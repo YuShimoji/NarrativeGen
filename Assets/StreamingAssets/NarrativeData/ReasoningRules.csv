@@ -1,0 +1,4 @@
+rule_id,conditions,consequences,priority,description
+rule_explore_room,"player.location=room;player.action=look_around","con_show_room_choices",1.0,"部屋を見回した時に、相互作用可能なオブジェクトの選択肢を表示する"
+rule_time_passing,"system.time_elapsed>10;player.no_action_recent=true","con_ambient_narration",0.5,"プレイヤーが長時間行動しない場合に、環境描写を差し込む"
+rule_key_found,"player.has_desk_key=true;drawer.contains_key=true","con_unlock_new_path",1.2,"鍵を見つけたことで新しい展開が生まれる" 

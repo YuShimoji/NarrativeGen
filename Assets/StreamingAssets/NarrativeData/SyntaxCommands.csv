@@ -1,0 +1,75 @@
+command_id,command_name,syntax_pattern,processor_class,parameters_json,priority,examples,enabled
+# 基本コマンド（構文メモ.txt対応）
+cmd_conditional,条件分岐,"if\\s*\\([^)]+\\)",ConditionalProcessor,"{\"supports_else\":true,\"operator_types\":[\"==\",\"!=\",\"<\",\">\",\"<=\",\">=\",\"AND\",\"OR\"],\"variable_scopes\":[\"entity\",\"character\",\"global\",\"system\"]}",1,"if(entity.weight > 0.1)",true
+cmd_else,条件分岐デフォルト,"else",ConditionalProcessor,"{\"default_branch\":true}",1,"else",true
+cmd_selection,選択肢,"\\{[^}]*\\|\\|[^}]*\\}",SelectionProcessor,"{\"separator\":\"||\"\"default_random\":true,\"weight_support\":true}",2,"{A||B||C}",true
+cmd_linked_selection,連動選択,"\\[.*?\\]&&\\[.*?\\]",LinkedSelectionProcessor,"{\"link_probability\":0.8,\"cascade_support\":true}",3,"[A]&&[B]",true
+cmd_random_insert,ランダム挿入,"r\\[.*?\\]r",RandomInsertProcessor,"{\"default_probability\":0.5,\"nested_support\":true}",4,"r[もし][何か]r",true
+cmd_n_selection,n個選択,"\\d+-\\{[^}]*\\|\\|[^}]*\\}",NSelectionProcessor,"{\"allow_duplicates\":false,\"max_selections\":10}",5,"2-{A||B||C}",true
+cmd_sequential_left,左から順次,"<\\{[^}]*\\|\\|[^}]*\\}",SequentialProcessor,"{\"direction\":\"left\",\"loop_support\":true}",6,"<{A||B||C}",true
+cmd_sequential_right,右から順次,">\\{[^}]*\\|\\|[^}]*\\}",SequentialProcessor,"{\"direction\":\"right\",\"loop_support\":true}",7,">{A||B||C}",true
+cmd_bracket_resolution,遡行検索,"\\[([^\\[\\]]+)\\]",BracketResolver,"{\"max_depth\":10,\"circular_ref_detection\":true,\"fallback_mode\":\"original_text\"}",8,"[そこに置いてある]",true
+
+# 高度なコマンド（拡張機能）
+cmd_weighted_selection,重み付き選択,"\\{[^}]*\\|w=[0-9.]+\\|[^}]*\\}",WeightedSelectionProcessor,"{\"weight_syntax\":\"w=\",\"normalize_weights\":true}",9,"{A|w=0.7|B|w=0.3}",true
+cmd_conditional_selection,条件付き選択,"\\{[^}]*\\|if\\([^)]+\\)\\|[^}]*\\}",ConditionalSelectionProcessor,"{\"condition_syntax\":\"if()\",\"fallback_selection\":true}",10,"{A|if(mood==happy)|B}",true
+cmd_probability_insert,確率挿入,"p\\([0-9.]+\\)\\[.*?\\]",ProbabilityProcessor,"{\"probability_range\":[0.0,1.0],\"random_seed_support\":true}",11,"p(0.3)[maybe text]",true
+cmd_loop_repeat,ループ繰り返し,"loop\\([0-9]+\\)\\{.*?\\}",LoopProcessor,"{\"max_iterations\":100,\"break_condition_support\":true}",12,"loop(3){[repeated text]}",true
+cmd_context_switch,文脈切り替え,"ctx\\([^)]+\\)\\{.*?\\}",ContextProcessor,"{\"context_stack\":true,\"scope_isolation\":true}",13,"ctx(formal){[polite text]}",true
+
+# 変数・参照コマンド
+cmd_variable_ref,変数参照,"\\$\\{[A-Za-z_][A-Za-z0-9_.]*\\}",VariableProcessor,"{\"scope_resolution\":true,\"type_checking\":true,\"default_value_support\":true}",14,"${character.name}",true
+cmd_entity_property,Entity参照,"\\@\\{[A-Za-z_][A-Za-z0-9_.]*\\}",EntityPropertyProcessor,"{\"inheritance_support\":true,\"property_calculation\":true}",15,"@{entity.weight}",true
+cmd_calculation,計算式,"calc\\([^)]+\\)",CalculationProcessor,"{\"operators\":[\"+\",\"-\",\"*\",\"/\",\"%\"],\"functions\":[\"abs\",\"round\",\"min\",\"max\"],\"variable_support\":true}",16,"calc(entity.weight * 1.2)",true
+cmd_comparison,比較評価,"cmp\\([^)]+\\)",ComparisonProcessor,"{\"tolerance_support\":true,\"percentage_mode\":true,\"range_checking\":true}",17,"cmp(actual_weight, expected_weight, tolerance)",true
+
+# 文字列操作コマンド
+cmd_case_transform,文字変換,"case\\([^)]+\\)\\{.*?\\}",CaseTransformProcessor,"{\"modes\":[\"upper\",\"lower\",\"title\",\"sentence\"],\"locale_support\":true}",18,"case(upper){[text]}",true
+cmd_length_limit,文字数制限,"limit\\([0-9]+\\)\\{.*?\\}",LengthLimitProcessor,"{\"truncate_mode\":\"ellipsis\",\"word_boundary\":true}",19,"limit(50){[long text]}",true
+cmd_replace_text,文字置換,"replace\\([^)]+\\)\\{.*?\\}",TextReplaceProcessor,"{\"regex_support\":true,\"global_replace\":true,\"case_sensitive\":false}",20,"replace(old,new){[text]}",true
+cmd_format_text,テキスト整形,"format\\([^)]+\\)\\{.*?\\}",TextFormatProcessor,"{\"formats\":[\"json\",\"csv\",\"html\",\"markdown\"],\"escape_support\":true}",21,"format(html){[text]}",true
+
+# 時間・日付コマンド
+cmd_time_format,時刻書式,"time\\([^)]*\\)",TimeFormatProcessor,"{\"formats\":[\"HH:mm\",\"yyyy-MM-dd\",\"full\"],\"timezone_support\":true}",22,"time(HH:mm)",true
+cmd_time_condition,時間条件,"timeif\\([^)]+\\)",TimeConditionalProcessor,"{\"time_ranges\":true,\"date_ranges\":true,\"weekday_support\":true}",23,"timeif(morning){[morning text]}",true
+cmd_duration,期間計算,"duration\\([^)]+\\)",DurationProcessor,"{\"units\":[\"seconds\",\"minutes\",\"hours\",\"days\"],\"relative_time\":true}",24,"duration(start,end)",true
+
+# ローカライゼーションコマンド
+cmd_language,言語切り替え,"lang\\([^)]+\\)\\{.*?\\}",LanguageProcessor,"{\"supported_languages\":[\"ja\",\"en\",\"zh\",\"ko\"],\"fallback_language\":\"en\"}",25,"lang(en){[english text]}",true
+cmd_currency,通貨表示,"currency\\([^)]+\\)",CurrencyProcessor,"{\"formats\":[\"symbol\",\"code\",\"name\"],\"locale_support\":true}",26,"currency(USD,123.45)",true
+cmd_number_format,数値書式,"number\\([^)]+\\)",NumberFormatProcessor,"{\"decimal_places\":2,\"thousands_separator\":true,\"locale_support\":true}",27,"number(1234.567,2)",true
+
+# 条件分岐の高度パターン
+cmd_multi_condition,複数条件,"multiif\\{.*?\\}",MultiConditionalProcessor,"{\"condition_chaining\":true,\"priority_support\":true,\"default_case\":true}",28,"multiif{case1:condition1|case2:condition2|default}",true
+cmd_switch_case,switch文,"switch\\([^)]+\\)\\{.*?\\}",SwitchProcessor,"{\"case_sensitivity\":false,\"regex_matching\":true,\"fallthrough\":false}",29,"switch(variable){case A: text1|case B: text2|default: text3}",true
+cmd_nested_condition,ネスト条件,"nestedif\\{.*?\\}",NestedConditionalProcessor,"{\"max_depth\":5,\"scope_isolation\":true}",30,"nestedif{if(a){if(b){text}}}",true
+
+# パフォーマンス・デバッグコマンド
+cmd_profile,性能測定,"profile\\{.*?\\}",ProfileProcessor,"{\"timing\":true,\"memory_usage\":true,\"call_count\":true}",31,"profile{[text to measure]}",false
+cmd_debug_log,デバッグログ,"debug\\([^)]*\\)\\{.*?\\}",DebugLogProcessor,"{\"log_levels\":[\"info\",\"warn\",\"error\"],\"console_output\":true}",32,"debug(info){[debug message]}",false
+cmd_validate,検証,"validate\\([^)]+\\)\\{.*?\\}",ValidationProcessor,"{\"schema_support\":true,\"error_reporting\":true}",33,"validate(schema){[content]}",false
+
+# エラーハンドリング・フォールバック
+cmd_try_catch,例外処理,"try\\{.*?\\}catch\\{.*?\\}",TryCatchProcessor,"{\"exception_types\":true,\"finally_support\":true}",34,"try{[risky operation]}catch{[fallback]}",true
+cmd_default_value,デフォルト値,"default\\([^)]+\\)\\{.*?\\}",DefaultValueProcessor,"{\"null_checking\":true,\"empty_checking\":true}",35,"default(fallback){[possibly empty]}",true
+cmd_fallback,フォールバック,"fallback\\{.*?\\}",FallbackProcessor,"{\"cascade_support\":true,\"priority_order\":true}",36,"fallback{option1|option2|option3}",true
+
+# ユーザー定義・拡張コマンド
+cmd_custom_function,カスタム関数,"fn\\([^)]+\\)\\{.*?\\}",CustomFunctionProcessor,"{\"parameter_support\":true,\"return_value\":true,\"recursion_limit\":10}",37,"fn(myFunction,param1,param2){[function body]}",true
+cmd_macro,マクロ,"macro\\([^)]+\\)\\{.*?\\}",MacroProcessor,"{\"parameter_substitution\":true,\"nested_macros\":true}",38,"macro(greet,name){Hello, ${name}!}",true
+cmd_include,インクルード,"include\\([^)]+\\)",IncludeProcessor,"{\"file_path_support\":true,\"circular_include_detection\":true}",39,"include(common_phrases.csv)",true
+
+# 特殊用途・実験的コマンド
+cmd_ai_generate,AI生成,"ai\\([^)]+\\)\\{.*?\\}",AIGeneratorProcessor,"{\"model_selection\":true,\"prompt_engineering\":true,\"quality_filter\":true}",40,"ai(generate_description){[context]}",false
+cmd_template,テンプレート,"template\\([^)]+\\)\\{.*?\\}",TemplateProcessor,"{\"parameter_binding\":true,\"inheritance_support\":true}",41,"template(character_intro,name,age){[template body]}",true
+cmd_cache,キャッシュ,"cache\\([^)]*\\)\\{.*?\\}",CacheProcessor,"{\"ttl_support\":true,\"invalidation_rules\":true,\"memory_limit\":true}",42,"cache(60){[expensive operation]}",true
+
+# テスト・検証用コマンド
+cmd_test_circular,循環参照テスト,"test_circular\\{.*?\\}",CircularTestProcessor,"{\"detection_depth\":20,\"reporting\":true}",90,"test_circular{[circular_ref_a]}",false
+cmd_test_performance,性能テスト,"test_perf\\{.*?\\}",PerformanceTestProcessor,"{\"iterations\":1000,\"memory_profiling\":true,\"timing_precision\":\"microseconds\"}",91,"test_perf{[heavy operation]}",false
+cmd_test_memory,メモリテスト,"test_memory\\{.*?\\}",MemoryTestProcessor,"{\"leak_detection\":true,\"allocation_tracking\":true}",92,"test_memory{[memory intensive]}",false
+cmd_test_edge_case,エッジケーステスト,"test_edge\\{.*?\\}",EdgeCaseTestProcessor,"{\"boundary_values\":true,\"null_inputs\":true,\"extreme_sizes\":true}",93,"test_edge{[edge case]}",false
+
+# 無効化・非推奨コマンド
+cmd_deprecated_old,"非推奨_旧形式","old\\{.*?\\}",DeprecatedProcessor,"{\"warning_message\":\"This command is deprecated\",\"migration_hint\":\"Use new syntax instead\"}",99,"old{[deprecated syntax]}",false
+cmd_experimental,"実験的機能","exp\\{.*?\\}",ExperimentalProcessor,"{\"stability\":\"alpha\",\"documentation\":\"limited\",\"support\":\"community\"}",98,"exp{[experimental feature]}",false 

@@ -1,0 +1,8 @@
+id,name,type,description,state,style
+player,プレイヤー,character,脱出ゲームの主人公,awake,protagonist
+room,部屋,location,謎に満ちた密室,mysterious,enclosed
+narrator,ナレーター,system,物語の語り手,active,storyteller
+entity_system,system,application,テストシステム,running,technical
+entity_database,database,component,CSVデータベース,loaded,neutral
+entity_test_runner,test_runner,component,テスト実行エンジン,ready,systematic
+test,test,test_entity,テスト用エンティティ,active,test 

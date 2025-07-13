@@ -1,0 +1,4 @@
+template_id,category,pattern
+tpl_generic_discovery,discovery,"{entity.name}を見つけた。{entity.description}。"
+tpl_generic_interaction,interaction,"{player.name}は{target.name}に{action}した。"
+tpl_ambient_description,environment,"辺りは静かだ。{world.time_of_day}の光が差し込んでいる。" 

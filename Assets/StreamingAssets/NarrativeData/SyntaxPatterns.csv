@@ -1,0 +1,93 @@
+pattern_id,context,pattern_text,conditions,priority,commands,variables,translation_unit_id,recursive_terms
+# 基本場面描写パターン
+scene_001,scene_start,"{scene:[あなたは[LOCATION]に立っている。],[目の前には[OBJECT]がある。],[sound]が[direction]から聞こえる。}","",1,"||","LOCATION,OBJECT,sound,direction","unit_scene_start","[LOCATION],[OBJECT]"
+scene_002,room_enter,"{scene:[部屋の中は[ROOM.atmosphere]。],[OBJECT:window]が[OBJECT:window.state]ており、[OBJECT:window.light_description]。]}","",1,"||","ROOM.atmosphere,OBJECT:window","unit_room_desc","[ROOM.atmosphere],[OBJECT:window]"
+scene_003,outdoor_scene,"r[{空には}][{雲が}]r{[浮かんで]||[漂って]}いて、[wind_description]が{[吹いて]||[流れて]}いる。","weather==outdoor",1,"r,||","wind_description","unit_outdoor","[wind_description]"
+scene_004,indoor_scene,"r[{室内は}][{とても}]r{[静かで]||[落ち着いて]}、{[暖かい]||[涼しい]||[快適な]}[atmosphere]が感じられる。","location==indoor",1,"r,||","atmosphere","unit_indoor","[atmosphere]"
+
+# 物体調査・観察パターン
+obs_001,object_examination,"{observation:[それは[OBJECT.material]製で、][表面は[OBJECT.surface_description]。][OBJECT.additional_details]が確認できる。]}","",1,"||","OBJECT.material,OBJECT.surface_description,OBJECT.additional_details","unit_basic_obs","[OBJECT.material],[OBJECT.surface_description]"
+obs_002,detailed_inspection,"{analysis:[詳しく調べると、[OBJECT.detailed_properties]。][OBJECT.anomaly_description]]}","has_anomaly==true",2,"||,if","OBJECT.detailed_properties,OBJECT.anomaly_description","unit_detailed_obs","[OBJECT.detailed_properties]"
+obs_003,weight_check,"r[{手に取ると}][{持ち上げると}]r、{[微妙に重い]||[予想より軽い]||[ちょうどいい重さ]}[feeling]がする。","interaction==touch",1,"r,||","feeling","unit_weight_feeling","[feeling]"
+obs_004,size_evaluation,"{[思ったより大きい]||[意外と小さい]||[標準的なサイズ]}で、{[使いやすそう]||[扱いにくそう]||[適度な大きさ]}だ。","size_evaluation==true",1,"||","","unit_size_eval","[size_evaluation]"
+
+# 推論・違和感検出パターン（memo.txt対応）
+reason_001,weight_anomaly,"{thought:[この[OBJECT]、何だか[WEIGHT_FEELING]。],[普通の[OBJECT_TYPE]より[WEIGHT_COMPARISON]のではないか？]}","weight_anomaly==true",3,"||,if","OBJECT,WEIGHT_FEELING,OBJECT_TYPE,WEIGHT_COMPARISON","unit_weight_anomaly","[WEIGHT_FEELING],[WEIGHT_COMPARISON]"
+reason_002,knowledge_check,"{internal:[r[{本当に}][{果たして}]r[EXPECTED_TYPE]だったのだろうか？]}","expectation_mismatch==true",3,"r,if","EXPECTED_TYPE","unit_doubt","[EXPECTED_TYPE]"
+reason_003,confidence_high,"{assertion:[間違いなく[OBSERVATION]だ。][これは[確実]に[anomaly]がある。]}","confidence>0.8",2,"||","OBSERVATION,anomaly","unit_confident","[OBSERVATION],[anomaly]"
+reason_004,confidence_low,"{uncertainty:[r[{よく分からない}][{定かでない}]rが、][何か[違和感]を感じる。]}","confidence<0.5",2,"r,||","違和感","unit_uncertain","[違和感]"
+
+# アルコール・認知状態パターン（memo.txt酩酊例）
+alcohol_001,drunk_response,"{drunk:[いや、[nothing]？],[別に]...{[おかしくない]||[変じゃない]}よ？]}","alcohol_level>0.6",1,"||","nothing","unit_drunk_response","[nothing]"
+alcohol_002,impaired_observation,"{impaired:[r[{え？}][{あれ？}]r[何か][変だった]？]}","alcohol_level>0.5 AND questioned==true",1,"r,||","変だった","unit_impaired_q","[変だった]"
+alcohol_003,sober_detailed,"{detailed:[確かに[DETAIL1]で、][さらに[DETAIL2]も[気になる]。][これは[明らかに]おかしい。]}","alcohol_level<0.2 AND knowledge_accuracy>0.8",2,"||","DETAIL1,DETAIL2","unit_sober_analysis","[DETAIL1],[DETAIL2]"
+
+# 感情・心理パターン
+psych_001,surprise_mild,"r[{おや}][{あれ}]r、{[これは]||[何だか]}[interesting]ですね。","emotion==mild_surprise",1,"r,||","interesting","unit_mild_surprise","[interesting]"
+psych_002,surprise_strong,"{[うわあ]||[きゃあ]||[おお]}！{[信じられない]||[驚いた]||[amazing]}！","emotion==strong_surprise",1,"||","","unit_strong_surprise","[amazing]"
+psych_003,confusion,"{[r[{どういうこと}][{何これ}]r？]||[意味が分からない]}","emotion==confusion",1,"r,||","","unit_confusion",""
+psych_004,realization,"{[なるほど]||[そうか]||[分かった]}！{[そういうことか]||[そういう仕組みか]}。","emotion==understanding",1,"||","","unit_realization",""
+
+# 対話・コミュニケーションパターン
+dialogue_001,greeting_time,"{time_greeting}、r[{今日は}][{いかがお過ごし}]rですか？","social_interaction==greeting",1,"r","time_greeting","unit_greeting_time","[time_greeting]"
+dialogue_002,greeting_casual,"r[{やあ}][{おっす}]r、{[元気？]||[調子どう？]||[最近どう？]}","formality<0.4",1,"r,||","","unit_casual_greeting",""
+dialogue_003,request_polite,"r[{恐れ入ります}][{申し訳ありませんが}]r、{[お聞きしたい]||[教えていただきたい]}ことがあります。","formality>0.7",1,"r,||","","unit_polite_request",""
+dialogue_004,request_casual,"{[ちょっと]||[すみません]}、{[聞きたい]||[教えて]}ことがあるんだけど。","formality<0.5",1,"||","","unit_casual_request",""
+
+# 複雑なコマンド組み合わせパターン
+complex_001,triple_random,"r[{もし}][{何か}]r{[あったら]||[起きたら]||[発生したら]}{、r[{遠慮せず}][{気にせず}]r[連絡]||知らせて}{[ください]||[くれ]||[いただけませんか]}","",2,"r,||","","unit_triple_random","[連絡]"
+complex_002,conditional_nested,"{[朝の挨拶]||[昼の挨拶]||[夕の挨拶]}, if(time_of_day == 'morning' AND formality > 0.5){[おはようございます]||[good morning]} if(time_of_day == 'afternoon'){[こんにちは]||[good afternoon]}{[こんばんは]||[good evening]}, else","",3,"||,if","time_of_day,formality","unit_time_greeting",""
+complex_003,linked_selection,"2-{[彼は]&&[困惑した表情を浮かべ]||[彼女は]&&[不安そうな様子で]||[その人は]&&[当惑したように]}{[立ち尽くして]||[佇んで]||[その場に留まって]}いた","",2,"&&,||,n-","","unit_character_state",""
+complex_004,mega_complex,"r[{もしも}]r{[その[複雑な[状況]]]||[当該[事案]]}が{[解決]||[改善]||[好転]}すれば、2-{[即座に]&&[適切な]||[迅速に]&&[最適な]||[速やかに]&&[効果的な]}{[対応]||[措置]||[手段]}を{[講じる]||[実施する]||[行う]}必要がある, if(urgency_level > 0.7)[慎重に][状況を][見極めてから][判断しましょう], else","",4,"r,||,&&,n-,if","urgency_level","unit_complex_decision","[状況],[対応],[措置]"
+
+# 小説・物語用長文パターン
+novel_001,scene_setting,"r[{その日の}][{朝早く}]r、[私]は{[いつものように]||[習慣として]||[例によって]}[図書館]に{[向かった]||[足を向けた]||[歩いて行った]}。{[古い建物特有の]||[歴史ある建物の]||[伝統的な建物の]}[静寂]が、[entrance]で私を{[迎えた]||[包んだ]||[出迎えた]}。","context==story_opening",1,"r,||","entrance","unit_story_opening","[図書館],[静寂],[entrance]"
+novel_002,mystery_discovery,"{discovery:[机の上に、][見慣れない[OBJECT]]が[置かれていた]。}r[{好奇心から}][{興味に駆られて}]r、[私]は{[それを手に取った]||[近づいて調べた]||[詳しく観察した]}。","context==mystery",2,"r,||","OBJECT","unit_discovery","[OBJECT]"
+novel_003,dialogue_exchange,"「{[今日も]||[また]}[研究]ですか？」{[と彼女は]||[と司書が]||[と受付の女性が]}{[尋ねた]||[聞いた]||[質問した]}。[私]は{[軽く頷いて]||[小さく頷き]||[静かに頷いて]}、「{[ええ]||[はい]||[そうです]}、{[よろしくお願いします]||[お世話になります]}」{[と答えた]||[と返事した]||[と応じた]}。","context==dialogue",1,"||","","unit_dialogue_exchange",""
+novel_004,internal_monologue,"{thought:[r[{この}][{内容}]r、何だか{[変だ]||[おかしい]||[妙だ]}。]}{thought:[普通の{[日記]||[手帳]||[記録]}にしては、][内容が{[専門的すぎる]||[難解すぎる]||[複雑すぎる]}。]}","context==internal",2,"r,||","","unit_internal_thought","[内容]"
+
+# レストラン・日常会話パターン
+restaurant_001,entry_greeting,"r[{いらっしゃいませ}][{お疲れさまです}]r、{[何名様]||[何人]||[お一人様]}でしょうか？","context==restaurant_entrance",1,"r,||","","unit_restaurant_greeting",""
+restaurant_002,order_request,"{[本日の]||[今日の]||[おすすめの]}[recommendation]は{[何ですか]||[どちらでしょう]}？","context==ordering",1,"||","recommendation","unit_order_inquiry","[recommendation]"
+restaurant_003,food_reaction,"r[{うーん}][{んー}]r{、これは}{[美味しい]||[おいしい]||[絶品]||[微妙]||[いまいち]}ですね","context==eating",1,"r,||","","unit_food_reaction",""
+restaurant_004,payment_request,"r[{お会計}][{会計}][{お勘定}]r{[お願いします]||[してください]}","context==payment",1,"r,||","","unit_payment_request",""
+
+# 職場・ビジネスパターン
+business_001,meeting_start,"r[{皆さま}][{みなさん}]r{、お疲れさまです}。r[{本日は}][{今日は}]r{[お忙しい中]}{[お集まり]||[ご参加]||[出席]}いただき、{[ありがとうございます]||[感謝いたします]}","context==meeting_start",1,"r,||","","unit_meeting_start",""
+business_002,agenda_intro,"r[{それでは}][{では}]r{[本日の]||[今日の]||[この度の]}[agenda]について{[説明]||[ご説明]||[検討]}させていただきます","context==agenda",1,"r,||","agenda","unit_agenda_intro","[agenda]"
+business_003,agreement,"r[{なるほど}][{そうですね}]r{、確かに}{[重要な]||[大切な]||[興味深い]}ポイントですね","agreement_level>0.7",1,"r,||","","unit_agreement",""
+business_004,concern,"r[{ちょっと}][{少し}]r{[気になる]||[心配な]}のは、{[実現可能性]||[リスク]||[費用]}ですが...","concern_level>0.6",1,"r,||","","unit_concern",""
+
+# 学校・教育パターン
+education_001,lesson_start,"r[{それでは}][{では}]r{[本日の]||[今日の]}[lesson]を{[始めましょう]||[開始いたします]||[スタートします]}","context==lesson_start",1,"r,||","lesson","unit_lesson_start","[lesson]"
+education_002,question_to_student,"{[分からない]||[質問がある]||[疑問な]}ところは{[ありませんか]||[ございませんか]}？","context==teaching",1,"||","","unit_question_check",""
+education_003,praise,"r[{よくできました}][{素晴らしい}]r！{[その調子]||[その通り]||[正解]}です。","evaluation==positive",1,"r,||","","unit_praise",""
+education_004,correction,"{[もう少し]||[ちょっと]||[少し]}考えてみましょう。{[ヒントは]||[手がかりは]}[hint]です。","evaluation==needs_improvement",1,"||","hint","unit_correction","[hint]"
+
+# 医療・健康パターン  
+medical_001,symptom_inquiry,"{[どのような]||[どんな]}[symptoms]が{[おありですか]||[ございますか]}？","context==medical_consultation",1,"||","symptoms","unit_symptom_inquiry","[symptoms]"
+medical_002,examination,"r[{それでは}][{では}]r{[診察]||[検査]||[確認]}させていただきます","context==medical_exam",1,"r,||","","unit_examination",""
+medical_003,prescription,"{[お薬]||[薬]||[処方薬]}を{[出しておきます]||[処方いたします]}。{[用法]||[飲み方]}は[instructions]です。","context==prescription",1,"||","instructions","unit_prescription","[instructions]"
+medical_004,follow_up,"{[経過]||[様子]}を{[見て]||[観察して]}、{[また]||[再度]}{[来院]||[受診]}してください","context==follow_up",1,"||","","unit_follow_up",""
+
+# 感情状態依存の複雑パターン
+emotion_complex_001,joy_expression,"{[わーい]||[やったー]||[嬉しい]}！r[{これで}][{やっと}]r{[解決]||[成功]||[完成]}だ！","emotion==joy AND intensity>0.7",1,"r,||","","unit_joy_high",""
+emotion_complex_002,sadness_expression,"{[悲しい]||[辛い]||[残念]}...{[どうして]||[なぜ]||[何で]}こんなことに...","emotion==sadness AND intensity>0.6",1,"||","","unit_sadness",""
+emotion_complex_003,anger_expression,"{[むかつく]||[腹が立つ]||[許せない]}！{[いい加減にしろ]||[ふざけるな]||[何考えてるんだ]}！","emotion==anger AND intensity>0.8",1,"||","","unit_anger_high",""
+emotion_complex_004,fear_expression,"{[怖い]||[恐ろしい]||[不安]}...{[どうしよう]||[大丈夫かな]||[心配]}...","emotion==fear AND intensity>0.5",1,"||","","unit_fear",""
+
+# 天候・季節依存パターン
+weather_001,sunny_comment,"{[いい天気]||[良い天気]||[晴天]}ですね。{[散歩]||[外出]||[ピクニック]}でも{[いかがですか]||[どうですか]}？","weather==sunny",1,"||","","unit_sunny_weather",""
+weather_002,rainy_comment,"{[雨]||[雨降り]||[あいにくの雨]}ですね。{[傘]||[レインコート]}を{[お忘れなく]||[持参してください]}","weather==rainy",1,"||","","unit_rainy_weather",""
+weather_003,cold_comment,"{[寒い]||[冷える]||[肌寒い]}ですね。{[暖かく]||[防寒]||[厚着]}してください","temperature<10",1,"||","","unit_cold_weather",""
+weather_004,hot_comment,"{[暑い]||[暖かい]||[蒸し暑い]}ですね。{[水分補給]||[涼しい格好]||[熱中症対策]}を{[忘れずに]||[お気をつけて]}","temperature>25",1,"||","","unit_hot_weather",""
+
+# エッジケース・テスト用パターン
+test_001,circular_test,"[test_circular_B]の結果を[test_circular_A]で確認","test_mode==circular",10,"","","unit_test_circular","[test_circular_A],[test_circular_B]"
+test_002,depth_test,"[depth_level_2]>[depth_level_3]>[depth_level_4]>[depth_level_5]>[depth_level_6]>[depth_level_7]","test_mode==depth",10,"","","unit_test_depth","[depth_level_2],[depth_level_3],[depth_level_4],[depth_level_5],[depth_level_6],[depth_level_7]"
+test_003,massive_choice,"{choice1||choice2||choice3||choice4||choice5||choice6||choice7||choice8||choice9||choice10||choice11||choice12||choice13||choice14||choice15||choice16||choice17||choice18||choice19||choice20}","test_mode==massive",10,"||","","unit_test_massive",""
+test_004,unicode_test,"{[こんにちは]||[hello]||[你好]||[안녕하세요]||[Bonjour]||[Hola]||[Guten Tag]}","test_mode==unicode",10,"||","","unit_test_unicode",""
+test_005,emoji_test,"{[😀]||[😊]||[😂]||[🤔]||[😮]||[😱]}な気持ちです","test_mode==emoji",10,"||","","unit_test_emoji",""
+
+# パフォーマンステスト用長文パターン
+perf_001,ultra_long,"これは{[非常に]||[とても]||[すごく]}長い{[テキスト]||[文章]||[文]}の{[テスト]||[検証]||[確認]}です。r[{この部分}][{には複数の}]r{[遡行検索]||[recursive search]||[参照解決]}[対象]が{[含まれて]||[入って]}おり、r[{処理性能}][{を測定するための}]r{[サンプル]||[例文]||[テストケース]}として{[設計]||[作成]||[用意]}されています。[実際の]{[小説]||[物語]||[ストーリー]}では、{[このような]||[こういった]||[この種の]}[長い文章]{[構造]||[パターン]||[形式]}が{[頻繁に]||[しばしば]||[よく]}[登場する]{[可能性]||[場合]||[ケース]}があるため、[十分な]{[パフォーマンス]||[性能]||[速度]}[テスト]が[必要]です","test_mode==performance",10,"r,||","","unit_performance_test","[対象],[サンプル],[構造],[パフォーマンス]" 

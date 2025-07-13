@@ -1,0 +1,115 @@
+# Unity generated files
+Library/
+Temp/
+Logs/
+UserSettings/
+obj/
+Builds/
+
+# Visual Studio / MonoDevelop generated files
+*.csproj
+*.user
+*.sln
+*.suo
+*.tmp
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Unity3D generated meta files
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# Unity3D LFS files
+*.fbx.meta
+*.png.meta
+*.jpg.meta
+*.jpeg.meta
+*.tga.meta
+*.tiff.meta
+*.iff.meta
+*.pict.meta
+*.exr.meta
+*.hdr.meta
+*.wav.meta
+*.mp3.meta
+*.ogg.meta
+*.aiff.meta
+*.aif.meta
+*.mod.meta
+*.it.meta
+*.s3m.meta
+*.xm.meta
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node.js (for web tools)
+node_modules/
+npm-debug.log*
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# NuGet packages
+*.nupkg
+packages/
+
+# Rider
+.idea/
+
+# Temporary files
+*.tmp
+*.log
+*.cache
+
+# Unity-specific
+ExportedObj/
+.consulo/
+*.VC.opendb
+*.csprojAssemblyReference.cache
+ProjectSettings/GraphicsSettings.asset
+ProjectSettings/QualitySettings.asset
+
+# Burst cache
+/BurstCache/
+
+# Build directories
+/[Bb]uilds/
+/[Ll]ogs/
+
+# Crashlytics generated file
+crashlytics-build.properties
+
+# Log files
+*.log
+
+# Console Application specific
+!/NarrativeGen.Core.csproj
+!/NarrativeGen.Console.csproj 

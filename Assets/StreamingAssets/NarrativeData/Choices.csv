@@ -1,0 +1,8 @@
+choice_id,category,text,next_event_id,conditions
+choice_default_look_around,default,"辺りを見回す","event_look_around",
+choice_default_think,default,"少し考える","event_think",
+choice_interact_desk,room_objects,"机を調べる","event_investigate_desk",
+choice_interact_bookshelf,room_objects,"本棚を調べる","event_investigate_bookshelf",
+choice_interact_window,room_objects,"窓の外を見る","event_investigate_window",
+choice_interact_door,room_objects,"ドアに手をかける","event_investigate_door","player.door_locked=true"
+choice_interact_door_unlocked,room_objects,"ドアを開ける","event_escape","player.door_locked=false" 
