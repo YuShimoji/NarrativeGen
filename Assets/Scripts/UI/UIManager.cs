@@ -5,6 +5,7 @@ using TMPro;
 using NarrativeGen.Data.Models;
 using NarrativeGen.Core;
 using System;
+using UnityEngine.SceneManagement;
 
 namespace NarrativeGen.UI
 {
@@ -18,12 +19,14 @@ namespace NarrativeGen.UI
         public GameObject choicesPanel;
         public GameObject choiceButtonPrefab;
         public TextMeshProUGUI debugText;
+        public Button backToMenuButton;
         
         [Header("Settings")]
         public bool enableTextAdvance = false;
         
         private List<GameObject> _choiceButtons = new List<GameObject>();
         private List<Choice> _currentChoices = new List<Choice>();
+        private TextClickHandler _textClickHandler;
         
         // Event sent to GameManager
         public event Action<string> OnChoiceSelected;
@@ -43,6 +46,23 @@ namespace NarrativeGen.UI
             else
             {
                 Debug.LogError("GameManager not found in scene. UI will not receive narrative events.");
+            }
+
+            // TextClickHandler setup
+            if (narrativeText != null)
+            {
+                _textClickHandler = narrativeText.GetComponent<TextClickHandler>();
+                if (_textClickHandler == null)
+                {
+                    _textClickHandler = narrativeText.gameObject.AddComponent<TextClickHandler>();
+                }
+                SetupInitialTextVariants();
+            }
+
+            // Back button setup
+            if (backToMenuButton != null)
+            {
+                backToMenuButton.onClick.AddListener(OnBackToMenuClicked);
             }
 
             if (narrativeText != null)
@@ -80,6 +100,12 @@ namespace NarrativeGen.UI
                 narrativeText.text = text;
                 enableTextAdvance = true;
                 HideChoices();
+                
+                // Add text variants for demonstration
+                if (_textClickHandler != null)
+                {
+                    GenerateTextVariants(text);
+                }
             }
         }
 
@@ -191,6 +217,57 @@ namespace NarrativeGen.UI
         public List<Choice> GetCurrentChoices()
         {
             return _currentChoices;
+        }
+
+        private void SetupInitialTextVariants()
+        {
+            if (_textClickHandler != null)
+            {
+                var variants = new List<string>
+                {
+                    "Entity推論ベースナラティブシステム\n初期化中...",
+                    "高度な構文解析エンジン\n起動中...",
+                    "動的物語生成システム\n準備中...",
+                    "インタラクティブ・ストーリー\nエンジン始動中..."
+                };
+                _textClickHandler.SetVariants(variants);
+            }
+        }
+
+        private void OnBackToMenuClicked()
+        {
+            if (SceneManager.Instance != null)
+            {
+                SceneManager.Instance.LoadMenuScene();
+            }
+        }
+
+        private void GenerateTextVariants(string originalText)
+        {
+            if (_textClickHandler == null) return;
+            
+            var variants = new List<string> { originalText };
+            
+            // Simple text variation examples
+            if (originalText.Contains("あなた"))
+            {
+                variants.Add(originalText.Replace("あなた", "プレイヤー"));
+                variants.Add(originalText.Replace("あなた", "主人公"));
+            }
+            
+            if (originalText.Contains("部屋"))
+            {
+                variants.Add(originalText.Replace("部屋", "空間"));
+                variants.Add(originalText.Replace("部屋", "室内"));
+            }
+            
+            if (originalText.Contains("見る"))
+            {
+                variants.Add(originalText.Replace("見る", "観察する"));
+                variants.Add(originalText.Replace("見る", "眺める"));
+            }
+            
+            _textClickHandler.SetVariants(variants);
         }
 
         /// <summary>
