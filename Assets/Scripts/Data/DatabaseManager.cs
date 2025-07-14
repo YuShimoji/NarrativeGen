@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 using UnityEngine;
 using NarrativeGen.Parsing;
 using NarrativeGen.Data.Models;
-using CsvHelper;
-using CsvHelper.Configuration;
 
 namespace NarrativeGen.Data
 {
@@ -77,27 +75,23 @@ namespace NarrativeGen.Data
         /// </summary>
         void LoadEvents()
         {
-            var filePath = Path.Combine(Application.streamingAssetsPath, "NarrativeData", eventsFileName);
-            
-            if (!File.Exists(filePath))
-            {
-                UnityEngine.Debug.LogError($"Events file not found at: {filePath}");
-                return;
-            }
-            
-            var csvText = File.ReadAllText(filePath);
             Events = new Dictionary<string, NarrativeGen.Data.Models.Event>();
-            var csvData = CsvParser.Parse(csvText);
+            
+            var csvData = SimpleCsvReader.ReadCsvFromStreamingAssets(eventsFileName);
             
             foreach (var row in csvData)
             {
                 var eventModel = new NarrativeGen.Data.Models.Event
                 {
-                    Id = row["id"],
-                    Commands = row["command"]
+                    Id = SimpleCsvReader.GetValue<string>(row, "id", ""),
+                    Commands = SimpleCsvReader.GetValue<string>(row, "command", ""),
+                    Text = SimpleCsvReader.GetValue<string>(row, "text", "")
                 };
                 
-                Events[eventModel.Id] = eventModel;
+                if (!string.IsNullOrEmpty(eventModel.Id))
+                {
+                    Events[eventModel.Id] = eventModel;
+                }
             }
             
             UnityEngine.Debug.Log($"Loaded {Events.Count} events.");
@@ -193,7 +187,7 @@ namespace NarrativeGen.Data
             }
 
             using (var reader = new StreamReader(path))
-            using (var csv = new CsvReader(reader, new CsvConfiguration(System.Globalization.CultureInfo.InvariantCulture)))
+            using (var csv = new CsvParser.CsvReader(reader))
             {
                 ReasoningRules = csv.GetRecords<ReasoningRule>().ToDictionary(r => r.RuleId);
             }
