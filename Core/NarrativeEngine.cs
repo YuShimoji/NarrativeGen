@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
 using NarrativeGen.Core.Data;
 using NarrativeGen.Core.Engine;
 using NarrativeGen.Core.Models;

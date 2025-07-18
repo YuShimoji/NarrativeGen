@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Globalization;
-using Microsoft.Extensions.Logging;
 using NarrativeGen.Core.Models;
 
 namespace NarrativeGen.Core.Data
@@ -28,8 +27,9 @@ namespace NarrativeGen.Core.Data
         {
             public string CommandType { get; set; } = "";
             public string Pattern { get; set; } = "";
-            public string Implementation { get; set; } = "";
-            public bool IsActive { get; set; } = true;
+            public string Replacement { get; set; } = "";
+            public int Priority { get; set; } = 1;
+            public string Description { get; set; } = "";
         }
 
         public class VariableDefinition
@@ -37,16 +37,14 @@ namespace NarrativeGen.Core.Data
             public string Name { get; set; } = "";
             public string Type { get; set; } = "";
             public string DefaultValue { get; set; } = "";
-            public string Range { get; set; } = "";
             public string Description { get; set; } = "";
         }
 
         public class EventData
         {
             public string Id { get; set; } = "";
-            public string Text { get; set; } = "";
             public string Commands { get; set; } = "";
-            public string Conditions { get; set; } = "";
+            public string Text { get; set; } = "";
         }
 
         public class PropertyDefinition
@@ -54,14 +52,18 @@ namespace NarrativeGen.Core.Data
             public string Name { get; set; } = "";
             public string Type { get; set; } = "";
             public string DefaultValue { get; set; } = "";
-            public string Category { get; set; } = "";
             public string Description { get; set; } = "";
+        }
+
+        public class Entity
+        {
+            public string Id { get; set; } = "";
+            public Dictionary<string, string> Properties { get; set; } = new Dictionary<string, string>();
         }
         #endregion
 
         #region Private Fields
         private readonly string _dataPath;
-        private readonly ILogger? _logger;
         
         private Dictionary<string, string> _recursiveDictionary;
         private List<SyntaxCommand> _syntaxCommands;
@@ -81,10 +83,9 @@ namespace NarrativeGen.Core.Data
         #endregion
 
         #region Constructor
-        public DataManager(string dataPath, ILogger? logger = null)
+        public DataManager(string dataPath)
         {
             _dataPath = dataPath ?? throw new ArgumentNullException(nameof(dataPath));
-            _logger = logger;
             
             _recursiveDictionary = new Dictionary<string, string>();
             _syntaxCommands = new List<SyntaxCommand>();
@@ -97,25 +98,17 @@ namespace NarrativeGen.Core.Data
 
         #region Public Methods
         /// <summary>
-        /// 全てのCSVデータを読み込み
+        /// 全データファイルの読み込み
         /// </summary>
         public void LoadAllData()
         {
             try
             {
-                LoadRecursiveDictionary();
-                LoadSyntaxCommands();
-                LoadVariables();
-                LoadEvents();
-                LoadProperties();
-                LoadEntities();
-                
-                _logger?.LogInformation("All data loaded successfully from: {DataPath}", _dataPath);
+                LoadAllDataFiles();
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Failed to load data from: {DataPath}", _dataPath);
-                throw;
+                throw new InvalidOperationException($"Failed to load data from: {_dataPath}", ex);
             }
         }
 
@@ -124,7 +117,17 @@ namespace NarrativeGen.Core.Data
         /// </summary>
         public EventData? GetEvent(string eventId)
         {
-            return _events.TryGetValue(eventId, out var eventData) ? eventData : null;
+            _events.TryGetValue(eventId, out var eventData);
+            return eventData;
+        }
+
+        /// <summary>
+        /// プロパティ定義の取得
+        /// </summary>
+        public PropertyDefinition? GetProperty(string propertyName)
+        {
+            _properties.TryGetValue(propertyName, out var property);
+            return property;
         }
 
         /// <summary>
@@ -132,238 +135,227 @@ namespace NarrativeGen.Core.Data
         /// </summary>
         public Entity? GetEntity(string entityId)
         {
-            return _entities.TryGetValue(entityId, out var entity) ? entity : null;
-        }
-
-        /// <summary>
-        /// プロパティ定義の取得
-        /// </summary>
-        public PropertyDefinition? GetPropertyDefinition(string propertyName)
-        {
-            return _properties.TryGetValue(propertyName, out var property) ? property : null;
+            _entities.TryGetValue(entityId, out var entity);
+            return entity;
         }
         #endregion
 
-        #region Private Loading Methods
-        /// <summary>
-        /// 遡行検索辞書の読み込み
-        /// </summary>
+        #region Private Methods
+        private void LoadAllDataFiles()
+        {
+            LoadRecursiveDictionary();
+            LoadSyntaxCommands();
+            LoadVariables();
+            LoadEvents();
+            LoadProperties();
+            LoadEntities();
+        }
+
         private void LoadRecursiveDictionary()
         {
             var filePath = Path.Combine(_dataPath, "RecursiveDictionary.csv");
             if (!File.Exists(filePath))
             {
-                _logger?.LogWarning("RecursiveDictionary.csv not found at: {FilePath}", filePath);
                 return;
             }
 
-            var entries = LoadCsv<RecursiveDictionaryEntry>(filePath);
-            foreach (var entry in entries)
+            var records = LoadCsvFile(filePath);
+            foreach (var record in records)
             {
-                _recursiveDictionary[entry.Key] = entry.Value;
+                if (record.TryGetValue("Key", out var key) && record.TryGetValue("Value", out var value))
+                {
+                    _recursiveDictionary[key] = value;
+                }
             }
-
-            _logger?.LogDebug("Loaded {Count} recursive dictionary entries", _recursiveDictionary.Count);
         }
 
-        /// <summary>
-        /// 構文コマンドの読み込み
-        /// </summary>
         private void LoadSyntaxCommands()
         {
             var filePath = Path.Combine(_dataPath, "SyntaxCommands.csv");
             if (!File.Exists(filePath))
             {
-                _logger?.LogWarning("SyntaxCommands.csv not found at: {FilePath}", filePath);
                 return;
             }
 
-            _syntaxCommands = LoadCsv<SyntaxCommand>(filePath).ToList();
-            _logger?.LogDebug("Loaded {Count} syntax commands", _syntaxCommands.Count);
+            var records = LoadCsvFile(filePath);
+            foreach (var record in records)
+            {
+                _syntaxCommands.Add(new SyntaxCommand
+                {
+                    CommandType = record.GetValueOrDefault("CommandType", ""),
+                    Pattern = record.GetValueOrDefault("Pattern", ""),
+                    Replacement = record.GetValueOrDefault("Replacement", ""),
+                    Priority = int.TryParse(record.GetValueOrDefault("Priority", "1"), out var priority) ? priority : 1,
+                    Description = record.GetValueOrDefault("Description", "")
+                });
+            }
         }
 
-        /// <summary>
-        /// 変数定義の読み込み
-        /// </summary>
         private void LoadVariables()
         {
             var filePath = Path.Combine(_dataPath, "Variables.csv");
             if (!File.Exists(filePath))
             {
-                _logger?.LogWarning("Variables.csv not found at: {FilePath}", filePath);
                 return;
             }
 
-            var variables = LoadCsv<VariableDefinition>(filePath);
-            foreach (var variable in variables)
+            var records = LoadCsvFile(filePath);
+            foreach (var record in records)
             {
+                var variable = new VariableDefinition
+                {
+                    Name = record.GetValueOrDefault("Name", ""),
+                    Type = record.GetValueOrDefault("Type", ""),
+                    DefaultValue = record.GetValueOrDefault("DefaultValue", ""),
+                    Description = record.GetValueOrDefault("Description", "")
+                };
                 _variables[variable.Name] = variable;
             }
-
-            _logger?.LogDebug("Loaded {Count} variable definitions", _variables.Count);
         }
 
-        /// <summary>
-        /// イベントデータの読み込み
-        /// </summary>
         private void LoadEvents()
         {
             var filePath = Path.Combine(_dataPath, "Events.csv");
             if (!File.Exists(filePath))
             {
-                _logger?.LogWarning("Events.csv not found at: {FilePath}", filePath);
                 return;
             }
 
-            var events = LoadCsv<EventData>(filePath);
-            foreach (var eventData in events)
+            var records = LoadCsvFile(filePath);
+            foreach (var record in records)
             {
+                var eventData = new EventData
+                {
+                    Id = record.GetValueOrDefault("Id", ""),
+                    Commands = record.GetValueOrDefault("Commands", ""),
+                    Text = record.GetValueOrDefault("Text", "")
+                };
                 _events[eventData.Id] = eventData;
             }
-
-            _logger?.LogDebug("Loaded {Count} events", _events.Count);
         }
 
-        /// <summary>
-        /// プロパティ定義の読み込み
-        /// </summary>
         private void LoadProperties()
         {
             var filePath = Path.Combine(_dataPath, "Properties.csv");
             if (!File.Exists(filePath))
             {
-                _logger?.LogWarning("Properties.csv not found at: {FilePath}", filePath);
                 return;
             }
 
-            var properties = LoadCsv<PropertyDefinition>(filePath);
-            foreach (var property in properties)
+            var records = LoadCsvFile(filePath);
+            foreach (var record in records)
             {
+                var property = new PropertyDefinition
+                {
+                    Name = record.GetValueOrDefault("Name", ""),
+                    Type = record.GetValueOrDefault("Type", ""),
+                    DefaultValue = record.GetValueOrDefault("DefaultValue", ""),
+                    Description = record.GetValueOrDefault("Description", "")
+                };
                 _properties[property.Name] = property;
             }
-
-            _logger?.LogDebug("Loaded {Count} property definitions", _properties.Count);
         }
 
-        /// <summary>
-        /// エンティティの読み込み
-        /// </summary>
         private void LoadEntities()
         {
             var filePath = Path.Combine(_dataPath, "EntityStates.csv");
             if (!File.Exists(filePath))
             {
-                _logger?.LogWarning("EntityStates.csv not found at: {FilePath}", filePath);
                 return;
             }
 
-            // TODO: EntityStatesの構造に応じて実装
-            _logger?.LogDebug("Entity loading placeholder");
+            // EntityStatesの実装は後で追加
         }
 
         /// <summary>
-        /// CSVファイルの汎用読み込み
+        /// シンプルなCSV読み込み（Core層用、Unity非依存）
         /// </summary>
-        private IEnumerable<T> LoadCsv<T>(string filePath) where T : class
+        private List<Dictionary<string, string>> LoadCsvFile(string filePath)
         {
+            var records = new List<Dictionary<string, string>>();
+            
             try
             {
-                using var reader = new StringReader(File.ReadAllText(filePath));
+                using var reader = new StreamReader(filePath);
                 using var csv = new SimpleCsvReader(reader, CultureInfo.InvariantCulture);
                 
-                var records = csv.GetRecords<T>().ToList();
-                _logger?.LogDebug("Loaded {Count} records from {FilePath}", records.Count, filePath);
-                return records;
+                var headers = csv.GetNextRecord();
+                if (headers == null) return records;
+
+                while (csv.GetNextRecord() is string[] values)
+                {
+                    var record = new Dictionary<string, string>();
+                    for (int i = 0; i < Math.Min(headers.Length, values.Length); i++)
+                    {
+                        record[headers[i]] = values[i];
+                    }
+                    records.Add(record);
+                }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Failed to load CSV file: {FilePath}", filePath);
-                return Enumerable.Empty<T>();
+                throw new InvalidOperationException($"Failed to load CSV file: {filePath}", ex);
             }
+
+            return records;
         }
         #endregion
+    }
 
-        #region Entity Management
-        /// <summary>
-        /// エンティティの登録
-        /// </summary>
-        public void RegisterEntity(Entity entity)
+    /// <summary>
+    /// Core層用の最小限CSVリーダー（Unity非依存）
+    /// </summary>
+    public class SimpleCsvReader : IDisposable
+    {
+        private readonly StreamReader _reader;
+        private readonly CultureInfo _culture;
+
+        public SimpleCsvReader(StreamReader reader, CultureInfo culture)
         {
-            _entities[entity.Id] = entity;
+            _reader = reader;
+            _culture = culture;
         }
 
-        /// <summary>
-        /// エンティティの削除
-        /// </summary>
-        public bool RemoveEntity(string entityId)
+        public string[]? GetNextRecord()
         {
-            return _entities.Remove(entityId);
+            var line = _reader.ReadLine();
+            if (line == null) return null;
+
+            return ParseCsvLine(line);
         }
 
-        /// <summary>
-        /// 新しいEntityの作成（memo.txt準拠）
-        /// </summary>
-        public Entity CreateEntity(string id, string name, Dictionary<string, object>? initialProperties = null)
+        private string[] ParseCsvLine(string line)
         {
-            var entity = new Entity(id, name);
-            
-            if (initialProperties != null)
+            var result = new List<string>();
+            var current = new System.Text.StringBuilder();
+            bool inQuotes = false;
+
+            for (int i = 0; i < line.Length; i++)
             {
-                foreach (var prop in initialProperties)
+                char c = line[i];
+
+                if (c == '"')
                 {
-                    entity.SetProperty(prop.Key, prop.Value);
+                    inQuotes = !inQuotes;
+                }
+                else if (c == ',' && !inQuotes)
+                {
+                    result.Add(current.ToString());
+                    current.Clear();
+                }
+                else
+                {
+                    current.Append(c);
                 }
             }
 
-            RegisterEntity(entity);
-            return entity;
+            result.Add(current.ToString());
+            return result.ToArray();
         }
-        #endregion
 
-        #region Utility Methods
-        /// <summary>
-        /// データの統計情報取得
-        /// </summary>
-        public string GetDataStatistics()
+        public void Dispose()
         {
-            return $"Data Statistics:\n" +
-                   $"  Recursive Dictionary: {_recursiveDictionary.Count} entries\n" +
-                   $"  Syntax Commands: {_syntaxCommands.Count} commands\n" +
-                   $"  Variables: {_variables.Count} definitions\n" +
-                   $"  Events: {_events.Count} events\n" +
-                   $"  Properties: {_properties.Count} definitions\n" +
-                   $"  Entities: {_entities.Count} entities";
+            _reader?.Dispose();
         }
-
-        /// <summary>
-        /// データの完全性チェック
-        /// </summary>
-        public List<string> ValidateData()
-        {
-            var issues = new List<string>();
-
-            // 循環参照チェック
-            foreach (var kvp in _recursiveDictionary)
-            {
-                if (kvp.Value.Contains($"[{kvp.Key}]"))
-                {
-                    issues.Add($"Circular reference detected: {kvp.Key} -> {kvp.Value}");
-                }
-            }
-
-            // 必要なファイルの存在チェック
-            var requiredFiles = new[] { "RecursiveDictionary.csv", "Events.csv", "Properties.csv" };
-            foreach (var file in requiredFiles)
-            {
-                var filePath = Path.Combine(_dataPath, file);
-                if (!File.Exists(filePath))
-                {
-                    issues.Add($"Required file missing: {file}");
-                }
-            }
-
-            return issues;
-        }
-        #endregion
     }
 } 
