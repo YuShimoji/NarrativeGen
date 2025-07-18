@@ -3,6 +3,8 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 using NarrativeGen.Core;
+using NarrativeGen.Data;
+using UnityEngine.SceneManagement;
 
 namespace NarrativeGen.UI
 {
@@ -139,11 +141,8 @@ namespace NarrativeGen.UI
         /// </summary>
         public void BackToMainMenu()
         {
-            ResumeGame(); // タイムスケールをリセット
-            if (SceneManager.Instance != null)
-            {
-                SceneManager.Instance.LoadMenuScene();
-            }
+            ResumeGame();
+            SceneManager.LoadScene("MenuScene");
         }
         #endregion
 

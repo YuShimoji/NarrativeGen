@@ -93,7 +93,7 @@ namespace NarrativeGen.UI
         /// <summary>
         /// Displays narrative text to the player.
         /// </summary>
-        public void ShowText(string text)
+        public void ShowText(string speaker, string text)
         {
             if (narrativeText != null)
             {
@@ -112,7 +112,7 @@ namespace NarrativeGen.UI
         /// <summary>
         /// Displays choices to the player.
         /// </summary>
-        public void ShowChoices(string text, List<Choice> choices)
+        public void ShowChoices(string speaker, string text, List<Choice> choices)
         {
             if (narrativeText != null)
             {
@@ -236,10 +236,7 @@ namespace NarrativeGen.UI
 
         private void OnBackToMenuClicked()
         {
-            if (SceneManager.Instance != null)
-            {
-                SceneManager.Instance.LoadMenuScene();
-            }
+            SceneManager.LoadScene("MenuScene");
         }
 
         private void GenerateTextVariants(string originalText)

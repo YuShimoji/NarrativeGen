@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NarrativeGen.Data.Models
 {
@@ -24,6 +25,11 @@ namespace NarrativeGen.Data.Models
         public void SetProperty(string key, object value)
         {
             Properties[key] = value;
+        }
+
+        public Dictionary<string, string> GetAllProperties()
+        {
+            return Properties.ToDictionary(kvp => kvp.Key, kvp => kvp.Value?.ToString() ?? "");
         }
     }
 } 

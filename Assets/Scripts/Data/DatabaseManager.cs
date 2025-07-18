@@ -113,7 +113,7 @@ namespace NarrativeGen.Data
             }
             
             var csvText = File.ReadAllText(filePath);
-            var csvData = CsvParser.Parse(csvText);
+            var csvData = SimpleCsvReader.ReadCsvFile(filePath);
             
             foreach (var row in csvData)
             {
@@ -147,7 +147,7 @@ namespace NarrativeGen.Data
             }
             
             var csvText = File.ReadAllText(filePath);
-            var csvData = CsvParser.Parse(csvText);
+            var csvData = SimpleCsvReader.ReadCsvFile(filePath);
             
             foreach (var row in csvData)
             {
@@ -186,11 +186,11 @@ namespace NarrativeGen.Data
                 return;
             }
 
-            using (var reader = new StreamReader(path))
-            using (var csv = new CsvParser.CsvReader(reader))
-            {
-                ReasoningRules = csv.GetRecords<ReasoningRule>().ToDictionary(r => r.RuleId);
-            }
+            var csvData = SimpleCsvReader.ReadCsvFile(path);
+            ReasoningRules = csvData.ToDictionary(row => row["RuleId"], row => new ReasoningRule {
+                RuleId = row.ContainsKey("RuleId") ? row["RuleId"] : string.Empty,
+                // 必要に応じて他のプロパティもここでセット
+            });
         }
 
         /// <summary>
@@ -208,7 +208,7 @@ namespace NarrativeGen.Data
             }
 
             var csvText = File.ReadAllText(filePath);
-            var csvData = CsvParser.Parse(csvText);
+            var csvData = SimpleCsvReader.ReadCsvFile(filePath);
 
             foreach (var row in csvData)
             {
@@ -238,7 +238,7 @@ namespace NarrativeGen.Data
             }
 
             var csvText = File.ReadAllText(filePath);
-            var csvData = CsvParser.Parse(csvText);
+            var csvData = SimpleCsvReader.ReadCsvFile(filePath);
 
             foreach (var row in csvData)
             {

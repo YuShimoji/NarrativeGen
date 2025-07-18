@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Globalization;
-using CsvHelper;
 using Microsoft.Extensions.Logging;
 using NarrativeGen.Core.Models;
 
@@ -270,7 +269,7 @@ namespace NarrativeGen.Core.Data
             try
             {
                 using var reader = new StringReader(File.ReadAllText(filePath));
-                using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+                using var csv = new SimpleCsvReader(reader, CultureInfo.InvariantCulture);
                 
                 var records = csv.GetRecords<T>().ToList();
                 _logger?.LogDebug("Loaded {Count} records from {FilePath}", records.Count, filePath);

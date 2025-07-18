@@ -35,7 +35,7 @@ namespace NarrativeGen.Core
             }
             else
                 {
-                Debug.LogError("UIManager not found in scene. Player choices will not be handled.");
+                UnityEngine.Debug.LogError("UIManager not found in scene. Player choices will not be handled.");
             }
         }
 
@@ -92,7 +92,7 @@ namespace NarrativeGen.Core
                     _worldState.RegisterEntity(entity);
                 }
             }
-            Debug.Log("WorldState initialized with data from DatabaseManager.");
+            UnityEngine.Debug.Log("WorldState initialized with data from DatabaseManager.");
         }
 
         private void StartNarrative()

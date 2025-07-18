@@ -10,11 +10,13 @@ namespace NarrativeGen.Data.Models
     {
         public string Id { get; set; }
         public string Commands { get; set; }
+        public string Text { get; set; }
         
         public Event()
         {
             Id = string.Empty;
             Commands = string.Empty;
+            Text = string.Empty;
         }
     }
 }
