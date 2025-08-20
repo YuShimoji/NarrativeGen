@@ -35,4 +35,28 @@
 
 1.  **シーン操作問題の回避:** 不安定なシーン検索に依存せず、既存のUIコンポーネントと`GameManager`を直接接続するアプローチを試みます。
 2.  **`IF`コマンドのテスト完了:** 上記の問題を解決し、`player.is_brave`のシナリオを正常に動作させ、`IF`コマンドの機能性を完全に検証します。
-3.  **`CHOICE`コマンドの実装:** 短期計画の最終ステップとして、プレイヤーに選択肢を提示し、その結果によって物語を分岐させる`CHOICE`コマンドの実装に着手します。 
+3.  **`CHOICE`コマンドの実装:** 短期計画の最終ステップとして、プレイヤーに選択肢を提示し、その結果によって物語を分岐させる`CHOICE`コマンドの実装に着手します。
+
+---
+
+## 5. 変更履歴（2025-08-21）
+
+- ドキュメント整備の強化を実施。
+  - `Documentation/01_Current_Status/TASK_LIST.md` を新規作成。
+    - タスクID対応表（TODOリスト連携）、受け入れ基準、担当、見積、期日を各タスクに追加。
+  - `README.md` にタスクリストへのリンクを追記。
+  - `Documentation/01_Current_Status/CURRENT_PROJECT_STATUS.md` に直近更新の追記と「テスト手順サマリ（データロードと開始イベント）」を追加。
+ - 目的: CSVロード安定化と開始イベント実行の検証を確実化し、開発タスクの可視性を向上。
+
+## 6. 変更履歴（2025-08-22）
+
+- 起動時エラーハンドリング/リトライ機構の導入。
+  - `UIManager.ShowError()` とリトライボタン生成 (`SetupRetryButton()`) を実装・整理。
+  - `GameManager.ProcessNarrativeResult()` に `Error` 処理と `OnRetryRequested` 購読・再初期化 (`HandleRetryRequested`) を追加。
+  - `LogicEngine` 側の `NarrativeResult.ResultType.Error` 返却ポリシー強化の受け口を用意。
+- ドキュメント整備。
+  - `CURRENT_PROJECT_STATUS.md` にエラー表示/リトライのテスト手順と既知の注意点を追記。
+  - `TASK_LIST.md` で A-3/C-2 を進行中に、C-0（Unity参照/IDEアナライザ不整合の整理）を追加。
+  - `README.md` に要約テスト手順と IDE 注意を追記。
+- IDE 偽陽性対策。
+  - `.csproj`（Core）で `Assets/**` とバックアップをビルド対象から除外し、Unity 参照の未解決エラーを .NET 側から分離。
