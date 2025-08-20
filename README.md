@@ -5,6 +5,10 @@
 Unityプロジェクトと**並行してCursor webでも開発可能**なナラティブ生成システムです。  
 **memo.txt** と **構文メモ.txt** の設計思想を完全に実装した、Unity非依存の核心ライブラリです。
 
+### ✅ 開発タスクリスト
+詳細な進行中タスクは以下を参照してください。
+- `Documentation/01_Current_Status/TASK_LIST.md`
+
 ## 🎯 設計思想の実装
 
 ### ✅ 完全実装済み機能
@@ -206,3 +210,19 @@ test_event,[今日は]{良い||素晴らしい}[天気]ですね。,GOTO END,
 - **循環参照検出**: 無限ループ防止・グレースフルデグラデーション
 
 **Cursor webでの開発により、Unityエディタなしでもナラティブシステムの核心機能を継続的に改良できます。** 
+
+---
+
+## 🧪 Unity起動時エラーハンドリング/リトライのテスト手順（要約）
+- 詳細は `Documentation/01_Current_Status/CURRENT_PROJECT_STATUS.md` を参照
+- 概要:
+  1. `Assets/Scenes/DemoScene.unity` を開き、`GameManager`/`UIManager` の参照を確認
+  2. 正常系: `Play` 実行 → テキスト/選択肢表示、リトライボタンは非表示
+  3. エラー系: `GameManager.m_StartEventID` を存在しないIDに → エラー表示と「リトライ」出現
+  4. リトライ: 設定/ファイルを正に戻し、リトライ押下 → DB/Logic 再初期化後に開始イベントから再開
+
+## ⚠️ IDE アナライザの注意（Unity 参照差異）
+- 一部 IDE で `System`/`UnityEngine` 未参照エラーが表示される場合あり
+- 本リポジトリでは `.csproj` にて Unity の `Assets/**` を .NET ビルド対象から除外
+- 実ビルドは Unity エディタに依存するため、IDE 側エラーは無視できるものがあります
+- 参考: `Documentation/01_Current_Status/CURRENT_PROJECT_STATUS.md` の「既知の注意点」
