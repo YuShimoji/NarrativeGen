@@ -6,6 +6,50 @@
 
 ---
 
+## 直近の更新（データロード安定化）
+
+- GameManager の既定CSVパスを `StreamingAssets/NarrativeData` 直下のファイル名に統一。
+  - `m_EventsCSVPath: "Events.csv"`
+  - `m_ChoicesCSVPath: "Choices.csv"`
+- DatabaseManager に `Choices.csv` の列名互換を追加。
+  - `id/choice_id`、`nextEventId/next_event_id`、`choiceId/category/choice_group_id` を許容
+- 開始イベントIDは `event_start_game`（アンダースコア）を採用・維持。
+ - ドキュメント整備: `Documentation/01_Current_Status/TASK_LIST.md` を新規作成し、タスクの受け入れ基準/担当/見積/期日/ID対応表を追加。
+ - README 連携: `README.md` からタスクリストへのリンクを追記。
+
+### 追加: 起動時エラーハンドリング/リトライ機構（UI/Logic/GameManager連携）
+- UI `UIManager.cs`
+  - `ShowError(string message, string hint = null)` を追加し、エラー文言表示とリトライボタン表示を実装。
+  - `SetupRetryButton()` を `UIManager` クラス内に実装し直し（partial の不一致によるビルドエラーを解消）。
+  - 通常の `ShowText`/`ShowChoices` 表示ではリトライボタンを自動的に非表示化。
+  - `Start()` で `SetupRetryButton()` を呼び出し、初期状態では非表示。
+- ロジック `LogicEngine.cs`
+  - 開始イベント未定義、DB未初期化、選択肢グループ欠落などのケースで `NarrativeResult.ResultType.Error` を返すよう強化。
+- 管理 `GameManager.cs`
+  - `ProcessNarrativeResult()` に `Error` ケースを追加し、`UIManager.ShowError()` を呼び出す。
+  - `UIManager.OnRetryRequested` を購読し、`HandleRetryRequested()` にて DB/Logic 再初期化と物語再開を実装。
+
+#### テスト手順（エラー表示とリカバリ）
+1. Unity でプロジェクトを開く。
+2. `Assets/Scenes/DemoScene.unity`（または実行シーン）で `GameManager` と `UIManager` がシーン上に存在し、相互参照されていることを確認。
+3. 正常系: `Play` 実行し、開始イベントが存在する状態でテキスト/選択肢が表示され、リトライボタンが非表示であることを確認。
+4. エラー系（例1）: `GameManager.m_StartEventID` を存在しない ID に変更して `Play`。エラーメッセージとリトライボタンが表示されることを確認。
+5. エラー系（例2）: `StreamingAssets/NarrativeData/Events.csv` を一時的にリネームし、読み込みエラーが発生する状態で `Play`。エラーメッセージとリトライボタン表示を確認。
+6. リカバリ: リトライボタン押下後、DB/Logic が再初期化され、再度開始イベントから再開されることを確認（手順4/5ではファイルやIDを元に戻してから押下）。
+
+#### 既知の注意点（IDE アナライザと Unity ビルド差）
+- 一部 IDE/拡張の C# アナライザで `System` や `UnityEngine` 未参照エラーが表示される場合がありますが、Unity エディタ上のビルドでは解消されます。Unity のコンパイラ対象/参照設定に依存するため、コンソールの実ビルド結果を信頼してください。
+- シーン上の参照未設定（`UIManager` フィールド未割当など）は実行時エラーや UI 未更新の原因となるため、必ずインスペクタで設定してください。
+
+### テスト手順サマリ（データロードと開始イベント）
+1. Unityで本プロジェクトを開く。
+2. `GameManager` のインスペクター既定値を確認。
+   - `m_EventsCSVPath = Events.csv`
+   - `m_ChoicesCSVPath = Choices.csv`
+3. 再生（Play）実行し、コンソールに以下を確認。
+   - `Events`/`Choices` の読込件数が0でない。
+   - `event_start_game` の実行ログがエラーなく出力され、UIにテキスト/選択肢が表示される。
+
 ## 0. 重要な方針転換
 
 ### 0.1 memo.txtによる設計思想の刷新
