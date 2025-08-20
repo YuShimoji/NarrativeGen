@@ -1,20 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <RootNamespace>NarrativeGen.Core</RootNamespace>
-    <AssemblyName>NarrativeGen.Core</AssemblyName>
-    <LangVersion>latest</LangVersion>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-  </PropertyGroup>
-
+  <!-- Exclude Unity/backup/other non-core sources from this library project -->
   <ItemGroup>
-    <PackageReference Include="CsvHelper" Version="30.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
+    <Compile Remove="Assets\**\*.cs" />
+    <Compile Remove="Core_Backup\**\*.cs" />
+    <Compile Remove="Program.cs" />
   </ItemGroup>
-
-</Project> 
+</Project>
