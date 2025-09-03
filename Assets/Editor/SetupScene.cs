@@ -57,10 +57,8 @@ public class SetupScene
         var gameManager = systemGo.AddComponent<GameManager>();
         var uiManager = systemGo.AddComponent<UIManager>();
         
-        // CRITICAL: Immediately set the reference while both components are being created
-        UnityEngine.Debug.Log("Setting GameManager.uiManager reference immediately...");
-        gameManager.uiManager = uiManager;
-        UnityEngine.Debug.Log($"Immediate assignment result: {(gameManager.uiManager != null ? "SUCCESS" : "FAILED")}");
+        // GameManager will automatically find UIManager in Awake()
+        UnityEngine.Debug.Log("GameManager will auto-detect UIManager on scene start...");
 
         // --- Main Camera ---
         GameObject cameraGo = new GameObject("Main Camera", typeof(Camera));
@@ -152,19 +150,10 @@ public class SetupScene
         // This is now the single source of truth for wiring dependencies.
         
         // Wire up the UIManager reference to the GameManager using direct assignment
-        UnityEngine.Debug.Log("Directly assigning UIManager to GameManager...");
-        try 
-        {
-            gameManager.uiManager = uiManager;
-            UnityEngine.Debug.Log($"Direct assignment successful. GameManager.uiManager: {(gameManager.uiManager != null ? "ASSIGNED" : "NULL")}");
-            UnityEngine.Debug.Log($"GameManager.uiManager is same UIManager: {gameManager.uiManager == uiManager}");
-        }
-        catch (System.Exception ex)
-        {
-            UnityEngine.Debug.LogError($"Direct assignment failed: {ex.Message}");
-            // Fallback to reflection
-            SetPublicField(gameManager, "uiManager", uiManager);
-        }
+                UnityEngine.Debug.Log("GameManager will auto-detect UIManager during Awake()...");
+        // No manual assignment needed - GameManager finds UIManager automatically
+        
+        // Setup UIManager UI references using reflection
 
         // Wire up UI references to the UIManager
         SetPublicField(uiManager, "narrativeText", narrativeText);

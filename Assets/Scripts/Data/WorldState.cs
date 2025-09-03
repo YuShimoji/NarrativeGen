@@ -146,7 +146,7 @@ namespace NarrativeGen.Data
             {
                 var parts = key.Split('.', 2);
                 var entity = GetEntity(parts[0]);
-                return entity?.GetProperty(parts[1]);
+                return entity?.GetProperty<object>(parts[1]);
             }
             return GetProperty(key);
         }

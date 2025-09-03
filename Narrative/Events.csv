@@ -1,0 +1,4 @@
+id,command,text,speaker
+event_start_game,SAY,"これはテストです。",主人公
+,CHOICE(choice_1),"選択肢があります。",
+,SAY,"次のイベントに進みます。",

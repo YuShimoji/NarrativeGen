@@ -1,0 +1,10 @@
+pattern_id,category,template,required_properties,conditions,priority,description
+food_desc_basic,food_description,"{name}は{taste}い{food_type}です。",name;taste;food_type,,1,基本的な食べ物の説明
+food_desc_detailed,food_description,"{name}は{taste}くて{texture}な{food_type}で、{price}円です。",name;taste;texture;food_type;price,,2,詳細な食べ物の説明
+location_desc_basic,location_description,"{name}は{atmosphere}な{location_type}です。",name;atmosphere;location_type,,1,基本的な場所の説明
+location_desc_detailed,location_description,"{name}は{atmosphere}な{location_type}で、{description}。",name;atmosphere;location_type;description,,2,詳細な場所の説明
+choice_examine,choice,"{name}を詳しく調べる",name,,1,調査選択肢
+choice_interact,choice,"{name}と関わる",name,,1,相互作用選択肢
+choice_move,choice,"{name}に移動する",name,location_type=location,,2,移動選択肢
+narrative_intro,narrative,"あなたは{location}にいます。{description}",location;description,,1,ナラティブ導入
+narrative_discovery,narrative,"{name}を発見しました。{description}",name;description,,1,発見イベント

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using NarrativeGen.Data;
 using NarrativeGen.Data.Models;
+using NarrativeResult = NarrativeGen.Data.Models.NarrativeResult;
 
 namespace NarrativeGen.Logic
 {
@@ -117,7 +118,7 @@ namespace NarrativeGen.Logic
 
             if (m_EnableDebugLog)
             {
-                Debug.Log("SyntaxEngine initialized");
+                UnityEngine.Debug.Log("SyntaxEngine initialized");
             }
         }
 
@@ -221,10 +222,10 @@ namespace NarrativeGen.Logic
         {
             if (m_EnableDebugLog)
             {
-                Debug.LogWarning($"SyntaxEngine: Fallback processing for: {input}");
+                UnityEngine.Debug.LogWarning($"SyntaxEngine: Fallback processing for: {input}");
             }
             return input.Replace("[", "").Replace("]", "");
         }
         #endregion
     }
-} 
+}

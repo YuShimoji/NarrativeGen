@@ -1,0 +1,11 @@
+paraphrase_id,original_text,variations,context,frequency
+taste_delicious,美味しい,おいしい;うまい;絶品の;美味な,food_description,0.8
+taste_bad,まずい,不味い;美味しくない;ひどい味の,food_description,0.7
+atmosphere_quiet,静かな,落ち着いた;穏やかな;平和な;静寂な,location_description,0.6
+atmosphere_busy,賑やかな,活気のある;騒がしい;混雑した;活発な,location_description,0.6
+texture_soft,柔らかい,やわらかな;ふんわりした;もちもちした,food_description,0.7
+texture_crispy,サクサクした,カリカリの;パリパリの;クリスピーな,food_description,0.7
+location_type_restaurant,レストラン,飲食店;食堂;ダイニング,location_description,0.5
+location_type_library,図書館,ライブラリー;書庫;読書室,location_description,0.5
+action_examine,調べる,確認する;観察する;検査する;見る,choice,0.6
+action_interact,関わる,接触する;触れる;やり取りする,choice,0.6

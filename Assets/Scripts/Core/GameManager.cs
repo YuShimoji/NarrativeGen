@@ -1,203 +1,148 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
-using NarrativeGen.Data;
-using NarrativeGen.Data.Models;
-using NarrativeGen.Logic;
-using NarrativeGen.UI;
-using UnityEngine;
+using NarrativeGen.Core.Entities;
+using NarrativeGen.Core.Syntax;
 
 namespace NarrativeGen.Core
 {
     /// <summary>
-    /// The main game manager that coordinates between the UI and logic systems.
+    /// 純粋なC#ロジック - Entity-PropertyシステムとSyntaxエンジンの統合管理
+    /// Unity依存を除去し、テスト可能な設計
     /// </summary>
-    public class GameManager : MonoBehaviour
+    public class GameManager
     {
-        [Header("Settings")]
-        [SerializeField] private string m_StartEventID = "START";
-
-        // Events for UI to subscribe to
-        public event Action<string, string, List<Choice>> OnShowChoices;
-        public event Action<string, string> OnShowText;
+        // Core Systems
+        private readonly EntityManager _entityManager;
+        private readonly SyntaxManager _syntaxManager;
+        private TextGenerator _textGenerator;
         
-        private DatabaseManager _databaseManager;
-        private SyntaxEngine _syntaxEngine;
-        private Data.WorldState _worldState;
-        private UIManager _uiManager;
-
-        private void Awake()
-        {
-            // Find the UIManager and subscribe to its events
-            _uiManager = FindObjectOfType<UIManager>();
-            if (_uiManager != null)
-            {
-                _uiManager.OnChoiceSelected += HandleChoiceSelection;
-            }
-            else
-                {
-                UnityEngine.Debug.LogError("UIManager not found in scene. Player choices will not be handled.");
-            }
-        }
-
-        private void Start()
-        {
-            InitializeSystem();
-            StartNarrative();
-        }
-
-        private void OnDestroy()
-        {
-            // Unsubscribe to prevent memory leaks
-            if (_uiManager != null)
-            {
-                _uiManager.OnChoiceSelected -= HandleChoiceSelection;
-            }
-        }
-
-        private void InitializeSystem()
-        {
-            _databaseManager = new DatabaseManager();
-            _databaseManager.LoadAllData();
-
-            _worldState = new Data.WorldState();
-            InitializeWorldState();
-
-            _syntaxEngine = FindObjectOfType<SyntaxEngine>();
-            if (_syntaxEngine == null)
-            {
-                GameObject syntaxEngineObj = new GameObject("SyntaxEngine");
-                _syntaxEngine = syntaxEngineObj.AddComponent<SyntaxEngine>();
-            }
-            _syntaxEngine.Initialize(_databaseManager, _worldState);
-        }
+        // Events for external integration
+        public event Action<List<string>>? OnShowChoices;
+        public event Action<string>? OnShowText;
         
-        private void InitializeWorldState()
-        {
-            if (_databaseManager.Properties != null)
-            {
-                foreach (var property in _databaseManager.Properties.Values)
-                {
-                    _worldState.SetProperty(property.Name, property.DefaultValue);
-                }
-            }
-            if (_databaseManager.EntityStates != null)
-            {
-                foreach (var entityState in _databaseManager.EntityStates.Values)
-                {
-                    var entity = new Entity(entityState.Id);
-                    foreach (var kvp in entityState.Properties)
-                    {
-                        entity.SetProperty(kvp.Key, kvp.Value);
-                    }
-                    _worldState.RegisterEntity(entity);
-                }
-            }
-            UnityEngine.Debug.Log("WorldState initialized with data from DatabaseManager.");
-        }
-
-        private void StartNarrative()
-        {
-            var initialResult = _syntaxEngine.StartNarrative(m_StartEventID);
-            ProcessNarrativeResult(initialResult);
-        }
-
-        private void HandleChoiceSelection(string nextEventId)
-        {
-            var nextResult = _syntaxEngine.ExecuteEvent(nextEventId);
-            ProcessNarrativeResult(nextResult);
-        }
-
-        private void ProcessNarrativeResult(NarrativeResult result)
-        {
-            var currentResult = result;
-            while (currentResult != null)
-            {
-                // --- Flow Control ---
-                // 1. Handle chained commands first. They produce a new result to be processed.
-                if (currentResult.HasChainedCommands)
-                {
-                    // TODO: SyntaxEngineにExecuteCommandsメソッドを実装する
-                    // currentResult = _syntaxEngine.ExecuteCommands(currentResult.ChainedCommands);
-                    currentResult = null; // 一時的に無効化
-                    continue; // Continue the loop with the new result.
-                }
-
-                // 2. Handle GOTO event transitions. They also produce a new result.
-                if (currentResult.HasNextEvent)
-                {
-                    currentResult = _syntaxEngine.ExecuteEvent(currentResult.NextEventId);
-                    continue; // Continue the loop with the new result.
-            }
-
-                // --- UI Display (breaks the loop) ---
-                // 3. If there are choices, display them and stop processing.
-                if (currentResult.HasChoices)
-            {
-                    OnShowChoices?.Invoke(currentResult.Speaker, currentResult.Text, currentResult.Choices);
-                    break; // Exit the loop, waiting for player input.
-                }
-                
-                // 4. If there is only text, display it and stop processing.
-                if (currentResult.HasText)
-                {
-                    OnShowText?.Invoke(currentResult.Speaker, currentResult.Text);
-                    break; // Exit the loop, waiting for player input (or auto-advance).
-                }
-
-                // 5. If there's nothing to do, exit the loop.
-                break;
-            }
-        }
+        // State
+        private string? _lastNarrativeResult;
         
-        void UpdateDebugInfo(string currentEvent, string command, string reason)
-        {
-            if (_uiManager == null || _syntaxEngine == null) return;
-            
-            // Get current entity states
-            var entityStates = new Dictionary<string, string>();
-            var worldState = _syntaxEngine.GetWorldState();
-            if (worldState != null)
-            {
-                var allProperties = worldState.GetAllProperties();
-                foreach (var prop in allProperties)
-        {
-                    entityStates[prop.Key] = prop.Value;
-                }
-            }
-            
-            // Add syntax engine status
-            entityStates["[システム] 構文エンジン"] = "有効";
-            entityStates["[システム] エンジンタイプ"] = "遡行検索ベース";
-            
-            _uiManager.UpdateDebugInfo(currentEvent, command, reason, entityStates);
-        }
-
         /// <summary>
-        /// 構文エンジンモードの切り替え（テスト用）
+        /// コンストラクタ
         /// </summary>
-        public void ToggleSyntaxMode()
+        public GameManager()
         {
-            if (_syntaxEngine != null)
+            _entityManager = new EntityManager();
+            _syntaxManager = new SyntaxManager();
+            _textGenerator = new TextGenerator();
+        }
+        
+        /// <summary>
+        /// システムの初期化
+        /// </summary>
+        public void Initialize(string csvDataPath)
+        {
+            try
             {
-                // TODO: SyntaxEngineにモード切り替え機能を実装する
-                UnityEngine.Debug.Log($"Syntax engine mode toggle requested");
+                // Entity-Property システムの読み込み
+                _entityManager.LoadFromCsv(csvDataPath);
+                
+                // Syntax システムの読み込み
+                _syntaxManager.LoadFromCsv(csvDataPath);
+                _textGenerator = _syntaxManager.GetTextGenerator();
+                
+                // 検証実行
+                var entityErrors = _entityManager.ValidateAllData();
+                var syntaxErrors = _syntaxManager.ValidateAllData();
+                
+                var allErrors = new List<string>();
+                allErrors.AddRange(entityErrors);
+                allErrors.AddRange(syntaxErrors);
+                
+                if (allErrors.Count > 0)
+                {
+                    throw new InvalidOperationException($"Data validation failed with {allErrors.Count} errors: {string.Join(", ", allErrors)}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to initialize GameManager: {ex.Message}", ex);
             }
         }
-
-        void OnTextAdvance()
+        
+        /// <summary>
+        /// エンティティの取得
+        /// </summary>
+        public Entity? GetEntity(string entityId)
         {
-            // This method is now only for advancing text when there's no automatic next event.
-            // The logic for pendingNextEventId is removed as GOTO is handled instantly.
-            if (_uiManager != null)
-            {
-                // Potentially hide the "click to continue" prompt if needed
-                // _uiManager.enableTextAdvance = false;
-            }
+            return _entityManager.GetEntity(entityId);
         }
-
-        private void Update()
+        
+        /// <summary>
+        /// エンティティの検索
+        /// </summary>
+        public List<Entity> SearchEntities(string query)
         {
-            // For features like reasoning mode toggle or other debug inputs
+            return _entityManager.SearchEntities(query);
+        }
+        
+        /// <summary>
+        /// プロパティ値の取得
+        /// </summary>
+        public T? GetPropertyValue<T>(string entityId, string propertyName)
+        {
+            var entity = _entityManager.GetEntity(entityId);
+            if (entity != null && entity.HasProperty(propertyName))
+            {
+                var propertyValue = entity.GetProperty(propertyName);
+                if (propertyValue.Value is T value)
+                {
+                    return value;
+                }
+            }
+            return default(T);
+        }
+        
+        /// <summary>
+        /// テキスト表示の実行
+        /// </summary>
+        public void ShowText(string text)
+        {
+            _lastNarrativeResult = text;
+            OnShowText?.Invoke(text);
+        }
+        
+        /// <summary>
+        /// 選択肢表示の実行
+        /// </summary>
+        public void ShowChoices(List<string> choices)
+        {
+            OnShowChoices?.Invoke(choices);
+        }
+        
+        /// <summary>
+        /// システム状態の取得
+        /// </summary>
+        public (int entityCount, int typeCount) GetSystemStatus()
+        {
+            var entityCount = _entityManager.GetAllEntities().Count;
+            var typeCount = _entityManager.GetAllEntityTypes().Count;
+            return (entityCount, typeCount);
+        }
+        
+        /// <summary>
+        /// 全データの検証
+        /// </summary>
+        public List<string> ValidateSystem()
+        {
+            return _entityManager.ValidateAllData();
+        }
+        
+        /// <summary>
+        /// リソースのクリーンアップ
+        /// </summary>
+        public void Dispose()
+        {
+            OnShowChoices = null;
+            OnShowText = null;
+            _lastNarrativeResult = null;
         }
     }
-} 
+}

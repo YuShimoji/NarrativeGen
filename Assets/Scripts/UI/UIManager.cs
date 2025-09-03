@@ -31,8 +31,13 @@ namespace NarrativeGen.UI
         // Event sent to GameManager
         public event Action<string> OnChoiceSelected;
 
-        // Event for text advance (can be internal)
-        private event Action OnTextAdvance;
+        // Event for text advance
+        public event Action OnTextAdvance;
+        // Event for retry (e.g., when start event is missing or data load failed)
+        public event Action OnRetryRequested;
+
+        private Button _textAdvanceButton;
+        private Button _retryButton;
         
         void Start()
         {
@@ -45,7 +50,7 @@ namespace NarrativeGen.UI
             }
             else
             {
-                Debug.LogError("GameManager not found in scene. UI will not receive narrative events.");
+                UnityEngine.Debug.LogError("GameManager not found in scene. UI will not receive narrative events.");
             }
 
             // TextClickHandler setup
@@ -69,6 +74,11 @@ namespace NarrativeGen.UI
             {
                 narrativeText.text = "Entity推論ベースナラティブシステム\n初期化中...";
             }
+
+            // Setup a full-screen button for advancing text
+            SetupTextAdvanceButton();
+            // Prepare retry button (hidden by default)
+            SetupRetryButton();
             
             if (debugText != null)
             {
@@ -81,15 +91,6 @@ namespace NarrativeGen.UI
             }
         }
         
-        void Update()
-        {
-            if (enableTextAdvance && Input.GetMouseButtonDown(0))
-            {
-                OnTextAdvance?.Invoke();
-                enableTextAdvance = false;
-            }
-        }
-        
         /// <summary>
         /// Displays narrative text to the player.
         /// </summary>
@@ -97,9 +98,10 @@ namespace NarrativeGen.UI
         {
             if (narrativeText != null)
             {
-                narrativeText.text = text;
-                enableTextAdvance = true;
+                narrativeText.text = $"{speaker}: {text}";
+                SetTextAdvanceActive(true);
                 HideChoices();
+                SetRetryActive(false);
                 
                 // Add text variants for demonstration
                 if (_textClickHandler != null)
@@ -116,11 +118,12 @@ namespace NarrativeGen.UI
         {
             if (narrativeText != null)
             {
-                narrativeText.text = text;
+                narrativeText.text = $"{speaker}: {text}";
             }
             
-            enableTextAdvance = false;
+            SetTextAdvanceActive(false);
             HideChoices();
+            SetRetryActive(false);
 
             if (choices == null || choices.Count == 0)
             {
@@ -187,6 +190,7 @@ namespace NarrativeGen.UI
                 OnChoiceSelected?.Invoke(choice.NextEventId);
             }
             
+            SetTextAdvanceActive(false);
             HideChoices();
         }
         
@@ -239,6 +243,116 @@ namespace NarrativeGen.UI
             SceneManager.LoadScene("MenuScene");
         }
 
+        private void SetupTextAdvanceButton()
+        {
+            // Find or create the button
+            var existingButton = transform.Find("TextAdvanceButton");
+            if (existingButton != null)
+            {
+                _textAdvanceButton = existingButton.GetComponent<Button>();
+                if (_textAdvanceButton != null)
+                {
+                    UnityEngine.Debug.Log("Found existing TextAdvanceButton");
+                    return;
+                }
+            }
+
+            UnityEngine.Debug.Log("Creating new TextAdvanceButton");
+            
+            // Create the button as a child of this UIManager (which should be on the Canvas)
+            GameObject buttonObj = new GameObject("TextAdvanceButton");
+            buttonObj.transform.SetParent(transform, false);
+            
+            // Set up the RectTransform to cover the entire screen
+            RectTransform rectTransform = buttonObj.AddComponent<RectTransform>();
+            rectTransform.anchorMin = Vector2.zero;
+            rectTransform.anchorMax = Vector2.one;
+            rectTransform.sizeDelta = Vector2.zero;
+            rectTransform.anchoredPosition = Vector2.zero;
+            
+            // Add required components
+            Image image = buttonObj.AddComponent<Image>();
+            image.color = new Color(0, 0, 0, 0.01f); // Very slight visibility for debugging
+            
+            _textAdvanceButton = buttonObj.AddComponent<Button>();
+            _textAdvanceButton.onClick.AddListener(() => {
+                UnityEngine.Debug.Log("TextAdvanceButton clicked");
+                OnTextAdvance?.Invoke();
+            });
+            
+            UnityEngine.Debug.Log($"TextAdvanceButton created and positioned at {rectTransform.anchoredPosition}");
+        }
+
+        private void SetTextAdvanceActive(bool isActive)
+        {
+            if (_textAdvanceButton != null)
+            {
+                _textAdvanceButton.gameObject.SetActive(isActive);
+                UnityEngine.Debug.Log($"TextAdvanceButton active state set to: {isActive}");
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning("TextAdvanceButton is null when trying to set active state");
+            }
+        }
+
+        private void SetRetryActive(bool isActive)
+        {
+            if (_retryButton != null)
+            {
+                _retryButton.gameObject.SetActive(isActive);
+                UnityEngine.Debug.Log($"RetryButton active state set to: {isActive}");
+            }
+        }
+
+        private void SetupRetryButton()
+        {
+            var existing = transform.Find("RetryButton");
+            if (existing != null)
+            {
+                _retryButton = existing.GetComponent<UnityEngine.UI.Button>();
+                if (_retryButton != null)
+                {
+                    _retryButton.gameObject.SetActive(false);
+                    return;
+                }
+            }
+
+            var buttonObj = new GameObject("RetryButton");
+            buttonObj.transform.SetParent(transform, false);
+
+            var rectTransform = buttonObj.AddComponent<RectTransform>();
+            rectTransform.anchorMin = new Vector2(0.5f, 0.1f);
+            rectTransform.anchorMax = new Vector2(0.5f, 0.1f);
+            rectTransform.sizeDelta = new Vector2(240, 60);
+            rectTransform.anchoredPosition = Vector2.zero;
+
+            var image = buttonObj.AddComponent<UnityEngine.UI.Image>();
+            image.color = new Color(0.2f, 0.2f, 0.2f, 0.6f);
+
+            _retryButton = buttonObj.AddComponent<UnityEngine.UI.Button>();
+            _retryButton.onClick.AddListener(() =>
+            {
+                UnityEngine.Debug.Log("RetryButton clicked");
+                OnRetryRequested?.Invoke();
+            });
+
+            var labelObj = new GameObject("RetryLabel");
+            labelObj.transform.SetParent(buttonObj.transform, false);
+            var label = labelObj.AddComponent<TMPro.TextMeshProUGUI>();
+            label.alignment = TMPro.TextAlignmentOptions.Center;
+            label.fontSize = 24;
+            label.text = "リトライ";
+
+            var labelRect = label.GetComponent<RectTransform>();
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.sizeDelta = Vector2.zero;
+            labelRect.anchoredPosition = Vector2.zero;
+
+            _retryButton.gameObject.SetActive(false);
+        }
+
         private void GenerateTextVariants(string originalText)
         {
             if (_textClickHandler == null) return;
@@ -289,6 +403,22 @@ namespace NarrativeGen.UI
             }
             
             debugText.text = debugInfo;
+        }
+
+        /// <summary>
+        /// Show error message to the player and present a retry action.
+        /// </summary>
+        public void ShowError(string message, string hint = null)
+        {
+            HideChoices();
+            SetTextAdvanceActive(false);
+            SetRetryActive(true);
+
+            if (narrativeText != null)
+            {
+                var display = string.IsNullOrEmpty(hint) ? message : $"{message}\n\nヒント: {hint}";
+                narrativeText.text = display;
+            }
         }
         
         /// <summary>

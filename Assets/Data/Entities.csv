@@ -1,0 +1,6 @@
+entity_id,entity_type_id,parent_entity_id,name,description,created_at,is_active
+food_portable,food_base,,携帯食料,持ち運び可能な食料の基本型,2024-01-15T10:00:00,true
+mac_burger,food_portable,,マックのチーズバーガー,マクドナルドのチーズバーガー,2024-01-15T10:15:00,true
+mac_burger_001,mac_burger,,誰々が食べていたマックのチーズバーガー,半分ほど食べられた状態,2024-01-15T10:30:00,true
+library_old,library,,古い図書館,埃をかぶった本が並ぶ古い図書館,2024-01-15T09:00:00,true
+book_dusty,food_base,,埃をかぶった本,長い間読まれていない古い本,2024-01-15T09:30:00,true

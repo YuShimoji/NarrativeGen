@@ -1,0 +1,11 @@
+entity_id,property_name,property_value,property_type,source,confidence,last_modified,notes
+mac_burger_001,weight,0.12,Float,override,0.95,2024-01-15T10:30:00,食べかけのため軽量化
+mac_burger_001,size,0.3,Float,inherited,1.0,2024-01-15T10:15:00,親型から継承
+mac_burger_001,brand,McDonald's,String,inherited,1.0,2024-01-15T10:15:00,親型から継承
+mac_burger_001,owner,誰々,String,override,0.9,2024-01-15T10:30:00,所有者情報
+mac_burger_001,condition,食べかけ,String,override,1.0,2024-01-15T10:30:00,現在の状態
+library_old,name,古い図書館,String,override,1.0,2024-01-15T09:00:00,場所名
+library_old,atmosphere,静寂,String,override,0.8,2024-01-15T09:00:00,雰囲気
+book_dusty,condition,埃をかぶった,String,override,1.0,2024-01-15T09:30:00,本の状態
+book_dusty,location,図書館の棚,String,override,0.9,2024-01-15T09:30:00,本の位置
+book_dusty,visible,true,Bool,default,1.0,2024-01-15T09:30:00,視認可能

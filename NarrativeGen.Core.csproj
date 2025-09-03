@@ -5,10 +5,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <!-- Exclude Unity/backup/other non-core sources from this library project -->
+  <!-- Include Entity-Property system and Syntax engine -->
   <ItemGroup>
-    <Compile Remove="Assets\**\*.cs" />
-    <Compile Remove="Core_Backup\**\*.cs" />
-    <Compile Remove="Program.cs" />
+    <Compile Include="Assets\Scripts\Core\Entities\**\*.cs" />
+    <Compile Include="Assets\Scripts\Core\Syntax\**\*.cs" />
+    <Compile Include="Assets\Scripts\Core\GameManager.cs" />
   </ItemGroup>
 </Project>

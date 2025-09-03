@@ -212,7 +212,7 @@ namespace NarrativeGen.Data
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Failed to export log to JSON: {ex.Message}");
+                UnityEngine.Debug.LogError($"Failed to export log to JSON: {ex.Message}");
                 return "{}";
             }
         }

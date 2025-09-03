@@ -1,0 +1,5 @@
+id,text,nextEventId,choiceId
+choice_1,選択肢A,event_A,ch_001
+choice_2,選択肢B,event_B,ch_001
+choice_3,選択肢C,event_C,ch_001
+choice_4,別の選択肢,event_D,ch_002

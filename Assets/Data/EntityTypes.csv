@@ -1,0 +1,6 @@
+type_id,parent_type_id,type_name,description,default_properties,validation_rules,description_patterns
+food_base,,食料基本型,すべての食料の基本型,"{""edible"": true, ""nutritional_value"": ""medium""}","{""weight"": {""min"": 0.01}}","[""食べ物"", ""[TYPE]""]"
+food_portable,food_base,携帯食料,持ち運び可能な食料,"{""weight"": 0.1, ""portable"": true}","{""weight"": {""max"": 1.0}}","[""携帯できる[TYPE]"", ""[WEIGHT]kgの[TYPE]""]"
+mac_burger,food_portable,マックのチーズバーガー,マクドナルドのチーズバーガー,"{""size"": 0.3, ""brand"": ""McDonald's"", ""type"": ""burger""}","{""size"": {""min"": 0.2, ""max"": 0.4}}","[""[BRAND]の[TYPE]"", ""[SIZE]サイズのハンバーガー""]"
+location_base,,場所基本型,すべての場所の基本型,"{""accessible"": true, ""visible"": true}","{""name"": {""required"": true}}","[""[NAME]"", ""[TYPE]の[NAME]""]"
+library,location_base,図書館,本や資料がある場所,"{""type"": ""library"", ""has_books"": true, ""quiet"": true}","{""capacity"": {""min"": 1}}","[""[NAME]図書館"", ""古い[NAME]"", ""静かな[NAME]""]"

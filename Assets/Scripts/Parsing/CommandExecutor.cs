@@ -5,6 +5,7 @@ using NarrativeGen.Data.Models;
 using NarrativeGen.Logic;
 using UnityEngine;
 using System.Collections.Generic;
+using NarrativeResult = NarrativeGen.Data.Models.NarrativeResult;
 
 namespace NarrativeGen.Parsing
 {
@@ -92,7 +93,7 @@ namespace NarrativeGen.Parsing
                 // 他のコマンド(SHOW_CHOICES, INCREMENTなど)はLogicEngineからここに移動する必要がある
                 
                 default:
-                    Debug.LogWarning($"CommandExecutor: Unknown command '{commandName}'");
+                    UnityEngine.Debug.LogWarning($"CommandExecutor: Unknown command '{commandName}'");
                     break;
             }
 
@@ -102,9 +103,9 @@ namespace NarrativeGen.Parsing
         private List<ChoiceData> GetAvailableChoices(string category)
         {
             var availableChoices = new List<ChoiceData>();
-            if (_databaseManager.Choices == null) return availableChoices;
+            if (_databaseManager.ChoiceGroups == null || !_databaseManager.ChoiceGroups.ContainsKey(category)) return availableChoices;
 
-            var choicesInCategory = _databaseManager.Choices.Values.Where(c => c.Category == category);
+            var choicesInCategory = _databaseManager.ChoiceGroups[category];
             foreach (var choiceData in choicesInCategory)
             {
                 if (_worldState.EvaluateCondition(choiceData.Conditions))
@@ -134,4 +135,4 @@ namespace NarrativeGen.Parsing
             return finalResult;
         }
     }
-} 
+}

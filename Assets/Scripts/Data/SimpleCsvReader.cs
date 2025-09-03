@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using UnityEngine;
 
 namespace NarrativeGen.Data
 {
@@ -22,7 +21,7 @@ namespace NarrativeGen.Data
             {
                 if (!File.Exists(filePath))
                 {
-                    Debug.LogWarning($"CSV file not found: {filePath}");
+                    // CSV file not found
                     return result;
                 }
 
@@ -52,7 +51,7 @@ namespace NarrativeGen.Data
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Error reading CSV file {filePath}: {ex.Message}");
+                throw new InvalidOperationException($"Error reading CSV file {filePath}: {ex.Message}", ex);
             }
 
             return result;
@@ -63,7 +62,7 @@ namespace NarrativeGen.Data
         /// </summary>
         public static List<Dictionary<string, string>> ReadCsvFromStreamingAssets(string fileName)
         {
-            string filePath = Path.Combine(Application.streamingAssetsPath, "NarrativeData", fileName);
+            string filePath = Path.Combine("StreamingAssets", "NarrativeData", fileName);
             return ReadCsvFile(filePath);
         }
 
@@ -150,7 +149,7 @@ namespace NarrativeGen.Data
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"Failed to convert value '{row[columnName]}' to type {typeof(T)}: {ex.Message}");
+                // Failed to convert value - returning default
                 return defaultValue;
             }
         }
