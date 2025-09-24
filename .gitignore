@@ -3,3 +3,31 @@ dist/
 .DS_Store
 *.log
 coverage/
+
+# C# / .NET
+bin/
+obj/
+*.user
+*.suo
+*.userprefs
+
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+MemoryCaptures/
+
+# Unity cache
+Assets/AssetStoreTools*
+
+# OS
+Thumbs.db
+ehthumbs.db
+.Spotlight-V100
+.Trashes
+*.swp
+*.tmp

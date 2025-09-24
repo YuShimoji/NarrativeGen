@@ -1,0 +1,14 @@
+{
+  "name": "VastCore.NarrativeGen",
+  "rootNamespace": "VastCore.NarrativeGen",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

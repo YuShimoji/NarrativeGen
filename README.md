@@ -1,33 +1,79 @@
 # NarrativeGen
 
-Core narrative playthrough engine and models.
+Rebuild from scratch: A narrative playthrough engine and Unity SDK.
 
-- packages/engine-ts: TypeScript engine (Node/Browser)
-- packages/sdk-unity: C# SDK stub for Unity
-- models/: Canonical JSON Schema and example models
+- `models/` — JSON schema and sample models
+- `packages/sdk-unity/` — Unity-ready SDK package (C# runtime)
+- `packages/samples/PlaythroughCli/` — CLI sample project for verification
 
-## Quick Start (engine-ts)
+## Purpose (Rebuild from scratch)
 
-- Install: `npm install` (in `packages/engine-ts`)
-- Build: `npm run build`
-- Test: `npm test`
+- Break away from the existing project's technical debt and design flaws
+- Build a minimal, correct, and maintainable core
+- Follow SoC/SOLID principles (Model / Session / Engine)
+- Integrate with Unity using a UPM package (`com.vastcore.narrativegen`)
 
-Minimal usage:
-```ts
-import { loadModel, startSession, getAvailableChoices, applyChoice } from './dist/index.js'
-import model from '../models/examples/linear.json' assert { type: 'json' }
+## Setup
 
-const validated = loadModel(model)
-let session = startSession(validated)
-console.log(getAvailableChoices(session))
-session = applyChoice(session, validated, 'c1')
+### Requirements
+
+- .NET SDK 6 or later
+- Unity 2021.3+ (for UPM integration)
+
+### Build (C# runtime)
+
+```powershell
+dotnet build .\packages\sdk-unity -c Release
 ```
 
-## Repository layout
-- models/schema/playthrough.schema.json — canonical schema
-- models/examples/*.json — sample models
-- packages/engine-ts — engine API
-- packages/sdk-unity — Unity-ready SDK stub
+### Run sample (CLI)
 
-## CI
-GitHub Actions workflow runs tests and model validation under `packages/engine-ts`.
+```powershell
+dotnet run --project .\packages\samples\PlaythroughCli
+```
+
+## Key State (C#)
+
+`VastCore.NarrativeGen.Engine` is used to load models, start sessions, get available choices, and apply choices.
+
+- Sample model: `models/examples/linear.json`
+- API: `LoadModel(json)`, `StartSession(model)`, `GetAvailableChoices(session, model)`, `ApplyChoice(session, model, choiceId)`
+
+## Test Procedure
+
+1. Verify JSON schema integrity
+
+   ```powershell
+   Get-Content .\models\schema\playthrough.schema.json | ConvertFrom-Json | Out-Null
+   Get-Content .\models\examples\linear.json | ConvertFrom-Json | Out-Null
+   ```
+
+2. Build the runtime
+
+   ```powershell
+   dotnet build .\packages\sdk-unity -c Release
+   ```
+
+3. Run the sample
+
+   ```powershell
+   dotnet run --project .\packages\samples\PlaythroughCli
+   ```
+
+Expected result:
+
+- The console will display the starting node's text and choices, and then terminate after selecting `c1` or `c2` and reaching the ending node.
+
+## Directory Structure
+
+- `models/schema/playthrough.schema.json` — canonical schema
+- `models/examples/linear.json` — minimal sample model
+- `packages/sdk-unity/Runtime/*.cs` — engine code (Model/Session/Engine/Converters)
+- `packages/sdk-unity/package.json` — UPM metadata
+- `packages/sdk-unity/Runtime/VastCore.NarrativeGen.asmdef` — assembly definition
+- `packages/samples/PlaythroughCli` — CLI sample project for verification
+
+## Development Notes
+
+- Design principles and decision logs are documented in `docs/architecture.md` and `choices-driven-development.md`
+- Refactoring should be done in small steps, with updated documentation and test procedures before committing/pushing.
