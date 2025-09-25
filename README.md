@@ -20,6 +20,34 @@ Rebuild from scratch: A narrative playthrough engine and Unity SDK.
 - .NET SDK 6 or later
 - Unity 2021.3+ (for UPM integration)
 
+### Build (C# runtime)
+
+```powershell
+dotnet build .\packages\sdk-unity -c Release
+```
+
+### Run sample (CLI)
+
+```powershell
+dotnet run --project .\packages\samples\PlaythroughCli
+```
+
+## Key State (C#)
+
+`VastCore.NarrativeGen.Engine` is used to load models, start sessions, get available choices, and apply choices.
+
+- Sample model: `models/examples/linear.json`
+- API: `LoadModel(json)`, `StartSession(model)`, `GetAvailableChoices(session, model)`, `ApplyChoice(session, model, choiceId)`
+
+## Test Procedure
+
+1. Verify JSON schema integrity
+
+```powershell
+Get-Content .\models\schema\playthrough.schema.json | ConvertFrom-Json | Out-Null
+Get-Content .\models\examples\linear.json | ConvertFrom-Json | Out-Null
+```
+
 1. Build the runtime
 
 ```powershell
@@ -32,13 +60,15 @@ dotnet build .\packages\sdk-unity -c Release
 dotnet run --project .\packages\samples\PlaythroughCli
 ```
 
+Expected result:
+
+- The console will display the starting node's text and choices, and then terminate after selecting `c1` or `c2` and reaching the ending node.
+
 ## Validate models (Node/Ajv)
 
 Requirements:
 
 - Node.js 18+
-
-Steps:
 
 ```powershell
 cd .\packages\engine-ts
@@ -56,6 +86,14 @@ cmd /c npm run validate:models
 - `packages/sdk-unity/Runtime/VastCore.NarrativeGen.asmdef` — assembly definition
 - `packages/samples/PlaythroughCli` — CLI sample project for verification
 - `packages/engine-ts/` — TypeScript engine and tools (Ajv validation)
+
+## Run tests (C#)
+
+```powershell
+dotnet test .\packages\tests\NarrativeGen.Tests -c Release
+```
+
+The NUnit smoke test `EngineSmokeTests` loads `models/examples/linear.json`, plays through `start -> scene1 -> end`, and asserts that the engine returns expected nodes and zero choices at the end.
 
 ## Development Notes
 

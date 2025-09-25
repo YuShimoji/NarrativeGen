@@ -40,13 +40,12 @@
 - Decision: O2 を採用。YAGNI/KISSに基づき、現時点ではグリーンを最優先。機能追加は次ステップ。
 - Impact: 開発者がクローン直後に JSON 検証 → .NET ビルド → CLI 実行まで一気通貫で確認可能。CI導入時の土台にもなる。
 - Actions:
-  - JSON整合性検証（schema/examples 全て ConvertFrom-Json で OK）
-  - .NET SDK ランタイム（Unity SDK）を Release ビルド（警告のみ、エラーなし）
-  - CLI サンプル実行（linear.json 経路で start → scene1 → end を確認）
-  - .gitignore を整備（[Bb]uild/ を追加、余計なインデントを除去、packages/sdk-unity/src/ を ignore）
-  - packages/sdk-unity/src/ 配下は未使用のスタブ/空ファイルのため、一旦 ignore 方針（将来必要になれば正式導入）
+  - `packages/tests/NarrativeGen.Tests/` を追加（NUnit）
+  - `EngineSmokeTests` にて `models/examples/linear.json` をロードし `start -> scene1 -> end` を検証
+  - README に "Run tests (C#)" 手順を追記
+
 - Next:
-  - TS エンジン（packages/engine-ts/）の雛形整備とモデル検証ツールの有効化（必要最小限）
-  - C# ランタイムの NUnit テスト雛形追加（Engine/Model/Session の単体テスト）
-  - CLI に引数指定（モデルパス）と簡易検証モードフラグを追加（将来のCI前提）
+  - 条件分岐/フラグ/リソース/時間窓の各ユースケースを少しずつユニットテストで拡充
+  - 将来的に GitHub Actions 等で自動実行（.NET/Node の両検証）
+
 - Date: 2025-09-25
