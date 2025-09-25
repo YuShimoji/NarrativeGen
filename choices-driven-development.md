@@ -32,19 +32,44 @@
 
 ### 2025-09-25 Post-Reclone Verification & Baseline Run
 
-- Context: リポジトリを再クローン後、最小コアがビルド・実行できることを確認して基盤の健全性を担保。
 - Options:
   - O1: すぐに機能追加（条件分岐・変数・タグ等）に着手
   - O2: まず現状のビルド/実行/ドキュメント/無視設定を正し、グリーン状態を確立
   - O3: TypeScriptエンジンへ主軸移行しC#を後追い
 - Decision: O2 を採用。YAGNI/KISSに基づき、現時点ではグリーンを最優先。機能追加は次ステップ。
-- Impact: 開発者がクローン直後に JSON 検証 → .NET ビルド → CLI 実行まで一気通貫で確認可能。CI導入時の土台にもなる。
+  - Impact: 開発者がクローン直後に JSON 検証 → .NET ビルド → CLI 実行まで一気通貫で確認可能。CI導入時の土台にもなる。
+  
+  - Actions:
+    - JSON整合性検証（schema/examples 全て ConvertFrom-Json で OK）
+    - .NET SDK ランタイム（Unity SDK）を Release ビルド（警告のみ、エラーなし）
+    - CLI サンプル実行（linear.json 経路で start → scene1 → end を確認）
+    - .gitignore を整備（[Bb]uild/ を追加、余計なインデントを除去、packages/sdk-unity/src/ を ignore）
+    - packages/sdk-unity/src/ 配下は未使用のスタブ/空ファイルのため、一旦 ignore 方針（将来必要になれば正式導入）
+
+  - Next:
+    - TS エンジン（packages/engine-ts/）の雛形整備とモデル検証ツールの有効化（必要最小限）
+    - C# ランタイムの NUnit テスト雛形追加（Engine/Model/Session の単体テスト）
+    - CLI に引数指定（モデルパス）と簡易検証モードフラグを追加（将来のCI前提）
+
+  - Date: 2025-09-25
+
+### 2025-09-25 Add NUnit Smoke Tests
+
+- Context: C# ランタイムの安定性を継続的に検証するため、最小のNUnitテストを追加してCI/ローカルで即時チェックできる状態を作る。
+
+- Options:
+  - O1: まずスモークテスト（linear.jsonの一本道）だけ導入
+  - O2: 条件分岐・フラグ・リソース・時間窓など一通りの網羅テストを最初から導入
+  - O3: CLIのみで検証し、テストは後回し
+
+- Decision: O1 を採用。YAGNIに基づき、まずスモークをグリーンに保つための最小テストから導入。
+
+- Impact: クローン直後に `dotnet test` でランタイムの基本動作が担保でき、改修時の回 regress を防止しやすくなる。
+
 - Actions:
   - `packages/tests/NarrativeGen.Tests/` を追加（NUnit）
   - `EngineSmokeTests` にて `models/examples/linear.json` をロードし `start -> scene1 -> end` を検証
   - README に "Run tests (C#)" 手順を追記
-
-- Next:
   - 条件分岐/フラグ/リソース/時間窓の各ユースケースを少しずつユニットテストで拡充
   - 将来的に GitHub Actions 等で自動実行（.NET/Node の両検証）
 
