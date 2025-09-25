@@ -10,7 +10,6 @@ obj/
 *.user
 *.suo
 *.userprefs
-
 # Unity
 [Ll]ibrary/
 [Tt]emp/
@@ -23,7 +22,6 @@ MemoryCaptures/
 
 # Unity cache
 Assets/AssetStoreTools*
-
 # OS
 Thumbs.db
 ehthumbs.db
@@ -31,3 +29,6 @@ ehthumbs.db
 .Trashes
 *.swp
 *.tmp
+
+# Project-specific ignores
+packages/sdk-unity/src/
