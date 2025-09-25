@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { loadModel, startSession, getAvailableChoices, applyChoice } from '../index'
+import { loadModel, startSession, getAvailableChoices, applyChoice } from '../index.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const modelsDir = path.resolve(__dirname, '../../../..', 'models', 'examples')

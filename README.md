@@ -20,49 +20,32 @@ Rebuild from scratch: A narrative playthrough engine and Unity SDK.
 - .NET SDK 6 or later
 - Unity 2021.3+ (for UPM integration)
 
-### Build (C# runtime)
+1. Build the runtime
 
 ```powershell
 dotnet build .\packages\sdk-unity -c Release
 ```
 
-### Run sample (CLI)
+1. Run the sample
 
 ```powershell
 dotnet run --project .\packages\samples\PlaythroughCli
 ```
 
-## Key State (C#)
+## Validate models (Node/Ajv)
 
-`VastCore.NarrativeGen.Engine` is used to load models, start sessions, get available choices, and apply choices.
+Requirements:
 
-- Sample model: `models/examples/linear.json`
-- API: `LoadModel(json)`, `StartSession(model)`, `GetAvailableChoices(session, model)`, `ApplyChoice(session, model, choiceId)`
+- Node.js 18+
 
-## Test Procedure
+Steps:
 
-1. Verify JSON schema integrity
-
-   ```powershell
-   Get-Content .\models\schema\playthrough.schema.json | ConvertFrom-Json | Out-Null
-   Get-Content .\models\examples\linear.json | ConvertFrom-Json | Out-Null
-   ```
-
-2. Build the runtime
-
-   ```powershell
-   dotnet build .\packages\sdk-unity -c Release
-   ```
-
-3. Run the sample
-
-   ```powershell
-   dotnet run --project .\packages\samples\PlaythroughCli
-   ```
-
-Expected result:
-
-- The console will display the starting node's text and choices, and then terminate after selecting `c1` or `c2` and reaching the ending node.
+```powershell
+cd .\packages\engine-ts
+cmd /c npm install
+cmd /c npm run build
+cmd /c npm run validate:models
+```
 
 ## Directory Structure
 
@@ -72,6 +55,7 @@ Expected result:
 - `packages/sdk-unity/package.json` — UPM metadata
 - `packages/sdk-unity/Runtime/VastCore.NarrativeGen.asmdef` — assembly definition
 - `packages/samples/PlaythroughCli` — CLI sample project for verification
+- `packages/engine-ts/` — TypeScript engine and tools (Ajv validation)
 
 ## Development Notes
 
