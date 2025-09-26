@@ -77,6 +77,18 @@ cmd /c npm run build
 cmd /c npm run validate:models
 ```
 
+## Lint/Format (TS)
+
+Run Prettier and ESLint for the TypeScript engine:
+
+```powershell
+cd .\packages\engine-ts
+cmd /c npm install
+cmd /c npm run format
+cmd /c npm run lint
+cmd /c npm run lint:fix
+```
+
 ## Directory Structure
 
 - `models/schema/playthrough.schema.json` — canonical schema

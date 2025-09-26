@@ -1,13 +1,15 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+
+// eslint-disable-next-line import/no-unresolved
 import { loadModel, startSession, getAvailableChoices, applyChoice } from '../index.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const modelsDir = path.resolve(__dirname, '../../../..', 'models', 'examples')
 
 function validateAll() {
-  const files = fs.readdirSync(modelsDir).filter(f => f.endsWith('.json'))
+  const files = fs.readdirSync(modelsDir).filter((f) => f.endsWith('.json'))
   let okCount = 0
   for (const f of files) {
     const full = path.join(modelsDir, f)

@@ -1,13 +1,29 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+
 import Ajv from 'ajv'
-import type { Choice, Condition, Effect, FlagState, Model, ResourceState, SessionState } from './types'
+
+import type {
+  Choice,
+  Condition,
+  Effect,
+  FlagState,
+  Model,
+  ResourceState,
+  SessionState,
+} from './types'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 function loadSchema(): any {
-  const schemaPath = path.resolve(__dirname, '../../..', 'models', 'schema', 'playthrough.schema.json')
+  const schemaPath = path.resolve(
+    __dirname,
+    '../../..',
+    'models',
+    'schema',
+    'playthrough.schema.json',
+  )
   const json = fs.readFileSync(schemaPath, 'utf-8')
   return JSON.parse(json)
 }
@@ -35,15 +51,25 @@ export function startSession(model: Model, initial?: Partial<SessionState>): Ses
 
 function cmp(op: '>=' | '<=' | '>' | '<' | '==', a: number, b: number): boolean {
   switch (op) {
-    case '>=': return a >= b
-    case '<=': return a <= b
-    case '>': return a > b
-    case '<': return a < b
-    case '==': return a === b
+    case '>=':
+      return a >= b
+    case '<=':
+      return a <= b
+    case '>':
+      return a > b
+    case '<':
+      return a < b
+    case '==':
+      return a === b
   }
 }
 
-function evalCondition(cond: Condition, flags: FlagState, resources: ResourceState, time: number): boolean {
+function evalCondition(
+  cond: Condition,
+  flags: FlagState,
+  resources: ResourceState,
+  time: number,
+): boolean {
   if (cond.type === 'flag') {
     return (flags[cond.key] ?? false) === cond.value
   }
@@ -75,16 +101,20 @@ export function getAvailableChoices(session: SessionState, model: Model): Choice
   const node = model.nodes[session.nodeId]
   if (!node) return []
   const choices = node.choices ?? []
-  return choices.filter(c => (c.conditions ?? []).every(cond => evalCondition(cond, session.flags, session.resources, session.time)))
+  return choices.filter((c) =>
+    (c.conditions ?? []).every((cond) =>
+      evalCondition(cond, session.flags, session.resources, session.time),
+    ),
+  )
 }
 
 export function applyChoice(session: SessionState, model: Model, choiceId: string): SessionState {
   const node = model.nodes[session.nodeId]
   if (!node) throw new Error(`Node not found: ${session.nodeId}`)
-  const choice = (node.choices ?? []).find(c => c.id === choiceId)
+  const choice = (node.choices ?? []).find((c) => c.id === choiceId)
   if (!choice) throw new Error(`Choice not found: ${choiceId}`)
   // ensure choice is available
-  const available = getAvailableChoices(session, model).some(c => c.id === choiceId)
+  const available = getAvailableChoices(session, model).some((c) => c.id === choiceId)
   if (!available) throw new Error(`Choice not available: ${choiceId}`)
 
   let next = { ...session }
@@ -92,7 +122,7 @@ export function applyChoice(session: SessionState, model: Model, choiceId: strin
     next = applyEffect(eff, next)
   }
   // default transition if no goto effect
-  if (!choice.effects?.some(e => e.type === 'goto')) {
+  if (!choice.effects?.some((e) => e.type === 'goto')) {
     next = { ...next, nodeId: choice.target }
   }
   // simple time progression
