@@ -15,14 +15,27 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
-      - name: Restore
-        run: dotnet restore
-      - name: Build
+      - name: Restore (per project)
         run: |
-          dotnet build src/NarrativeGen.Domain.csproj -nologo
-          dotnet build src/NarrativeGen.Application.csproj -nologo
-          dotnet build src/NarrativeGen.Infrastructure.csproj -nologo
+          dotnet restore src/NarrativeGen.Domain.csproj -nologo
+          dotnet restore src/NarrativeGen.Application.csproj -nologo
+          dotnet restore src/NarrativeGen.Infrastructure.csproj -nologo
+          dotnet restore adapters/NarrativeGen.Adapter.csproj -nologo
+          dotnet restore NarrativeGen.Core.csproj -nologo
+          dotnet restore tests/NarrativeGen.Domain.Tests -nologo
+      - name: Build (net8.0)
+        run: |
+          dotnet build src/NarrativeGen.Domain.csproj -f net8.0 -nologo
+          dotnet build src/NarrativeGen.Application.csproj -f net8.0 -nologo
+          dotnet build src/NarrativeGen.Infrastructure.csproj -f net8.0 -nologo
+          dotnet build adapters/NarrativeGen.Adapter.csproj -f net8.0 -nologo
           dotnet build NarrativeGen.Core.csproj -nologo
+      - name: Build (netstandard2.1 for Unity)
+        run: |
+          dotnet build src/NarrativeGen.Domain.csproj -f netstandard2.1 -nologo
+          dotnet build src/NarrativeGen.Application.csproj -f netstandard2.1 -nologo
+          dotnet build src/NarrativeGen.Infrastructure.csproj -f netstandard2.1 -nologo
+          dotnet build adapters/NarrativeGen.Adapter.csproj -f netstandard2.1 -nologo
       - name: Test
         run: |
           dotnet test tests/NarrativeGen.Domain.Tests -nologo
