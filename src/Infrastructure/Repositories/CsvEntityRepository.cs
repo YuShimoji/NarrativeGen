@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using NarrativeGen.Domain.Entities;
 using NarrativeGen.Domain.Repositories;
@@ -106,13 +107,56 @@ namespace NarrativeGen.Infrastructure.Repositories
             var lines = await File.ReadAllLinesAsync(_entitiesFilePath);
             if (lines.Length <= 1) return; // ヘッダーのみまたは空ファイル
 
-            var headers = lines[0].Split(',');
-            var idIndex = Array.IndexOf(headers, "Id");
-            var typeIdIndex = Array.IndexOf(headers, "TypeId");
+            string[] ParseCsvLine(string line)
+            {
+                var result = new List<string>();
+                var sb = new StringBuilder();
+                bool inQuotes = false;
+                for (int i = 0; i < line.Length; i++)
+                {
+                    char c = line[i];
+                    if (c == '\"')
+                    {
+                        if (inQuotes && i + 1 < line.Length && line[i + 1] == '\"')
+                        {
+                            sb.Append('\"');
+                            i++;
+                        }
+                        else
+                        {
+                            inQuotes = !inQuotes;
+                        }
+                    }
+                    else if (c == ',' && !inQuotes)
+                    {
+                        result.Add(sb.ToString());
+                        sb.Clear();
+                    }
+                    else
+                    {
+                        sb.Append(c);
+                    }
+                }
+                result.Add(sb.ToString());
+                return result.ToArray();
+            }
+
+            var headers = ParseCsvLine(lines[0]);
+            int IndexOfAny(string[] arr, params string[] keys)
+            {
+                foreach (var k in keys)
+                {
+                    var idx = Array.FindIndex(arr, h => string.Equals(h.Trim('\"').Trim(), k, StringComparison.OrdinalIgnoreCase));
+                    if (idx >= 0) return idx;
+                }
+                return -1;
+            }
+            var idIndex = IndexOfAny(headers, "Id", "entity_id");
+            var typeIdIndex = IndexOfAny(headers, "TypeId", "entity_type_id");
 
             if (idIndex == -1 || typeIdIndex == -1)
             {
-                throw new InvalidOperationException("CSV file must contain Id and TypeId columns.");
+                throw new InvalidOperationException("CSV file must contain Id/entity_id and TypeId/entity_type_id columns.");
             }
 
             lock (_lockObject)
@@ -121,11 +165,11 @@ namespace NarrativeGen.Infrastructure.Repositories
 
                 for (int i = 1; i < lines.Length; i++)
                 {
-                    var values = lines[i].Split(',');
+                    var values = ParseCsvLine(lines[i]);
                     if (values.Length < headers.Length) continue;
 
-                    var id = values[idIndex].Trim('"');
-                    var typeId = values[typeIdIndex].Trim('"');
+                    var id = values[idIndex].Trim('\"');
+                    var typeId = values[typeIdIndex].Trim('\"');
 
                     var entity = new Entity(id, typeId);
 
@@ -135,8 +179,8 @@ namespace NarrativeGen.Infrastructure.Repositories
                         if (j == idIndex || j == typeIdIndex)
                             continue;
 
-                        var propertyName = headers[j].Trim();
-                        var propertyValue = values[j].Trim('"');
+                        var propertyName = headers[j].Trim('\"').Trim();
+                        var propertyValue = values[j].Trim('\"');
                         
                         if (!string.IsNullOrEmpty(propertyValue))
                         {

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using NarrativeGen.Domain.Entities;
 using NarrativeGen.Domain.Repositories;
@@ -88,19 +90,62 @@ namespace NarrativeGen.Infrastructure.Repositories
             _isLoaded = true;
         }
 
+        private static string[] ParseCsvLine(string line)
+        {
+            var result = new List<string>();
+            var sb = new StringBuilder();
+            bool inQuotes = false;
+            for (int i = 0; i < line.Length; i++)
+            {
+                char c = line[i];
+                if (c == '"')
+                {
+                    if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
+                    {
+                        sb.Append('"');
+                        i++;
+                    }
+                    else
+                    {
+                        inQuotes = !inQuotes;
+                    }
+                }
+                else if (c == ',' && !inQuotes)
+                {
+                    result.Add(sb.ToString());
+                    sb.Clear();
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+            result.Add(sb.ToString());
+            return result.ToArray();
+        }
+
         private async Task LoadFromCsvAsync()
         {
             var lines = await File.ReadAllLinesAsync(_entityTypesFilePath);
             if (lines.Length <= 1) return; // ヘッダーのみまたは空ファイル
 
-            var headers = lines[0].Split(',');
-            var idIndex = Array.IndexOf(headers, "Id");
-            var nameIndex = Array.IndexOf(headers, "Name");
-            var parentTypeIdIndex = Array.IndexOf(headers, "ParentTypeId");
+            var headers = ParseCsvLine(lines[0]);
+            int IndexOfAny(string[] arr, params string[] keys)
+            {
+                foreach (var k in keys)
+                {
+                    var idx = Array.FindIndex(arr, h => string.Equals(h.Trim('"').Trim(), k, StringComparison.OrdinalIgnoreCase));
+                    if (idx >= 0) return idx;
+                }
+                return -1;
+            }
+            var idIndex = IndexOfAny(headers, "Id", "type_id");
+            var nameIndex = IndexOfAny(headers, "Name", "type_name");
+            var parentTypeIdIndex = IndexOfAny(headers, "ParentTypeId", "parent_type_id");
 
             if (idIndex == -1 || nameIndex == -1)
             {
-                throw new InvalidOperationException("CSV file must contain Id and Name columns.");
+                throw new InvalidOperationException("CSV file must contain Id/type_id and Name/type_name columns.");
             }
 
             lock (_lockObject)
@@ -109,7 +154,7 @@ namespace NarrativeGen.Infrastructure.Repositories
 
                 for (int i = 1; i < lines.Length; i++)
                 {
-                    var values = lines[i].Split(',');
+                    var values = ParseCsvLine(lines[i]);
                     if (values.Length < headers.Length) continue;
 
                     var id = values[idIndex].Trim('"');
@@ -128,9 +173,51 @@ namespace NarrativeGen.Infrastructure.Repositories
                         if (j == idIndex || j == nameIndex || j == parentTypeIdIndex)
                             continue;
 
-                        var propertyName = headers[j].Trim();
-                        var propertyValue = values[j].Trim('"');
+                        var propertyName = headers[j].Trim('"').Trim();
+                        var propertyValue = values[j];
                         
+                        if (string.Equals(propertyName, "default_properties", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!string.IsNullOrWhiteSpace(propertyValue))
+                            {
+                                try
+                                {
+                                    var dict = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(propertyValue);
+                                    if (dict != null)
+                                    {
+                                        foreach (var kv in dict)
+                                        {
+                                            object? objVal = kv.Value.ValueKind switch
+                                            {
+                                                JsonValueKind.String => kv.Value.GetString(),
+                                                JsonValueKind.True => true,
+                                                JsonValueKind.False => false,
+                                                JsonValueKind.Number => kv.Value.TryGetInt64(out var l) ? l : kv.Value.GetDouble(),
+                                                JsonValueKind.Null => null,
+                                                _ => kv.Value.ToString()
+                                            };
+                                            if (objVal != null)
+                                            {
+                                                entityType.SetDefaultProperty(kv.Key, objVal);
+                                            }
+                                        }
+                                    }
+                                }
+                                catch
+                                {
+                                    // JSON 解析失敗時は無視（スキップ）
+                                }
+                            }
+                            continue;
+                        }
+
+                        if (string.Equals(propertyName, "validation_rules", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(propertyName, "description_patterns", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // 現段階では読み取りのみ対象外
+                            continue;
+                        }
+
                         if (!string.IsNullOrEmpty(propertyValue))
                         {
                             // CSVの文字列をそのまま既定値として設定
