@@ -115,7 +115,8 @@ crashlytics-build.properties
 !/NarrativeGen.Console.csproj 
 !/ModernArchitectureTest.csproj
 !/TestRunner.csproj
-!/src/NarrativeGen.Domain.csproj
-!/src/NarrativeGen.Application.csproj
-!/src/NarrativeGen.Infrastructure.csproj
-!/adapters/NarrativeGen.Adapter.csproj
+!src/NarrativeGen.Domain.csproj
+!src/NarrativeGen.Application.csproj
+!src/NarrativeGen.Infrastructure.csproj
+!adapters/NarrativeGen.Adapter.csproj
+!tests/NarrativeGen.Domain.Tests/NarrativeGen.Domain.Tests.csproj
