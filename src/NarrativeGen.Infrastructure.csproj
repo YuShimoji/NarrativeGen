@@ -12,7 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Application\UseCases\EntityUseCase.cs" />
+    <Compile Include="Infrastructure/Repositories/CsvEntityRepository.cs" />
+    <Compile Include="Infrastructure/Repositories/CsvEntityTypeRepository.cs" />
   </ItemGroup>
 
 </Project>
