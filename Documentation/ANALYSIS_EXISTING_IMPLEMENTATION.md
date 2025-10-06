@@ -83,9 +83,43 @@ Infrastructure Layer (External Concerns)
 - Repository パターンの適用
 - Dependency Injection設計
 
-### TASK-003: 最小Domain実装
-- Entityクラス（シンプル版）
-- PropertyValueクラス（シンプル版）
-- EntityTypeクラス（シンプル版）
 
-memo.txtの要件を満たす最小実装から開始し、段階的に機能を追加していく方針で進めます。
+---
+
+## 2025-10-07 追記: モダンアーキテクチャ移行の実施内容と検証結果
+
+### 実施した主な変更
+- Clean Architecture への移行: `src/` 配下に Domain / Application / Infrastructure を集約。
+  - Domain: `Entity`, `EntityType`, `PropertyValue`, `PropertySource`
+  - Domain Services: `EntityInheritanceService`
+  - Application: `EntityUseCase`
+  - Infrastructure: `CsvEntityRepository`, `CsvEntityTypeRepository`
+- CSV互換性の強化:
+  - `Entities.csv` のヘッダ互換: `Id|entity_id`, `TypeId|entity_type_id`
+  - `EntityTypes.csv` のヘッダ互換: `Id|type_id`, `Name|type_name`, `ParentTypeId|parent_type_id`
+  - 実装箇所: `src/Infrastructure/Repositories/CsvEntityRepository.cs`, `CsvEntityTypeRepository.cs`
+- 統合テストの整備:
+  - `TestRunner.csproj` を Clean Architecture 構成に合わせて更新
+  - CSV ロードとサンプルEntity確認（`mac_burger_001`）の実行
+- ユニットテスト（xUnit）:
+  - プロジェクト: `tests/NarrativeGen.Domain.Tests`
+  - テスト: `EntityInheritanceService` の継承・上書き動作の検証
+- CI の追加:
+  - `.github/workflows/dotnet-ci.yml` を追加（ビルド/テスト実行）
+
+### 実行したテストと結果
+- .NET 実行
+  - `dotnet run --project TestRunner.csproj -nologo`
+  - 期待どおり CSV 読込が成功し、`mac_burger_001` が検出されることを確認
+- ドメイン単体テスト
+  - `dotnet test tests/NarrativeGen.Domain.Tests -nologo`
+  - 継承値（Inherited）と直接設定（Direct）の優先関係が仕様通りであることを確認
+
+### 既知の注意点 / リスク
+- 既存ドキュメント（README等）に旧構成の断片が残存していたため、順次整合を実施
+- Unity 側の参照は Adapter 経由（`Assets/Scripts/Unity/NarrativeController.cs`）に更新済み。パス/インポートの再確認が必要
+
+### 今後の計画（抜粋）
+- Application 層のユースケース拡充（検索/フィルタ/集約）
+- 推論ルール/言い換え仕様の確定・最小実装
+- CI にコード品質チェック（lint/format）とカバレッジ計測の追加

@@ -17,6 +17,28 @@
  - ドキュメント整備: `Documentation/01_Current_Status/TASK_LIST.md` を新規作成し、タスクの受け入れ基準/担当/見積/期日/ID対応表を追加。
  - README 連携: `README.md` からタスクリストへのリンクを追記。
 
+## 変更履歴（2025-10-07）
+
+- Clean Architecture への移行（Domain/Application/Infrastructure を `src/` に集約）。
+- `CsvEntityRepository`/`CsvEntityTypeRepository` に列名互換を追加。
+  - Entities: `Id|entity_id`, `TypeId|entity_type_id`
+  - EntityTypes: `Id|type_id`, `Name|type_name`, `ParentTypeId|parent_type_id`
+- `TestRunner.csproj` を Clean Architecture 構成に更新し、`Assets/Data/*.csv` でのロード検証を実行。
+- ドメイン単体テスト（xUnit）を追加: `tests/NarrativeGen.Domain.Tests`
+  - `EntityInheritanceService` の継承/上書き動作を検証しグリーン。
+- CI 追加: `.github/workflows/dotnet-ci.yml`（ドメイン層ビルド/テスト）。
+
+### テスト手順（.NET 側）
+1. `dotnet restore`
+2. `dotnet run --project TestRunner.csproj -nologo`
+   - 期待: CSV ロード成功と `mac_burger_001` 確認
+3. `dotnet test tests/NarrativeGen.Domain.Tests -nologo`
+   - 期待: すべて成功（継承チェーンと Direct 優先の確認）
+
+### Unity 統合メモ
+- Adapter 経由で `Assets/Scripts/Unity/NarrativeController.cs` を `EntityUseCase` に接続。
+- CSV パス: `Assets/Data/EntityTypes.csv`, `Assets/Data/Entities.csv`
+
 ### 追加: 起動時エラーハンドリング/リトライ機構（UI/Logic/GameManager連携）
 - UI `UIManager.cs`
   - `ShowError(string message, string hint = null)` を追加し、エラー文言表示とリトライボタン表示を実装。
