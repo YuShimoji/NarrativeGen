@@ -1,4 +1,6 @@
 # NarrativeGen - Cursor Web対応版
+
+[![.NET CI](https://github.com/YuShimoji/NarrativeGen/actions/workflows/dotnet-ci.yml/badge.svg)](https://github.com/YuShimoji/NarrativeGen/actions/workflows/dotnet-ci.yml)
 ## 📋 プロジェクト概要
 
 Unityプロジェクトと**並行してCursor webでも開発可能**なナラティブ生成システムです。  

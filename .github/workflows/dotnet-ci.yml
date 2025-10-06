@@ -2,9 +2,9 @@ name: .NET CI
 
 on:
   push:
-    branches: [ main, master, develop, "feature/**" ]
+    branches: [ main, master, develop, "feature/**", "open-ws/**" ]
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [ main, master, develop, "open-ws/**" ]
 
 jobs:
   build-test:
@@ -30,12 +30,26 @@ jobs:
           dotnet build src/NarrativeGen.Infrastructure.csproj -f net8.0 -nologo
           dotnet build adapters/NarrativeGen.Adapter.csproj -f net8.0 -nologo
           dotnet build NarrativeGen.Core.csproj -nologo
-      - name: Build (netstandard2.1 for Unity)
+      - name: Build (netstandard2.1 for Unity, Release)
         run: |
-          dotnet build src/NarrativeGen.Domain.csproj -f netstandard2.1 -nologo
-          dotnet build src/NarrativeGen.Application.csproj -f netstandard2.1 -nologo
-          dotnet build src/NarrativeGen.Infrastructure.csproj -f netstandard2.1 -nologo
-          dotnet build adapters/NarrativeGen.Adapter.csproj -f netstandard2.1 -nologo
-      - name: Test
+          dotnet build src/NarrativeGen.Domain.csproj -c Release -f netstandard2.1 -nologo
+          dotnet build src/NarrativeGen.Application.csproj -c Release -f netstandard2.1 -nologo
+          dotnet build src/NarrativeGen.Infrastructure.csproj -c Release -f netstandard2.1 -nologo
+          dotnet build adapters/NarrativeGen.Adapter.csproj -c Release -f netstandard2.1 -nologo
+      - name: Upload netstandard2.1 artifacts (DLLs)
+        uses: actions/upload-artifact@v4
+        with:
+          name: narrativegen-netstandard2.1-dlls
+          path: |
+            src/bin/Release/netstandard2.1/*.dll
+            adapters/bin/Release/netstandard2.1/*.dll
+          if-no-files-found: error
+      - name: Test with coverage (Domain)
         run: |
-          dotnet test tests/NarrativeGen.Domain.Tests -nologo
+          dotnet test tests/NarrativeGen.Domain.Tests -nologo --collect:"XPlat Code Coverage"
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-cobertura
+          path: tests/NarrativeGen.Domain.Tests/TestResults/**/coverage.cobertura.xml
+          if-no-files-found: warn
