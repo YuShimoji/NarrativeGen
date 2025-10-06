@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using NarrativeGen.Core.Entities;
+using NarrativeGen.Debug;
 
 namespace NarrativeGen.Unity
 {
@@ -40,7 +41,7 @@ namespace NarrativeGen.Unity
         private void InitializeEntitySystem()
         {
             _entityManager = new EntityManager();
-            Debug.Log("Entity-Property System initialized");
+            Log.Message("Entity-Property System initialized");
         }
         
         /// <summary>
@@ -51,27 +52,29 @@ namespace NarrativeGen.Unity
             try
             {
                 // CSV データの読み込み
-                _entityManager.LoadFromCsv(csvDataPath);
-                Debug.Log("CSV data loaded successfully");
+                string entityTypesPath = csvDataPath + "EntityTypes.csv";
+                string entitiesPath = csvDataPath + "Entities.csv";
+                _entityManager.LoadFromCsv(entityTypesPath, entitiesPath);
+                Log.Message("CSV data loaded successfully");
                 
                 // 検証実行
                 var errors = _entityManager.ValidateAllData();
                 if (errors.Count > 0)
                 {
-                    Debug.LogWarning($"Validation found {errors.Count} issues:");
+                    Log.LogWarning($"Validation found {errors.Count} issues:");
                     foreach (var error in errors)
                     {
-                        Debug.LogWarning($"- {error}");
+                        Log.LogWarning($"- {error}");
                     }
                 }
                 else
                 {
-                    Debug.Log("All data validation passed");
+                    Log.Message("All data validation passed");
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Failed to load initial data: {ex.Message}");
+                Log.LogError($"Failed to load initial data: {ex.Message}");
             }
         }
         
@@ -127,22 +130,40 @@ namespace NarrativeGen.Unity
         /// <summary>
         /// デバッグ情報の表示
         /// </summary>
-        [ContextMenu("Show Debug Info")]
+        public void DebugEntitySystem()
+        {
+            if (_entityManager == null) return;
+            
+            var allEntities = _entityManager.GetAllEntities();
+            var allEntityTypes = _entityManager.GetAllEntityTypes();
+            Log.Message($"Total Entities: {allEntities.Count}");
+            
+            foreach (var entity in allEntities)
+            {
+                Log.Message($"Entity: {entity.Id} (Type: {entity.TypeId})");
+                Log.Message($"Properties: {entity.GetAllProperties().Count}");
+                Log.Message($"Details: {entity}");
+            }
+        }
+        
+        /// <summary>
+        /// デバッグ情報の表示
+        /// </summary>
         public void ShowDebugInfo()
         {
             if (_entityManager != null)
             {
                 var entityCount = _entityManager.GetAllEntities().Count;
                 var typeCount = _entityManager.GetAllEntityTypes().Count;
-                Debug.Log($"Entity System Status: {entityCount} entities, {typeCount} types");
+                Log.Message($"Entity System Status: {entityCount} entities, {typeCount} types");
                 
                 // サンプルエンティティの情報表示
                 var sampleEntity = _entityManager.GetEntity("mac_burger_001");
                 if (sampleEntity != null)
                 {
-                    Debug.Log($"Sample Entity: {sampleEntity.Id}");
-                    Debug.Log($"Type: {sampleEntity.TypeId}");
-                    Debug.Log($"Properties: {sampleEntity.GetAllProperties().Count}");
+                    Log.Message($"Sample Entity: {sampleEntity.Id}");
+                    Log.Message($"Type: {sampleEntity.TypeId}");
+                    Log.Message($"Properties: {sampleEntity.GetAllProperties().Count}");
                 }
             }
         }

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Domain\Entities\Entity.cs" />
+    <Compile Include="Domain\Entities\EntityType.cs" />
+    <Compile Include="Domain\ValueObjects\PropertyValue.cs" />
+    <Compile Include="Domain\Repositories\IEntityRepository.cs" />
+    <Compile Include="Domain\Repositories\IEntityTypeRepository.cs" />
+    <Compile Include="Domain\Services\EntityInheritanceService.cs" />
+  </ItemGroup>
+
+</Project>

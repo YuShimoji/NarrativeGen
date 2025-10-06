@@ -5,10 +5,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <!-- Include Entity-Property system and Syntax engine -->
+  <!-- Clean Architecture aggregator: Domain + Application + Infrastructure -->
   <ItemGroup>
-    <Compile Include="Assets\Scripts\Core\Entities\**\*.cs" />
-    <Compile Include="Assets\Scripts\Core\Syntax\**\*.cs" />
-    <Compile Include="Assets\Scripts\Core\GameManager.cs" />
+    <ProjectReference Include="src/NarrativeGen.Domain.csproj" />
+    <ProjectReference Include="src/NarrativeGen.Application.csproj" />
+    <ProjectReference Include="src/NarrativeGen.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

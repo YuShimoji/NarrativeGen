@@ -1,0 +1,11 @@
+name: CI Smoke
+
+on:
+  push:
+    branches: [ main, develop, "feature/**" ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  reuse:
+    uses: YuShimoji/shared-workflows/.github/workflows/ci-smoke.yml@chore/central-init

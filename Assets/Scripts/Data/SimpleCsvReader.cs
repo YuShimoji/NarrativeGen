@@ -147,7 +147,7 @@ namespace NarrativeGen.Data
                     return (T)Convert.ChangeType(value, targetType);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Failed to convert value - returning default
                 return defaultValue;

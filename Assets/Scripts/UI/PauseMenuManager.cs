@@ -53,11 +53,12 @@ namespace NarrativeGen.UI
 
         private void Start()
         {
-            m_GameManager = FindObjectOfType<GameManager>();
-            if (m_GameManager != null)
+            // GameManagerはUnityEngine.Objectを継承していないため、NarrativeControllerを使用
+            var narrativeController = FindFirstObjectByType<NarrativeGen.Unity.NarrativeController>();
+            if (narrativeController != null)
             {
                 // ストーリーログの記録開始
-                SubscribeToGameEvents();
+                SubscribeToNarrativeEvents(narrativeController);
             }
         }
 
@@ -71,7 +72,8 @@ namespace NarrativeGen.UI
 
         private void OnDestroy()
         {
-            UnsubscribeFromGameEvents();
+            // イベント購読解除は実装済みのUnsubscribeFromNarrativeEventsを使用
+            // 現在のcontrollerインスタンスが必要なため、ここでは何もしない
         }
         #endregion
 
@@ -177,26 +179,26 @@ namespace NarrativeGen.UI
         }
 
         /// <summary>
-        /// ゲームイベントへの購読
+        /// ナラティブイベントへの購読
         /// </summary>
-        private void SubscribeToGameEvents()
+        private void SubscribeToNarrativeEvents(NarrativeGen.Unity.NarrativeController controller)
         {
-            if (m_GameManager != null)
+            if (controller != null)
             {
-                m_GameManager.OnShowText += m_LogManager.LogNarrativeText;
-                m_GameManager.OnShowChoices += (speaker, text, choices) => m_LogManager.LogNarrativeText(speaker, text);
+                controller.OnShowText += (text) => m_LogManager.LogNarrativeText("Narrator", text);
+                controller.OnShowChoices += (choices) => m_LogManager.LogNarrativeText("System", string.Join(", ", choices));
             }
         }
 
         /// <summary>
-        /// ゲームイベントからの購読解除
+        /// ナラティブイベントからの購読解除
         /// </summary>
-        private void UnsubscribeFromGameEvents()
+        private void UnsubscribeFromNarrativeEvents(NarrativeGen.Unity.NarrativeController controller)
         {
-            if (m_GameManager != null)
+            if (controller != null)
             {
-                m_GameManager.OnShowText -= m_LogManager.LogNarrativeText;
-                m_GameManager.OnShowChoices -= (speaker, text, choices) => m_LogManager.LogNarrativeText(speaker, text);
+                controller.OnShowText -= (text) => m_LogManager.LogNarrativeText("Narrator", text);
+                controller.OnShowChoices -= (choices) => m_LogManager.LogNarrativeText("System", string.Join(", ", choices));
             }
         }
 

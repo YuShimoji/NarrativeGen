@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using NarrativeGen.Domain.ValueObjects;
 
 namespace NarrativeGen.Domain.Entities
 {

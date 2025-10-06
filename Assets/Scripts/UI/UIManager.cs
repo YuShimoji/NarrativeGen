@@ -41,16 +41,16 @@ namespace NarrativeGen.UI
         
         void Start()
         {
-            // Subscribe to GameManager events
-            var gameManager = FindObjectOfType<GameManager>();
-            if (gameManager != null)
+            // Subscribe to NarrativeController events (Unity統合レイヤー)
+            var narrativeController = FindFirstObjectByType<NarrativeGen.Unity.NarrativeController>();
+            if (narrativeController != null)
             {
-                gameManager.OnShowChoices += ShowChoices;
-                gameManager.OnShowText += ShowText;
+                narrativeController.OnShowChoices += ShowChoices;
+                narrativeController.OnShowText += ShowText;
             }
             else
             {
-                UnityEngine.Debug.LogError("GameManager not found in scene. UI will not receive narrative events.");
+                UnityEngine.Debug.LogError("NarrativeController not found in scene. UI will not receive narrative events.");
             }
 
             // TextClickHandler setup
@@ -94,11 +94,11 @@ namespace NarrativeGen.UI
         /// <summary>
         /// Displays narrative text to the player.
         /// </summary>
-        public void ShowText(string speaker, string text)
+        public void ShowText(string text)
         {
             if (narrativeText != null)
             {
-                narrativeText.text = $"{speaker}: {text}";
+                narrativeText.text = text;
                 SetTextAdvanceActive(true);
                 HideChoices();
                 SetRetryActive(false);
@@ -114,38 +114,31 @@ namespace NarrativeGen.UI
         /// <summary>
         /// Displays choices to the player.
         /// </summary>
-        public void ShowChoices(string speaker, string text, List<Choice> choices)
+        public void ShowChoices(List<string> choiceTexts)
         {
-            if (narrativeText != null)
-            {
-                narrativeText.text = $"{speaker}: {text}";
-            }
-            
             SetTextAdvanceActive(false);
             HideChoices();
             SetRetryActive(false);
 
-            if (choices == null || choices.Count == 0)
+            if (choiceTexts == null || choiceTexts.Count == 0)
             {
                 return;
             }
-
-            _currentChoices = new List<Choice>(choices);
             
             if (choicesPanel != null)
             {
                 choicesPanel.SetActive(true);
             }
             
-            CreateChoiceButtons(choices);
+            CreateChoiceButtons(choiceTexts);
         }
         
         /// <summary>
         /// Creates choice buttons for the given choices.
         /// </summary>
-        void CreateChoiceButtons(List<Choice> choices)
+        void CreateChoiceButtons(List<string> choiceTexts)
         {
-            for (int i = 0; i < choices.Count; i++)
+            for (int i = 0; i < choiceTexts.Count; i++)
             {
                 if (choiceButtonPrefab == null || choicesPanel == null)
                 {
@@ -168,12 +161,11 @@ namespace NarrativeGen.UI
                 
                 if (buttonText != null)
                 {
-                    buttonText.text = choices[i].Text;
+                    buttonText.text = choiceTexts[i];
                 }
 
-                // Capture the choice and index for the lambda
+                // Capture the choice index for the lambda
                 int choiceIndex = i;
-                Choice choice = choices[i];
                 
                 button.onClick.AddListener(() => HandleChoiceClick(choiceIndex));
             }
@@ -184,11 +176,7 @@ namespace NarrativeGen.UI
         /// </summary>
         void HandleChoiceClick(int choiceIndex)
         {
-            if (choiceIndex >= 0 && choiceIndex < _currentChoices.Count)
-            {
-                var choice = _currentChoices[choiceIndex];
-                OnChoiceSelected?.Invoke(choice.NextEventId);
-            }
+            OnChoiceSelected?.Invoke(choiceIndex.ToString());
             
             SetTextAdvanceActive(false);
             HideChoices();

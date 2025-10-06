@@ -6,6 +6,7 @@ using NarrativeGen.Core;
 using NarrativeGen.Data;
 using NarrativeGen.Logic;
 using NarrativeGen.UI;
+using NarrativeGen.Unity;
 using System.IO;
 using System.Linq;
 using UnityEditor.Events; // Required for persistent listener
@@ -54,7 +55,7 @@ public class SetupScene
         // Revised System GameObject creation to avoid duplicate components
         // and ensure correct dependency injection.
         GameObject systemGo = new GameObject("System");
-        var gameManager = systemGo.AddComponent<GameManager>();
+        var gameManagerComponent = systemGo.AddComponent<GameManagerComponent>();
         var uiManager = systemGo.AddComponent<UIManager>();
         
         // GameManager will automatically find UIManager in Awake()
@@ -90,12 +91,11 @@ public class SetupScene
         narrativeRect.offsetMax = new Vector2(-25, -50);
         
         // Configure TextMeshPro settings for proper text wrapping and display
-        narrativeText.enableWordWrapping = true;
-        narrativeText.overflowMode = TextOverflowModes.Overflow; // Changed from Ellipsis to allow scrolling
         narrativeText.textWrappingMode = TextWrappingModes.Normal;
+        narrativeText.overflowMode = TextOverflowModes.Overflow; // Changed from Ellipsis to allow scrolling
         narrativeText.lineSpacing = -10; // Reduce line spacing to fit more text
         
-        UnityEngine.Debug.Log($"NarrativeText configured - Font size: {narrativeText.fontSize}, Word wrapping: {narrativeText.enableWordWrapping}");
+        UnityEngine.Debug.Log($"NarrativeText configured - Font size: {narrativeText.fontSize}, Word wrapping: {narrativeText.textWrappingMode}");
         
         // Next button is removed as it's not part of the current UIManager logic.
         // Button nextButton = CreateButton(panelGo.transform, "NextButton", "次へ", font);
@@ -187,18 +187,14 @@ public class SetupScene
         // --- Post-Setup Verification ---
         UnityEngine.Debug.Log("=== Post-Setup Verification ===");
         
-        // Verify GameManager and UIManager
-        UnityEngine.Debug.Log($"GameManager exists: {gameManager != null}");
+        // Verify GameManagerComponent and UIManager
+        UnityEngine.Debug.Log($"GameManagerComponent exists: {gameManagerComponent != null}");
         UnityEngine.Debug.Log($"UIManager exists: {uiManager != null}");
         
-        // Check GameManager fields using reflection
-        if (gameManager != null)
+        // Check GameManagerComponent
+        if (gameManagerComponent != null)
         {
-            var gameManagerUIManagerField = gameManager.GetType().GetField("uiManager");
-            var gameManagerUIManagerValue = gameManagerUIManagerField?.GetValue(gameManager) as UIManager;
-            UnityEngine.Debug.Log($"GameManager.uiManager field exists: {gameManagerUIManagerField != null}");
-            UnityEngine.Debug.Log($"GameManager.uiManager value: {(gameManagerUIManagerValue != null ? "ASSIGNED" : "NULL")}");
-            UnityEngine.Debug.Log($"GameManager.uiManager value is same UIManager: {gameManagerUIManagerValue == uiManager}");
+            UnityEngine.Debug.Log("GameManagerComponent will initialize GameManager in Awake()");
         }
         
         if (uiManager != null)
@@ -356,9 +352,8 @@ public class SetupScene
         textComp.alignment = alignment;
         
         // Configure text wrapping and overflow for narrative text
-        textComp.enableWordWrapping = true;
-        textComp.overflowMode = TextOverflowModes.Overflow;
         textComp.textWrappingMode = TextWrappingModes.Normal;
+        textComp.overflowMode = TextOverflowModes.Overflow;
         
         RectTransform rect = textGo.GetComponent<RectTransform>();
         if(pivot.HasValue) rect.pivot = pivot.Value;
@@ -553,10 +548,10 @@ public class SetupScene
         if (system != null)
         {
             var uiManager = system.GetComponent<UIManager>();
-            var gameManager = system.GetComponent<GameManager>();
+            var gameManagerComponent = system.GetComponent<GameManagerComponent>();
             
             UnityEngine.Debug.Log($"UIManager component: {(uiManager != null ? "EXISTS" : "MISSING")}");
-            UnityEngine.Debug.Log($"GameManager component: {(gameManager != null ? "EXISTS" : "MISSING")}");
+            UnityEngine.Debug.Log($"GameManagerComponent: {(gameManagerComponent != null ? "EXISTS" : "MISSING")}");
             
             if (uiManager != null)
             {

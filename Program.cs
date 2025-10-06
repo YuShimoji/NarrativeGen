@@ -1,16 +1,13 @@
-using NarrativeGen.Core;
-using NarrativeGen.Core.Data;
+using System;
 
-var engine = new NarrativeEngine();
-var result = engine.StartNarrative("START");
-
-Console.WriteLine("生成されたナラティブ:");
-Console.WriteLine(result.Text);
-
-if (result.HasError)
+namespace NarrativeGen
 {
-    Console.WriteLine($"\nエラー発生: {result.ErrorMessage}");
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("NarrativeGen Console - Clean Architecture migration placeholder");
+            Console.WriteLine("Domain/Application/Infrastructure の統合検証用に最小起動");
+        }
+    }
 }
-
-Console.WriteLine("\n処理が完了しました。任意のキーを押して終了...");
-Console.ReadKey();

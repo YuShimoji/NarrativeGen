@@ -413,6 +413,61 @@ namespace NarrativeGen.Core.Entities
 
             return errors;
         }
+
+        /// <summary>
+        /// CSV読み込み統合メソッド - 既存コードとの互換性
+        /// </summary>
+        public void LoadFromCsv(string entityTypesPath, string entitiesPath)
+        {
+            LoadEntityTypesFromCsv(entityTypesPath);
+            LoadEntitiesFromCsv(entitiesPath);
+        }
+
+        /// <summary>
+        /// Entity検索 - 既存コードとの互換性
+        /// </summary>
+        public List<Entity> SearchEntities(string query)
+        {
+            var results = new List<Entity>();
+            
+            foreach (var entity in _entities.Values)
+            {
+                // IDで検索
+                if (entity.Id.Contains(query, StringComparison.OrdinalIgnoreCase))
+                {
+                    results.Add(entity);
+                    continue;
+                }
+                
+                // プロパティ値で検索
+                foreach (var property in entity.Properties.Values)
+                {
+                    if (property.Value?.ToString()?.Contains(query, StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        results.Add(entity);
+                        break;
+                    }
+                }
+            }
+            
+            return results;
+        }
+
+        /// <summary>
+        /// 全Entity取得 - 既存コードとの互換性
+        /// </summary>
+        public List<Entity> GetAllEntities()
+        {
+            return _entities.Values.ToList();
+        }
+
+        /// <summary>
+        /// 全EntityType取得 - 既存コードとの互換性
+        /// </summary>
+        public List<EntityType> GetAllEntityTypes()
+        {
+            return _entityTypes.Values.ToList();
+        }
     }
 
     /// <summary>

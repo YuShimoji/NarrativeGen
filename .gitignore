@@ -113,3 +113,8 @@ crashlytics-build.properties
 # Console Application specific
 !/NarrativeGen.Core.csproj
 !/NarrativeGen.Console.csproj 
+!/ModernArchitectureTest.csproj
+!/TestRunner.csproj
+!/src/NarrativeGen.Domain.csproj
+!/src/NarrativeGen.Application.csproj
+!/src/NarrativeGen.Infrastructure.csproj

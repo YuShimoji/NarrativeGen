@@ -7,6 +7,6 @@
     <RootNamespace>NarrativeGen.Console</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NarrativeGen.Core.csproj" />
+    <ProjectReference Include="NarrativeGen.Core.csproj" />
   </ItemGroup>
 </Project>

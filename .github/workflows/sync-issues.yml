@@ -1,0 +1,11 @@
+name: Sync Issues from docs
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'docs/ISSUES.md'
+
+jobs:
+  reuse:
+    uses: YuShimoji/shared-workflows/.github/workflows/sync-issues.yml@chore/central-init

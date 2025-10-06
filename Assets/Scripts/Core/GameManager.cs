@@ -42,7 +42,9 @@ namespace NarrativeGen.Core
             try
             {
                 // Entity-Property システムの読み込み
-                _entityManager.LoadFromCsv(csvDataPath);
+                string entityTypesPath = csvDataPath + "EntityTypes.csv";
+                string entitiesPath = csvDataPath + "Entities.csv";
+                _entityManager.LoadFromCsv(entityTypesPath, entitiesPath);
                 
                 // Syntax システムの読み込み
                 _syntaxManager.LoadFromCsv(csvDataPath);
@@ -92,7 +94,7 @@ namespace NarrativeGen.Core
             if (entity != null && entity.HasProperty(propertyName))
             {
                 var propertyValue = entity.GetProperty(propertyName);
-                if (propertyValue.Value is T value)
+                if (propertyValue?.Value is T value)
                 {
                     return value;
                 }

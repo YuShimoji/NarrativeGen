@@ -107,7 +107,15 @@ namespace NarrativeGen.Core.Entities
         }
 
         /// <summary>
-        /// 指定されたプロパティ名と値でEntityを検索するための比較
+        /// プロパティの存在確認（オーバーロード1）
+        /// </summary>
+        public bool HasProperty(string propertyName)
+        {
+            return _properties.ContainsKey(propertyName);
+        }
+
+        /// <summary>
+        /// 指定されたプロパティ名と値でEntityを検索するための比較（オーバーロード2）
         /// </summary>
         public bool HasProperty(string propertyName, object expectedValue)
         {
@@ -118,6 +126,14 @@ namespace NarrativeGen.Core.Entities
                 return property.Value == null;
 
             return property.Value?.ToString().Equals(expectedValue.ToString(), StringComparison.OrdinalIgnoreCase) == true;
+        }
+
+        /// <summary>
+        /// 全プロパティ取得 - 既存コードとの互換性
+        /// </summary>
+        public Dictionary<string, PropertyValue> GetAllProperties()
+        {
+            return new Dictionary<string, PropertyValue>(_properties);
         }
 
         /// <summary>
