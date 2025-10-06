@@ -1,26 +1,16 @@
 # NarrativeGen - Cursor Web対応版
-
 ## 📋 プロジェクト概要
 
 Unityプロジェクトと**並行してCursor webでも開発可能**なナラティブ生成システムです。  
 **memo.txt** と **構文メモ.txt** の設計思想を完全に実装した、Unity非依存の核心ライブラリです。
 
-### ✅ 開発タスクリスト
-詳細な進行中タスクは以下を参照してください。
-- `Documentation/01_Current_Status/TASK_LIST.md`
-
-## 🎯 設計思想の実装
-
-### ✅ 完全実装済み機能
-
-#### 🔄 遡行検索エンジン (構文メモ.txt準拠)
-```
-入力: [そこに置いてある][傘]は[壊れ]ている。
-処理: [～]が残っていれば更に遡って辞書検索を繰り返す
-出力: そこの古い傘は壊れかけている。
-```
-
-#### 🏗️ Entity-Property システム (memo.txt準拠)
+### 🧪 Unity起動時エラーハンドリング/リトライのテスト手順（要約）
+- 詳細は `Documentation/01_Current_Status/CURRENT_PROJECT_STATUS.md` を参照
+- 概要:
+  1. `Assets/Scenes/DemoScene.unity` を開き、`GameManager`/`UIManager` の参照を確認
+  2. 正常系: `Play` 実行 → テキスト/選択肢表示、リトライボタンは非表示
+  3. エラー系: `GameManager.m_StartEventID` を存在しないIDに → エラー表示と「リトライ」出現
+  4. リトライ: 設定/ファイルを正に戻し、リトライ押下 → DB/Logic 再初期化後に開始イベントから再開
 ```csharp
 // チーズバーガー例の完全実装
 var cheeseburger = engine.CreateEntity("test_item", "誰々が食べていたマックのチーズバーガー");
@@ -32,6 +22,7 @@ observer.SetProperty("tolerance_重さ", 10.0f);
 
 // 違和感検出: 0.12kg > 0.11kg(±10%) → 違和感トリガー
 var reaction = engine.DetectInconsistency("observer", "test_item", "重さ");
+```
 // 出力: "微妙に重い気がする。本当にチーズバーガーだったのか？"
 ```
 
@@ -199,12 +190,45 @@ test_event,[今日は]{良い||素晴らしい}[天気]ですね。,GOTO END,
 
 ---
 
-## 🎯 設計思想の堅牢性
 
 このシステムは**memo.txt**と**構文メモ.txt**の要求を完全に満たし、以下の原則を徹底しています：
 
 - **YAGNI/KISS/DRY**: 簡潔性・機能分離の徹底
 - **既定値システム**: 細かい設定漏れ防止・変数設定地獄の回避
-- **文単位制約**: 翻訳対応のための厳格なルール遵守
-- **思いつき回避**: 当て推量でのバリエーション増加禁止
-- **循環参照検出**: 無限ループ防止・グレースフルデグラデーション
+ - **文単位制約**: 翻訳対応のための厳格なルール遵守
+ - **思いつき回避**: 当て推量でのバリエーション増加禁止
+ - **循環参照検出**: 無限ループ防止・グレースフルデグラデーション
+ 
+ ---
+ 
+ ## 🧱 Clean Architecture と Unity 連携ビルド手順（補足）
+ 
+ - **注意: `dotnet restore` の実行範囲**
+   - リポジトリ直下（ルート）での `dotnet restore` は複数プロジェクトのため失敗する場合があります。
+   - 必ずプロジェクト単位で実行してください。
+ 
+ ```powershell
+ # Restore (プロジェクト単位)
+ dotnet restore src/NarrativeGen.Domain.csproj -nologo
+ dotnet restore src/NarrativeGen.Application.csproj -nologo
+ dotnet restore src/NarrativeGen.Infrastructure.csproj -nologo
+ dotnet restore adapters/NarrativeGen.Adapter.csproj -nologo
+ ```
+ 
+ - **Unity 向け DLL 生成（netstandard2.1）**
+ 
+ ```powershell
+ dotnet build src/NarrativeGen.Domain.csproj -f netstandard2.1 -nologo
+ dotnet build src/NarrativeGen.Application.csproj -f netstandard2.1 -nologo
+ dotnet build src/NarrativeGen.Infrastructure.csproj -f netstandard2.1 -nologo
+ dotnet build adapters/NarrativeGen.Adapter.csproj -f netstandard2.1 -nologo
+ ```
+ 
+ - **Unity への配置例**
+   - `src/bin/Debug/netstandard2.1/NarrativeGen.Domain.dll`
+   - `src/bin/Debug/netstandard2.1/NarrativeGen.Application.dll`
+   - `src/bin/Debug/netstandard2.1/NarrativeGen.Infrastructure.dll`
+   - `adapters/bin/Debug/netstandard2.1/NarrativeGen.Adapter.dll`
+   - 推奨配置先: `Assets/Plugins/NarrativeGen/`
+ 
+ > Infrastructure は `default_properties` 列の JSON を読み取るため、.NET 8 では `System.Text.Json`、Unity 向け `netstandard2.1` では `Newtonsoft.Json` を使用します（条件コンパイル/条件参照）。
