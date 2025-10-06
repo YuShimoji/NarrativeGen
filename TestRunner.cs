@@ -1,40 +1,45 @@
 using System;
-using NarrativeGen.Core;
-using NarrativeGen.Core.Entities;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using NarrativeGen.Application.UseCases;
+using NarrativeGen.Domain.Entities;
+using NarrativeGen.Domain.Services;
+using NarrativeGen.Infrastructure.Repositories;
 
 namespace NarrativeGen.Test
 {
     /// <summary>
-    /// Entity-Propertyシステムの統合テスト実行
+    /// Entity-Propertyシステムの統合テスト実行（Clean Architecture 構成）
     /// </summary>
     class TestRunner
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            Console.WriteLine("=== Entity-Property System Integration Test ===");
+            Console.WriteLine("=== Entity-Property System Integration Test (Clean Architecture) ===");
             
             try
             {
-                // GameManagerの初期化テスト
-                var gameManager = new GameManager();
-                Console.WriteLine("✓ GameManager initialized successfully");
-                
-                // システム状態の確認
-                var (entityCount, typeCount) = gameManager.GetSystemStatus();
-                Console.WriteLine($"✓ System Status: {entityCount} entities, {typeCount} types");
+                // Clean Architecture 構成
+                var dataRoot = Path.Combine("Assets", "Data");
+                var entitiesCsv = Path.Combine(dataRoot, "Entities.csv");
+                var typesCsv = Path.Combine(dataRoot, "EntityTypes.csv");
+
+                var entityRepo = new CsvEntityRepository(entitiesCsv);
+                var typeRepo = new CsvEntityTypeRepository(typesCsv);
+                var inheritance = new EntityInheritanceService(typeRepo);
+                var useCase = new EntityUseCase(entityRepo, typeRepo, inheritance);
                 
                 // CSV読み込みテスト
                 try
                 {
-                    gameManager.Initialize("Assets/Data/");
+                    var allEntities = await entityRepo.GetAllAsync();
+                    var allTypes = await typeRepo.GetAllAsync();
                     Console.WriteLine("✓ CSV data loaded successfully");
-                    
-                    // 再度システム状態を確認
-                    var (newEntityCount, newTypeCount) = gameManager.GetSystemStatus();
-                    Console.WriteLine($"✓ After loading: {newEntityCount} entities, {newTypeCount} types");
+                    Console.WriteLine($"✓ After loading: {allEntities.Count()} entities, {allTypes.Count()} types");
                     
                     // サンプルエンティティのテスト
-                    var sampleEntity = gameManager.GetEntity("mac_burger_001");
+                    var sampleEntity = await entityRepo.GetByIdAsync("mac_burger_001");
                     if (sampleEntity != null)
                     {
                         Console.WriteLine($"✓ Sample entity found: {sampleEntity.Id}");
@@ -47,7 +52,7 @@ namespace NarrativeGen.Test
                     }
                     
                     // 検索テスト
-                    var searchResults = gameManager.SearchEntities("burger");
+                    var searchResults = allEntities.Where(e => e.Id.IndexOf("burger", StringComparison.OrdinalIgnoreCase) >= 0).ToList();
                     Console.WriteLine($"✓ Search test: found {searchResults.Count} entities for 'burger'");
                     
                 }
@@ -58,17 +63,22 @@ namespace NarrativeGen.Test
                 }
                 
                 // システム検証
-                var validationErrors = gameManager.ValidateSystem();
-                if (validationErrors.Count == 0)
+                // 簡易バリデーション: 全エンティティの TypeId が存在していること
                 {
-                    Console.WriteLine("✓ System validation passed");
-                }
-                else
-                {
-                    Console.WriteLine($"! System validation found {validationErrors.Count} issues:");
-                    foreach (var error in validationErrors)
+                    var allEntities2 = await entityRepo.GetAllAsync();
+                    var allTypeIds = (await typeRepo.GetAllAsync()).Select(t => t.Id).ToHashSet();
+                    var missingType = allEntities2.Where(e => !allTypeIds.Contains(e.TypeId)).Select(e => e.Id).ToList();
+                    if (missingType.Count == 0)
                     {
-                        Console.WriteLine($"  - {error}");
+                        Console.WriteLine("✓ System validation passed (all entities have valid TypeId)");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"! System validation found {missingType.Count} entities with missing TypeId:");
+                        foreach (var id in missingType)
+                        {
+                            Console.WriteLine($"  - {id}");
+                        }
                     }
                 }
                 
