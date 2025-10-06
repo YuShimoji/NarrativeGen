@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultItems>false</EnableDefaultItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\src\NarrativeGen.Domain.csproj" />
+    <ProjectReference Include="..\src\NarrativeGen.Application.csproj" />
+    <ProjectReference Include="..\src\NarrativeGen.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ServiceComposition\CompositionRoot.cs" />
+  </ItemGroup>
+</Project>

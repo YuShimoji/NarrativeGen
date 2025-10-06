@@ -118,3 +118,4 @@ crashlytics-build.properties
 !/src/NarrativeGen.Domain.csproj
 !/src/NarrativeGen.Application.csproj
 !/src/NarrativeGen.Infrastructure.csproj
+!/adapters/NarrativeGen.Adapter.csproj
