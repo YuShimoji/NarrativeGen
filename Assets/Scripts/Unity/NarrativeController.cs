@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
-using NarrativeGen.Core.Entities;
-using NarrativeGen.Debug;
+using NarrativeGen.Adapter.ServiceComposition;
+using NarrativeGen.Application.UseCases;
+using NarrativeGen.Domain.Entities;
 
 namespace NarrativeGen.Unity
 {
@@ -17,8 +20,8 @@ namespace NarrativeGen.Unity
         [Header("UI References")]
         [SerializeField] private GameObject uiManager;
         
-        // Core Entity System
-        private EntityManager _entityManager;
+        // Adapter-composed services (Domain/Application/Infrastructure)
+        private CompositionRoot.Services _services;
         
         // Events for UI
         public event Action<string> OnShowText;
@@ -30,9 +33,9 @@ namespace NarrativeGen.Unity
             InitializeEntitySystem();
         }
         
-        private void Start()
+        private async void Start()
         {
-            LoadInitialData();
+            await ValidateAndLogAsync();
         }
         
         /// <summary>
@@ -40,50 +43,35 @@ namespace NarrativeGen.Unity
         /// </summary>
         private void InitializeEntitySystem()
         {
-            _entityManager = new EntityManager();
-            Log.Message("Entity-Property System initialized");
+            var entityTypesPath = System.IO.Path.Combine(csvDataPath, "EntityTypes.csv");
+            var entitiesPath = System.IO.Path.Combine(csvDataPath, "Entities.csv");
+            _services = CompositionRoot.CreateFromCsv(entitiesPath, entityTypesPath);
+            Debug.Log("Entity-Property System initialized (Adapter)");
         }
         
         /// <summary>
         /// 初期データの読み込み
         /// </summary>
-        private void LoadInitialData()
+        private async Task ValidateAndLogAsync()
         {
             try
             {
-                // CSV データの読み込み
-                string entityTypesPath = csvDataPath + "EntityTypes.csv";
-                string entitiesPath = csvDataPath + "Entities.csv";
-                _entityManager.LoadFromCsv(entityTypesPath, entitiesPath);
-                Log.Message("CSV data loaded successfully");
-                
-                // 検証実行
-                var errors = _entityManager.ValidateAllData();
-                if (errors.Count > 0)
-                {
-                    Log.LogWarning($"Validation found {errors.Count} issues:");
-                    foreach (var error in errors)
-                    {
-                        Log.LogWarning($"- {error}");
-                    }
-                }
-                else
-                {
-                    Log.Message("All data validation passed");
-                }
+                var types = await _services.EntityTypeRepository.GetAllAsync();
+                var entities = await _services.EntityRepository.GetAllAsync();
+                Debug.Log($"CSV data loaded successfully: {entities.Count()} entities, {types.Count()} types");
             }
             catch (Exception ex)
             {
-                Log.LogError($"Failed to load initial data: {ex.Message}");
+                Debug.LogError($"Failed to load initial data: {ex.Message}");
             }
         }
         
         /// <summary>
         /// エンティティの取得
         /// </summary>
-        public Entity GetEntity(string entityId)
+        public Entity? GetEntity(string entityId)
         {
-            return _entityManager.GetEntity(entityId);
+            return _services?.EntityRepository.GetByIdAsync(entityId).GetAwaiter().GetResult();
         }
         
         /// <summary>
@@ -91,7 +79,10 @@ namespace NarrativeGen.Unity
         /// </summary>
         public List<Entity> SearchEntities(string query)
         {
-            return _entityManager.SearchEntities(query);
+            var all = _services?.EntityRepository.GetAllAsync().GetAwaiter().GetResult() ?? Enumerable.Empty<Entity>();
+            return all
+                .Where(e => !string.IsNullOrEmpty(query) && e.Id.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
+                .ToList();
         }
         
         /// <summary>
@@ -99,15 +90,8 @@ namespace NarrativeGen.Unity
         /// </summary>
         public T GetPropertyValue<T>(string entityId, string propertyName)
         {
-            var entity = _entityManager.GetEntity(entityId);
-            if (entity != null && entity.HasProperty(propertyName))
-            {
-                var propertyValue = entity.GetProperty(propertyName);
-                if (propertyValue.Value is T value)
-                {
-                    return value;
-                }
-            }
+            var pv = _services?.EntityUseCase.GetEntityPropertyAsync(entityId, propertyName).GetAwaiter().GetResult();
+            if (pv != null && pv.Value is T t) return t;
             return default(T);
         }
         
@@ -132,17 +116,16 @@ namespace NarrativeGen.Unity
         /// </summary>
         public void DebugEntitySystem()
         {
-            if (_entityManager == null) return;
-            
-            var allEntities = _entityManager.GetAllEntities();
-            var allEntityTypes = _entityManager.GetAllEntityTypes();
-            Log.Message($"Total Entities: {allEntities.Count}");
-            
+            if (_services == null) return;
+
+            var allEntities = _services.EntityRepository.GetAllAsync().GetAwaiter().GetResult();
+            var allEntityTypes = _services.EntityTypeRepository.GetAllAsync().GetAwaiter().GetResult();
+            Debug.Log($"Total Entities: {allEntities.Count()}");
+
             foreach (var entity in allEntities)
             {
-                Log.Message($"Entity: {entity.Id} (Type: {entity.TypeId})");
-                Log.Message($"Properties: {entity.GetAllProperties().Count}");
-                Log.Message($"Details: {entity}");
+                Debug.Log($"Entity: {entity.Id} (Type: {entity.TypeId})");
+                Debug.Log($"Properties: {entity.GetAllProperties().Count}");
             }
         }
         
@@ -151,19 +134,18 @@ namespace NarrativeGen.Unity
         /// </summary>
         public void ShowDebugInfo()
         {
-            if (_entityManager != null)
+            if (_services != null)
             {
-                var entityCount = _entityManager.GetAllEntities().Count;
-                var typeCount = _entityManager.GetAllEntityTypes().Count;
-                Log.Message($"Entity System Status: {entityCount} entities, {typeCount} types");
-                
-                // サンプルエンティティの情報表示
-                var sampleEntity = _entityManager.GetEntity("mac_burger_001");
+                var entityCount = _services.EntityRepository.GetAllAsync().GetAwaiter().GetResult().Count();
+                var typeCount = _services.EntityTypeRepository.GetAllAsync().GetAwaiter().GetResult().Count();
+                Debug.Log($"Entity System Status: {entityCount} entities, {typeCount} types");
+
+                var sampleEntity = _services.EntityRepository.GetByIdAsync("mac_burger_001").GetAwaiter().GetResult();
                 if (sampleEntity != null)
                 {
-                    Log.Message($"Sample Entity: {sampleEntity.Id}");
-                    Log.Message($"Type: {sampleEntity.TypeId}");
-                    Log.Message($"Properties: {sampleEntity.GetAllProperties().Count}");
+                    Debug.Log($"Sample Entity: {sampleEntity.Id}");
+                    Debug.Log($"Type: {sampleEntity.TypeId}");
+                    Debug.Log($"Properties: {sampleEntity.GetAllProperties().Count}");
                 }
             }
         }
