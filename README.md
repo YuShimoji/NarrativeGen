@@ -1,5 +1,7 @@
 # NarrativeGen
 
+[![CI](https://github.com/YuShimoji/NarrativeGen/actions/workflows/ci.yml/badge.svg)](https://github.com/YuShimoji/NarrativeGen/actions/workflows/ci.yml)
+
 Rebuild from scratch: A narrative playthrough engine and Unity SDK.
 
 - `models/` — JSON schema and sample models
