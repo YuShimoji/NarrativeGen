@@ -25,8 +25,8 @@ namespace VastCore.NarrativeGen
                 var map = ParseEntitiesCsv(EntitiesCsv.text);
                 if (map.TryGetValue(TargetId, out var ent))
                 {
-                    Debug.Log($"[MinimalNarrativeController] Entity '{TargetId}' brand: {ent.brand}");
-                    Debug.Log($"[MinimalNarrativeController] Entity '{TargetId}' description: {ent.description}");
+                    Debug.Log($"[MinimalNarrativeController] Entity '{TargetId}' brand: {ent.Brand}");
+                    Debug.Log($"[MinimalNarrativeController] Entity '{TargetId}' description: {ent.Description}");
                 }
                 else
                 {
@@ -39,9 +39,9 @@ namespace VastCore.NarrativeGen
             }
         }
 
-        private static Dictionary<string, (string brand, string description)> ParseEntitiesCsv(string csv)
+        private static Dictionary<string, Entity> ParseEntitiesCsv(string csv)
         {
-            var result = new Dictionary<string, (string brand, string description)>();
+            var result = new Dictionary<string, Entity>();
             if (string.IsNullOrWhiteSpace(csv)) return result;
 
             var lines = csv.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
@@ -70,7 +70,7 @@ namespace VastCore.NarrativeGen
                 if (string.IsNullOrEmpty(id)) continue;
                 string brand = SafeGet(row, colIndex["brand"]).Trim();
                 string description = SafeGet(row, colIndex["description"]).Trim();
-                result[id] = (brand, description);
+                result[id] = new Entity { Id = id, Brand = brand, Description = description };
             }
             return result;
         }
