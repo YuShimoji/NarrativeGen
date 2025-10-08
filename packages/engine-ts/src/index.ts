@@ -14,6 +14,18 @@ import type {
   SessionState,
 } from './types'
 
+export type {
+  Choice,
+  Condition,
+  Effect,
+  FlagState,
+  Model,
+  ResourceState,
+  SessionState,
+} from './types'
+
+export { Entity, parseEntitiesCsv, loadEntitiesFromFile } from './entities'
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 function loadSchema(): any {
