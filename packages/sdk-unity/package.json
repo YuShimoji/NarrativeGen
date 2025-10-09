@@ -9,5 +9,12 @@
   },
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.2.1"
-  }
+  },
+  "samples": [
+    {
+      "displayName": "Minimal",
+      "description": "Minimal sample with a controller that logs an entity's brand and description.",
+      "path": "Samples~/Minimal"
+    }
+  ]
 }
