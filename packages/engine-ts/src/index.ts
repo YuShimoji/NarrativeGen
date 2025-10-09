@@ -138,3 +138,7 @@ export function deserialize(payload: string): SessionState {
   const parsed = JSON.parse(payload)
   return parsed as SessionState
 }
+
+export type { Entity } from './entities'
+export { parseEntitiesCsv } from './entities'
+export { Inventory } from './inventory'
