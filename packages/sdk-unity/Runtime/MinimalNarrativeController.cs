@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine;
 
 namespace VastCore.NarrativeGen
@@ -7,7 +8,7 @@ namespace VastCore.NarrativeGen
     [AddComponentMenu("NarrativeGen/MinimalNarrativeController")]
     public class MinimalNarrativeController : MonoBehaviour
     {
-        [Tooltip("Entities CSV TextAsset (id,brand,description)")]
+        [Tooltip("Entities CSV TextAsset (id,brand,description,cost)")]
         public TextAsset EntitiesCsv;
 
         [Tooltip("Target entity id to log")] public string TargetId = "mac_burger_001";
@@ -25,8 +26,9 @@ namespace VastCore.NarrativeGen
                 var map = ParseEntitiesCsv(EntitiesCsv.text);
                 if (map.TryGetValue(TargetId, out var ent))
                 {
-                    Debug.Log($"[MinimalNarrativeController] Entity '{TargetId}' brand: {ent.brand}");
-                    Debug.Log($"[MinimalNarrativeController] Entity '{TargetId}' description: {ent.description}");
+                    Debug.Log($"[MinimalNarrativeController] Entity '{TargetId}' brand: {ent.Brand}");
+                    Debug.Log($"[MinimalNarrativeController] Entity '{TargetId}' description: {ent.Description}");
+                    Debug.Log($"[MinimalNarrativeController] Entity '{TargetId}' cost: {ent.Cost}");
                 }
                 else
                 {
@@ -39,9 +41,9 @@ namespace VastCore.NarrativeGen
             }
         }
 
-        private static Dictionary<string, (string brand, string description)> ParseEntitiesCsv(string csv)
+        private static Dictionary<string, Entity> ParseEntitiesCsv(string csv)
         {
-            var result = new Dictionary<string, (string brand, string description)>();
+            var result = new Dictionary<string, Entity>();
             if (string.IsNullOrWhiteSpace(csv)) return result;
 
             var lines = csv.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
@@ -60,8 +62,8 @@ namespace VastCore.NarrativeGen
             {
                 colIndex[header[i]] = i;
             }
-            if (!colIndex.ContainsKey("id") || !colIndex.ContainsKey("brand") || !colIndex.ContainsKey("description"))
-                throw new ArgumentException("Entities.csv must contain columns: id, brand, description");
+            if (!colIndex.ContainsKey("id") || !colIndex.ContainsKey("brand") || !colIndex.ContainsKey("description") || !colIndex.ContainsKey("cost"))
+                throw new ArgumentException("Entities.csv must contain columns: id, brand, description, cost");
 
             for (int i = 1; i < rows.Count; i++)
             {
@@ -70,7 +72,18 @@ namespace VastCore.NarrativeGen
                 if (string.IsNullOrEmpty(id)) continue;
                 string brand = SafeGet(row, colIndex["brand"]).Trim();
                 string description = SafeGet(row, colIndex["description"]).Trim();
-                result[id] = (brand, description);
+                string rawCost = SafeGet(row, colIndex["cost"]).Trim();
+                double cost = 0;
+                if (!string.IsNullOrEmpty(rawCost))
+                    double.TryParse(rawCost, NumberStyles.Any, CultureInfo.InvariantCulture, out cost);
+
+                result[id] = new Entity
+                {
+                    Id = id,
+                    Brand = brand,
+                    Description = description,
+                    Cost = cost,
+                };
             }
             return result;
         }
