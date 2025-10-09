@@ -1,0 +1,7 @@
+{
+  "name": "narrativegen-monorepo",
+  "private": true,
+  "scripts": {
+    "test:engine": "npm run test --prefix packages/engine-ts"
+  }
+}
