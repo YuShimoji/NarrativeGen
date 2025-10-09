@@ -1,2 +1,2 @@
-id,brand,description
-mac_burger_001,MacBurger,これはおいしいチーズバーガーです
+id,brand,description,cost
+mac_burger_001,MacBurger,これはおいしいチーズバーガーです,100

@@ -4,6 +4,7 @@ export interface Entity {
   id: string
   brand: string
   description: string
+  cost: number
 }
 
 function parseCsvRow(row: string): string[] {
@@ -48,7 +49,7 @@ export function parseEntitiesCsv(csv: string): Entity[] {
   const header = parseCsvRow(lines[0])
   const colIndex: Record<string, number> = {}
   header.forEach((h, idx) => (colIndex[h] = idx))
-  const required = ['id', 'brand', 'description']
+  const required = ['id', 'brand', 'description', 'cost']
   for (const key of required) {
     if (!(key in colIndex)) throw new Error(`Missing column '${key}' in Entities.csv`)
   }
@@ -57,10 +58,13 @@ export function parseEntitiesCsv(csv: string): Entity[] {
     const row = parseCsvRow(lines[i])
     const id = row[colIndex['id']]?.trim()
     if (!id) continue
+    const rawCost = (row[colIndex['cost']] ?? '').trim()
+    const cost = rawCost.length > 0 ? Number(rawCost) : 0
     out.push({
       id,
       brand: (row[colIndex['brand']] ?? '').trim(),
       description: (row[colIndex['description']] ?? '').trim(),
+      cost: Number.isFinite(cost) ? cost : 0,
     })
   }
   return out
