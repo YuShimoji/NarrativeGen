@@ -32,3 +32,5 @@ export class Inventory {
     return Array.from(this.items)
   }
 }
+
+export default Inventory
