@@ -4,7 +4,9 @@ using System.Text;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace VastCore.NarrativeGen.Editor
 {
@@ -34,7 +36,18 @@ namespace VastCore.NarrativeGen.Editor
                 csvAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(CsvPath);
             }
             ctrl.EntitiesCsv = csvAsset;
-            ctrl.TargetId = "mac_burger_001";
+
+            var canvas = CreateCanvas();
+            var panel = CreateChoicesPanel(canvas.transform);
+            var status = CreateStatusText(panel.transform);
+            var buttonTemplate = CreateChoiceButtonTemplate(panel.transform);
+            buttonTemplate.gameObject.SetActive(false);
+
+            ctrl.ChoicesRoot = panel.GetComponent<RectTransform>();
+            ctrl.ChoiceButtonPrefab = buttonTemplate;
+            ctrl.StatusText = status;
+
+            CreateEventSystemIfMissing();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.Refresh();
@@ -54,10 +67,108 @@ namespace VastCore.NarrativeGen.Editor
         {
             if (!File.Exists(CsvPath))
             {
-                var csv = "id,brand,description\nmac_burger_001,MacBurger,これはおいしいチーズバーガーです\n";
+                var csv =
+                    "id,brand,description,cost\n" +
+                    "mac_burger_001,MacBurger,これはおいしいチーズバーガーです,100\n" +
+                    "coffee_001,CoffeeStand,香り高いコーヒーです,50\n";
                 File.WriteAllText(CsvPath, csv, Encoding.UTF8);
                 AssetDatabase.ImportAsset(CsvPath);
             }
+        }
+
+        private static GameObject CreateCanvas()
+        {
+            var canvasGo = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            var canvas = canvasGo.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+
+            var scaler = canvasGo.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1280, 720);
+
+            return canvasGo;
+        }
+
+        private static RectTransform CreateChoicesPanel(Transform parent)
+        {
+            var panelGo = new GameObject("ChoicesPanel", typeof(RectTransform), typeof(Image), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
+            var rect = panelGo.GetComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.anchorMin = new Vector2(0.5f, 0f);
+            rect.anchorMax = new Vector2(0.5f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = new Vector2(0f, 32f);
+            rect.sizeDelta = new Vector2(360f, 0f);
+
+            var image = panelGo.GetComponent<Image>();
+            image.color = new Color(0f, 0f, 0f, 0.4f);
+
+            var layout = panelGo.GetComponent<VerticalLayoutGroup>();
+            layout.padding = new RectOffset(16, 16, 16, 16);
+            layout.spacing = 12f;
+            layout.childForceExpandHeight = false;
+            layout.childForceExpandWidth = true;
+
+            var fitter = panelGo.GetComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            return rect;
+        }
+
+        private static Text CreateStatusText(Transform parent)
+        {
+            var textGo = new GameObject("StatusText", typeof(RectTransform), typeof(Text));
+            var rect = textGo.GetComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.sizeDelta = new Vector2(0f, 60f);
+
+            var text = textGo.GetComponent<Text>();
+            text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            text.fontSize = 20;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = Color.white;
+            text.text = "状態: 初期化待ち";
+
+            return text;
+        }
+
+        private static Button CreateChoiceButtonTemplate(Transform parent)
+        {
+            var buttonGo = new GameObject("ChoiceButtonTemplate", typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
+            var rect = buttonGo.GetComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.sizeDelta = new Vector2(0f, 48f);
+
+            var image = buttonGo.GetComponent<Image>();
+            image.color = new Color(0.1f, 0.33f, 0.7f, 0.95f);
+
+            var layout = buttonGo.GetComponent<LayoutElement>();
+            layout.minHeight = 48f;
+
+            var textGo = new GameObject("Text", typeof(RectTransform), typeof(Text));
+            var textRect = textGo.GetComponent<RectTransform>();
+            textRect.SetParent(buttonGo.transform, false);
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
+
+            var text = textGo.GetComponent<Text>();
+            text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            text.fontSize = 18;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = Color.white;
+            text.text = "選択肢";
+
+            return buttonGo.GetComponent<Button>();
+        }
+
+        private static void CreateEventSystemIfMissing()
+        {
+            if (Object.FindObjectOfType<EventSystem>() != null) return;
+            var eventSystemGo = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+            Object.DontDestroyOnLoad(eventSystemGo);
         }
     }
 }

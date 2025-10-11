@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace VastCore.NarrativeGen
 {
@@ -11,34 +13,191 @@ namespace VastCore.NarrativeGen
         [Tooltip("Entities CSV TextAsset (id,brand,description,cost)")]
         public TextAsset EntitiesCsv;
 
-        [Tooltip("Target entity id to log")] public string TargetId = "mac_burger_001";
+        [Tooltip("Root container that will receive instantiated choice buttons")]
+        public RectTransform ChoicesRoot;
+
+        [Tooltip("Template button cloned per available choice")]
+        public Button ChoiceButtonPrefab;
+
+        [Tooltip("Text element showing current session status")]
+        public Text StatusText;
+
+        private GameSession? _session;
+        private NarrativeModel? _model;
+        private readonly List<Button> _spawnedButtons = new();
 
         private void OnEnable()
         {
             try
             {
-                if (EntitiesCsv == null)
-                {
-                    Debug.LogWarning("[MinimalNarrativeController] EntitiesCsv is not assigned");
-                    return;
-                }
-
-                var map = ParseEntitiesCsv(EntitiesCsv.text);
-                if (map.TryGetValue(TargetId, out var ent))
-                {
-                    Debug.Log($"[MinimalNarrativeController] Entity '{TargetId}' brand: {ent.Brand}");
-                    Debug.Log($"[MinimalNarrativeController] Entity '{TargetId}' description: {ent.Description}");
-                    Debug.Log($"[MinimalNarrativeController] Entity '{TargetId}' cost: {ent.Cost}");
-                }
-                else
-                {
-                    Debug.LogWarning($"[MinimalNarrativeController] Entity id not found: {TargetId}");
-                }
+                InitializeSession();
+                RefreshChoices();
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[MinimalNarrativeController] Failed to parse Entities CSV: {ex.Message}");
+                Debug.LogError($"[MinimalNarrativeController] Initialization failed: {ex.Message}");
             }
+        }
+
+        private void OnDisable()
+        {
+            ClearButtons();
+            _session = null;
+            _model = null;
+        }
+
+        private void InitializeSession()
+        {
+            if (EntitiesCsv == null)
+                throw new InvalidOperationException("EntitiesCsv is not assigned");
+            if (ChoicesRoot == null)
+                throw new InvalidOperationException("ChoicesRoot is not assigned");
+            if (ChoiceButtonPrefab == null)
+                throw new InvalidOperationException("ChoiceButtonPrefab is not assigned");
+            if (StatusText == null)
+                throw new InvalidOperationException("StatusText is not assigned");
+
+            var entities = ParseEntitiesCsv(EntitiesCsv.text).Values.ToList();
+            if (entities.Count == 0)
+                throw new InvalidOperationException("No entities parsed from CSV");
+
+            _model = CreateSampleModel();
+            _session = new GameSession(_model, entities);
+            UpdateStatus("状態: セッション開始");
+            LogInventory();
+        }
+
+        private void RefreshChoices()
+        {
+            if (_session == null)
+            {
+                UpdateStatus("状態: セッション未初期化");
+                return;
+            }
+
+            ClearButtons();
+
+            var choices = _session.GetAvailableChoices();
+            if (choices.Count == 0)
+            {
+                UpdateStatus("状態: 利用可能な選択肢なし");
+                return;
+            }
+
+            foreach (var choice in choices)
+            {
+                var button = Instantiate(ChoiceButtonPrefab, ChoicesRoot);
+                button.gameObject.name = $"Choice_{choice.Id}";
+                if (button.TryGetComponentInChildren(out Text text))
+                {
+                    text.text = choice.Text;
+                }
+                button.gameObject.SetActive(true);
+                button.onClick.AddListener(() => HandleChoiceSelected(choice.Id));
+                _spawnedButtons.Add(button);
+            }
+        }
+
+        private void HandleChoiceSelected(string choiceId)
+        {
+            if (_session == null)
+            {
+                Debug.LogWarning("[MinimalNarrativeController] Session not initialized");
+                return;
+            }
+
+            try
+            {
+                var state = _session.ApplyChoice(choiceId);
+                Debug.Log($"[MinimalNarrativeController] Applied choice '{choiceId}'. Node={state.CurrentNodeId}, Time={state.Time}");
+                if (_session.LastOutcome != null)
+                {
+                    Debug.Log($"[MinimalNarrativeController] Outcome: {_session.LastOutcome.Type} => {_session.LastOutcome.Value}");
+                }
+                LogInventory();
+                UpdateStatus($"状態: 選択 '{choiceId}' を適用");
+                RefreshChoices();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[MinimalNarrativeController] Failed to apply choice '{choiceId}': {ex.Message}");
+            }
+        }
+
+        private void UpdateStatus(string message)
+        {
+            if (StatusText != null)
+            {
+                StatusText.text = message;
+            }
+        }
+
+        private void ClearButtons()
+        {
+            foreach (var button in _spawnedButtons)
+            {
+                if (button != null)
+                {
+                    DestroyImmediate(button.gameObject);
+                }
+            }
+            _spawnedButtons.Clear();
+        }
+
+        private void LogInventory()
+        {
+            if (_session == null) return;
+            var inventory = _session.ListInventory();
+            if (inventory.Count == 0)
+            {
+                Debug.Log("[MinimalNarrativeController] Inventory is empty");
+                return;
+            }
+
+            foreach (var entity in inventory)
+            {
+                Debug.Log($"[MinimalNarrativeController] Inventory contains: {entity.Id} ({entity.Brand})");
+            }
+        }
+
+        private static NarrativeModel CreateSampleModel()
+        {
+            var node = new Node
+            {
+                Id = "hub",
+                Text = "メニューを選んでください",
+                Choices = new List<Choice>
+                {
+                    new Choice
+                    {
+                        Id = "choose_burger",
+                        Text = "チーズバーガーを食べる",
+                        Target = "hub",
+                        Outcome = new ChoiceOutcome { Type = "ADD_ITEM", Value = "mac_burger_001" }
+                    },
+                    new Choice
+                    {
+                        Id = "choose_coffee",
+                        Text = "コーヒーを飲む",
+                        Target = "hub",
+                        Outcome = new ChoiceOutcome { Type = "ADD_ITEM", Value = "coffee_001" }
+                    },
+                    new Choice
+                    {
+                        Id = "discard",
+                        Text = "アイテムを捨てる",
+                        Target = "hub",
+                        Outcome = new ChoiceOutcome { Type = "REMOVE_ITEM", Value = "mac_burger_001" }
+                    }
+                }
+            };
+
+            return new NarrativeModel
+            {
+                ModelType = "unity-sample",
+                StartNode = node.Id,
+                Nodes = new Dictionary<string, Node> { [node.Id] = node }
+            };
         }
 
         private static Dictionary<string, Entity> ParseEntitiesCsv(string csv)
