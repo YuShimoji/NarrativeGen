@@ -69,8 +69,8 @@ namespace VastCore.NarrativeGen
                 target = node.Id; // stay if no target specified
             if (!model.Nodes.ContainsKey(target))
                 throw new ArgumentException($"Target node '{target}' not found in model");
-
-            return session.With(currentNodeId: target, flags: flags, resources: resources);
+            var nextTime = session.Time + 1;
+            return session.With(currentNodeId: target, flags: flags, resources: resources, time: nextTime);
         }
 
         private static bool EvaluateConditions(List<Condition>? conditions, Runtime.Session session)
