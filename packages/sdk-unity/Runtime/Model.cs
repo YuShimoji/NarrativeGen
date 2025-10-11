@@ -62,6 +62,7 @@ namespace VastCore.NarrativeGen
         [JsonProperty("target")] public string? Target { get; set; }
         [JsonProperty("conditions")] public List<Condition>? Conditions { get; set; }
         [JsonProperty("effects")] public List<Effect>? Effects { get; set; }
+        [JsonProperty("outcome")] public ChoiceOutcome? Outcome { get; set; }
 
         public void Validate()
         {
@@ -70,6 +71,12 @@ namespace VastCore.NarrativeGen
             if (string.IsNullOrWhiteSpace(Text))
                 throw new ArgumentException("Choice.text is required");
         }
+    }
+
+    public class ChoiceOutcome
+    {
+        [JsonProperty("type")] public string Type { get; set; } = string.Empty;
+        [JsonProperty("value")] public string Value { get; set; } = string.Empty;
     }
 
     // Conditions
