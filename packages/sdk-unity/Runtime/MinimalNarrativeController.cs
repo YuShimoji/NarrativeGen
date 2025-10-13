@@ -98,8 +98,7 @@ namespace NarrativeGen
 
             foreach (var choice in choices)
             {
-                var button = Instantiate(ChoiceButtonPrefab, ChoicesRoot);
-                button.gameObject.name = $"Choice_{choice.Id}";
+                var button = CreateChoiceButton(choice);
                 var text = button.GetComponentInChildren<TextMeshProUGUI>();
                 if (text != null)
                 {
@@ -114,7 +113,9 @@ namespace NarrativeGen
                     }
                 }
                 button.gameObject.SetActive(true);
-                button.onClick.AddListener(() => HandleChoiceSelected(choice.Id));
+                button.onClick.RemoveAllListeners();
+                var choiceId = choice.Id;
+                button.onClick.AddListener(() => HandleChoiceSelected(choiceId));
                 _spawnedButtons.Add(button);
             }
 
@@ -239,6 +240,50 @@ namespace NarrativeGen
             }
 
             StateText.text = sb.ToString();
+        }
+
+        private Button CreateChoiceButton(Choice choice)
+        {
+            if (ChoiceButtonPrefab != null)
+            {
+                var instance = Instantiate(ChoiceButtonPrefab, ChoicesRoot);
+                instance.gameObject.name = $"Choice_{choice.Id}";
+                return instance;
+            }
+
+            var buttonGo = new GameObject($"Choice_{choice.Id}", typeof(RectTransform), typeof(Image), typeof(Button));
+            var rect = buttonGo.GetComponent<RectTransform>();
+            rect.SetParent(ChoicesRoot, false);
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.sizeDelta = new Vector2(0f, 48f);
+
+            var image = buttonGo.GetComponent<Image>();
+            image.color = new Color(0.1f, 0.33f, 0.7f, 0.95f);
+
+            if (!buttonGo.TryGetComponent<LayoutElement>(out var layout))
+            {
+                layout = buttonGo.AddComponent<LayoutElement>();
+            }
+            layout.minHeight = 48f;
+
+            var textGo = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+            var textRect = textGo.GetComponent<RectTransform>();
+            textRect.SetParent(buttonGo.transform, false);
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = Vector2.zero;
+            textRect.offsetMax = Vector2.zero;
+
+            var text = textGo.GetComponent<TextMeshProUGUI>();
+            text.fontSize = 20;
+            text.alignment = TextAlignmentOptions.Center;
+            text.color = Color.white;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
+            text.text = choice.Text;
+
+            return buttonGo.GetComponent<Button>();
         }
 
         private static NarrativeModel CreateSampleModel()
