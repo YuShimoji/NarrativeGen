@@ -103,6 +103,7 @@ namespace NarrativeGen
                 var text = button.GetComponentInChildren<TextMeshProUGUI>();
                 if (text != null)
                 {
+                    text.textWrappingMode = TextWrappingModes.NoWrap;
                     if (choice.Outcome != null)
                     {
                         text.text = $"{choice.Text}\n<size=16><color=#FFD966>{choice.Outcome.Type}: {choice.Outcome.Value}</color></size>";
