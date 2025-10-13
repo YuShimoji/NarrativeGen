@@ -100,7 +100,8 @@ namespace VastCore.NarrativeGen
             {
                 var button = Instantiate(ChoiceButtonPrefab, ChoicesRoot);
                 button.gameObject.name = $"Choice_{choice.Id}";
-                if (button.TryGetComponentInChildren(out TextMeshProUGUI text))
+                var text = button.GetComponentInChildren<TextMeshProUGUI>();
+                if (text != null)
                 {
                     if (choice.Outcome != null)
                     {

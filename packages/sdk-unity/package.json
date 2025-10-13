@@ -1,20 +1,13 @@
 {
-  "name": "com.vastcore.narrativegen",
+  "name": "com.yushimoji.narrativegen",
   "version": "0.1.0",
-  "displayName": "VastCore NarrativeGen",
+  "displayName": "NarrativeGen",
   "description": "Minimal narrative playthrough engine for Unity.",
   "unity": "2021.3",
   "author": {
-    "name": "VastCore"
+    "name": "YuShimoji"
   },
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.2.1"
-  },
-  "samples": [
-    {
-      "displayName": "Minimal",
-      "description": "Minimal sample with a controller that logs an entity's brand and description.",
-      "path": "Samples~/Minimal"
-    }
-  ]
+  }
 }
