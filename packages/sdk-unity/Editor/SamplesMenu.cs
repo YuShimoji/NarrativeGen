@@ -132,6 +132,7 @@ namespace NarrativeGen.Editor
             text.fontSize = 24;
             text.alignment = TextAlignmentOptions.Midline;
             text.color = Color.white;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
             text.text = "状態: 初期化待ち";
 
             return text;
