@@ -20,7 +20,7 @@ namespace VastCore.NarrativeGen
         public Button ChoiceButtonPrefab;
 
         [Tooltip("Text element showing current session status")]
-        public Text StatusText;
+        public TextMeshProUGUI StatusText;
 
         private GameSession? _session;
         private NarrativeModel? _model;
@@ -88,7 +88,7 @@ namespace VastCore.NarrativeGen
             {
                 var button = Instantiate(ChoiceButtonPrefab, ChoicesRoot);
                 button.gameObject.name = $"Choice_{choice.Id}";
-                if (button.TryGetComponentInChildren(out Text text))
+                if (button.TryGetComponentInChildren(out TextMeshProUGUI text))
                 {
                     text.text = choice.Text;
                 }

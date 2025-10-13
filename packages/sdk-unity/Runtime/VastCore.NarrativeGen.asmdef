@@ -1,7 +1,9 @@
 {
   "name": "VastCore.NarrativeGen",
   "rootNamespace": "VastCore.NarrativeGen",
-  "references": [],
+  "references": [
+    "Unity.TextMeshPro"
+  ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
