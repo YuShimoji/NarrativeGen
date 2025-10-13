@@ -41,12 +41,14 @@ namespace VastCore.NarrativeGen.Editor
             var canvas = CreateCanvas();
             var panel = CreateChoicesPanel(canvas.transform);
             var status = CreateStatusText(panel.transform);
+            var state = CreateStateText(panel.transform);
             var buttonTemplate = CreateChoiceButtonTemplate(panel.transform);
             buttonTemplate.gameObject.SetActive(false);
 
             ctrl.ChoicesRoot = panel.GetComponent<RectTransform>();
             ctrl.ChoiceButtonPrefab = buttonTemplate;
             ctrl.StatusText = status;
+            ctrl.StateText = state;
 
             CreateEventSystemIfMissing();
 
@@ -129,6 +131,23 @@ namespace VastCore.NarrativeGen.Editor
             text.alignment = TextAlignmentOptions.Midline;
             text.color = Color.white;
             text.text = "状態: 初期化待ち";
+
+            return text;
+        }
+
+        private static TextMeshProUGUI CreateStateText(Transform parent)
+        {
+            var textGo = new GameObject("StateText", typeof(RectTransform), typeof(TextMeshProUGUI));
+            var rect = textGo.GetComponent<RectTransform>();
+            rect.SetParent(parent, false);
+            rect.sizeDelta = new Vector2(0f, 140f);
+
+            var text = textGo.GetComponent<TextMeshProUGUI>();
+            text.fontSize = 18;
+            text.alignment = TextAlignmentOptions.TopLeft;
+            text.color = Color.white;
+            text.enableWordWrapping = true;
+            text.text = "状態表示: 未更新";
 
             return text;
         }

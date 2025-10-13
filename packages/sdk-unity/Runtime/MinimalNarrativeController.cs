@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,6 +23,9 @@ namespace VastCore.NarrativeGen
 
         [Tooltip("Text element showing current session status")]
         public TextMeshProUGUI StatusText;
+
+        [Tooltip("Text element displaying current session state snapshot")]
+        public TextMeshProUGUI StateText;
 
         private GameSession? _session;
         private NarrativeModel? _model;
@@ -44,6 +49,10 @@ namespace VastCore.NarrativeGen
             ClearButtons();
             _session = null;
             _model = null;
+            if (StateText != null)
+            {
+                StateText.text = "状態表示: セッション未初期化";
+            }
         }
 
         private void InitializeSession()
@@ -56,6 +65,8 @@ namespace VastCore.NarrativeGen
                 throw new InvalidOperationException("ChoiceButtonPrefab is not assigned");
             if (StatusText == null)
                 throw new InvalidOperationException("StatusText is not assigned");
+            if (StateText == null)
+                throw new InvalidOperationException("StateText is not assigned");
 
             var entities = ParseEntitiesCsv(EntitiesCsv.text).Values.ToList();
             if (entities.Count == 0)
@@ -64,7 +75,7 @@ namespace VastCore.NarrativeGen
             _model = CreateSampleModel();
             _session = new GameSession(_model, entities);
             UpdateStatus("状態: セッション開始");
-            LogInventory();
+            UpdateStateView();
         }
 
         private void RefreshChoices()
@@ -81,6 +92,7 @@ namespace VastCore.NarrativeGen
             if (choices.Count == 0)
             {
                 UpdateStatus("状態: 利用可能な選択肢なし");
+                UpdateStateView(choices);
                 return;
             }
 
@@ -90,12 +102,21 @@ namespace VastCore.NarrativeGen
                 button.gameObject.name = $"Choice_{choice.Id}";
                 if (button.TryGetComponentInChildren(out TextMeshProUGUI text))
                 {
-                    text.text = choice.Text;
+                    if (choice.Outcome != null)
+                    {
+                        text.text = $"{choice.Text}\n<size=16><color=#FFD966>{choice.Outcome.Type}: {choice.Outcome.Value}</color></size>";
+                    }
+                    else
+                    {
+                        text.text = choice.Text;
+                    }
                 }
                 button.gameObject.SetActive(true);
                 button.onClick.AddListener(() => HandleChoiceSelected(choice.Id));
                 _spawnedButtons.Add(button);
             }
+
+            UpdateStateView(choices);
         }
 
         private void HandleChoiceSelected(string choiceId)
@@ -114,7 +135,6 @@ namespace VastCore.NarrativeGen
                 {
                     Debug.Log($"[MinimalNarrativeController] Outcome: {_session.LastOutcome.Type} => {_session.LastOutcome.Value}");
                 }
-                LogInventory();
                 UpdateStatus($"状態: 選択 '{choiceId}' を適用");
                 RefreshChoices();
             }
@@ -136,10 +156,9 @@ namespace VastCore.NarrativeGen
         {
             foreach (var button in _spawnedButtons)
             {
-                if (button != null)
-                {
-                    DestroyImmediate(button.gameObject);
-                }
+                if (button == null) continue;
+                button.onClick.RemoveAllListeners();
+                DestroyImmediate(button.gameObject);
             }
             _spawnedButtons.Clear();
         }
@@ -158,6 +177,66 @@ namespace VastCore.NarrativeGen
             {
                 Debug.Log($"[MinimalNarrativeController] Inventory contains: {entity.Id} ({entity.Brand})");
             }
+        }
+
+        private void UpdateStateView(IReadOnlyList<Choice>? choices = null)
+        {
+            if (StateText == null)
+                return;
+
+            if (_session == null)
+            {
+                StateText.text = "状態表示: セッション未初期化";
+                return;
+            }
+
+            var state = _session.State;
+            var inventory = _session.ListInventory();
+            var available = choices ?? _session.GetAvailableChoices();
+            var sb = new StringBuilder();
+            sb.AppendLine($"ノード: {state.CurrentNodeId}");
+            sb.AppendLine($"時間: {state.Time}");
+
+            sb.AppendLine("インベントリ:");
+            if (inventory.Count == 0)
+            {
+                sb.AppendLine("  (なし)");
+            }
+            else
+            {
+                foreach (var entity in inventory)
+                {
+                    sb.AppendLine($"  - {entity.Brand} [{entity.Id}]");
+                }
+            }
+
+            if (_session.LastOutcome != null)
+            {
+                var outcome = _session.LastOutcome;
+                sb.AppendLine($"直近の結果: {outcome.Type} -> {outcome.Value}");
+            }
+
+            sb.AppendLine("選択肢:");
+            if (available.Count == 0)
+            {
+                sb.AppendLine("  (なし)");
+            }
+            else
+            {
+                foreach (var choice in available)
+                {
+                    if (choice.Outcome != null)
+                    {
+                        sb.AppendLine($"  - {choice.Text} ({choice.Outcome.Type}: {choice.Outcome.Value})");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"  - {choice.Text}");
+                    }
+                }
+            }
+
+            StateText.text = sb.ToString();
         }
 
         private static NarrativeModel CreateSampleModel()
