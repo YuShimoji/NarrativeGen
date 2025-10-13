@@ -1,6 +1,6 @@
 using System;
 
-namespace VastCore.NarrativeGen
+namespace NarrativeGen
 {
     [Serializable]
     public class Entity

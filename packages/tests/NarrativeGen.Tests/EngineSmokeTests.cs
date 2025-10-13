@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
-using VastCore.NarrativeGen;
+using NarrativeGen;
 
 namespace NarrativeGen.Tests
 {

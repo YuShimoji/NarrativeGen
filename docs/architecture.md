@@ -9,7 +9,7 @@
 - SoC（関心の分離）: モデル（データ）/ セッション（状態）/ エンジン（ロジック）
 - SRP: 各クラスは単一責任
 - DRY/KISS/YAGNI を徹底
-- 名前空間: `VastCore.NarrativeGen`
+- 名前空間: `NarrativeGen`
 
 ## Data Model (Schema)
 - Model
@@ -33,7 +33,7 @@
 - `ApplyChoice(Session session, NarrativeModel model, string choiceId): Session`
 
 ## Unity Integration
-- UPM パッケージ `com.vastcore.narrativegen`
+- UPM パッケージ `com.NarrativeGen`
 - 依存: `com.unity.nuget.newtonsoft-json`
 - Runtime のみ（最小）。Editor/Tests は段階的に追加。
 

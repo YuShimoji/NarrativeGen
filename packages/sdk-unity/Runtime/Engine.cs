@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using VastCore.NarrativeGen.Serialization;
+using NarrativeGen.Serialization;
 
-namespace VastCore.NarrativeGen
+namespace NarrativeGen
 {
     public static class Engine
     {

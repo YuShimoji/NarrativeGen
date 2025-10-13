@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using VastCore.NarrativeGen;
+using NarrativeGen;
 
 static class Program
 {

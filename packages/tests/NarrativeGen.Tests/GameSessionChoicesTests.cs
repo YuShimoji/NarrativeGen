@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using NUnit.Framework;
-using VastCore.NarrativeGen;
-using VastCore.NarrativeGen.Runtime;
+using NarrativeGen;
+using NarrativeGen.Runtime;
 
 namespace NarrativeGen.Tests
 {

@@ -8,8 +8,10 @@ using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
+using NarrativeGen;
+using NarrativeGen.Runtime;
 
-namespace VastCore.NarrativeGen.Editor
+namespace NarrativeGen.Editor
 {
     public static class SamplesMenu
     {
@@ -26,8 +28,8 @@ namespace VastCore.NarrativeGen.Editor
             var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
             scene.name = "MinimalSample";
 
-            var go = new GameObject("NarrativeGenController");
-            var ctrl = go.AddComponent<VastCore.NarrativeGen.MinimalNarrativeController>();
+            var controllerGo = new GameObject("NarrativeGenController");
+            var controller = controllerGo.AddComponent<MinimalNarrativeController>();
 
             var csvAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(CsvPath);
             if (csvAsset == null)
@@ -36,7 +38,7 @@ namespace VastCore.NarrativeGen.Editor
                 CreateCsvIfMissing();
                 csvAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(CsvPath);
             }
-            ctrl.EntitiesCsv = csvAsset;
+            controller.EntitiesCsv = csvAsset;
 
             var canvas = CreateCanvas();
             var panel = CreateChoicesPanel(canvas.transform);
@@ -45,10 +47,10 @@ namespace VastCore.NarrativeGen.Editor
             var buttonTemplate = CreateChoiceButtonTemplate(panel.transform);
             buttonTemplate.gameObject.SetActive(false);
 
-            ctrl.ChoicesRoot = panel.GetComponent<RectTransform>();
-            ctrl.ChoiceButtonPrefab = buttonTemplate;
-            ctrl.StatusText = status;
-            ctrl.StateText = state;
+            controller.ChoicesRoot = panel.GetComponent<RectTransform>();
+            controller.ChoiceButtonPrefab = buttonTemplate;
+            controller.StatusText = status;
+            controller.StateText = state;
 
             CreateEventSystemIfMissing();
 
@@ -146,7 +148,7 @@ namespace VastCore.NarrativeGen.Editor
             text.fontSize = 18;
             text.alignment = TextAlignmentOptions.TopLeft;
             text.color = Color.white;
-            text.enableWordWrapping = true;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
             text.text = "状態表示: 未更新";
 
             return text;
@@ -184,7 +186,7 @@ namespace VastCore.NarrativeGen.Editor
 
         private static void CreateEventSystemIfMissing()
         {
-            if (Object.FindObjectOfType<EventSystem>() != null) return;
+            if (Object.FindFirstObjectByType<EventSystem>() != null) return;
             var eventSystemGo = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
             Object.DontDestroyOnLoad(eventSystemGo);
         }

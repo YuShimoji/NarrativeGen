@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace VastCore.NarrativeGen.Runtime
+namespace NarrativeGen.Runtime
 {
     public class Session
     {

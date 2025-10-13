@@ -17,7 +17,7 @@ This stub compiles as a .NET class library; Unity integration and full feature p
 ```csharp
 using System;
 using System.IO;
-using VastCore.NarrativeGen;
+using NarrativeGen;
 
 class Example
 {
