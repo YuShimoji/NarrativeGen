@@ -1,6 +1,6 @@
 {
-  "name": "VastCore.NarrativeGen",
-  "rootNamespace": "VastCore.NarrativeGen",
+  "name": "NarrativeGen",
+  "rootNamespace": "NarrativeGen",
   "references": [
     "Unity.TextMeshPro"
   ],

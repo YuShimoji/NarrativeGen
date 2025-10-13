@@ -2,7 +2,7 @@ using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace VastCore.NarrativeGen.Serialization
+namespace NarrativeGen.Serialization
 {
     public static class JsonSettings
     {

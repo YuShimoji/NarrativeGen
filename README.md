@@ -13,7 +13,7 @@ Rebuild from scratch: A narrative playthrough engine and Unity SDK.
 - Break away from the existing project's technical debt and design flaws
 - Build a minimal, correct, and maintainable core
 - Follow SoC/SOLID principles (Model / Session / Engine)
-- Integrate with Unity using a UPM package (`com.vastcore.narrativegen`)
+- Integrate with Unity using a UPM package (`com.NarrativeGen`)
 
 ## Setup
 
@@ -36,7 +36,7 @@ dotnet run --project .\packages\samples\PlaythroughCli
 
 ## Key State (C#)
 
-`VastCore.NarrativeGen.Engine` is used to load models, start sessions, get available choices, and apply choices.
+`NarrativeGen.Engine` is used to load models, start sessions, get available choices, and apply choices.
 
 - Sample model: `models/examples/linear.json`
 - API: `LoadModel(json)`, `StartSession(model)`, `GetAvailableChoices(session, model)`, `ApplyChoice(session, model, choiceId)`
@@ -97,7 +97,7 @@ cmd /c npm run lint:fix
 - `models/examples/linear.json` — minimal sample model
 - `packages/sdk-unity/Runtime/*.cs` — engine code (Model/Session/Engine/Converters)
 - `packages/sdk-unity/package.json` — UPM metadata
-- `packages/sdk-unity/Runtime/VastCore.NarrativeGen.asmdef` — assembly definition
+- `packages/sdk-unity/Runtime/NarrativeGen.asmdef` — assembly definition
 - `packages/samples/PlaythroughCli` — CLI sample project for verification
 - `packages/engine-ts/` — TypeScript engine and tools (Ajv validation)
 

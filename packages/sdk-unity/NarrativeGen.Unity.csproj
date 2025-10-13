@@ -5,7 +5,7 @@
     <LangVersion>latest</LangVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AssemblyName>NarrativeGen.Unity</AssemblyName>
-    <RootNamespace>VastCore.NarrativeGen</RootNamespace>
+    <RootNamespace>NarrativeGen</RootNamespace>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>

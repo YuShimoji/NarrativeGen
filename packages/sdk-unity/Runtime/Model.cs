@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using VastCore.NarrativeGen.Serialization;
+using NarrativeGen.Serialization;
 
-namespace VastCore.NarrativeGen
+namespace NarrativeGen
 {
     public class NarrativeModel
     {

@@ -7,7 +7,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace VastCore.NarrativeGen
+namespace NarrativeGen
 {
     [AddComponentMenu("NarrativeGen/MinimalNarrativeController")]
     public class MinimalNarrativeController : MonoBehaviour
