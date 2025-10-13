@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using TMPro;
 
 namespace VastCore.NarrativeGen.Editor
 {
@@ -116,17 +117,16 @@ namespace VastCore.NarrativeGen.Editor
             return rect;
         }
 
-        private static Text CreateStatusText(Transform parent)
+        private static TextMeshProUGUI CreateStatusText(Transform parent)
         {
-            var textGo = new GameObject("StatusText", typeof(RectTransform), typeof(Text));
+            var textGo = new GameObject("StatusText", typeof(RectTransform), typeof(TextMeshProUGUI));
             var rect = textGo.GetComponent<RectTransform>();
             rect.SetParent(parent, false);
             rect.sizeDelta = new Vector2(0f, 60f);
 
-            var text = textGo.GetComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            text.fontSize = 20;
-            text.alignment = TextAnchor.MiddleCenter;
+            var text = textGo.GetComponent<TextMeshProUGUI>();
+            text.fontSize = 24;
+            text.alignment = TextAlignmentOptions.Midline;
             text.color = Color.white;
             text.text = "状態: 初期化待ち";
 
@@ -146,7 +146,7 @@ namespace VastCore.NarrativeGen.Editor
             var layout = buttonGo.GetComponent<LayoutElement>();
             layout.minHeight = 48f;
 
-            var textGo = new GameObject("Text", typeof(RectTransform), typeof(Text));
+            var textGo = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
             var textRect = textGo.GetComponent<RectTransform>();
             textRect.SetParent(buttonGo.transform, false);
             textRect.anchorMin = Vector2.zero;
@@ -154,10 +154,9 @@ namespace VastCore.NarrativeGen.Editor
             textRect.offsetMin = Vector2.zero;
             textRect.offsetMax = Vector2.zero;
 
-            var text = textGo.GetComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            text.fontSize = 18;
-            text.alignment = TextAnchor.MiddleCenter;
+            var text = textGo.GetComponent<TextMeshProUGUI>();
+            text.fontSize = 20;
+            text.alignment = TextAlignmentOptions.Center;
             text.color = Color.white;
             text.text = "選択肢";
 
