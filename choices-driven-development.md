@@ -52,3 +52,18 @@
   - CLI に引数指定（モデルパス）と簡易検証モードフラグを追加（将来のCI前提）
 
 - Date: 2025-09-25
+
+### 2025-10-14 Unity SDK Documentation Pass
+
+- Context: Unity SDK Runtime に公開 API ドキュメントが不足しており、ビルド時に多数の CS1591 警告が発生していた。
+- Options:
+  - O1: 警告を黙認し、機能拡張を優先する
+  - O2: Runtime 各クラスに XML ドキュメントコメントを付与し、API の意図を明確にする
+  - O3: 警告抑制ディレクティブでビルドを静かにする
+- Decision: O2 を採用。将来の拡張時に参照しやすいよう API 仕様を明文化。
+- Impact: `Model`/`Session`/`Entity`/`GameSession`/`Serialization.Converters` へのコメント追加で CS1591 警告を大幅に削減。残課題として `Engine` 系や Null 許容警告 (CS8765/CS8604) を別タスクで解消予定。
+- Next:
+  - `packages/sdk-unity/Runtime/Engine.cs` にドキュメントコメントを追加
+  - Null 許容警告に対する引数バリデーションや注釈の整備
+  - CI で警告ゼロを維持する検証を追加
+- Date: 2025-10-14

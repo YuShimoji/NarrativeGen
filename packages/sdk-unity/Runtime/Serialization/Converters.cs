@@ -4,8 +4,15 @@ using Newtonsoft.Json.Linq;
 
 namespace NarrativeGen.Serialization
 {
+    /// <summary>
+    /// Provides factory helpers for JSON serialization settings used by the engine.
+    /// </summary>
     public static class JsonSettings
     {
+        /// <summary>
+        /// Creates a serializer configuration with NarrativeGen converters installed.
+        /// </summary>
+        /// <returns>Configured <see cref="JsonSerializerSettings"/> instance.</returns>
         public static JsonSerializerSettings Create()
         {
             var s = new JsonSerializerSettings
@@ -19,11 +26,16 @@ namespace NarrativeGen.Serialization
         }
     }
 
+    /// <summary>
+    /// Handles polymorphic JSON conversion for narrative conditions.
+    /// </summary>
     public class ConditionConverter : JsonConverter
     {
+        /// <inheritdoc />
         public override bool CanConvert(Type objectType) => typeof(Condition).IsAssignableFrom(objectType);
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        /// <inheritdoc />
+        public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
             var jo = JObject.Load(reader);
             var type = jo["type"]?.Value<string>() ?? string.Empty;
@@ -38,17 +50,28 @@ namespace NarrativeGen.Serialization
             return result;
         }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        /// <inheritdoc />
+        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
+            if (value is null)
+            {
+                writer.WriteNull();
+                return;
+            }
             JObject.FromObject(value, serializer).WriteTo(writer);
         }
     }
 
+    /// <summary>
+    /// Handles polymorphic JSON conversion for narrative effects.
+    /// </summary>
     public class EffectConverter : JsonConverter
     {
+        /// <inheritdoc />
         public override bool CanConvert(Type objectType) => typeof(Effect).IsAssignableFrom(objectType);
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        /// <inheritdoc />
+        public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
             var jo = JObject.Load(reader);
             var type = jo["type"]?.Value<string>() ?? string.Empty;
@@ -63,8 +86,14 @@ namespace NarrativeGen.Serialization
             return result;
         }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        /// <inheritdoc />
+        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
+            if (value is null)
+            {
+                writer.WriteNull();
+                return;
+            }
             JObject.FromObject(value, serializer).WriteTo(writer);
         }
     }
