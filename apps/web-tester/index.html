@@ -62,7 +62,14 @@
       <p>GameSession の挙動をブラウザで簡易確認できます。ブラウザで静的にホストしてください。</p>
 
       <div class="controls">
-        <button id="startBtn">セッション開始</button>
+        <label for="modelSelect">サンプルモデル</label>
+        <select id="modelSelect">
+          <option value="linear">linear.json</option>
+          <option value="branching_flags">branching_flags.json</option>
+          <option value="resource_management">resource_management.json</option>
+          <option value="time_gated">time_gated.json</option>
+        </select>
+        <button id="startBtn">サンプルを実行</button>
       </div>
 
       <p id="statusText">初期化中...</p>

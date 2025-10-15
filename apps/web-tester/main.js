@@ -1,53 +1,23 @@
 import { GameSession } from '@narrativegen/engine-ts/dist/game-session.js'
 
-const model = {
-  modelType: 'web-test-model',
-  startNode: 'entrance',
-  nodes: {
-    entrance: {
-      id: 'entrance',
-      text: 'スタート地点',
-      choices: [
-        { id: 'advance', text: '次へ進む', target: 'second' },
-      ],
-    },
-    second: {
-      id: 'second',
-      text: '2番目のノード',
-    },
-  },
-}
-
-const entities = [
-  {
-    id: 'mac_burger_001',
-    brand: 'MacBurger',
-    description: 'おいしいバーガー',
-    cost: 100,
-  },
-  {
-    id: 'coffee_001',
-    brand: 'CoffeeStand',
-    description: '香り高いコーヒー',
-    cost: 50,
-  },
-]
-
 const startBtn = document.getElementById('startBtn')
 const choicesContainer = document.getElementById('choices')
 const stateView = document.getElementById('stateView')
 const statusText = document.getElementById('statusText')
+const modelSelect = document.getElementById('modelSelect')
 
 let session = null
+let currentModelName = null
 
 function renderState() {
   if (!session) {
-    stateView.textContent = JSON.stringify({ status: 'セッション未開始' }, null, 2)
+    stateView.textContent = JSON.stringify({ status: 'サンプル未実行' }, null, 2)
     return
   }
 
   const snapshot = session.state
   const view = {
+    model: currentModelName,
     nodeId: snapshot.nodeId,
     time: snapshot.time,
     flags: snapshot.flags,
@@ -60,6 +30,11 @@ function renderState() {
 function setStatus(message, type = 'info') {
   statusText.textContent = message
   statusText.dataset.type = type
+}
+
+function setControlsEnabled(enabled) {
+  startBtn.disabled = !enabled
+  modelSelect.disabled = !enabled
 }
 
 function renderChoices() {
@@ -112,16 +87,79 @@ function formatChoiceLabel(choice) {
   return choice?.text ?? '(不明な選択肢)'
 }
 
-startBtn.addEventListener('click', () => {
-  session = new GameSession(model, {
-    entities,
-    initialInventory: [],
-  })
-  setStatus('セッションを開始しました', 'success')
-  renderState()
-  renderChoices()
+async function loadSampleModel(sampleId) {
+  const url = new URL(`../../models/examples/${sampleId}.json`, import.meta.url)
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`モデルの読み込みに失敗しました (${response.status})`)
+  }
+  return response.json()
+}
+
+async function loadEntitiesCatalog() {
+  const url = new URL('../../models/entities/Entities.csv', import.meta.url)
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`Entities.csv の読み込みに失敗しました (${response.status})`)
+  }
+  const text = await response.text()
+  return parseEntitiesCsv(text)
+}
+
+function parseEntitiesCsv(csvText) {
+  const lines = csvText.trim().split(/\r?\n/)
+  if (lines.length <= 1) {
+    return []
+  }
+
+  const headers = lines[0].split(',').map((h) => h.trim().toLowerCase())
+  const idx = {
+    id: headers.indexOf('id'),
+    brand: headers.indexOf('brand'),
+    description: headers.indexOf('description'),
+    cost: headers.indexOf('cost'),
+  }
+
+  return lines.slice(1)
+    .map((line) => line.split(',').map((cell) => cell.trim()))
+    .filter((cells) => cells[idx.id])
+    .map((cells) => ({
+      id: cells[idx.id] ?? '',
+      brand: cells[idx.brand] ?? '',
+      description: cells[idx.description] ?? '',
+      cost: Number.parseFloat(cells[idx.cost] ?? '0') || 0,
+    }))
+}
+
+startBtn.addEventListener('click', async () => {
+  const sampleId = modelSelect.value
+  setControlsEnabled(false)
+  setStatus(`サンプル ${sampleId} を読み込み中...`)
+
+  try {
+    const [model, entities] = await Promise.all([
+      loadSampleModel(sampleId),
+      loadEntitiesCatalog(),
+    ])
+
+    session = new GameSession(model, {
+      entities,
+      initialInventory: [],
+    })
+    currentModelName = sampleId
+    setStatus(`サンプル ${sampleId} を実行中`, 'success')
+  } catch (err) {
+    console.error(err)
+    session = null
+    currentModelName = null
+    setStatus(`サンプルの初期化に失敗しました: ${err?.message ?? err}`, 'warn')
+  } finally {
+    setControlsEnabled(true)
+    renderState()
+    renderChoices()
+  }
 })
 
-setStatus('「セッション開始」を押して操作を始めてください')
+setStatus('サンプルを選択して「サンプルを実行」を押してください')
 renderState()
 renderChoices()
