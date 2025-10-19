@@ -9,11 +9,17 @@ const modelSelect = document.getElementById('modelSelect')
 const fileInput = document.getElementById('fileInput')
 const uploadBtn = document.getElementById('uploadBtn')
 const dropZone = document.getElementById('dropZone')
-const editBtn = document.getElementById('editBtn')
+const guiEditBtn = document.getElementById('editBtn')
 const editMode = document.getElementById('editMode')
 const jsonEditor = document.getElementById('jsonEditor')
 const saveBtn = document.getElementById('saveBtn')
 const cancelBtn = document.getElementById('cancelBtn')
+const guiEditMode = document.getElementById('guiEditMode')
+const nodeList = document.getElementById('nodeList')
+const addNodeBtn = document.getElementById('addNodeBtn')
+const previewBtn = document.getElementById('previewBtn')
+const saveGuiBtn = document.getElementById('saveGuiBtn')
+const cancelGuiBtn = document.getElementById('cancelGuiBtn')
 
 let session = null
 let currentModelName = null
@@ -48,7 +54,7 @@ function setControlsEnabled(enabled) {
   uploadBtn.disabled = !enabled
   dropZone.style.pointerEvents = enabled ? 'auto' : 'none'
   dropZone.style.opacity = enabled ? '1' : '0.5'
-  editBtn.disabled = !enabled
+  guiEditBtn.disabled = !enabled
 }
 
 function renderChoices() {
@@ -306,4 +312,48 @@ cancelBtn.addEventListener('click', () => {
   editMode.style.display = 'none'
   setControlsEnabled(true)
 })
+
+guiEditBtn.addEventListener('click', () => {
+  if (session == null) {
+    setStatus('GUI編集するにはまずモデルを読み込んでください', 'warn')
+    return
+  }
+  renderNodeList()
+  guiEditMode.style.display = 'block'
+  setControlsEnabled(false)
+})
+
+function renderNodeList() {
+  nodeList.innerHTML = ''
+  for (const [nodeId, node] of Object.entries(_model.nodes)) {
+    const nodeDiv = document.createElement('div')
+    nodeDiv.className = 'node-editor'
+    nodeDiv.innerHTML = `
+      <h3>ノード: ${nodeId}</h3>
+      <label>テキスト: <input type="text" value="${node.text || ''}" data-node-id="${nodeId}" data-field="text"></label>
+      <h4>選択肢</h4>
+      <div class="choices-editor" data-node-id="${nodeId}"></div>
+      <button class="add-choice-btn" data-node-id="${nodeId}">選択肢を追加</button>
+      <button class="delete-node-btn" data-node-id="${nodeId}">ノードを削除</button>
+    `
+    nodeList.appendChild(nodeDiv)
+    renderChoicesForNode(nodeId)
+  }
+}
+
+function renderChoicesForNode(nodeId) {
+  const node = _model.nodes[nodeId]
+  const choicesDiv = nodeList.querySelector(`.choices-editor[data-node-id="${nodeId}"]`)
+  choicesDiv.innerHTML = ''
+  node.choices?.forEach((choice, index) => {
+    const choiceDiv = document.createElement('div')
+    choiceDiv.className = 'choice-editor'
+    choiceDiv.innerHTML = `
+      <label>テキスト: <input type="text" value="${choice.text}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="text"></label>
+      <label>ターゲット: <input type="text" value="${choice.target}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="target"></label>
+      <button class="delete-choice-btn" data-node-id="${nodeId}" data-choice-index="${index}">削除</button>
+    `
+    choicesDiv.appendChild(choiceDiv)
+  })
+}
 

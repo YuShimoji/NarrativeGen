@@ -88,12 +88,13 @@
         <p>またはここに JSON ファイルをドラッグ＆ドロップしてください</p>
       </div>
 
-      <div id="editMode" style="display: none;">
-        <h2>モデル編集</h2>
-        <textarea id="jsonEditor" rows="20" cols="80" placeholder="JSON を編集"></textarea>
-        <br>
-        <button id="saveBtn">保存して適用</button>
-        <button id="cancelBtn">キャンセル</button>
+      <div id="guiEditMode" style="display: none;">
+        <h2>GUI モデル編集</h2>
+        <div id="nodeList"></div>
+        <button id="addNodeBtn">ノードを追加</button>
+        <button id="previewBtn">小説プレビュー</button>
+        <button id="saveGuiBtn">GUI保存して適用</button>
+        <button id="cancelGuiBtn">キャンセル</button>
       </div>
 
       <p id="statusText">初期化中...</p>
