@@ -9,10 +9,6 @@ const fileInput = document.getElementById('fileInput')
 const uploadBtn = document.getElementById('uploadBtn')
 const dropZone = document.getElementById('dropZone')
 const guiEditBtn = document.getElementById('editBtn')
-const editMode = document.getElementById('editMode')
-const jsonEditor = document.getElementById('jsonEditor')
-const saveBtn = document.getElementById('saveBtn')
-const cancelBtn = document.getElementById('cancelBtn')
 const guiEditMode = document.getElementById('guiEditMode')
 const nodeList = document.getElementById('nodeList')
 const addNodeBtn = document.getElementById('addNodeBtn')
@@ -273,27 +269,6 @@ dropZone.addEventListener('drop', async (e) => {
 setStatus('サンプルを選択して「サンプルを実行」を押してください')
 renderState()
 renderChoices()
-
-saveBtn.addEventListener('click', () => {
-  try {
-    const newModel = JSON.parse(jsonEditor.value)
-    _model = newModel
-    session = startSession(_model)
-    currentModelName = 'edited'
-    editMode.style.display = 'none'
-    setStatus('モデルを保存しました', 'success')
-    setControlsEnabled(true)
-    renderState()
-    renderChoices()
-  } catch (err) {
-    setStatus(`モデル保存に失敗しました: ${err?.message ?? err}`, 'warn')
-  }
-})
-
-cancelBtn.addEventListener('click', () => {
-  editMode.style.display = 'none'
-  setControlsEnabled(true)
-})
 
 guiEditBtn.addEventListener('click', () => {
   if (session == null) {

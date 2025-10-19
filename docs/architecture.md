@@ -70,6 +70,23 @@
 - 依存: `com.unity.nuget.newtonsoft-json`
 - Runtime のみ（最小）。Editor/Tests は段階的に追加。
 
+## AI Features
+
+AI アシスト機能（次の物語展開生成・言い換え）の設計については、`docs/ai-features.md` を参照してください。
+
+### 設計方針
+
+- **エンジン本体は AI 非依存**: コア実行ロジックは決定論的に動作
+- **AI 機能はツール層**: Web Tester や専用エディタツールが AI API を呼び、結果を JSON モデルに反映
+- **段階的導入**: モック → ローカルLLM → クラウドAPI の順で展開
+
+### 実装状況
+
+- ✅ **Phase 1**: モック実装（Web Tester の AI提案ボタンでランダムサンプル）
+- ⏳ **Phase 2**: プロンプト設計 + OpenAI API 統合
+- ⏳ **Phase 3**: ローカル LLM 統合（Ollama など）
+- ⏳ **Phase 4**: バッチ処理・履歴管理
+
 ## Future Work
 - 変数・条件分岐、タグ、メタデータ
 - セーブ/ロード、診断ログ

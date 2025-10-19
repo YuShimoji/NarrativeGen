@@ -111,7 +111,19 @@ cmd /c npm run build
 - Start sessions and play through choices interactively
 - View current state (nodeId, flags, resources, time) in real-time
 - GUI editor ("モデルを編集" button) for visual node/choice editing
-- Preview story flow and download edited JSON
+  - Add/delete nodes and choices
+  - Preview story flow (連続ノードを小説風に表示)
+  - Download edited JSON
+  - AI suggestion for choice text (Phase 1: mock implementation)
+
+### AI Features (Planned)
+
+See `docs/ai-features.md` for detailed design. Current status:
+
+- ✅ **Phase 1**: Mock AI suggestion (random samples)
+- ⏳ **Phase 2**: Next story generation & paraphrase via OpenAI API
+- ⏳ **Phase 3**: Local LLM integration (Ollama, llama.cpp)
+- ⏳ **Phase 4**: Batch processing & history management
 
 ## Lint/Format (TS)
 
