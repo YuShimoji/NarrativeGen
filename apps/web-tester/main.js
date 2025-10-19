@@ -1,5 +1,4 @@
-import { GameSession } from '@narrativegen/engine-ts/dist/game-session.js'
-import { loadModel } from '@narrativegen/engine-ts/dist/index.js'
+import { startSession, getAvailableChoices, applyChoice } from '@narrativegen/engine-ts/dist/browser.js'
 
 const startBtn = document.getElementById('startBtn')
 const choicesContainer = document.getElementById('choices')
@@ -32,14 +31,13 @@ function renderState() {
     return
   }
 
-  const snapshot = session.state
+  const snapshot = session
   const view = {
     model: currentModelName,
     nodeId: snapshot.nodeId,
     time: snapshot.time,
     flags: snapshot.flags,
     resources: snapshot.resources,
-    inventory: session.listInventory(),
   }
   stateView.textContent = JSON.stringify(view, null, 2)
 }
@@ -68,7 +66,7 @@ function renderChoices() {
     return
   }
 
-  const choices = session.getAvailableChoices()
+  const choices = getAvailableChoices(session, _model)
   if (!choices || choices.length === 0) {
     const empty = document.createElement('p')
     empty.textContent = '利用可能な選択肢はありません'
@@ -86,7 +84,7 @@ function renderChoices() {
     button.textContent = formatChoiceLabel(choice)
     button.addEventListener('click', () => {
       try {
-        session.applyChoice(choice.id)
+        session = applyChoice(session, _model, choice.id)
         setStatus(`選択肢「${choice.text}」を適用しました`, 'success')
       } catch (err) {
         console.error(err)
@@ -180,10 +178,7 @@ startBtn.addEventListener('click', async () => {
     ])
 
     _model = model
-    session = new GameSession(model, {
-      entities,
-      initialInventory: [],
-    })
+    session = startSession(_model)
     currentModelName = sampleId
     setStatus(`サンプル ${sampleId} を実行中`, 'success')
   } catch (err) {
@@ -215,10 +210,7 @@ fileInput.addEventListener('change', async (e) => {
     ])
 
     _model = model
-    session = new GameSession(model, {
-      entities,
-      initialInventory: [],
-    })
+    session = startSession(_model)
     currentModelName = file.name
     setStatus(`ファイル ${file.name} を実行中`, 'success')
   } catch (err) {
@@ -282,22 +274,11 @@ setStatus('サンプルを選択して「サンプルを実行」を押してく
 renderState()
 renderChoices()
 
-editBtn.addEventListener('click', () => {
-  if (session == null) {
-    setStatus('編集するにはまずモデルを読み込んでください', 'warn')
-    return
-  }
-  jsonEditor.value = JSON.stringify(_model, null, 2)
-  editMode.style.display = 'block'
-  setControlsEnabled(false)
-})
-
 saveBtn.addEventListener('click', () => {
   try {
     const newModel = JSON.parse(jsonEditor.value)
-    // ここで loadModel を呼び、検証
-    _model = loadModel(newModel) // loadModel は import が必要
-    session = new GameSession(_model, { entities: [], initialInventory: [] })
+    _model = newModel
+    session = startSession(_model)
     currentModelName = 'edited'
     editMode.style.display = 'none'
     setStatus('モデルを保存しました', 'success')
