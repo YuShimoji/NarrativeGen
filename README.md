@@ -83,20 +83,35 @@ cmd /c npm run validate:models
 
 ## Web Tester
 
-1. Run the web tester
+### Option 1: Development Server (Recommended)
 
 ```powershell
 cd .\apps\web-tester
 cmd /c npm install
 cmd /c npm run dev
-# Or serve the built files statically (e.g., using python -m http.server)
 ```
 
-For development, use `npm run dev` to start the Vite dev server. For production, build and serve the `dist/` directory.
+Then open **http://localhost:5173** (or the port shown in terminal) in your browser.
 
-The web tester allows you to load sample models from dropdown or upload custom JSON files via button/drag & drop, start sessions, and play through choices. Model validation errors are displayed in the UI.
+### Option 2: Static Build & Serve
 
-You can also use the "モデルを編集" button to open a GUI editor for modifying nodes and choices visually, with a preview feature for story flow.
+```powershell
+cd .\apps\web-tester
+cmd /c npm install
+cmd /c npm run build
+# Now serve the dist/ directory with any static server
+# e.g., VSCode Live Server, python -m http.server, etc.
+```
+
+**Important**: When using Live Server or other static servers, open the `dist/` directory (not the project root) to avoid module resolution errors.
+
+### Features
+
+- Load sample models from dropdown or upload custom JSON files via button/drag & drop
+- Start sessions and play through choices interactively
+- View current state (nodeId, flags, resources, time) in real-time
+- GUI editor ("モデルを編集" button) for visual node/choice editing
+- Preview story flow and download edited JSON
 
 ## Lint/Format (TS)
 
