@@ -352,6 +352,7 @@ function renderChoicesForNode(nodeId) {
     choiceDiv.innerHTML = `
       <label>テキスト: <input type="text" value="${choice.text}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="text"></label>
       <label>ターゲット: <input type="text" value="${choice.target}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="target"></label>
+      <button class="ai-suggest-btn" data-node-id="${nodeId}" data-choice-index="${index}">AI提案</button>
       <button class="delete-choice-btn" data-node-id="${nodeId}" data-choice-index="${index}">削除</button>
     `
     choicesDiv.appendChild(choiceDiv)
@@ -359,3 +360,15 @@ function renderChoicesForNode(nodeId) {
 }
 
 addNodeBtn.addEventListener('click', () => { const nodeId = prompt('新しいノードIDを入力してください:'); if (nodeId && !_model.nodes[nodeId]) { _model.nodes[nodeId] = { id: nodeId, text: '新しいノード', choices: [] }; renderNodeList(); } }); previewBtn.addEventListener('click', () => { let current = _model.startNode; let story = ''; const visited = new Set(); while (current && !visited.has(current)) { visited.add(current); const node = _model.nodes[current]; if (node?.text) story += node.text + '\n\n'; if (node?.choices?.length === 1) { current = node.choices[0].target; } else { break; } } alert('小説プレビュー:\n\n' + story); }); downloadBtn.addEventListener('click', () => { const json = JSON.stringify(_model, null, 2); const blob = new Blob([json], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'model.json'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); }); saveGuiBtn.addEventListener('click', () => { try { _model = loadModel(_model); session = new GameSession(_model, { entities: [], initialInventory: [] }); currentModelName = 'gui-edited'; guiEditMode.style.display = 'none'; setStatus('GUI編集を保存しました', 'success'); setControlsEnabled(true); renderState(); renderChoices(); } catch (err) { setStatus(`GUI保存に失敗しました: ${err?.message ?? err}`, 'warn'); } }); cancelGuiBtn.addEventListener('click', () => { guiEditMode.style.display = 'none'; setControlsEnabled(true); });
+
+// AI提案イベント（モック）
+nodeList.addEventListener('click', (e) => {
+  if (e.target.classList.contains('ai-suggest-btn')) {
+    const nodeId = e.target.dataset.nodeId;
+    const choiceIndex = e.target.dataset.choiceIndex;
+    const suggestions = ['進む', '待つ', '調べる', '話す', '逃げる'];
+    const randomSuggest = suggestions[Math.floor(Math.random() * suggestions.length)];
+    const input = nodeList.querySelector(`input[data-node-id="${nodeId}"][data-choice-index="${choiceIndex}"][data-field="text"]`);
+    if (input) input.value = randomSuggest;
+  }
+});
