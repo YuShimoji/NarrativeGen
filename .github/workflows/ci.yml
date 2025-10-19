@@ -28,6 +28,19 @@ jobs:
       - name: Validate models
         working-directory: packages/engine-ts
         run: node dist/tools/validate-models.js
+  web-tester:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        working-directory: apps/web-tester
+        run: npm install
+      - name: Build
+        working-directory: apps/web-tester
+        run: npm run build
   sdk-unity:
     runs-on: ubuntu-latest
     steps:
