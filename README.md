@@ -79,6 +79,52 @@ cmd /c npm run build
 cmd /c npm run validate:models
 ```
 
+`packages/engine-ts/src/index.ts` の `loadModel()` は JSON Schema による構造検証に加え、`startNode` の存在・ノードID整合・選択肢ターゲット整合などを確認します。エラーは CLI 出力に集約されます。
+
+## Web Tester
+
+### Option 1: Development Server (Recommended)
+
+```powershell
+cd .\apps\web-tester
+cmd /c npm install
+cmd /c npm run dev
+```
+
+Then open **http://localhost:5173** (or the port shown in terminal) in your browser.
+
+### Option 2: Static Build & Serve
+
+```powershell
+cd .\apps\web-tester
+cmd /c npm install
+cmd /c npm run build
+# Now serve the dist/ directory with any static server
+# e.g., VSCode Live Server, python -m http.server, etc.
+```
+
+**Important**: When using Live Server or other static servers, open the `dist/` directory (not the project root) to avoid module resolution errors.
+
+### Features
+
+- Load sample models from dropdown or upload custom JSON files via button/drag & drop
+- Start sessions and play through choices interactively
+- View current state (nodeId, flags, resources, time) in real-time
+- GUI editor ("モデルを編集" button) for visual node/choice editing
+  - Add/delete nodes and choices
+  - Preview story flow (連続ノードを小説風に表示)
+  - Download edited JSON
+  - AI suggestion for choice text (Phase 1: mock implementation)
+
+### AI Features (Planned)
+
+See `docs/ai-features.md` for detailed design. Current status:
+
+- ✅ **Phase 1**: Mock AI suggestion (random samples)
+- ⏳ **Phase 2**: Next story generation & paraphrase via OpenAI API
+- ⏳ **Phase 3**: Local LLM integration (Ollama, llama.cpp)
+- ⏳ **Phase 4**: Batch processing & history management
+
 ## Lint/Format (TS)
 
 Run Prettier and ESLint for the TypeScript engine:
@@ -87,9 +133,11 @@ Run Prettier and ESLint for the TypeScript engine:
 cd .\packages\engine-ts
 cmd /c npm install
 cmd /c npm run format
-cmd /c npm run lint
+cmd /c npm run lint -- --max-warnings=0
 cmd /c npm run lint:fix
 ```
+
+CI (`.github/workflows/ci.yml`) では `npm run lint -- --max-warnings=0` / `npm run build` / `npm run validate:models` を自動実行し、リポジトリの整合性を常時チェックします。
 
 ## Directory Structure
 
@@ -112,4 +160,5 @@ The NUnit smoke test `EngineSmokeTests` loads `models/examples/linear.json`, pla
 ## Development Notes
 
 - Design principles and decision logs are documented in `docs/architecture.md` and `choices-driven-development.md`
+- TypeScript engine の型検証・整合チェック仕様も `docs/architecture.md` を参照
 - Refactoring should be done in small steps, with updated documentation and test procedures before committing/pushing.

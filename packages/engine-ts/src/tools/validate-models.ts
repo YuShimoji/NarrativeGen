@@ -5,6 +5,11 @@ import { fileURLToPath } from 'url'
 // eslint-disable-next-line import/no-unresolved
 import { loadModel, startSession, getAvailableChoices, applyChoice } from '../index.js'
 
+function readJsonFile(filePath: string): unknown {
+  const content = fs.readFileSync(filePath, 'utf-8')
+  return JSON.parse(content) as unknown
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const modelsDir = path.resolve(__dirname, '../../../..', 'models', 'examples')
 
@@ -13,8 +18,8 @@ function validateAll() {
   let okCount = 0
   for (const f of files) {
     const full = path.join(modelsDir, f)
-    const json = JSON.parse(fs.readFileSync(full, 'utf-8'))
-    const model = loadModel(json)
+    const jsonData = readJsonFile(full)
+    const model = loadModel(jsonData)
     // simple smoke run
     let session = startSession(model)
     const choices = getAvailableChoices(session, model)

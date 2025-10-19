@@ -3,6 +3,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import Ajv from 'ajv'
+import type { JSONSchemaType } from 'ajv'
 
 import type {
   Choice,
@@ -16,7 +17,63 @@ import type {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-function loadSchema(): any {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isFlagStateRecord(value: unknown): value is FlagState {
+  if (!isRecord(value)) return false
+  return Object.values(value).every((entry) => typeof entry === 'boolean')
+}
+
+function isResourceStateRecord(value: unknown): value is ResourceState {
+  if (!isRecord(value)) return false
+  return Object.values(value).every((entry) => typeof entry === 'number' && Number.isFinite(entry))
+}
+
+function isSessionState(value: unknown): value is SessionState {
+  if (!isRecord(value)) return false
+  const nodeId = value.nodeId
+  const time = value.time
+  const flags = value.flags
+  const resources = value.resources
+  if (typeof nodeId !== 'string') return false
+  if (typeof time !== 'number' || Number.isNaN(time)) return false
+  if (!isFlagStateRecord(flags)) return false
+  if (!isResourceStateRecord(resources)) return false
+  return true
+}
+
+function assertModelIntegrity(model: Model): void {
+  const issues: string[] = []
+  if (!model.nodes[model.startNode]) {
+    issues.push(`startNode '${model.startNode}' does not exist in nodes`)
+  }
+  for (const [nodeKey, node] of Object.entries(model.nodes)) {
+    if (node.id !== nodeKey) {
+      issues.push(`node key '${nodeKey}' must match node.id '${node.id}'`)
+    }
+    const seenChoiceIds = new Set<string>()
+    for (const choice of node.choices ?? []) {
+      if (seenChoiceIds.has(choice.id)) {
+        issues.push(`duplicate choice id '${choice.id}' in node '${nodeKey}'`)
+      }
+      seenChoiceIds.add(choice.id)
+      if (!choice.target) {
+        issues.push(`choice '${choice.id}' in node '${nodeKey}' is missing target`)
+        continue
+      }
+      if (!model.nodes[choice.target]) {
+        issues.push(`choice '${choice.id}' in node '${nodeKey}' targets missing node '${choice.target}'`)
+      }
+    }
+  }
+  if (issues.length > 0) {
+    throw new Error(`Model integrity check failed:\n${issues.join('\n')}`)
+  }
+}
+
+function loadSchema(): JSONSchemaType<Model> {
   const schemaPath = path.resolve(
     __dirname,
     '../../..',
@@ -25,19 +82,20 @@ function loadSchema(): any {
     'playthrough.schema.json',
   )
   const json = fs.readFileSync(schemaPath, 'utf-8')
-  return JSON.parse(json)
+  return JSON.parse(json) as JSONSchemaType<Model>
 }
 
-export function loadModel(model: any): Model {
+export function loadModel(modelData: unknown): Model {
   const ajv = new Ajv({ allErrors: true, strict: false })
   const schema = loadSchema()
-  const validate = ajv.compile(schema)
-  const ok = validate(model)
-  if (!ok) {
-    const err = ajv.errorsText(validate.errors, { separator: '\n' })
+  const validate = ajv.compile<Model>(schema)
+  if (!validate(modelData)) {
+    const err = ajv.errorsText(validate.errors ?? [], { separator: '\n' })
     throw new Error(`Model validation failed:\n${err}`)
   }
-  return model as Model
+  const model = modelData
+  assertModelIntegrity(model)
+  return model
 }
 
 export function startSession(model: Model, initial?: Partial<SessionState>): SessionState {
@@ -135,6 +193,9 @@ export function serialize(session: SessionState): string {
 }
 
 export function deserialize(payload: string): SessionState {
-  const parsed = JSON.parse(payload)
-  return parsed as SessionState
+  const parsed: unknown = JSON.parse(payload)
+  if (!isSessionState(parsed)) {
+    throw new Error('Invalid session payload')
+  }
+  return parsed
 }
