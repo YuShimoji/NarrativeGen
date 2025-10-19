@@ -52,7 +52,16 @@
         border-radius: 8px;
         max-height: 320px;
         overflow: auto;
-        font-size: 0.9rem;
+      }
+      .drop-zone {
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+      }
+      .drop-zone:hover {
+        background-color: #f0f0f0;
       }
     </style>
   </head>
@@ -70,6 +79,21 @@
           <option value="time_gated">time_gated.json</option>
         </select>
         <button id="startBtn">サンプルを実行</button>
+        <input type="file" id="fileInput" accept=".json" style="display: none;">
+        <button id="uploadBtn">JSONファイルをアップロード</button>
+        <button id="editBtn">モデルを編集</button>
+      </div>
+
+      <div id="dropZone" class="drop-zone">
+        <p>またはここに JSON ファイルをドラッグ＆ドロップしてください</p>
+      </div>
+
+      <div id="editMode" style="display: none;">
+        <h2>モデル編集</h2>
+        <textarea id="jsonEditor" rows="20" cols="80" placeholder="JSON を編集"></textarea>
+        <br>
+        <button id="saveBtn">保存して適用</button>
+        <button id="cancelBtn">キャンセル</button>
       </div>
 
       <p id="statusText">初期化中...</p>
