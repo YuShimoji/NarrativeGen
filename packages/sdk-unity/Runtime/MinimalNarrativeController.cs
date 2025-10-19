@@ -15,6 +15,9 @@ namespace NarrativeGen
         [Tooltip("Entities CSV TextAsset (id,brand,description,cost)")]
         public TextAsset EntitiesCsv;
 
+        [Tooltip("Optional NarrativeModel JSON TextAsset. If not set, uses built-in sample.")]
+        public TextAsset? NarrativeModelJson;
+
         [Tooltip("Root container that will receive instantiated choice buttons")]
         public RectTransform ChoicesRoot;
 
@@ -80,7 +83,7 @@ namespace NarrativeGen
             if (entities.Count == 0)
                 throw new InvalidOperationException("No entities parsed from CSV");
 
-            _model = CreateSampleModel();
+            _model = NarrativeModelJson != null ? Engine.LoadModel(NarrativeModelJson.text) : CreateSampleModel();
             _session = new GameSession(_model, entities);
             UpdateStatus("状態: セッション開始");
             UpdateStateView();
