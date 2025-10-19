@@ -79,6 +79,8 @@ cmd /c npm run build
 cmd /c npm run validate:models
 ```
 
+`packages/engine-ts/src/index.ts` の `loadModel()` は JSON Schema による構造検証に加え、`startNode` の存在・ノードID整合・選択肢ターゲット整合などを確認します。エラーは CLI 出力に集約されます。
+
 ## Lint/Format (TS)
 
 Run Prettier and ESLint for the TypeScript engine:
@@ -87,9 +89,11 @@ Run Prettier and ESLint for the TypeScript engine:
 cd .\packages\engine-ts
 cmd /c npm install
 cmd /c npm run format
-cmd /c npm run lint
+cmd /c npm run lint -- --max-warnings=0
 cmd /c npm run lint:fix
 ```
+
+CI (`.github/workflows/ci.yml`) では `npm run lint -- --max-warnings=0` / `npm run build` / `npm run validate:models` を自動実行し、リポジトリの整合性を常時チェックします。
 
 ## Directory Structure
 
@@ -112,4 +116,5 @@ The NUnit smoke test `EngineSmokeTests` loads `models/examples/linear.json`, pla
 ## Development Notes
 
 - Design principles and decision logs are documented in `docs/architecture.md` and `choices-driven-development.md`
+- TypeScript engine の型検証・整合チェック仕様も `docs/architecture.md` を参照
 - Refactoring should be done in small steps, with updated documentation and test procedures before committing/pushing.

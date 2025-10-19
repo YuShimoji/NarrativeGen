@@ -17,6 +17,7 @@ export interface Choice {
   target: string
   conditions?: Condition[]
   effects?: Effect[]
+  outcome?: { type: string; value: string }
 }
 
 export interface NodeDef {

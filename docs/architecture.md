@@ -12,19 +12,33 @@
 - 名前空間: `NarrativeGen`
 
 ## Data Model (Schema)
-- Model
-  - id: string
-  - title: string
-  - start: node id
-  - nodes: Node[]
-- Node
-  - id: string
-  - text: string
-  - choices?: Choice[]
-- Choice
-  - id: string
-  - text: string
-  - next: node id
+- **Model** (`models/schema/playthrough.schema.json`)
+  - `modelType`: 固定値 `"adventure-playthrough"`
+  - `startNode`: 開始ノード ID（`nodes` 内に必須）
+  - `flags`: 初期フラグ。`Record<string, boolean>`
+  - `resources`: 初期リソース。`Record<string, number>`
+  - `nodes`: ノード定義。キー（ノードID）と `Node` オブジェクトのマップ
+- **Node**
+  - `id`: ノードID（キーと一致させること）
+  - `text`: 表示テキスト（任意）
+  - `choices`: `Choice[]`。欠如時は選択肢なしとして扱う
+- **Choice**
+  - `id`: 選択肢ID（ノード内でユニーク）
+  - `text`: 表示文言
+  - `target`: 遷移先ノードID（`nodes` 内に必須）
+  - `conditions`: フラグ・リソース・時間帯条件の配列
+  - `effects`: `setFlag` / `addResource` / `goto` のいずれか
+  - `outcome`: `{ type: string; value: string }` 任意メタデータ（UI表示等に利用）
+
+## Validation Pipeline (TypeScript)
+- **AJV 検証**: `packages/engine-ts/src/index.ts` の `loadModel()` が JSON Schema で構造を検証。
+- **整合性チェック**: 同関数内 `assertModelIntegrity()` が以下を確認。
+  - `startNode` が `nodes` に存在すること
+  - ノードキーと `node.id` の一致
+  - ノード内での選択肢ID重複禁止
+  - `choice.target` の存在と必須指定
+- **CLI ツール**: `npm run validate:models` が `models/examples/` を一括検証し、最初の選択肢を仮実行してスモークテスト。
+- **CI**: `.github/workflows/ci.yml` で `npm run lint -- --max-warnings=0` / `npm run build` / `npm run validate:models` を自動実行。
 
 ## Engine API (C#)
 - `LoadModel(string json): NarrativeModel`
