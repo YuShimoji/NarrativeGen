@@ -156,5 +156,32 @@ namespace NarrativeGen.Tests
             session = Engine.ApplyChoice(session, model, "visitMarket");
             Assert.AreEqual("market", session.CurrentNodeId);
         }
+
+        [Test]
+        public void LoadModel_Throws_On_Invalid_Json()
+        {
+            Assert.Throws<System.Text.Json.JsonException>(() => Engine.LoadModel("invalid json"));
+        }
+
+        [Test]
+        public void LoadModel_Throws_On_Missing_StartNode()
+        {
+            var invalidModel = @"{
+                ""modelType"": ""adventure-playthrough"",
+                ""nodes"": { ""node1"": { ""id"": ""node1"", ""text"": ""test"" } }
+            }";
+            Assert.Throws<ArgumentException>(() => Engine.LoadModel(invalidModel));
+        }
+
+        [Test]
+        public void LoadModel_Throws_On_Node_Id_Mismatch()
+        {
+            var invalidModel = @"{
+                ""modelType"": ""adventure-playthrough"",
+                ""startNode"": ""node1"",
+                ""nodes"": { ""wrongId"": { ""id"": ""node1"", ""text"": ""test"" } }
+            }";
+            Assert.Throws<ArgumentException>(() => Engine.LoadModel(invalidModel));
+        }
     }
 }
