@@ -81,6 +81,21 @@ cmd /c npm run validate:models
 
 `packages/engine-ts/src/index.ts` の `loadModel()` は JSON Schema による構造検証に加え、`startNode` の存在・ノードID整合・選択肢ターゲット整合などを確認します。エラーは CLI 出力に集約されます。
 
+## Web Tester
+
+1. Run the web tester
+
+```powershell
+cd .\apps\web-tester
+cmd /c npm install
+cmd /c npm run build
+# Serve the built files statically (e.g., using python -m http.server)
+```
+
+The web tester allows you to load sample models from dropdown or upload custom JSON files via button/drag & drop, start sessions, and play through choices. Model validation errors are displayed in the UI.
+
+You can also use the "モデルを編集" button to open a GUI editor for modifying nodes and choices visually, with a preview feature for story flow.
+
 ## Lint/Format (TS)
 
 Run Prettier and ESLint for the TypeScript engine:

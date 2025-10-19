@@ -62,7 +62,7 @@
 ## Known Gaps / Next Steps
 - **[任意モデル読込 (Web テスター拡張)]**: ✅ 実装完了。`apps/web-tester/` に drag & drop / ファイル選択 UI を追加し、カスタム JSON を `GameSession` に反映。`loadModel()` の例外を UI 表示して即フィードバック。
 - **[Unity JSON ローダー]**: ✅ 実装完了。`packages/sdk-unity/Runtime/MinimalNarrativeController.cs` に `NarrativeModelJson` TextAsset フィールドを追加。未設定時はビルトインサンプルを使用。
-- **[ライター専用ツール]** choices-driven-development.md で整理した GUI エディタ（選択肢追加・アウトカム設定・AI 補助保存）を Web テスター拡張として段階的に実装する。
+- **[ライター専用ツール]**: ✅ 実装完了。Web Tester にノード/選択肢 GUI エディタを実装。ノード追加・プレビュー・保存機能を追加。AI 補助は次フェーズ。
 - **[CI テスト]** `dotnet test` と `npm run build` を CI パイプラインに統合し、サンプル JSON の整合性と Web テスターのビルドを自動検証。
 
 ## Unity Integration
