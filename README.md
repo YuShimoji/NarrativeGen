@@ -88,9 +88,11 @@ cmd /c npm run validate:models
 ```powershell
 cd .\apps\web-tester
 cmd /c npm install
-cmd /c npm run build
-# Serve the built files statically (e.g., using python -m http.server)
+cmd /c npm run dev
+# Or serve the built files statically (e.g., using python -m http.server)
 ```
+
+For development, use `npm run dev` to start the Vite dev server. For production, build and serve the `dist/` directory.
 
 The web tester allows you to load sample models from dropdown or upload custom JSON files via button/drag & drop, start sessions, and play through choices. Model validation errors are displayed in the UI.
 
