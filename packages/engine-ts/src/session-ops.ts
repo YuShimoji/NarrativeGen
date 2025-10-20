@@ -1,4 +1,4 @@
-import type { Choice, Condition, Effect, Model, SessionState } from './types'
+import type { Choice, Condition, Effect, Model, SessionState } from './types.js'
 
 function cmp(op: '>=' | '<=' | '>' | '<' | '==', a: number, b: number): boolean {
   switch (op) {

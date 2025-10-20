@@ -1,7 +1,7 @@
-import { applyChoice as applyChoiceOp, getAvailableChoices as getChoices, startSession } from './session-ops'
-import { Inventory } from './inventory'
-import type { Entity } from './entities'
-import type { Choice, ChoiceOutcome, Model, SessionState } from './types'
+import { applyChoice as applyChoiceOp, getAvailableChoices as getChoices, startSession } from './session-ops.js'
+import { Inventory } from './inventory.js'
+import type { Entity } from './entities.js'
+import type { Choice, ChoiceOutcome, Model, SessionState } from './types.js'
 
 function normalizeId(value: string): string {
   return value.trim().toLowerCase()

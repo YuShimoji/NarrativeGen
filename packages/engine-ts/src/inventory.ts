@@ -1,4 +1,4 @@
-import type { Entity } from './entities'
+import type { Entity } from './entities.js'
 
 export interface InventoryOptions {
   entities?: Entity[]

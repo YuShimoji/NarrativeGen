@@ -32,9 +32,9 @@ export function loadModel(model: any): Model {
   return model as Model
 }
 
-export { deserialize, applyChoice, getAvailableChoices, serialize, startSession } from './session-ops'
-export { GameSession, type GameSessionOptions } from './game-session'
-export { Inventory } from './inventory'
-export type { Entity } from './entities'
-export { parseEntitiesCsv, loadEntitiesFromFile } from './entities'
-export * from './types'
+export { deserialize, applyChoice, getAvailableChoices, serialize, startSession } from './session-ops.js'
+export { GameSession, type GameSessionOptions } from './game-session.js'
+export { Inventory } from './inventory.js'
+export type { Entity } from './entities.js'
+export { parseEntitiesCsv, loadEntitiesFromFile } from './entities.js'
+export * from './types.js'
