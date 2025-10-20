@@ -14,8 +14,7 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        working-directory: packages/engine-ts
-        run: npm install --ignore-workspaces
+        run: npm install --workspace=packages/engine-ts
       - name: Build
         working-directory: packages/engine-ts
         run: npm run build
