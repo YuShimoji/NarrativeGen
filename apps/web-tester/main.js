@@ -396,6 +396,7 @@ csvFileInput.addEventListener('change', async (e) => {
     const delim = file.name.endsWith('.tsv') || text.includes('\t') ? '\t' : ','
     const rows = text.split(/\r?\n/).filter((l) => l.trim().length > 0)
     if (rows.length === 0) throw new Error('空のファイルです')
+    
     const headers = rows[0].split(delim).map((h) => h.trim())
     const idx = {
       node_id: headers.indexOf('node_id'),
@@ -403,27 +404,102 @@ csvFileInput.addEventListener('change', async (e) => {
       choice_id: headers.indexOf('choice_id'),
       choice_text: headers.indexOf('choice_text'),
       choice_target: headers.indexOf('choice_target'),
+      choice_conditions: headers.indexOf('choice_conditions'),
+      choice_effects: headers.indexOf('choice_effects'),
+      choice_outcome_type: headers.indexOf('choice_outcome_type'),
+      choice_outcome_value: headers.indexOf('choice_outcome_value'),
+      initial_flags: headers.indexOf('initial_flags'),
+      initial_resources: headers.indexOf('initial_resources'),
     }
+    
+    // 初期値の抽出（最初の行）
+    let initialFlags = {}
+    let initialResources = {}
+    if (rows.length > 1) {
+      const firstRow = parseCsvLine(rows[1], delim)
+      if (idx.initial_flags >= 0 && firstRow[idx.initial_flags]) {
+        initialFlags = parseKeyValuePairs(firstRow[idx.initial_flags], 'boolean')
+      }
+      if (idx.initial_resources >= 0 && firstRow[idx.initial_resources]) {
+        initialResources = parseKeyValuePairs(firstRow[idx.initial_resources], 'number')
+      }
+    }
+    
     const nodes = {}
-    for (const line of rows.slice(1)) {
-      const cells = line.split(delim)
+    const errors = []
+    
+    for (let i = 1; i < rows.length; i++) {
+      const cells = parseCsvLine(rows[i], delim)
       const nid = (cells[idx.node_id] || '').trim()
       if (!nid) continue
+      
       if (!nodes[nid]) nodes[nid] = { id: nid, text: '', choices: [] }
+      
       const ntext = (cells[idx.node_text] || '').trim()
       if (ntext) nodes[nid].text = ntext
+      
       const cid = (cells[idx.choice_id] || '').trim()
       const ctext = (cells[idx.choice_text] || '').trim()
       const ctgt = (cells[idx.choice_target] || '').trim()
+      
       if (ctgt || ctext || cid) {
-        nodes[nid].choices.push({ id: cid || `c${nodes[nid].choices.length + 1}`, text: ctext || '', target: ctgt || nid })
+        const choice = {
+          id: cid || `c${nodes[nid].choices.length + 1}`,
+          text: ctext || '',
+          target: ctgt || nid
+        }
+        
+        // 条件のパース
+        if (idx.choice_conditions >= 0 && cells[idx.choice_conditions]) {
+          try {
+            choice.conditions = parseConditions(cells[idx.choice_conditions])
+          } catch (err) {
+            errors.push(`行${i + 1}: 条件パースエラー: ${err.message}`)
+          }
+        }
+        
+        // 効果のパース
+        if (idx.choice_effects >= 0 && cells[idx.choice_effects]) {
+          try {
+            choice.effects = parseEffects(cells[idx.choice_effects])
+          } catch (err) {
+            errors.push(`行${i + 1}: 効果パースエラー: ${err.message}`)
+          }
+        }
+        
+        // アウトカムのパース
+        if (idx.choice_outcome_type >= 0 && cells[idx.choice_outcome_type]) {
+          choice.outcome = {
+            type: cells[idx.choice_outcome_type].trim(),
+            value: idx.choice_outcome_value >= 0 ? cells[idx.choice_outcome_value]?.trim() : undefined
+          }
+        }
+        
+        nodes[nid].choices.push(choice)
       }
     }
+    
+    // バリデーション
+    const validationErrors = validateModel(nodes)
+    errors.push(...validationErrors)
+    
+    if (errors.length > 0) {
+      console.warn('CSV検証警告:', errors)
+      setStatus(`CSV読み込み成功（警告${errors.length}件あり）`, 'warn')
+    } else {
+      setStatus('CSV を読み込みました', 'success')
+    }
+    
     const firstNode = Object.keys(nodes)[0]
-    _model = { modelType: 'adventure-playthrough', startNode: firstNode, nodes }
+    _model = {
+      modelType: 'adventure-playthrough',
+      startNode: firstNode,
+      flags: initialFlags,
+      resources: initialResources,
+      nodes
+    }
     session = startSession(_model)
     currentModelName = file.name
-    setStatus('CSV を読み込みました', 'success')
     initStory()
     renderState()
     renderChoices()
@@ -434,22 +510,150 @@ csvFileInput.addEventListener('change', async (e) => {
   }
 })
 
+// CSV行のパース（引用符対応）
+function parseCsvLine(line, delim) {
+  const cells = []
+  let current = ''
+  let inQuotes = false
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i]
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"'
+        i++
+      } else {
+        inQuotes = !inQuotes
+      }
+    } else if (char === delim && !inQuotes) {
+      cells.push(current)
+      current = ''
+    } else {
+      current += char
+    }
+  }
+  cells.push(current)
+  return cells
+}
+
+// キー=値ペアのパース（セミコロン区切り）
+function parseKeyValuePairs(text, type = 'string') {
+  const result = {}
+  text.split(';').forEach((pair) => {
+    const [key, val] = pair.split('=').map((s) => s.trim())
+    if (!key || val === undefined) return
+    if (type === 'boolean') {
+      result[key] = val.toLowerCase() === 'true'
+    } else if (type === 'number') {
+      result[key] = parseFloat(val)
+    } else {
+      result[key] = val
+    }
+  })
+  return result
+}
+
+// 条件のパース
+function parseConditions(text) {
+  const conditions = []
+  text.split(';').forEach((cond) => {
+    cond = cond.trim()
+    if (!cond) return
+    
+    if (cond.startsWith('flag:')) {
+      const [key, val] = cond.slice(5).split('=')
+      conditions.push({ type: 'flag', key: key.trim(), value: val.trim().toLowerCase() === 'true' })
+    } else if (cond.startsWith('resource:')) {
+      const match = cond.slice(9).match(/^(\w+)(>=|<=|>|<|==)(.+)$/)
+      if (!match) throw new Error(`不正なリソース条件: ${cond}`)
+      conditions.push({ type: 'resource', key: match[1].trim(), op: match[2], value: parseFloat(match[3]) })
+    } else if (cond.startsWith('timeWindow:')) {
+      const [start, end] = cond.slice(11).split('-').map((s) => parseInt(s.trim()))
+      conditions.push({ type: 'timeWindow', start, end })
+    } else {
+      throw new Error(`不明な条件タイプ: ${cond}`)
+    }
+  })
+  return conditions
+}
+
+// 効果のパース
+function parseEffects(text) {
+  const effects = []
+  text.split(';').forEach((eff) => {
+    eff = eff.trim()
+    if (!eff) return
+    
+    if (eff.startsWith('setFlag:')) {
+      const [key, val] = eff.slice(8).split('=')
+      effects.push({ type: 'setFlag', key: key.trim(), value: val.trim().toLowerCase() === 'true' })
+    } else if (eff.startsWith('addResource:')) {
+      const [key, val] = eff.slice(12).split('=')
+      effects.push({ type: 'addResource', key: key.trim(), delta: parseFloat(val) })
+    } else if (eff.startsWith('goto:')) {
+      effects.push({ type: 'goto', target: eff.slice(5).trim() })
+    } else {
+      throw new Error(`不明な効果タイプ: ${eff}`)
+    }
+  })
+  return effects
+}
+
+// モデル検証
+function validateModel(nodes) {
+  const errors = []
+  const nodeIds = Object.keys(nodes)
+  
+  for (const [nid, node] of Object.entries(nodes)) {
+    for (const choice of node.choices || []) {
+      if (choice.target && !nodeIds.includes(choice.target)) {
+        errors.push(`ノード'${nid}'の選択肢'${choice.id}': 存在しないターゲット'${choice.target}'`)
+      }
+    }
+  }
+  
+  return errors
+}
+
 exportCsvBtn.addEventListener('click', () => {
   if (!_model) {
     setStatus('まずモデルを読み込んでください', 'warn')
     return
   }
-  const header = ['node_id','node_text','choice_id','choice_text','choice_target']
+  const header = [
+    'node_id', 'node_text', 'choice_id', 'choice_text', 'choice_target',
+    'choice_conditions', 'choice_effects', 'choice_outcome_type', 'choice_outcome_value',
+    'initial_flags', 'initial_resources'
+  ]
   const rows = [header.join(',')]
+  
+  let firstRow = true
   for (const [nid, node] of Object.entries(_model.nodes)) {
+    const initialFlags = firstRow && _model.flags ? serializeKeyValuePairs(_model.flags) : ''
+    const initialResources = firstRow && _model.resources ? serializeKeyValuePairs(_model.resources) : ''
+    firstRow = false
+    
     if (!node.choices || node.choices.length === 0) {
-      rows.push([nid, escapeCsv(node.text ?? ''), '', '', ''].join(','))
+      rows.push([
+        nid, escapeCsv(node.text ?? ''), '', '', '',
+        '', '', '', '', initialFlags, initialResources
+      ].join(','))
       continue
     }
+    
     for (const ch of node.choices) {
-      rows.push([nid, escapeCsv(node.text ?? ''), ch.id ?? '', escapeCsv(ch.text ?? ''), ch.target ?? ''].join(','))
+      const conditions = ch.conditions ? serializeConditions(ch.conditions) : ''
+      const effects = ch.effects ? serializeEffects(ch.effects) : ''
+      const outcomeType = ch.outcome?.type || ''
+      const outcomeValue = ch.outcome?.value || ''
+      
+      rows.push([
+        nid, escapeCsv(node.text ?? ''), ch.id ?? '', escapeCsv(ch.text ?? ''), ch.target ?? '',
+        escapeCsv(conditions), escapeCsv(effects), outcomeType, outcomeValue,
+        initialFlags, initialResources
+      ].join(','))
     }
   }
+  
   const csv = rows.join('\n')
   const blob = new Blob([csv], { type: 'text/csv' })
   const url = URL.createObjectURL(blob)
@@ -461,6 +665,31 @@ exportCsvBtn.addEventListener('click', () => {
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
 })
+
+// 条件のシリアライズ
+function serializeConditions(conditions) {
+  return conditions.map((cond) => {
+    if (cond.type === 'flag') return `flag:${cond.key}=${cond.value}`
+    if (cond.type === 'resource') return `resource:${cond.key}${cond.op}${cond.value}`
+    if (cond.type === 'timeWindow') return `timeWindow:${cond.start}-${cond.end}`
+    return ''
+  }).filter(Boolean).join(';')
+}
+
+// 効果のシリアライズ
+function serializeEffects(effects) {
+  return effects.map((eff) => {
+    if (eff.type === 'setFlag') return `setFlag:${eff.key}=${eff.value}`
+    if (eff.type === 'addResource') return `addResource:${eff.key}=${eff.delta}`
+    if (eff.type === 'goto') return `goto:${eff.target}`
+    return ''
+  }).filter(Boolean).join(';')
+}
+
+// キー=値ペアのシリアライズ
+function serializeKeyValuePairs(obj) {
+  return Object.entries(obj).map(([k, v]) => `${k}=${v}`).join(';')
+}
 
 function escapeCsv(s) {
   if (s == null) return ''
