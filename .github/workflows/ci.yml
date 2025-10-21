@@ -14,7 +14,7 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm install --workspace=packages/engine-ts
+        run: npm ci
       - name: Build
         working-directory: packages/engine-ts
         run: npm run build
@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm install --workspace=apps/web-tester
+        run: npm ci
       - name: Build
         working-directory: apps/web-tester
         run: npm run build
