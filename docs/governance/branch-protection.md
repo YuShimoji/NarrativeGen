@@ -7,23 +7,28 @@
 - リスク/Tier: Tier 2（中）
 
 ## 目的
+
 デフォルトブランチへマージされる全ての Pull Request に対して、GitHub Actions による CI 成功を必須化し、品質担保と安全性を向上させる。
 
 ## 適用ルール
-- 必須ステータスチェック: `engine-ts`（GitHub Actions）
+
+- 必須ステータスチェック: `engine-ts`, `web-tester`, `sdk-unity`（GitHub Actions）
 - 厳格モード: 有効（`strict: true` → ベースブランチに対して最新化を要求）
 - 管理者への適用: 有効（`enforce_admins: true`）
 - レビュー必須: 今回は未設定（必要に応じて今後拡張）
 
 ## 設定方式（自動化）
+
 GitHub REST API を用いて設定。
+
 - Endpoint: `PUT /repos/{owner}/{repo}/branches/{branch}/protection`
 - 主要パラメータ:
   - `required_status_checks.strict = true`
-  - `required_status_checks.contexts = ["engine-ts"]`
+  - `required_status_checks.contexts = ["engine-ts", "web-tester", "sdk-unity"]`
   - `enforce_admins = true`
 
 ## 検証方法
+
 1. API で保護状態を取得:
    - `GET /repos/{owner}/{repo}/branches/{branch}/protection`
    - `required_status_checks.contexts` に `engine-ts` が含まれること。
