@@ -14,13 +14,46 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm install --workspace=packages/engine-ts
+        working-directory: packages/engine-ts
+        run: npm install
       - name: Build
         working-directory: packages/engine-ts
         run: npm run build
+      - name: Lint
+        working-directory: packages/engine-ts
+        run: npm run lint -- --max-warnings=0
       - name: Test
         working-directory: packages/engine-ts
         run: npm test -- --reporter=dot
       - name: Validate models
         working-directory: packages/engine-ts
         run: node dist/tools/validate-models.js
+  web-tester:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        working-directory: apps/web-tester
+        run: npm install
+      - name: Build
+        working-directory: apps/web-tester
+        run: npm run build
+  sdk-unity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore dependencies
+        working-directory: packages/tests/NarrativeGen.Tests
+        run: dotnet restore
+      - name: Build
+        working-directory: packages/tests/NarrativeGen.Tests
+        run: dotnet build --configuration Release --no-restore
+      - name: Test
+        working-directory: packages/tests/NarrativeGen.Tests
+        run: dotnet test --configuration Release --no-build --verbosity normal

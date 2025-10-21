@@ -15,6 +15,9 @@ namespace NarrativeGen
         [Tooltip("Entities CSV TextAsset (id,brand,description,cost)")]
         public TextAsset EntitiesCsv;
 
+        [Tooltip("Optional NarrativeModel JSON TextAsset. If not set, uses built-in sample.")]
+        public TextAsset? NarrativeModelJson;
+
         [Tooltip("Root container that will receive instantiated choice buttons")]
         public RectTransform ChoicesRoot;
 
@@ -27,9 +30,16 @@ namespace NarrativeGen
         [Tooltip("Text element displaying current session state snapshot")]
         public TextMeshProUGUI StateText;
 
+        [Tooltip("Optional root for inventory item views")]
+        public RectTransform? InventoryListRoot;
+
+        [Tooltip("Optional prefab used to display inventory entries")]
+        public InventoryListItemView? InventoryItemPrefab;
+
         private GameSession? _session;
         private NarrativeModel? _model;
         private readonly List<Button> _spawnedButtons = new();
+        private readonly List<InventoryListItemView> _spawnedInventoryItems = new();
 
         private void OnEnable()
         {
@@ -47,6 +57,7 @@ namespace NarrativeGen
         private void OnDisable()
         {
             ClearButtons();
+            ClearInventoryViews();
             _session = null;
             _model = null;
             if (StateText != null)
@@ -72,7 +83,7 @@ namespace NarrativeGen
             if (entities.Count == 0)
                 throw new InvalidOperationException("No entities parsed from CSV");
 
-            _model = CreateSampleModel();
+            _model = NarrativeModelJson != null ? Engine.LoadModel(NarrativeModelJson.text) : CreateSampleModel();
             _session = new GameSession(_model, entities);
             UpdateStatus("状態: セッション開始");
             UpdateStateView();
@@ -196,6 +207,7 @@ namespace NarrativeGen
             var state = _session.State;
             var inventory = _session.ListInventory();
             var available = choices ?? _session.GetAvailableChoices();
+            RefreshInventoryViews(inventory);
             var sb = new StringBuilder();
             sb.AppendLine($"ノード: {state.CurrentNodeId}");
             sb.AppendLine($"時間: {state.Time}");
@@ -284,6 +296,40 @@ namespace NarrativeGen
             text.text = choice.Text;
 
             return buttonGo.GetComponent<Button>();
+        }
+
+        private void RefreshInventoryViews(IReadOnlyList<Entity> inventory)
+        {
+            if (InventoryListRoot == null)
+            {
+                return;
+            }
+
+            if (InventoryItemPrefab == null)
+            {
+                ClearInventoryViews();
+                return;
+            }
+
+            ClearInventoryViews();
+
+            foreach (var entity in inventory)
+            {
+                var instance = Instantiate(InventoryItemPrefab, InventoryListRoot);
+                instance.gameObject.name = $"Inventory_{entity.Id}";
+                instance.Bind(entity);
+                _spawnedInventoryItems.Add(instance);
+            }
+        }
+
+        private void ClearInventoryViews()
+        {
+            foreach (var item in _spawnedInventoryItems)
+            {
+                if (item == null) continue;
+                DestroyImmediate(item.gameObject);
+            }
+            _spawnedInventoryItems.Clear();
         }
 
         private static NarrativeModel CreateSampleModel()

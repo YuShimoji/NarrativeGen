@@ -52,7 +52,27 @@
         border-radius: 8px;
         max-height: 320px;
         overflow: auto;
-        font-size: 0.9rem;
+      }
+      .story-view {
+        background: #fff;
+        color: #111827;
+        padding: 1rem;
+        border-radius: 8px;
+        min-height: 120px;
+        max-height: 320px;
+        overflow: auto;
+        white-space: pre-wrap;
+        border: 1px solid #e5e7eb;
+      }
+      .drop-zone {
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+      }
+      .drop-zone:hover {
+        background-color: #f0f0f0;
       }
     </style>
   </head>
@@ -62,12 +82,43 @@
       <p>GameSession の挙動をブラウザで簡易確認できます。ブラウザで静的にホストしてください。</p>
 
       <div class="controls">
-        <button id="startBtn">セッション開始</button>
+        <label for="modelSelect">サンプルモデル</label>
+        <select id="modelSelect">
+          <option value="linear">linear.json</option>
+          <option value="branching_flags">branching_flags.json</option>
+          <option value="resource_management">resource_management.json</option>
+          <option value="time_gated">time_gated.json</option>
+        </select>
+        <button id="startBtn">サンプルを実行</button>
+        <input type="file" id="fileInput" accept=".json" style="display: none;">
+        <button id="uploadBtn">JSONファイルをアップロード</button>
+        <button id="previewTopBtn">小説プレビュー</button>
+        <button id="downloadTopBtn">JSONダウンロード</button>
+        <button id="importCsvBtn">CSVインポート</button>
+        <input type="file" id="csvFileInput" accept=".csv,.tsv" style="display: none;">
+        <button id="exportCsvBtn">CSVエクスポート</button>
+        <button id="editBtn">モデルを編集</button>
+      </div>
+
+      <div id="dropZone" class="drop-zone">
+        <p>またはここに JSON ファイルをドラッグ＆ドロップしてください</p>
+      </div>
+
+      <div id="guiEditMode" style="display: none;">
+        <h2>GUI モデル編集</h2>
+        <div id="nodeList"></div>
+        <button id="addNodeBtn">ノードを追加</button>
+        <button id="previewBtn">小説プレビュー</button>
+        <button id="downloadBtn">JSONダウンロード</button>
+        <button id="saveGuiBtn">GUI保存して適用</button>
+        <button id="cancelGuiBtn">キャンセル</button>
       </div>
 
       <p id="statusText">初期化中...</p>
 
       <div id="choices"></div>
+
+      <div id="storyView" class="story-view"></div>
 
       <pre id="stateView">{ "status": "初期化待ち" }</pre>
     </div>
