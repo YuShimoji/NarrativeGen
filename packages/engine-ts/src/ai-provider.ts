@@ -32,7 +32,7 @@ export interface AIConfig {
 }
 
 export class MockAIProvider implements AIProvider {
-  async generateNextNode(context: StoryContext): Promise<string> {
+  async generateNextNode(_context: StoryContext): Promise<string> {
     // Return a simple continuation
     const samples = [
       '次のシーンへ進みます。',
@@ -42,9 +42,9 @@ export class MockAIProvider implements AIProvider {
     return samples[Math.floor(Math.random() * samples.length)]
   }
 
-  async paraphrase(text: string, options?: ParaphraseOptions): Promise<string[]> {
+  async paraphrase(text: string, _options?: ParaphraseOptions): Promise<string[]> {
     // Simple mock paraphrases
-    const count = options?.variantCount ?? 3
+    const count = _options?.variantCount ?? 3
     const variants: string[] = []
     for (let i = 0; i < count; i++) {
       variants.push(`${text} (バリエーション ${i + 1})`)
@@ -72,23 +72,23 @@ export function createAIProvider(config: AIConfig): AIProvider {
 class OpenAIProvider implements AIProvider {
   constructor(private config: NonNullable<AIConfig['openai']>) {}
 
-  async generateNextNode(context: StoryContext): Promise<string> {
+  async generateNextNode(_context: StoryContext): Promise<string> {
     throw new Error('OpenAI integration not implemented yet')
   }
 
-  async paraphrase(text: string, options?: ParaphraseOptions): Promise<string[]> {
+  async paraphrase(_text: string, _options?: ParaphraseOptions): Promise<string[]> {
     throw new Error('OpenAI integration not implemented yet')
   }
 }
 
 class OllamaProvider implements AIProvider {
-  constructor(private config?: AIConfig['ollama']) {}
+  constructor(private _config?: AIConfig['ollama']) {}
 
-  async generateNextNode(context: StoryContext): Promise<string> {
+  async generateNextNode(_context: StoryContext): Promise<string> {
     throw new Error('Ollama integration not implemented yet')
   }
 
-  async paraphrase(text: string, options?: ParaphraseOptions): Promise<string[]> {
+  async paraphrase(_text: string, _options?: ParaphraseOptions): Promise<string[]> {
     throw new Error('Ollama integration not implemented yet')
   }
 }

@@ -32,6 +32,9 @@ module.exports = {
     '@typescript-eslint/no-misused-promises': 'error',
     '@typescript-eslint/no-unnecessary-type-assertion': 'error',
     '@typescript-eslint/switch-exhaustiveness-check': 'error',
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/require-await': 'off',
+    'import/no-unresolved': ['error', { ignore: ['\\.js$'] }],
     'import/no-extraneous-dependencies': [
       'error',
       {

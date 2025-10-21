@@ -94,6 +94,6 @@ export function serialize(session: SessionState): string {
 }
 
 export function deserialize(payload: string): SessionState {
-  const parsed = JSON.parse(payload)
+  const parsed: unknown = JSON.parse(payload)
   return parsed as SessionState
 }
