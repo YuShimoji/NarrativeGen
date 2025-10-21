@@ -14,7 +14,7 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm install --workspace=packages/engine-ts
+        run: npm ci
       - name: Build
         working-directory: packages/engine-ts
         run: npm run build
@@ -24,3 +24,24 @@ jobs:
       - name: Validate models
         working-directory: packages/engine-ts
         run: node dist/tools/validate-models.js
+  web-tester:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        working-directory: apps/web-tester
+        run: npm run build
+  sdk-unity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: game-ci/unity-test-runner@v4
+        with:
+          unityVersion: 2021.3.0f1
+          testMode: playmode
+          projectPath: packages/sdk-unity
