@@ -125,7 +125,20 @@ See `docs/ai-features.md` for detailed design. Current status:
 - ⏳ **Phase 3**: Local LLM integration (Ollama, llama.cpp)
 - ⏳ **Phase 4**: Batch processing & history management
 
-## Lint/Format (TS)
+## Unity SDK
+
+Install as a UPM package:
+
+1. Open Unity Package Manager (Window > Package Manager)
+2. Click "+" > "Add package from git URL"
+3. Enter: `https://github.com/YuShimoji/NarrativeGen.git?path=packages/sdk-unity`
+
+See `packages/sdk-unity/README.md` for API usage and examples.
+
+### Dependencies
+
+- Unity 2021.3+
+- `com.unity.nuget.newtonsoft-json` (auto-installed)
 
 Run Prettier and ESLint for the TypeScript engine:
 

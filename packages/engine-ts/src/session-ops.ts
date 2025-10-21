@@ -1,18 +1,4 @@
-/**
- * Browser-compatible entry point for NarrativeGen engine
- * Does not include Node.js-specific features (fs, path, schema validation)
- */
-
-import type {
-  Choice,
-  Condition,
-  Effect,
-  FlagState,
-  Model,
-  ResourceState,
-  SessionState,
-} from './types'
-export { chooseParaphrase, paraphraseJa } from './paraphrase'
+import type { Choice, Condition, Effect, Model, SessionState } from './types.js'
 
 function cmp(op: '>=' | '<=' | '>' | '<' | '==', a: number, b: number): boolean {
   switch (op) {
@@ -26,13 +12,15 @@ function cmp(op: '>=' | '<=' | '>' | '<' | '==', a: number, b: number): boolean 
       return a < b
     case '==':
       return a === b
+    default:
+      return false
   }
 }
 
 function evalCondition(
   cond: Condition,
-  flags: FlagState,
-  resources: ResourceState,
+  flags: Record<string, boolean>,
+  resources: Record<string, number>,
   time: number,
 ): boolean {
   if (cond.type === 'flag') {
@@ -87,7 +75,6 @@ export function applyChoice(session: SessionState, model: Model, choiceId: strin
   if (!node) throw new Error(`Node not found: ${session.nodeId}`)
   const choice = (node.choices ?? []).find((c) => c.id === choiceId)
   if (!choice) throw new Error(`Choice not found: ${choiceId}`)
-  // ensure choice is available
   const available = getAvailableChoices(session, model).some((c) => c.id === choiceId)
   if (!available) throw new Error(`Choice not available: ${choiceId}`)
 
@@ -95,13 +82,18 @@ export function applyChoice(session: SessionState, model: Model, choiceId: strin
   for (const eff of choice.effects ?? []) {
     next = applyEffect(eff, next)
   }
-  // default transition if no goto effect
   if (!choice.effects?.some((e) => e.type === 'goto')) {
     next = { ...next, nodeId: choice.target }
   }
-  // simple time progression
   next.time = next.time + 1
   return next
 }
 
-export type { Choice, Condition, Effect, FlagState, Model, NodeDef, ResourceState, SessionState } from './types'
+export function serialize(session: SessionState): string {
+  return JSON.stringify(session)
+}
+
+export function deserialize(payload: string): SessionState {
+  const parsed = JSON.parse(payload)
+  return parsed as SessionState
+}

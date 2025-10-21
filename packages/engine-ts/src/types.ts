@@ -11,13 +11,18 @@ export type Effect =
   | { type: 'addResource'; key: string; delta: number }
   | { type: 'goto'; target: string }
 
+export interface ChoiceOutcome {
+  type: string
+  value?: string
+}
+
 export interface Choice {
   id: string
   text: string
   target: string
   conditions?: Condition[]
   effects?: Effect[]
-  outcome?: { type: string; value: string }
+  outcome?: ChoiceOutcome | null
 }
 
 export interface NodeDef {

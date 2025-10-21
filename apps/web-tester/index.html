@@ -53,6 +53,17 @@
         max-height: 320px;
         overflow: auto;
       }
+      .story-view {
+        background: #fff;
+        color: #111827;
+        padding: 1rem;
+        border-radius: 8px;
+        min-height: 120px;
+        max-height: 320px;
+        overflow: auto;
+        white-space: pre-wrap;
+        border: 1px solid #e5e7eb;
+      }
       .drop-zone {
         border: 2px dashed #ccc;
         border-radius: 8px;
@@ -81,6 +92,11 @@
         <button id="startBtn">サンプルを実行</button>
         <input type="file" id="fileInput" accept=".json" style="display: none;">
         <button id="uploadBtn">JSONファイルをアップロード</button>
+        <button id="previewTopBtn">小説プレビュー</button>
+        <button id="downloadTopBtn">JSONダウンロード</button>
+        <button id="importCsvBtn">CSVインポート</button>
+        <input type="file" id="csvFileInput" accept=".csv,.tsv" style="display: none;">
+        <button id="exportCsvBtn">CSVエクスポート</button>
         <button id="editBtn">モデルを編集</button>
       </div>
 
@@ -101,6 +117,8 @@
       <p id="statusText">初期化中...</p>
 
       <div id="choices"></div>
+
+      <div id="storyView" class="story-view"></div>
 
       <pre id="stateView">{ "status": "初期化待ち" }</pre>
     </div>
