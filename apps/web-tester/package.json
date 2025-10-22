@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@narrativegen/engine-ts": "file:../../packages/engine-ts"
+    "@narrativegen/engine-ts": "workspace:*"
   },
   "devDependencies": {
     "vite": "^5.4.9"

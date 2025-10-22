@@ -37,9 +37,11 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        working-directory: apps/web-tester
-        run: npm install
-      - name: Build
+        run: npm ci
+      - name: Build engine-ts
+        working-directory: packages/engine-ts
+        run: npm run build
+      - name: Build web-tester
         working-directory: apps/web-tester
         run: npm run build
   sdk-unity:
