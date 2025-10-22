@@ -875,7 +875,17 @@ nodeList.addEventListener('click', (e) => {
 
 // 入力変更でモデル更新
 nodeList.addEventListener('input', (e) => {
-  const input = e.target
+  updateModelFromInput(e.target)
+})
+
+// フォーカス外れ時にもモデル更新（フォールバック）
+nodeList.addEventListener('blur', (e) => {
+  if (e.target.tagName === 'INPUT') {
+    updateModelFromInput(e.target)
+  }
+}, true)
+
+function updateModelFromInput(input) {
   if (!input.dataset.nodeId) return
 
   const nodeId = input.dataset.nodeId
@@ -897,7 +907,7 @@ nodeList.addEventListener('input', (e) => {
       node[field] = value
     }
   }
-})
+}
 
 // トップレベルのプレビュー/ダウンロード
 previewTopBtn.addEventListener('click', () => {
