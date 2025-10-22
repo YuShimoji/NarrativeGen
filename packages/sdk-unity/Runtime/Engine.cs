@@ -6,8 +6,17 @@ using NarrativeGen.Serialization;
 
 namespace NarrativeGen
 {
+    /// <summary>
+    /// Provides core functionality for loading models and executing narrative sessions.
+    /// </summary>
     public static class Engine
     {
+        /// <summary>
+        /// Deserializes and validates a <see cref="NarrativeModel"/> from JSON.
+        /// </summary>
+        /// <param name="json">Narrative model JSON payload.</param>
+        /// <returns>Validated <see cref="NarrativeModel"/> instance.</returns>
+        /// <exception cref="ArgumentException">Thrown when the payload cannot be parsed or is invalid.</exception>
         public static NarrativeModel LoadModel(string json)
         {
             var settings = JsonSettings.Create();
@@ -17,6 +26,11 @@ namespace NarrativeGen
             return model;
         }
 
+        /// <summary>
+        /// Creates a new runtime session using the model's initial state.
+        /// </summary>
+        /// <param name="model">Model used to seed the session state.</param>
+        /// <returns>Initialized session instance.</returns>
         public static Runtime.Session StartSession(NarrativeModel model)
         {
             return new Runtime.Session(
@@ -27,6 +41,12 @@ namespace NarrativeGen
             );
         }
 
+        /// <summary>
+        /// Resolves the set of choices currently available for the session's active node.
+        /// </summary>
+        /// <param name="session">Current session state.</param>
+        /// <param name="model">Narrative model supplying node definitions.</param>
+        /// <returns>Filtered list of available choices.</returns>
         public static IReadOnlyList<Choice> GetAvailableChoices(Runtime.Session session, NarrativeModel model)
         {
             var node = model.Nodes[session.CurrentNodeId];
@@ -34,6 +54,15 @@ namespace NarrativeGen
             return choices.Where(c => EvaluateConditions(c.Conditions, session)).ToList();
         }
 
+        /// <summary>
+        /// Applies the specified choice, mutating the session state and advancing time.
+        /// </summary>
+        /// <param name="session">Current session state.</param>
+        /// <param name="model">Narrative model providing choice definitions.</param>
+        /// <param name="choiceId">Identifier of the choice to apply.</param>
+        /// <returns>Updated session state.</returns>
+        /// <exception cref="ArgumentException">Thrown when the choice or target node cannot be resolved.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the choice is not currently available.</exception>
         public static Runtime.Session ApplyChoice(Runtime.Session session, NarrativeModel model, string choiceId)
         {
             var node = model.Nodes[session.CurrentNodeId];
@@ -65,12 +94,13 @@ namespace NarrativeGen
                 }
             }
 
-            if (string.IsNullOrEmpty(target))
-                target = node.Id; // stay if no target specified
-            if (!model.Nodes.ContainsKey(target))
-                throw new ArgumentException($"Target node '{target}' not found in model");
+            var resolvedTarget = string.IsNullOrWhiteSpace(target) ? node.Id : target;
+            if (string.IsNullOrWhiteSpace(resolvedTarget))
+                throw new ArgumentException("Target node id cannot be null or whitespace", nameof(choiceId));
+            if (!model.Nodes.ContainsKey(resolvedTarget!))
+                throw new ArgumentException($"Target node '{resolvedTarget}' not found in model", nameof(choiceId));
             var nextTime = session.Time + 1;
-            return session.With(currentNodeId: target, flags: flags, resources: resources, time: nextTime);
+            return session.With(currentNodeId: resolvedTarget, flags: flags, resources: resources, time: nextTime);
         }
 
         private static bool EvaluateConditions(List<Condition>? conditions, Runtime.Session session)

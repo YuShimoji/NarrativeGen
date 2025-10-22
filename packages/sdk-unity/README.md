@@ -1,43 +1,54 @@
-# NarrativeGen Unity SDK (stub)
+# NarrativeGen Unity SDK
 
-Minimal C# SDK mirroring the TypeScript engine API. Intended for use in Unity.
+Minimal C# SDK mirroring the TypeScript engine API. Intended for use in Unity as a UPM package.
 
-API sketch:
+## Installation
 
-- LoadModel(json)
-- StartSession(initialState)
-- GetAvailableChoices(session)
-- ApplyChoice(session, choiceId)
-- Serialize(session) / Deserialize(payload)
+### Option 1: Unity Package Manager (Recommended)
 
-This stub compiles as a .NET class library; Unity integration and full feature parity will be added later.
+1. Open Unity Package Manager (Window > Package Manager)
+2. Click "+" > "Add package from git URL"
+3. Enter: `https://github.com/YuShimoji/NarrativeGen.git?path=packages/sdk-unity`
+
+### Option 2: Manual Installation
+
+1. Clone this repository
+2. Copy `packages/sdk-unity` folder into your Unity project's `Packages/` directory
+
+## Dependencies
+
+Requires:
+- Unity 2021.3 or later
+- `com.unity.nuget.newtonsoft-json` (automatically installed via UPM)
+
+## API Overview
+
+- `Engine.LoadModel(json)` - Parse and validate JSON model
+- `Engine.StartSession(model, initialState?)` - Create new session
+- `Engine.GetAvailableChoices(session, model)` - Get choices for current node
+- `Engine.ApplyChoice(session, model, choiceId)` - Apply choice and advance state
+- `Engine.Serialize(session)` / `Engine.Deserialize(payload)` - Session persistence
 
 ## Quick Example
 
 ```csharp
-using System;
-using System.IO;
+using UnityEngine;
 using NarrativeGen;
 
-class Example
+public class NarrativeController : MonoBehaviour
 {
-    static void Main()
+    public TextAsset modelJson; // Assign in Inspector
+
+    void Start()
     {
-        var json = File.ReadAllText("path/to/models/examples/linear.json");
-        var model = Engine.LoadModel(json);
+        var model = Engine.LoadModel(modelJson.text);
         var session = Engine.StartSession(model);
 
         var choices = Engine.GetAvailableChoices(session, model);
-        foreach (var c in choices)
-        {
-            Console.WriteLine($"Choice: {c.Id} - {c.Text}");
-        }
-
-        // Apply the first available choice
         if (choices.Count > 0)
         {
             session = Engine.ApplyChoice(session, model, choices[0].Id);
-            Console.WriteLine($"Moved to node: {session.CurrentNodeId}");
+            Debug.Log($"Moved to node: {session.CurrentNodeId}");
         }
     }
 }

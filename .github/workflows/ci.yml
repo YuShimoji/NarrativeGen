@@ -14,10 +14,14 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm install --workspace=packages/engine-ts
+        working-directory: packages/engine-ts
+        run: npm install
       - name: Build
         working-directory: packages/engine-ts
         run: npm run build
+      - name: Lint
+        working-directory: packages/engine-ts
+        run: npm run lint -- --max-warnings=0
       - name: Test
         working-directory: packages/engine-ts
         run: npm test -- --reporter=dot
@@ -32,7 +36,16 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm install --workspace=apps/web-tester
+        run: npm ci
       - name: Build
         working-directory: apps/web-tester
         run: npm run build
+  sdk-unity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: game-ci/unity-test-runner@v4
+        with:
+          unityVersion: 2021.3.0f1
+          testMode: playmode
+          projectPath: packages/sdk-unity

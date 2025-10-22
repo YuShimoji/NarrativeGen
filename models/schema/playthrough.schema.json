@@ -99,6 +99,15 @@
                       }
                     ]
                   }
+                },
+                "outcome": {
+                  "type": "object",
+                  "required": ["type", "value"],
+                  "properties": {
+                    "type": { "type": "string" },
+                    "value": { "type": "string" }
+                  },
+                  "additionalProperties": false
                 }
               },
               "additionalProperties": false
