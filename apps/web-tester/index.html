@@ -64,15 +64,24 @@
         white-space: pre-wrap;
         border: 1px solid #e5e7eb;
       }
-      .drop-zone {
-        border: 2px dashed #ccc;
+      .error-panel {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
         border-radius: 8px;
         padding: 1rem;
         margin-bottom: 1rem;
-        cursor: pointer;
+        display: none;
       }
-      .drop-zone:hover {
-        background-color: #f0f0f0;
+      .error-panel.show {
+        display: block;
+      }
+      .error-list {
+        margin: 0;
+        padding-left: 1.5rem;
+      }
+      .error-list li {
+        color: #dc2626;
+        margin-bottom: 0.25rem;
       }
     </style>
   </head>
@@ -80,6 +89,11 @@
     <div class="panel">
       <h1>NarrativeGen Web Tester</h1>
       <p>GameSession の挙動をブラウザで簡易確認できます。ブラウザで静的にホストしてください。</p>
+
+      <div id="errorPanel" class="error-panel">
+        <h3>⚠️ バリデーションエラー</h3>
+        <ul id="errorList" class="error-list"></ul>
+      </div>
 
       <div class="controls">
         <label for="modelSelect">サンプルモデル</label>

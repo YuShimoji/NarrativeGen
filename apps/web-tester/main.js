@@ -22,6 +22,8 @@ const downloadBtn = document.getElementById('downloadBtn')
 const saveGuiBtn = document.getElementById('saveGuiBtn')
 const cancelGuiBtn = document.getElementById('cancelGuiBtn')
 const storyView = document.getElementById('storyView')
+const errorPanel = document.getElementById('errorPanel')
+const errorList = document.getElementById('errorList')
 
 let session = null
 let currentModelName = null
@@ -48,6 +50,25 @@ function renderState() {
 function setStatus(message, type = 'info') {
   statusText.textContent = message
   statusText.dataset.type = type
+}
+
+function showErrors(errors) {
+  if (!errors || errors.length === 0) {
+    hideErrors()
+    return
+  }
+
+  errorList.innerHTML = ''
+  errors.forEach(error => {
+    const li = document.createElement('li')
+    li.textContent = error
+    errorList.appendChild(li)
+  })
+  errorPanel.classList.add('show')
+}
+
+function hideErrors() {
+  errorPanel.classList.remove('show')
 }
 
 function setControlsEnabled(enabled) {
@@ -259,6 +280,15 @@ dropZone.addEventListener('drop', async (e) => {
       loadEntitiesCatalog(),
     ])
 
+    // Validate model
+    const validationErrors = validateModel(model.nodes)
+    if (validationErrors.length > 0) {
+      showErrors(validationErrors)
+      setStatus(`モデルにエラーがあります: ${validationErrors.length}件`, 'warn')
+      return
+    }
+
+    hideErrors()
     _model = model
     session = startSession(_model)
     currentModelName = file.name
@@ -266,6 +296,7 @@ dropZone.addEventListener('drop', async (e) => {
     initStory()
   } catch (err) {
     console.error(err)
+    showErrors([err?.message ?? err])
     session = null
     currentModelName = null
     setStatus(`ファイルの初期化に失敗しました: ${err?.message ?? err}`, 'warn')
@@ -484,9 +515,10 @@ csvFileInput.addEventListener('change', async (e) => {
     errors.push(...validationErrors)
     
     if (errors.length > 0) {
-      console.warn('CSV検証警告:', errors)
-      setStatus(`CSV読み込み成功（警告${errors.length}件あり）`, 'warn')
+      showErrors(errors)
+      setStatus(`CSV読み込みに失敗しました（${errors.length}件のエラー）`, 'warn')
     } else {
+      hideErrors()
       setStatus('CSV を読み込みました', 'success')
     }
     
@@ -509,8 +541,6 @@ csvFileInput.addEventListener('change', async (e) => {
     setStatus(`CSV 読み込みに失敗: ${err?.message ?? err}`, 'warn')
   }
 })
-
-// CSV行のパース（引用符対応）
 function parseCsvLine(line, delim) {
   const cells = []
   let current = ''
@@ -703,10 +733,12 @@ saveGuiBtn.addEventListener('click', () => {
     // Validate model before saving
     const validationErrors = validateModel(_model.nodes)
     if (validationErrors.length > 0) {
-      setStatus(`モデルにエラーがあります: ${validationErrors.join(', ')}`, 'warn')
+      showErrors(validationErrors)
+      setStatus(`モデルにエラーがあります: ${validationErrors.length}件`, 'warn')
       return
     }
 
+    hideErrors()
     // Restart session with current model
     session = startSession(_model)
     currentModelName = 'gui-edited'
@@ -718,6 +750,7 @@ saveGuiBtn.addEventListener('click', () => {
     initStory()
     renderStory()
   } catch (err) {
+    showErrors([err?.message ?? err])
     setStatus(`GUI保存に失敗しました: ${err?.message ?? err}`, 'warn')
   }
 })
