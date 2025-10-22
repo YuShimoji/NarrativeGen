@@ -10,7 +10,7 @@
 デフォルトブランチへマージされる全ての Pull Request に対して、GitHub Actions による CI 成功を必須化し、品質担保と安全性を向上させる。
 
 ## 適用ルール
-- 必須ステータスチェック: `engine-ts`（GitHub Actions）
+- 必須ステータスチェック: `engine-ts`, `web-tester`（GitHub Actions） ※ `sdk-unity`はUnityライセンス設定時のみ
 - 厳格モード: 有効（`strict: true` → ベースブランチに対して最新化を要求）
 - 管理者への適用: 有効（`enforce_admins: true`）
 - レビュー必須: 今回は未設定（必要に応じて今後拡張）
