@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && npm run copy:models",
-    "copy:models": "pwsh -Command \"Copy-Item -Path '../../models' -Destination 'dist/models' -Recurse -Force\"",
+    "build": "vite build",
+    "copy:models": "mkdir -p dist/models && cp -r ../../models/* dist/models/",
     "preview": "vite preview"
   },
   "dependencies": {
