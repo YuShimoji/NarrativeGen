@@ -10,7 +10,7 @@
 - **プログラミング不要**: フラグ、リソース、条件分岐をCSV列で記述
 - **マルチプラットフォーム**: TypeScript エンジン + Unity SDK + Web Tester
 
-## 🎯 最新実装状況（2025-10-22）
+## 🎯 最新実装状況（2025-10-22 更新）
 
 ### ✅ 完了した主要機能
 
@@ -72,6 +72,12 @@ goto:target_node_id
 - **設計方針**: AI はエンジン本体から独立した補助層（`docs/ai-features.md`）
 - **現状**: Web Tester から AI UI を撤去し、コア機能に集中
 - **今後**: AI Provider インターフェースは実装済み（`packages/engine-ts/src/ai-provider.ts`）だが、UI 統合は保留
+
+#### 6. CI/CD ワークフロー修正
+
+- **依存関係修正**: web-tester ジョブが engine-ts ジョブに依存するよう修正
+- **並行実行の最適化**: engine-ts → web-tester → sdk-unity の順序で実行
+- **ローカルテスト**: 全コンポーネントでビルド・テスト成功確認済み
 
 ## 📂 プロジェクト構成
 
@@ -264,17 +270,12 @@ npm run preview       # ビルド結果をプレビュー
 
 ### 現在の制約
 
-1. **Web Tester の CI 失敗**
-   - ローカルビルドは成功するが、GitHub Actions で失敗
-   - 原因: 依存関係またはビルドツールのバージョン差異の可能性
-   - 対策: CI 環境の調査とビルドスクリプト修正
-
-2. **Unity SDK のシリアライゼーション**
+1. **Unity SDK のシリアライゼーション**
    - C# SDK は Serialize/Deserialize 未実装
    - TypeScript 版は実装済み（`serialize()`, `deserialize()`）
    - 対策: C# に Newtonsoft.Json を活用したシリアライゼーション追加
 
-3. **AI 機能の実装遅延**
+2. **AI 機能の実装遅延**
    - `ai-provider.ts` にインターフェースのみ実装
    - Web Tester UI から AI 関連コードを撤去済み
    - 対策: Phase 2 で OpenAI 統合を実施
