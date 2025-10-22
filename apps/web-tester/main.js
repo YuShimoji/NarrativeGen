@@ -1,4 +1,5 @@
 import { startSession, getAvailableChoices, applyChoice, chooseParaphrase } from '@narrativegen/engine-ts/dist/browser.js'
+import * as d3 from 'd3'
 
 const startBtn = document.getElementById('startBtn')
 const choicesContainer = document.getElementById('choices')
@@ -30,6 +31,25 @@ const csvPreviewContent = document.getElementById('csvPreviewContent')
 const confirmImportBtn = document.getElementById('confirmImportBtn')
 const cancelPreviewBtn = document.getElementById('cancelPreviewBtn')
 
+// Tab elements
+const storyTab = document.getElementById('storyTab')
+const graphTab = document.getElementById('graphTab')
+const debugTab = document.getElementById('debugTab')
+const storyPanel = document.getElementById('storyPanel')
+const graphPanel = document.getElementById('graphPanel')
+const debugPanel = document.getElementById('debugPanel')
+
+// Graph elements
+const graphSvg = document.getElementById('graphSvg')
+const fitGraphBtn = document.getElementById('fitGraphBtn')
+const resetGraphBtn = document.getElementById('resetGraphBtn')
+const showConditions = document.getElementById('showConditions')
+
+// Debug elements
+const flagsDisplay = document.getElementById('flagsDisplay')
+const resourcesDisplay = document.getElementById('resourcesDisplay')
+const reachableNodes = document.getElementById('reachableNodes')
+
 let session = null
 let currentModelName = null
 let _model = null
@@ -50,6 +70,11 @@ function renderState() {
     resources: snapshot.resources,
   }
   stateView.textContent = JSON.stringify(view, null, 2)
+
+  // Update debug info if debug tab is active
+  if (debugPanel.classList.contains('active')) {
+    renderDebugInfo()
+  }
 }
 
 function setStatus(message, type = 'info') {
@@ -116,6 +141,230 @@ function showCsvPreview(file) {
 
 function hideCsvPreview() {
   csvPreviewModal.classList.remove('show')
+}
+
+function renderGraph() {
+  if (!_model) {
+    d3.select(graphSvg).selectAll('*').remove()
+    return
+  }
+
+  const width = graphSvg.clientWidth
+  const height = graphSvg.clientHeight
+
+  // Clear previous graph
+  d3.select(graphSvg).selectAll('*').remove()
+
+  const svg = d3.select(graphSvg)
+    .attr('width', width)
+    .attr('height', height)
+
+  // Create nodes and links data
+  const nodes = []
+  const links = []
+
+  Object.entries(_model.nodes).forEach(([id, node]) => {
+    nodes.push({
+      id: id,
+      text: node.text?.substring(0, 50) + (node.text?.length > 50 ? '...' : ''),
+      x: Math.random() * (width - 200) + 100,
+      y: Math.random() * (height - 200) + 100
+    })
+
+    node.choices?.forEach(choice => {
+      links.push({
+        source: id,
+        target: choice.target,
+        condition: showConditions.checked ? getConditionText(choice.conditions) : null
+      })
+    })
+  })
+
+  // Create force simulation
+  const simulation = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d => d.id).distance(150))
+    .force('charge', d3.forceManyBody().strength(-300))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force('collision', d3.forceCollide().radius(60))
+
+  // Create links
+  const link = svg.append('g')
+    .selectAll('line')
+    .data(links)
+    .enter().append('line')
+    .attr('stroke', '#999')
+    .attr('stroke-opacity', 0.6)
+    .attr('stroke-width', 2)
+
+  // Add condition labels to links
+  const linkLabels = svg.append('g')
+    .selectAll('text')
+    .data(links.filter(l => l.condition))
+    .enter().append('text')
+    .attr('font-size', '10px')
+    .attr('fill', '#666')
+    .attr('text-anchor', 'middle')
+    .text(d => d.condition)
+
+  // Create nodes
+  const node = svg.append('g')
+    .selectAll('circle')
+    .data(nodes)
+    .enter().append('circle')
+    .attr('r', 30)
+    .attr('fill', d => d.id === _model.startNode ? '#4ade80' : '#60a5fa')
+    .attr('stroke', '#fff')
+    .attr('stroke-width', 2)
+    .call(d3.drag()
+      .on('start', (event, d) => {
+        if (!event.active) simulation.alphaTarget(0.3).restart()
+        d.fx = d.x
+        d.fy = d.y
+      })
+      .on('drag', (event, d) => {
+        d.fx = event.x
+        d.fy = event.y
+      })
+      .on('end', (event, d) => {
+        if (!event.active) simulation.alphaTarget(0)
+        d.fx = null
+        d.fy = null
+      }))
+
+  // Add node labels
+  const labels = svg.append('g')
+    .selectAll('text')
+    .data(nodes)
+    .enter().append('text')
+    .attr('text-anchor', 'middle')
+    .attr('dy', '0.35em')
+    .attr('font-size', '10px')
+    .attr('fill', '#333')
+    .text(d => d.id)
+
+  // Update positions on simulation tick
+  simulation.on('tick', () => {
+    link
+      .attr('x1', d => d.source.x)
+      .attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x)
+      .attr('y2', d => d.target.y)
+
+    linkLabels
+      .attr('x', d => (d.source.x + d.target.x) / 2)
+      .attr('y', d => (d.source.y + d.target.y) / 2)
+
+    node
+      .attr('cx', d => d.x)
+      .attr('cy', d => d.y)
+
+    labels
+      .attr('x', d => d.x)
+      .attr('y', d => d.y)
+  })
+
+  // Graph controls
+  fitGraphBtn.onclick = () => {
+    const bounds = svg.node().getBBox()
+    const fullWidth = bounds.width
+    const fullHeight = bounds.height
+    const midX = bounds.x + fullWidth / 2
+    const midY = bounds.y + fullHeight / 2
+
+    const scale = 0.8 / Math.max(fullWidth / width, fullHeight / height)
+    const translate = [width / 2 - scale * midX, height / 2 - scale * midY]
+
+    svg.transition().duration(750).call(
+      d3.zoom().transform,
+      d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
+    )
+  }
+
+  resetGraphBtn.onclick = () => {
+    nodes.forEach(n => {
+      n.x = Math.random() * (width - 200) + 100
+      n.y = Math.random() * (height - 200) + 100
+      n.fx = null
+      n.fy = null
+    })
+    simulation.restart()
+  }
+
+  showConditions.onchange = () => renderGraph()
+}
+
+function renderDebugInfo() {
+  if (!session || !_model) {
+    flagsDisplay.innerHTML = '<p>セッションを開始してください</p>'
+    resourcesDisplay.innerHTML = ''
+    reachableNodes.innerHTML = '<p>モデルを読み込んでください</p>'
+    return
+  }
+
+  // Render flags
+  flagsDisplay.innerHTML = '<h4>フラグ</h4>'
+  if (session.flags && Object.keys(session.flags).length > 0) {
+    Object.entries(session.flags).forEach(([key, value]) => {
+      const div = document.createElement('div')
+      div.className = 'flag-item'
+      div.innerHTML = `<span>${key}</span><span>${value}</span>`
+      flagsDisplay.appendChild(div)
+    })
+  } else {
+    flagsDisplay.innerHTML += '<p>フラグなし</p>'
+  }
+
+  // Render resources
+  resourcesDisplay.innerHTML = '<h4>リソース</h4>'
+  if (session.resources && Object.keys(session.resources).length > 0) {
+    Object.entries(session.resources).forEach(([key, value]) => {
+      const div = document.createElement('div')
+      div.className = 'resource-item'
+      div.innerHTML = `<span>${key}</span><span>${value}</span>`
+      resourcesDisplay.appendChild(div)
+    })
+  } else {
+    resourcesDisplay.innerHTML += '<p>リソースなし</p>'
+  }
+
+  // Render reachability map
+  reachableNodes.innerHTML = '<h4>到達可能性</h4>'
+  const visited = new Set([session.nodeId])
+  const queue = [session.nodeId]
+  const reachable = new Set([session.nodeId])
+
+  // BFS to find all reachable nodes
+  while (queue.length > 0) {
+    const currentNodeId = queue.shift()
+    const node = _model.nodes[currentNodeId]
+    if (!node) continue
+
+    node.choices?.forEach(choice => {
+      if (!visited.has(choice.target)) {
+        visited.add(choice.target)
+        // Check if choice is available in current state
+        try {
+          const availableChoices = getAvailableChoices(session, _model)
+          const isAvailable = availableChoices.some(c => c.id === choice.id)
+          if (isAvailable) {
+            queue.push(choice.target)
+            reachable.add(choice.target)
+          }
+        } catch (e) {
+          // If error, assume reachable for now
+          reachable.add(choice.target)
+        }
+      }
+    })
+  }
+
+  // Display all nodes with reachability status
+  Object.keys(_model.nodes).forEach(nodeId => {
+    const div = document.createElement('div')
+    div.className = reachable.has(nodeId) ? 'reachable-node' : 'unreachable-node'
+    div.textContent = `${nodeId}: ${reachable.has(nodeId) ? '到達可能' : '未到達'}`
+    reachableNodes.appendChild(div)
+  })
 }
 
 // CSVファイルのインポート処理
@@ -481,6 +730,11 @@ setStatus('サンプルを選択して「サンプルを実行」を押してく
 renderState()
 renderChoices()
 renderStory()
+
+// Tab event listeners
+storyTab.addEventListener('click', () => switchTab('story'))
+graphTab.addEventListener('click', () => switchTab('graph'))
+debugTab.addEventListener('click', () => switchTab('debug'))
 
 guiEditBtn.addEventListener('click', () => {
   if (session == null) {
