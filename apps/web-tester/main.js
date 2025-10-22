@@ -24,6 +24,11 @@ const cancelGuiBtn = document.getElementById('cancelGuiBtn')
 const storyView = document.getElementById('storyView')
 const errorPanel = document.getElementById('errorPanel')
 const errorList = document.getElementById('errorList')
+const csvPreviewModal = document.getElementById('csvPreviewModal')
+const csvFileName = document.getElementById('csvFileName')
+const csvPreviewContent = document.getElementById('csvPreviewContent')
+const confirmImportBtn = document.getElementById('confirmImportBtn')
+const cancelPreviewBtn = document.getElementById('cancelPreviewBtn')
 
 let session = null
 let currentModelName = null
@@ -69,6 +74,170 @@ function showErrors(errors) {
 
 function hideErrors() {
   errorPanel.classList.remove('show')
+}
+
+function showCsvPreview(file) {
+  csvFileName.textContent = file.name
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const text = e.target.result
+    const lines = text.trim().split(/\r?\n/).slice(0, 11) // First 10 lines + header
+    const table = document.createElement('table')
+    table.className = 'csv-table'
+    
+    lines.forEach((line, index) => {
+      const row = document.createElement('tr')
+      const cells = parseCsvLine(line, line.includes('\t') ? '\t' : ',')
+      cells.forEach(cell => {
+        const cellEl = document.createElement(index === 0 ? 'th' : 'td')
+        cellEl.textContent = cell
+        row.appendChild(cellEl)
+      })
+      table.appendChild(row)
+    })
+    
+    if (lines.length >= 11) {
+      const row = document.createElement('tr')
+      const cell = document.createElement('td')
+      cell.colSpan = lines[0].split(line.includes('\t') ? '\t' : ',').length
+      cell.textContent = '... (以降省略)'
+      cell.style.textAlign = 'center'
+      cell.style.fontStyle = 'italic'
+      row.appendChild(cell)
+      table.appendChild(row)
+    }
+    
+    csvPreviewContent.innerHTML = ''
+    csvPreviewContent.appendChild(table)
+    csvPreviewModal.classList.add('show')
+  }
+  reader.readAsText(file)
+}
+
+function hideCsvPreview() {
+  csvPreviewModal.classList.remove('show')
+}
+
+// CSVファイルのインポート処理
+async function importCsvFile(file) {
+  try {
+    const text = await file.text()
+    const delim = file.name.endsWith('.tsv') || text.includes('\t') ? '\t' : ','
+    const rows = text.split(/\r?\n/).filter((l) => l.trim().length > 0)
+    if (rows.length === 0) throw new Error('空のファイルです')
+    
+    const headers = rows[0].split(delim).map((h) => h.trim())
+    const idx = {
+      node_id: headers.indexOf('node_id'),
+      node_text: headers.indexOf('node_text'),
+      choice_id: headers.indexOf('choice_id'),
+      choice_text: headers.indexOf('choice_text'),
+      choice_target: headers.indexOf('choice_target'),
+      choice_conditions: headers.indexOf('choice_conditions'),
+      choice_effects: headers.indexOf('choice_effects'),
+      choice_outcome_type: headers.indexOf('choice_outcome_type'),
+      choice_outcome_value: headers.indexOf('choice_outcome_value'),
+      initial_flags: headers.indexOf('initial_flags'),
+      initial_resources: headers.indexOf('initial_resources'),
+    }
+    
+    // 初期値の抽出（最初の行）
+    let initialFlags = {}
+    let initialResources = {}
+    if (rows.length > 1) {
+      const firstRow = parseCsvLine(rows[1], delim)
+      if (idx.initial_flags >= 0 && firstRow[idx.initial_flags]) {
+        initialFlags = parseKeyValuePairs(firstRow[idx.initial_flags], 'boolean')
+      }
+      if (idx.initial_resources >= 0 && firstRow[idx.initial_resources]) {
+        initialResources = parseKeyValuePairs(firstRow[idx.initial_resources], 'number')
+      }
+    }
+    
+    const nodes = {}
+    const errors = []
+    
+    for (let i = 1; i < rows.length; i++) {
+      const cells = parseCsvLine(rows[i], delim)
+      const nid = (cells[idx.node_id] || '').trim()
+      if (!nid) continue
+      
+      if (!nodes[nid]) nodes[nid] = { id: nid, text: '', choices: [] }
+      
+      const ntext = (cells[idx.node_text] || '').trim()
+      if (ntext) nodes[nid].text = ntext
+      
+      const cid = (cells[idx.choice_id] || '').trim()
+      const ctext = (cells[idx.choice_text] || '').trim()
+      const ctgt = (cells[idx.choice_target] || '').trim()
+      
+      if (ctgt || ctext || cid) {
+        const choice = {
+          id: cid || `c${nodes[nid].choices.length + 1}`,
+          text: ctext || '',
+          target: ctgt || nid
+        }
+        
+        // 条件のパース
+        if (idx.choice_conditions >= 0 && cells[idx.choice_conditions]) {
+          try {
+            choice.conditions = parseConditions(cells[idx.choice_conditions])
+          } catch (err) {
+            errors.push(`行${i + 1}: 条件パースエラー: ${err.message}`)
+          }
+        }
+        
+        // 効果のパース
+        if (idx.choice_effects >= 0 && cells[idx.choice_effects]) {
+          try {
+            choice.effects = parseEffects(cells[idx.choice_effects])
+          } catch (err) {
+            errors.push(`行${i + 1}: 効果パースエラー: ${err.message}`)
+          }
+        }
+        
+        // アウトカムのパース
+        if (idx.choice_outcome_type >= 0 && cells[idx.choice_outcome_type]) {
+          choice.outcome = {
+            type: cells[idx.choice_outcome_type].trim(),
+            value: idx.choice_outcome_value >= 0 ? cells[idx.choice_outcome_value]?.trim() : undefined
+          }
+        }
+        
+        nodes[nid].choices.push(choice)
+      }
+    }
+    
+    // バリデーション
+    const validationErrors = validateModel(nodes)
+    errors.push(...validationErrors)
+    
+    if (errors.length > 0) {
+      showErrors(errors)
+      setStatus(`CSV読み込みに失敗しました（${errors.length}件のエラー）`, 'warn')
+    } else {
+      hideErrors()
+      setStatus('CSV を読み込みました', 'success')
+    }
+    
+    const firstNode = Object.keys(nodes)[0]
+    _model = {
+      modelType: 'adventure-playthrough',
+      startNode: firstNode,
+      flags: initialFlags,
+      resources: initialResources,
+      nodes
+    }
+    session = startSession(_model)
+    currentModelName = file.name
+    initStory()
+    renderState()
+    renderChoices()
+    renderStory()
+  } catch (err) {
+    console.error(err)
+    setStatus(`CSV 読み込みに失敗: ${err?.message ?? err}`, 'warn')
+  }
 }
 
 function setControlsEnabled(enabled) {
@@ -416,130 +585,22 @@ function renderStory() {
   storyView.textContent = storyLog.join('\n\n')
 }
 
-// CSV / TSV import/export
-importCsvBtn.addEventListener('click', () => csvFileInput.click())
+// CSVプレビューモーダル
+confirmImportBtn.addEventListener('click', async () => {
+  const file = csvFileInput.files[0]
+  if (!file) return
+  hideCsvPreview()
+  await importCsvFile(file)
+})
+
+cancelPreviewBtn.addEventListener('click', () => {
+  hideCsvPreview()
+})
 
 csvFileInput.addEventListener('change', async (e) => {
   const file = e.target.files[0]
   if (!file) return
-  try {
-    const text = await file.text()
-    const delim = file.name.endsWith('.tsv') || text.includes('\t') ? '\t' : ','
-    const rows = text.split(/\r?\n/).filter((l) => l.trim().length > 0)
-    if (rows.length === 0) throw new Error('空のファイルです')
-    
-    const headers = rows[0].split(delim).map((h) => h.trim())
-    const idx = {
-      node_id: headers.indexOf('node_id'),
-      node_text: headers.indexOf('node_text'),
-      choice_id: headers.indexOf('choice_id'),
-      choice_text: headers.indexOf('choice_text'),
-      choice_target: headers.indexOf('choice_target'),
-      choice_conditions: headers.indexOf('choice_conditions'),
-      choice_effects: headers.indexOf('choice_effects'),
-      choice_outcome_type: headers.indexOf('choice_outcome_type'),
-      choice_outcome_value: headers.indexOf('choice_outcome_value'),
-      initial_flags: headers.indexOf('initial_flags'),
-      initial_resources: headers.indexOf('initial_resources'),
-    }
-    
-    // 初期値の抽出（最初の行）
-    let initialFlags = {}
-    let initialResources = {}
-    if (rows.length > 1) {
-      const firstRow = parseCsvLine(rows[1], delim)
-      if (idx.initial_flags >= 0 && firstRow[idx.initial_flags]) {
-        initialFlags = parseKeyValuePairs(firstRow[idx.initial_flags], 'boolean')
-      }
-      if (idx.initial_resources >= 0 && firstRow[idx.initial_resources]) {
-        initialResources = parseKeyValuePairs(firstRow[idx.initial_resources], 'number')
-      }
-    }
-    
-    const nodes = {}
-    const errors = []
-    
-    for (let i = 1; i < rows.length; i++) {
-      const cells = parseCsvLine(rows[i], delim)
-      const nid = (cells[idx.node_id] || '').trim()
-      if (!nid) continue
-      
-      if (!nodes[nid]) nodes[nid] = { id: nid, text: '', choices: [] }
-      
-      const ntext = (cells[idx.node_text] || '').trim()
-      if (ntext) nodes[nid].text = ntext
-      
-      const cid = (cells[idx.choice_id] || '').trim()
-      const ctext = (cells[idx.choice_text] || '').trim()
-      const ctgt = (cells[idx.choice_target] || '').trim()
-      
-      if (ctgt || ctext || cid) {
-        const choice = {
-          id: cid || `c${nodes[nid].choices.length + 1}`,
-          text: ctext || '',
-          target: ctgt || nid
-        }
-        
-        // 条件のパース
-        if (idx.choice_conditions >= 0 && cells[idx.choice_conditions]) {
-          try {
-            choice.conditions = parseConditions(cells[idx.choice_conditions])
-          } catch (err) {
-            errors.push(`行${i + 1}: 条件パースエラー: ${err.message}`)
-          }
-        }
-        
-        // 効果のパース
-        if (idx.choice_effects >= 0 && cells[idx.choice_effects]) {
-          try {
-            choice.effects = parseEffects(cells[idx.choice_effects])
-          } catch (err) {
-            errors.push(`行${i + 1}: 効果パースエラー: ${err.message}`)
-          }
-        }
-        
-        // アウトカムのパース
-        if (idx.choice_outcome_type >= 0 && cells[idx.choice_outcome_type]) {
-          choice.outcome = {
-            type: cells[idx.choice_outcome_type].trim(),
-            value: idx.choice_outcome_value >= 0 ? cells[idx.choice_outcome_value]?.trim() : undefined
-          }
-        }
-        
-        nodes[nid].choices.push(choice)
-      }
-    }
-    
-    // バリデーション
-    const validationErrors = validateModel(nodes)
-    errors.push(...validationErrors)
-    
-    if (errors.length > 0) {
-      showErrors(errors)
-      setStatus(`CSV読み込みに失敗しました（${errors.length}件のエラー）`, 'warn')
-    } else {
-      hideErrors()
-      setStatus('CSV を読み込みました', 'success')
-    }
-    
-    const firstNode = Object.keys(nodes)[0]
-    _model = {
-      modelType: 'adventure-playthrough',
-      startNode: firstNode,
-      flags: initialFlags,
-      resources: initialResources,
-      nodes
-    }
-    session = startSession(_model)
-    currentModelName = file.name
-    initStory()
-    renderState()
-    renderChoices()
-    renderStory()
-  } catch (err) {
-    console.error(err)
-    setStatus(`CSV 読み込みに失敗: ${err?.message ?? err}`, 'warn')
-  }
+  showCsvPreview(file)
 })
 function parseCsvLine(line, delim) {
   const cells = []
