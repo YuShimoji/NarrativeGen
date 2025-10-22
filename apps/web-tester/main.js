@@ -700,6 +700,14 @@ function escapeCsv(s) {
 
 saveGuiBtn.addEventListener('click', () => {
   try {
+    // Validate model before saving
+    const validationErrors = validateModel(_model.nodes)
+    if (validationErrors.length > 0) {
+      setStatus(`モデルにエラーがあります: ${validationErrors.join(', ')}`, 'warn')
+      return
+    }
+
+    // Restart session with current model
     session = startSession(_model)
     currentModelName = 'gui-edited'
     guiEditMode.style.display = 'none'
@@ -733,6 +741,66 @@ nodeList.addEventListener('click', (e) => {
     } catch (err) {
       console.error('言い換えエラー:', err)
       setStatus(`言い換えに失敗しました: ${err?.message ?? err}`, 'warn')
+    }
+  }
+
+  if (e.target.classList.contains('add-choice-btn')) {
+    const nodeId = e.target.dataset.nodeId
+    const node = _model.nodes[nodeId]
+    if (!node.choices) node.choices = []
+    node.choices.push({
+      id: `c${node.choices.length + 1}`,
+      text: '新しい選択肢',
+      target: nodeId
+    })
+    renderChoicesForNode(nodeId)
+  }
+
+  if (e.target.classList.contains('delete-node-btn')) {
+    const nodeId = e.target.dataset.nodeId
+    if (Object.keys(_model.nodes).length <= 1) {
+      setStatus('少なくとも1つのノードが必要です', 'warn')
+      return
+    }
+    delete _model.nodes[nodeId]
+    // Remove references to deleted node
+    for (const [nid, node] of Object.entries(_model.nodes)) {
+      node.choices = node.choices?.filter(c => c.target !== nodeId) ?? []
+    }
+    renderNodeList()
+  }
+
+  if (e.target.classList.contains('delete-choice-btn')) {
+    const nodeId = e.target.dataset.nodeId
+    const choiceIndex = parseInt(e.target.dataset.choiceIndex)
+    const node = _model.nodes[nodeId]
+    node.choices.splice(choiceIndex, 1)
+    renderChoicesForNode(nodeId)
+  }
+})
+
+// 入力変更でモデル更新
+nodeList.addEventListener('input', (e) => {
+  const input = e.target
+  if (!input.dataset.nodeId) return
+
+  const nodeId = input.dataset.nodeId
+  const choiceIndex = input.dataset.choiceIndex
+  const field = input.dataset.field
+  const value = input.value
+
+  if (choiceIndex !== undefined) {
+    // 選択肢のフィールド更新
+    const node = _model.nodes[nodeId]
+    const choice = node.choices[parseInt(choiceIndex)]
+    if (choice) {
+      choice[field] = value
+    }
+  } else {
+    // ノードのフィールド更新
+    const node = _model.nodes[nodeId]
+    if (node) {
+      node[field] = value
     }
   }
 })
