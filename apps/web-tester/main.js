@@ -1,5 +1,57 @@
-import { startSession, getAvailableChoices, applyChoice, chooseParaphrase } from '@narrativegen/engine-ts/dist/browser.js'
-import * as d3 from 'd3'
+// Error handling and logging
+class Logger {
+  static log(level, message, data = {}) {
+    const timestamp = new Date().toISOString()
+    const logEntry = {
+      timestamp,
+      level,
+      message,
+      ...data,
+      userAgent: navigator.userAgent,
+      url: window.location.href
+    }
+
+    console[level === 'error' ? 'error' : 'log'](`[${timestamp}] ${level.toUpperCase()}: ${message}`, data)
+
+    // Store in sessionStorage for debugging
+    try {
+      const logs = JSON.parse(sessionStorage.getItem('narrativeGenLogs') || '[]')
+      logs.push(logEntry)
+      // Keep only last 100 entries
+      if (logs.length > 100) logs.shift()
+      sessionStorage.setItem('narrativeGenLogs', JSON.stringify(logs))
+    } catch (error) {
+      console.warn('Failed to store log:', error)
+    }
+  }
+
+  static info(message, data) { this.log('info', message, data) }
+  static warn(message, data) { this.log('warn', message, data) }
+  static error(message, data) { this.log('error', message, data) }
+}
+
+// Error boundary for UI operations
+class ErrorBoundary {
+  static wrap(operation, fallbackMessage = '操作に失敗しました') {
+    return async (...args) => {
+      try {
+        Logger.info('Operation started', { operation: operation.name, args: args.length })
+        const result = await operation.apply(this, args)
+        Logger.info('Operation completed', { operation: operation.name })
+        return result
+      } catch (error) {
+        Logger.error('Operation failed', {
+          operation: operation.name,
+          error: error.message,
+          stack: error.stack,
+          args: args.length
+        })
+        setStatus(`${fallbackMessage}: ${error.message}`, 'error')
+        throw error
+      }
+    }
+  }
+}
 
 const startBtn = document.getElementById('startBtn')
 const choicesContainer = document.getElementById('choices')
@@ -179,7 +231,7 @@ function renderGraph() {
   const allNodes = Object.keys(_model.nodes)
   const shouldVirtualize = allNodes.length > maxNodes
 
-  let nodesToShow: string[]
+  let nodesToShow
   if (shouldVirtualize) {
     // Show current node and its direct connections, plus some random nodes
     const currentNode = session?.nodeId || _model.startNode
@@ -731,7 +783,43 @@ function renderChoices() {
   choicesContainer.appendChild(list)
 }
 
-// AI functions
+// Apply error boundaries to critical operations
+const safeStartSession = ErrorBoundary.wrap(async (modelName) => {
+  const model = await loadModel(modelName)
+  session = startSession(model)
+  currentModelName = modelName
+  initStory()
+  renderState()
+  renderChoices()
+  renderStory()
+  Logger.info('Session started', { modelName, nodeCount: Object.keys(model.nodes).length })
+})
+
+const safeApplyChoice = ErrorBoundary.wrap(async (choiceId) => {
+  if (!session || !_model) throw new Error('セッションが開始されていません')
+  session = applyChoice(session, _model, choiceId)
+  appendStoryFromCurrentNode()
+  renderState()
+  renderChoices()
+  renderStory()
+  Logger.info('Choice applied', { choiceId, newNodeId: session.nodeId })
+})
+
+const safeImportCsv = ErrorBoundary.wrap(async (file) => {
+  await importCsvFile(file)
+  Logger.info('CSV imported', { fileName: file.name, fileSize: file.size })
+})
+
+const safeGenerateNode = ErrorBoundary.wrap(async () => {
+  await generateNextNode()
+  Logger.info('Node generated via AI')
+})
+
+const safeParaphrase = ErrorBoundary.wrap(async () => {
+  await paraphraseCurrentText()
+  Logger.info('Text paraphrased via AI')
+})
+
 async function initAiProvider() {
   if (!aiProviderInstance || aiConfig.provider !== aiProvider.value) {
     try {
@@ -1176,7 +1264,7 @@ function renderStory() {
   const maxVisibleEntries = 50
   const shouldVirtualize = storyLog.length > maxVisibleEntries
 
-  let visibleEntries: string[]
+  let visibleEntries
   let startIndex = 0
 
   if (shouldVirtualize) {
@@ -1207,7 +1295,7 @@ function renderStory() {
     storyView.insertBefore(indicator, storyView.firstChild)
 
     // Add scroll handler for lazy loading more content
-    let scrollTimeout: number
+    let scrollTimeout
     const handleScroll = () => {
       clearTimeout(scrollTimeout)
       scrollTimeout = setTimeout(() => {
@@ -1220,7 +1308,7 @@ function renderStory() {
           storyView.textContent = newVisibleEntries.join('\n\n')
 
           // Update indicator
-          const newIndicator = indicator.cloneNode(true) as HTMLElement
+          const newIndicator = indicator.cloneNode(true)
           newIndicator.textContent = `... (${newStartIndex} 件の古いエントリが非表示) ...`
           storyView.insertBefore(newIndicator, storyView.firstChild)
 

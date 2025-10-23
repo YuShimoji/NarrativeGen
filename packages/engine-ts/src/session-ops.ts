@@ -113,20 +113,52 @@ export function getAvailableChoices(session: SessionState, model: Model): Choice
 }
 
 export function applyChoice(session: SessionState, model: Model, choiceId: string): SessionState {
+  // Validate inputs
+  if (!session) {
+    throw new Error('Session state is required')
+  }
+  if (!model) {
+    throw new Error('Model is required')
+  }
+  if (!choiceId) {
+    throw new Error('Choice ID is required')
+  }
+
   const node = model.nodes[session.nodeId]
-  if (!node) throw new Error(`Node not found: ${session.nodeId}`)
+  if (!node) {
+    throw new Error(`Node not found: ${session.nodeId}. Available nodes: ${Object.keys(model.nodes).join(', ')}`)
+  }
+
   const choice = (node.choices ?? []).find((c) => c.id === choiceId)
-  if (!choice) throw new Error(`Choice not found: ${choiceId}`)
+  if (!choice) {
+    const availableChoices = (node.choices ?? []).map(c => c.id).join(', ')
+    throw new Error(`Choice not found: ${choiceId}. Available choices in node ${session.nodeId}: ${availableChoices}`)
+  }
+
   const available = getAvailableChoices(session, model).some((c) => c.id === choiceId)
-  if (!available) throw new Error(`Choice not available: ${choiceId}`)
+  if (!available) {
+    const availableIds = getAvailableChoices(session, model).map(c => c.id).join(', ')
+    throw new Error(`Choice not available: ${choiceId}. Available choices: ${availableIds}`)
+  }
 
   let next = { ...session }
   for (const eff of choice.effects ?? []) {
-    next = applyEffect(eff, next)
+    try {
+      next = applyEffect(eff, next)
+    } catch (error) {
+      throw new Error(`Failed to apply effect ${JSON.stringify(eff)}: ${error.message}`)
+    }
   }
+
   if (!choice.effects?.some((e) => e.type === 'goto')) {
     next = { ...next, nodeId: choice.target }
   }
+
+  // Validate target node exists
+  if (!model.nodes[next.nodeId]) {
+    throw new Error(`Target node not found: ${next.nodeId}. Available nodes: ${Object.keys(model.nodes).join(', ')}`)
+  }
+
   next.time = next.time + 1
   return next
 }
