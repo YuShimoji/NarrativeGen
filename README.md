@@ -10,6 +10,8 @@
 - 🎮 **条件分岐・リソース管理**: フラグ、リソース、時間ゲート等をCSV列で直接記述
 - 🔧 **プログラミング不要**: ライター・デザイナーが直接ストーリーを構築
 - 🚀 **マルチプラットフォーム**: Unity SDK + Web Tester + TypeScript エンジン
+- ⚡ **高性能**: 大規模モデルの仮想化・メモ化・遅延読み込み対応
+- 🛡️ **堅牢**: 構造化ログ・エラーバウンダリ・包括的検証
 
 ## プロジェクト構成
 
@@ -162,6 +164,16 @@ cmd /c npm run build
   - Preview story flow (連続ノードを小説風に表示)
   - Download edited JSON
   - AI suggestion for choice text (Phase 1: mock implementation)
+- **Performance Optimizations**:
+  - Graph virtualization for large models (>100 nodes) with smart node selection
+  - Virtual scrolling for long story logs with lazy loading
+  - Chunked CSV import with progress indicators for large files
+  - Memoized condition evaluation and choice availability checking
+- **Error Handling & Logging**:
+  - Structured logging system with sessionStorage persistence for debugging
+  - Error boundary wrappers for critical operations with user-friendly messages
+  - Comprehensive input validation with detailed error contexts
+  - Model validation with specific error location reporting
 
 ### AI Features (Planned)
 
