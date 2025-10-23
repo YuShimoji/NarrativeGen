@@ -36,10 +36,24 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm ci
+        working-directory: apps/web-tester
+        run: npm install
       - name: Build
         working-directory: apps/web-tester
         run: npm run build
-      - name: Copy models
-        working-directory: apps/web-tester
-        run: cp -r ../../models dist/models
+  sdk-unity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore dependencies
+        working-directory: packages/tests/NarrativeGen.Tests
+        run: dotnet restore
+      - name: Build
+        working-directory: packages/tests/NarrativeGen.Tests
+        run: dotnet build --configuration Release --no-restore
+      - name: Test
+        working-directory: packages/tests/NarrativeGen.Tests
+        run: dotnet test --configuration Release --no-build --verbosity normal
