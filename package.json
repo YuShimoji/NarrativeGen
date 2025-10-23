@@ -5,5 +5,14 @@
   "workspaces": [
     "packages/engine-ts",
     "apps/*"
-  ]
+  ],
+  "scripts": {
+    "build:engine": "npm run build -w @narrativegen/engine-ts",
+    "build:tester": "npm run build -w @narrativegen/web-tester",
+    "build:all": "npm run build:engine && npm run build:tester",
+    "dev:engine": "npm run build -w @narrativegen/engine-ts -- --watch",
+    "dev:tester": "npm run dev -w @narrativegen/web-tester",
+    "clean": "pwsh -Command \"Get-ChildItem -Path . -Include node_modules,dist -Recurse -Directory | Remove-Item -Recurse -Force\"",
+    "fresh-install": "npm run clean && npm install && npm run build:all"
+  }
 }

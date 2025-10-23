@@ -1,6 +1,41 @@
 // Error handling and logging
-import { startSession, getAvailableChoices, applyChoice, chooseParaphrase, resolveVariables, loadModel } from '@narrativegen/engine-ts/dist/browser.js'
+import { startSession, getAvailableChoices, applyChoice, chooseParaphrase } from '@narrativegen/engine-ts/dist/browser.js'
 import * as d3 from 'd3'
+
+// Utility function for resolving variables in text (browser-compatible)
+function resolveVariables(text, session, model) {
+  if (!text || !session) return text
+  
+  let resolved = text
+  
+  // Replace flag variables: {flag:key}
+  Object.entries(session.flags || {}).forEach(([key, value]) => {
+    resolved = resolved.replace(new RegExp(`\\{flag:${key}\\}`, 'g'), value ? 'true' : 'false')
+  })
+  
+  // Replace resource variables: {resource:key}
+  Object.entries(session.resources || {}).forEach(([key, value]) => {
+    resolved = resolved.replace(new RegExp(`\\{resource:${key}\\}`, 'g'), String(value))
+  })
+  
+  // Replace node ID variable: {nodeId}
+  resolved = resolved.replace(/\{nodeId\}/g, session.nodeId)
+  
+  // Replace time variable: {time}
+  resolved = resolved.replace(/\{time\}/g, String(session.time))
+  
+  return resolved
+}
+
+// Browser-compatible model loading (no fs module)
+async function loadModel(modelName) {
+  const url = new URL(`../../models/examples/${modelName}.json`, import.meta.url)
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`Failed to load model: ${response.status} ${response.statusText}`)
+  }
+  return response.json()
+}
 class Logger {
   static log(level, message, data = {}) {
     const timestamp = new Date().toISOString()

@@ -146,7 +146,8 @@ export function applyChoice(session: SessionState, model: Model, choiceId: strin
     try {
       next = applyEffect(eff, next)
     } catch (error) {
-      throw new Error(`Failed to apply effect ${JSON.stringify(eff)}: ${error.message}`)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      throw new Error(`Failed to apply effect ${JSON.stringify(eff)}: ${errorMessage}`)
     }
   }
 
