@@ -1,4 +1,6 @@
 // Error handling and logging
+import { startSession, getAvailableChoices, applyChoice, chooseParaphrase, resolveVariables, loadModel } from '@narrativegen/engine-ts/dist/browser.js'
+import * as d3 from 'd3'
 class Logger {
   static log(level, message, data = {}) {
     const timestamp = new Date().toISOString()
