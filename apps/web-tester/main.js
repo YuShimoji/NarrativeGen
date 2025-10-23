@@ -379,6 +379,9 @@ async function importCsvFile(file) {
     const idx = {
       node_id: headers.indexOf('node_id'),
       node_text: headers.indexOf('node_text'),
+      node_type: headers.indexOf('node_type'),
+      node_tags: headers.indexOf('node_tags'),
+      node_assets: headers.indexOf('node_assets'),
       choice_id: headers.indexOf('choice_id'),
       choice_text: headers.indexOf('choice_text'),
       choice_target: headers.indexOf('choice_target'),
@@ -386,8 +389,11 @@ async function importCsvFile(file) {
       choice_effects: headers.indexOf('choice_effects'),
       choice_outcome_type: headers.indexOf('choice_outcome_type'),
       choice_outcome_value: headers.indexOf('choice_outcome_value'),
+      choice_metadata: headers.indexOf('choice_metadata'),
+      choice_variables: headers.indexOf('choice_variables'),
       initial_flags: headers.indexOf('initial_flags'),
       initial_resources: headers.indexOf('initial_resources'),
+      global_metadata: headers.indexOf('global_metadata'),
     }
     
     // 初期値の抽出（最初の行）
@@ -411,10 +417,34 @@ async function importCsvFile(file) {
       const nid = (cells[idx.node_id] || '').trim()
       if (!nid) continue
       
-      if (!nodes[nid]) nodes[nid] = { id: nid, text: '', choices: [] }
+      if (!nodes[nid]) {
+        nodes[nid] = { 
+          id: nid, 
+          text: '', 
+          choices: [],
+          type: 'normal',
+          tags: [],
+          assets: {}
+        }
+      }
+      
+      const node = nodes[nid]
       
       const ntext = (cells[idx.node_text] || '').trim()
-      if (ntext) nodes[nid].text = ntext
+      if (ntext) node.text = ntext
+      
+      // Parse node metadata
+      if (idx.node_type >= 0 && cells[idx.node_type]) {
+        node.type = cells[idx.node_type].trim()
+      }
+      
+      if (idx.node_tags >= 0 && cells[idx.node_tags]) {
+        node.tags = cells[idx.node_tags].split(';').map(t => t.trim()).filter(Boolean)
+      }
+      
+      if (idx.node_assets >= 0 && cells[idx.node_assets]) {
+        node.assets = parseKeyValuePairs(cells[idx.node_assets])
+      }
       
       const cid = (cells[idx.choice_id] || '').trim()
       const ctext = (cells[idx.choice_text] || '').trim()
@@ -424,7 +454,19 @@ async function importCsvFile(file) {
         const choice = {
           id: cid || `c${nodes[nid].choices.length + 1}`,
           text: ctext || '',
-          target: ctgt || nid
+          target: ctgt || nid,
+          metadata: {},
+          variables: {}
+        }
+        
+        // Parse choice metadata
+        if (idx.choice_metadata >= 0 && cells[idx.choice_metadata]) {
+          choice.metadata = parseKeyValuePairs(cells[idx.choice_metadata])
+        }
+        
+        // Parse choice variables
+        if (idx.choice_variables >= 0 && cells[idx.choice_variables]) {
+          choice.variables = parseKeyValuePairs(cells[idx.choice_variables])
         }
         
         // 条件のパース
@@ -469,13 +511,23 @@ async function importCsvFile(file) {
       setStatus('CSV を読み込みました', 'success')
     }
     
+    // グローバルメタデータのパース（最初の行）
+    let globalMetadata = {}
+    if (rows.length > 1 && idx.global_metadata >= 0) {
+      const firstRow = parseCsvLine(rows[1], delim)
+      if (firstRow[idx.global_metadata]) {
+        globalMetadata = parseKeyValuePairs(firstRow[idx.global_metadata])
+      }
+    }
+    
     const firstNode = Object.keys(nodes)[0]
     _model = {
       modelType: 'adventure-playthrough',
       startNode: firstNode,
       flags: initialFlags,
       resources: initialResources,
-      nodes
+      nodes,
+      metadata: globalMetadata
     }
     session = startSession(_model)
     currentModelName = file.name
@@ -541,6 +593,28 @@ function renderChoices() {
   })
 
   choicesContainer.appendChild(list)
+}
+
+function resolveVariables(text, session, model) {
+  if (!text) return text
+  
+  return text.replace(/\{([^}]+)\}/g, (match, varName) => {
+    // Check flags first
+    if (session.flags && session.flags.hasOwnProperty(varName)) {
+      return session.flags[varName]
+    }
+    
+    // Check resources
+    if (session.resources && session.resources.hasOwnProperty(varName)) {
+      return session.resources[varName]
+    }
+    
+    // Check choice variables if available
+    // (This would need to be passed from the choice context)
+    
+    // Return original placeholder if not found
+    return match
+  })
 }
 
 function formatChoiceLabel(choice) {
@@ -830,7 +904,8 @@ function initStory() {
 function appendStoryFromCurrentNode() {
   const node = _model?.nodes?.[session?.nodeId]
   if (node?.text) {
-    storyLog.push(node.text)
+    const resolvedText = resolveVariables(node.text, session, _model)
+    storyLog.push(resolvedText)
   }
 }
 
@@ -934,6 +1009,26 @@ function parseEffects(text) {
     } else if (eff.startsWith('addResource:')) {
       const [key, val] = eff.slice(12).split('=')
       effects.push({ type: 'addResource', key: key.trim(), delta: parseFloat(val) })
+    } else if (eff.startsWith('multiplyResource:')) {
+      const [key, val] = eff.slice(16).split('=')
+      effects.push({ type: 'multiplyResource', key: key.trim(), factor: parseFloat(val) })
+    } else if (eff.startsWith('setResource:')) {
+      const [key, val] = eff.slice(12).split('=')
+      effects.push({ type: 'setResource', key: key.trim(), value: parseFloat(val) })
+    } else if (eff.startsWith('randomEffect:')) {
+      const effectList = eff.slice(12).split('|').map(e => e.trim())
+      const parsedEffects = effectList.map(e => parseEffects(e)[0]).filter(Boolean)
+      effects.push({ type: 'randomEffect', effects: parsedEffects })
+    } else if (eff.startsWith('conditionalEffect:')) {
+      const parts = eff.slice(17).split('?')
+      if (parts.length === 2) {
+        const condition = parseConditions(parts[0])[0]
+        const effectText = parts[1]
+        const effect = parseEffects(effectText)[0]
+        if (condition && effect) {
+          effects.push({ type: 'conditionalEffect', condition, effect })
+        }
+      }
     } else if (eff.startsWith('goto:')) {
       effects.push({ type: 'goto', target: eff.slice(5).trim() })
     } else {
@@ -965,9 +1060,11 @@ exportCsvBtn.addEventListener('click', () => {
     return
   }
   const header = [
-    'node_id', 'node_text', 'choice_id', 'choice_text', 'choice_target',
+    'node_id', 'node_text', 'node_type', 'node_tags', 'node_assets',
+    'choice_id', 'choice_text', 'choice_target',
     'choice_conditions', 'choice_effects', 'choice_outcome_type', 'choice_outcome_value',
-    'initial_flags', 'initial_resources'
+    'choice_metadata', 'choice_variables',
+    'initial_flags', 'initial_resources', 'global_metadata'
   ]
   const rows = [header.join(',')]
   
@@ -975,12 +1072,21 @@ exportCsvBtn.addEventListener('click', () => {
   for (const [nid, node] of Object.entries(_model.nodes)) {
     const initialFlags = firstRow && _model.flags ? serializeKeyValuePairs(_model.flags) : ''
     const initialResources = firstRow && _model.resources ? serializeKeyValuePairs(_model.resources) : ''
+    const globalMetadata = firstRow && _model.metadata ? serializeKeyValuePairs(_model.metadata) : ''
     firstRow = false
+    
+    // Node metadata
+    const nodeType = node.type || 'normal'
+    const nodeTags = node.tags ? node.tags.join(';') : ''
+    const nodeAssets = node.assets ? serializeKeyValuePairs(node.assets) : ''
     
     if (!node.choices || node.choices.length === 0) {
       rows.push([
-        nid, escapeCsv(node.text ?? ''), '', '', '',
-        '', '', '', '', initialFlags, initialResources
+        nid, escapeCsv(node.text ?? ''), nodeType, escapeCsv(nodeTags), escapeCsv(nodeAssets),
+        '', '', '',
+        '', '', '', '',
+        '', '',
+        initialFlags, initialResources, globalMetadata
       ].join(','))
       continue
     }
@@ -991,10 +1097,16 @@ exportCsvBtn.addEventListener('click', () => {
       const outcomeType = ch.outcome?.type || ''
       const outcomeValue = ch.outcome?.value || ''
       
+      // Choice metadata and variables
+      const choiceMetadata = ch.metadata ? serializeKeyValuePairs(ch.metadata) : ''
+      const choiceVariables = ch.variables ? serializeKeyValuePairs(ch.variables) : ''
+      
       rows.push([
-        nid, escapeCsv(node.text ?? ''), ch.id ?? '', escapeCsv(ch.text ?? ''), ch.target ?? '',
+        nid, escapeCsv(node.text ?? ''), nodeType, escapeCsv(nodeTags), escapeCsv(nodeAssets),
+        ch.id ?? '', escapeCsv(ch.text ?? ''), ch.target ?? '',
         escapeCsv(conditions), escapeCsv(effects), outcomeType, outcomeValue,
-        initialFlags, initialResources
+        escapeCsv(choiceMetadata), escapeCsv(choiceVariables),
+        initialFlags, initialResources, globalMetadata
       ].join(','))
     }
   }
@@ -1026,6 +1138,17 @@ function serializeEffects(effects) {
   return effects.map((eff) => {
     if (eff.type === 'setFlag') return `setFlag:${eff.key}=${eff.value}`
     if (eff.type === 'addResource') return `addResource:${eff.key}=${eff.delta}`
+    if (eff.type === 'multiplyResource') return `multiplyResource:${eff.key}=${eff.factor}`
+    if (eff.type === 'setResource') return `setResource:${eff.key}=${eff.value}`
+    if (eff.type === 'randomEffect') {
+      const effectStrings = eff.effects.map(e => serializeEffects([e])[0])
+      return `randomEffect:${effectStrings.join('|')}`
+    }
+    if (eff.type === 'conditionalEffect') {
+      const conditionStr = serializeConditions([eff.condition])[0]
+      const effectStr = serializeEffects([eff.effect])[0]
+      return `conditionalEffect:${conditionStr}?${effectStr}`
+    }
     if (eff.type === 'goto') return `goto:${eff.target}`
     return ''
   }).filter(Boolean).join(';')
