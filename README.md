@@ -132,27 +132,62 @@ cmd /c npm run validate:models
 
 ## Web Tester
 
-### Option 1: Development Server (Recommended)
+### Recommended Workflow (From Project Root)
+
+**First-time setup**:
+```powershell
+npm install
+npm run build:all
+```
+
+**Development** (recommended for active development):
+```powershell
+# Terminal 1: Watch and rebuild engine on changes
+npm run dev:engine
+
+# Terminal 2: Run web tester dev server
+npm run dev:tester
+```
+
+**Production build**:
+```powershell
+npm run build:all
+```
+
+### Alternative: Manual Commands
+
+**Option 1: Development Server**
 
 ```powershell
-cd .\apps\web-tester
-cmd /c npm install
-cmd /c npm run dev
+# Build engine first
+cd .\packages\engine-ts
+npm run build
+
+# Then start web tester
+cd ..\..\apps\web-tester
+npm install
+npm run dev
 ```
 
 Then open **http://localhost:5173** (or the port shown in terminal) in your browser.
 
-### Option 2: Static Build & Serve
+**Option 2: Static Build & Serve**
 
 ```powershell
-cd .\apps\web-tester
-cmd /c npm install
-cmd /c npm run build
+# Build both packages
+cd .\packages\engine-ts
+npm run build
+
+cd ..\..\apps\web-tester
+npm install
+npm run build
 # Now serve the dist/ directory with any static server
-# e.g., VSCode Live Server, python -m http.server, etc.
 ```
 
-**Important**: When using Live Server or other static servers, open the `dist/` directory (not the project root) to avoid module resolution errors.
+**Important**: 
+- Always build `engine-ts` before `web-tester`
+- When using Live Server, open the `dist/` directory to avoid module resolution errors
+- See `docs/troubleshooting.md` for common issues and solutions
 
 ### Features
 
