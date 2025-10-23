@@ -174,6 +174,43 @@ function renderGraph() {
   const width = graphSvg.clientWidth
   const height = graphSvg.clientHeight
 
+  // Performance optimization: Limit nodes for large graphs
+  const maxNodes = 100
+  const allNodes = Object.keys(_model.nodes)
+  const shouldVirtualize = allNodes.length > maxNodes
+
+  let nodesToShow: string[]
+  if (shouldVirtualize) {
+    // Show current node and its direct connections, plus some random nodes
+    const currentNode = session?.nodeId || _model.startNode
+    const connectedNodes = new Set([currentNode])
+
+    // Add directly connected nodes
+    const currentNodeObj = _model.nodes[currentNode]
+    if (currentNodeObj?.choices) {
+      currentNodeObj.choices.forEach(choice => {
+        if (choice.target) connectedNodes.add(choice.target)
+      })
+    }
+
+    // Add nodes that connect to current node
+    Object.entries(_model.nodes).forEach(([id, node]) => {
+      if (node.choices?.some(c => c.target === currentNode)) {
+        connectedNodes.add(id)
+      }
+    })
+
+    // Fill remaining slots with random nodes
+    const remaining = Array.from(allNodes.filter(id => !connectedNodes.has(id)))
+    const randomNodes = remaining
+      .sort(() => Math.random() - 0.5)
+      .slice(0, maxNodes - connectedNodes.size)
+
+    nodesToShow = Array.from(connectedNodes).concat(randomNodes)
+  } else {
+    nodesToShow = allNodes
+  }
+
   // Clear previous graph
   d3.select(graphSvg).selectAll('*').remove()
 
@@ -181,62 +218,75 @@ function renderGraph() {
     .attr('width', width)
     .attr('height', height)
 
-  // Create nodes and links data
+  // Create nodes and links data (only for visible nodes)
   const nodes = []
   const links = []
 
-  Object.entries(_model.nodes).forEach(([id, node]) => {
+  nodesToShow.forEach(id => {
+    const node = _model.nodes[id]
+    if (!node) return
+
     nodes.push({
       id: id,
       text: node.text?.substring(0, 50) + (node.text?.length > 50 ? '...' : ''),
       x: Math.random() * (width - 200) + 100,
-      y: Math.random() * (height - 200) + 100
+      y: Math.random() * (height - 200) + 100,
+      isVirtualized: shouldVirtualize && !isConnectedToCurrent(id)
     })
 
     node.choices?.forEach(choice => {
-      links.push({
-        source: id,
-        target: choice.target,
-        condition: showConditions.checked ? getConditionText(choice.conditions) : null
-      })
+      if (choice.target && nodesToShow.includes(choice.target)) {
+        links.push({
+          source: id,
+          target: choice.target,
+          condition: showConditions.checked ? getConditionText(choice.conditions) : null
+        })
+      }
     })
   })
 
-  // Create force simulation
+  // Performance optimization: Use efficient force simulation settings
   const simulation = d3.forceSimulation(nodes)
-    .force('link', d3.forceLink(links).id(d => d.id).distance(150))
-    .force('charge', d3.forceManyBody().strength(-300))
+    .force('link', d3.forceLink(links).id(d => d.id).distance(shouldVirtualize ? 100 : 150).strength(0.5))
+    .force('charge', d3.forceManyBody().strength(shouldVirtualize ? -200 : -300))
     .force('center', d3.forceCenter(width / 2, height / 2))
-    .force('collision', d3.forceCollide().radius(60))
+    .force('collision', d3.forceCollide().radius(shouldVirtualize ? 40 : 60))
+    .alphaDecay(0.02) // Faster convergence for better performance
 
-  // Create links
+  // Create links with optimized rendering
   const link = svg.append('g')
     .selectAll('line')
     .data(links)
     .enter().append('line')
     .attr('stroke', '#999')
     .attr('stroke-opacity', 0.6)
-    .attr('stroke-width', 2)
+    .attr('stroke-width', shouldVirtualize ? 1 : 2)
 
-  // Add condition labels to links
-  const linkLabels = svg.append('g')
-    .selectAll('text')
-    .data(links.filter(l => l.condition))
-    .enter().append('text')
-    .attr('font-size', '10px')
-    .attr('fill', '#666')
-    .attr('text-anchor', 'middle')
-    .text(d => d.condition)
+  // Add condition labels to links (only if enabled and not virtualized)
+  if (showConditions.checked && !shouldVirtualize) {
+    const linkLabels = svg.append('g')
+      .selectAll('text')
+      .data(links.filter(l => l.condition))
+      .enter().append('text')
+      .attr('font-size', '10px')
+      .attr('fill', '#666')
+      .attr('text-anchor', 'middle')
+      .text(d => d.condition)
+  }
 
-  // Create nodes
+  // Create nodes with performance optimizations
   const node = svg.append('g')
     .selectAll('circle')
     .data(nodes)
     .enter().append('circle')
-    .attr('r', 30)
-    .attr('fill', d => d.id === _model.startNode ? '#4ade80' : '#60a5fa')
-    .attr('stroke', '#fff')
-    .attr('stroke-width', 2)
+    .attr('r', d => d.isVirtualized ? 20 : 30)
+    .attr('fill', d => {
+      if (d.id === _model.startNode) return '#4ade80'
+      if (d.isVirtualized) return '#94a3b8'
+      return '#60a5fa'
+    })
+    .attr('stroke', d => d.id === (session?.nodeId || _model.startNode) ? '#ef4444' : '#fff')
+    .attr('stroke-width', d => d.id === (session?.nodeId || _model.startNode) ? 3 : 2)
     .call(d3.drag()
       .on('start', (event, d) => {
         if (!event.active) simulation.alphaTarget(0.3).restart()
@@ -253,37 +303,58 @@ function renderGraph() {
         d.fy = null
       }))
 
-  // Add node labels
-  const labels = svg.append('g')
-    .selectAll('text')
-    .data(nodes)
-    .enter().append('text')
-    .attr('text-anchor', 'middle')
-    .attr('dy', '0.35em')
-    .attr('font-size', '10px')
-    .attr('fill', '#333')
-    .text(d => d.id)
+  // Add node labels with conditional rendering
+  if (!shouldVirtualize) {
+    const labels = svg.append('g')
+      .selectAll('text')
+      .data(nodes)
+      .enter().append('text')
+      .attr('text-anchor', 'middle')
+      .attr('dy', '0.35em')
+      .attr('font-size', '10px')
+      .attr('fill', '#333')
+      .text(d => d.id)
+  }
 
-  // Update positions on simulation tick
+  // Update positions on simulation tick with throttled updates
+  let tickCount = 0
   simulation.on('tick', () => {
+    tickCount++
+    if (tickCount % 3 !== 0) return // Update every 3 ticks for performance
+
     link
       .attr('x1', d => d.source.x)
       .attr('y1', d => d.source.y)
       .attr('x2', d => d.target.x)
       .attr('y2', d => d.target.y)
 
-    linkLabels
-      .attr('x', d => (d.source.x + d.target.x) / 2)
-      .attr('y', d => (d.source.y + d.target.y) / 2)
+    if (!shouldVirtualize) {
+      labels
+        .attr('x', d => d.x)
+        .attr('y', d => d.y)
+    }
 
     node
       .attr('cx', d => d.x)
       .attr('cy', d => d.y)
 
-    labels
-      .attr('x', d => d.x)
-      .attr('y', d => d.y)
+    if (showConditions.checked && !shouldVirtualize) {
+      linkLabels
+        .attr('x', d => (d.source.x + d.target.x) / 2)
+        .attr('y', d => (d.source.y + d.target.y) / 2)
+    }
   })
+
+  // Add virtualization notice
+  if (shouldVirtualize) {
+    svg.append('text')
+      .attr('x', width - 10)
+      .attr('y', 20)
+      .attr('text-anchor', 'end')
+      .attr('font-size', '12px')
+      .attr('fill', '#666')
+      .text(`表示中: ${nodesToShow.length}/${allNodes.length} ノード`)
+  }
 
   // Graph controls
   fitGraphBtn.onclick = () => {
@@ -313,6 +384,24 @@ function renderGraph() {
   }
 
   showConditions.onchange = () => renderGraph()
+}
+
+function isConnectedToCurrent(nodeId) {
+  if (!session) return nodeId === _model.startNode
+  const currentNode = session.nodeId
+
+  // Direct connection
+  if (nodeId === currentNode) return true
+
+  // Current node connects to this node
+  const currentNodeObj = _model.nodes[currentNode]
+  if (currentNodeObj?.choices?.some(c => c.target === nodeId)) return true
+
+  // This node connects to current node
+  const nodeObj = _model.nodes[nodeId]
+  if (nodeObj?.choices?.some(c => c.target === currentNode)) return true
+
+  return false
 }
 
 function renderDebugInfo() {
@@ -396,7 +485,7 @@ async function importCsvFile(file) {
     const delim = file.name.endsWith('.tsv') || text.includes('\t') ? '\t' : ','
     const rows = text.split(/\r?\n/).filter((l) => l.trim().length > 0)
     if (rows.length === 0) throw new Error('空のファイルです')
-    
+
     const headers = rows[0].split(delim).map((h) => h.trim())
     const idx = {
       node_id: headers.indexOf('node_id'),
@@ -417,7 +506,16 @@ async function importCsvFile(file) {
       initial_resources: headers.indexOf('initial_resources'),
       global_metadata: headers.indexOf('global_metadata'),
     }
-    
+
+    // Performance optimization: Process in chunks for large files
+    const totalRows = rows.length - 1 // Exclude header
+    const chunkSize = 100
+    const chunks = []
+
+    for (let i = 1; i < rows.length; i += chunkSize) {
+      chunks.push(rows.slice(i, i + chunkSize))
+    }
+
     // 初期値の抽出（最初の行）
     let initialFlags = {}
     let initialResources = {}
@@ -430,101 +528,117 @@ async function importCsvFile(file) {
         initialResources = parseKeyValuePairs(firstRow[idx.initial_resources], 'number')
       }
     }
-    
+
     const nodes = {}
     const errors = []
-    
-    for (let i = 1; i < rows.length; i++) {
-      const cells = parseCsvLine(rows[i], delim)
-      const nid = (cells[idx.node_id] || '').trim()
-      if (!nid) continue
-      
-      if (!nodes[nid]) {
-        nodes[nid] = { 
-          id: nid, 
-          text: '', 
-          choices: [],
-          type: 'normal',
-          tags: [],
-          assets: {}
-        }
-      }
-      
-      const node = nodes[nid]
-      
-      const ntext = (cells[idx.node_text] || '').trim()
-      if (ntext) node.text = ntext
-      
-      // Parse node metadata
-      if (idx.node_type >= 0 && cells[idx.node_type]) {
-        node.type = cells[idx.node_type].trim()
-      }
-      
-      if (idx.node_tags >= 0 && cells[idx.node_tags]) {
-        node.tags = cells[idx.node_tags].split(';').map(t => t.trim()).filter(Boolean)
-      }
-      
-      if (idx.node_assets >= 0 && cells[idx.node_assets]) {
-        node.assets = parseKeyValuePairs(cells[idx.node_assets])
-      }
-      
-      const cid = (cells[idx.choice_id] || '').trim()
-      const ctext = (cells[idx.choice_text] || '').trim()
-      const ctgt = (cells[idx.choice_target] || '').trim()
-      
-      if (ctgt || ctext || cid) {
-        const choice = {
-          id: cid || `c${nodes[nid].choices.length + 1}`,
-          text: ctext || '',
-          target: ctgt || nid,
-          metadata: {},
-          variables: {}
-        }
-        
-        // Parse choice metadata
-        if (idx.choice_metadata >= 0 && cells[idx.choice_metadata]) {
-          choice.metadata = parseKeyValuePairs(cells[idx.choice_metadata])
-        }
-        
-        // Parse choice variables
-        if (idx.choice_variables >= 0 && cells[idx.choice_variables]) {
-          choice.variables = parseKeyValuePairs(cells[idx.choice_variables])
-        }
-        
-        // 条件のパース
-        if (idx.choice_conditions >= 0 && cells[idx.choice_conditions]) {
-          try {
-            choice.conditions = parseConditions(cells[idx.choice_conditions])
-          } catch (err) {
-            errors.push(`行${i + 1}: 条件パースエラー: ${err.message}`)
+    let processedRows = 0
+
+    // Progress indicator
+    setStatus(`CSV読み込み中... (0/${totalRows})`)
+
+    // Process chunks with progress updates
+    for (const chunk of chunks) {
+      for (const row of chunk) {
+        const cells = parseCsvLine(row, delim)
+        const nid = (cells[idx.node_id] || '').trim()
+        if (!nid) continue
+
+        if (!nodes[nid]) {
+          nodes[nid] = {
+            id: nid,
+            text: '',
+            choices: [],
+            type: 'normal',
+            tags: [],
+            assets: {}
           }
         }
-        
-        // 効果のパース
-        if (idx.choice_effects >= 0 && cells[idx.choice_effects]) {
-          try {
-            choice.effects = parseEffects(cells[idx.choice_effects])
-          } catch (err) {
-            errors.push(`行${i + 1}: 効果パースエラー: ${err.message}`)
-          }
+
+        const node = nodes[nid]
+
+        const ntext = (cells[idx.node_text] || '').trim()
+        if (ntext) node.text = ntext
+
+        // Parse node metadata
+        if (idx.node_type >= 0 && cells[idx.node_type]) {
+          node.type = cells[idx.node_type].trim()
         }
-        
-        // アウトカムのパース
-        if (idx.choice_outcome_type >= 0 && cells[idx.choice_outcome_type]) {
-          choice.outcome = {
-            type: cells[idx.choice_outcome_type].trim(),
-            value: idx.choice_outcome_value >= 0 ? cells[idx.choice_outcome_value]?.trim() : undefined
-          }
+
+        if (idx.node_tags >= 0 && cells[idx.node_tags]) {
+          node.tags = cells[idx.node_tags].split(';').map(t => t.trim()).filter(Boolean)
         }
-        
-        nodes[nid].choices.push(choice)
+
+        if (idx.node_assets >= 0 && cells[idx.node_assets]) {
+          node.assets = parseKeyValuePairs(cells[idx.node_assets])
+        }
+
+        const cid = (cells[idx.choice_id] || '').trim()
+        const ctext = (cells[idx.choice_text] || '').trim()
+        const ctgt = (cells[idx.choice_target] || '').trim()
+
+        if (ctgt || ctext || cid) {
+          const choice = {
+            id: cid || `c${nodes[nid].choices.length + 1}`,
+            text: ctext || '',
+            target: ctgt || nid,
+            metadata: {},
+            variables: {}
+          }
+
+          // Parse choice metadata
+          if (idx.choice_metadata >= 0 && cells[idx.choice_metadata]) {
+            choice.metadata = parseKeyValuePairs(cells[idx.choice_metadata])
+          }
+
+          // Parse choice variables
+          if (idx.choice_variables >= 0 && cells[idx.choice_variables]) {
+            choice.variables = parseKeyValuePairs(cells[idx.choice_variables])
+          }
+
+          // 条件のパース
+          if (idx.choice_conditions >= 0 && cells[idx.choice_conditions]) {
+            try {
+              choice.conditions = parseConditions(cells[idx.choice_conditions])
+            } catch (err) {
+              errors.push(`行${processedRows + 2}: 条件パースエラー: ${err.message}`)
+            }
+          }
+
+          // 効果のパース
+          if (idx.choice_effects >= 0 && cells[idx.choice_effects]) {
+            try {
+              choice.effects = parseEffects(cells[idx.choice_effects])
+            } catch (err) {
+              errors.push(`行${processedRows + 2}: 効果パースエラー: ${err.message}`)
+            }
+          }
+
+          // アウトカムのパース
+          if (idx.choice_outcome_type >= 0 && cells[idx.choice_outcome_type]) {
+            choice.outcome = {
+              type: cells[idx.choice_outcome_type].trim(),
+              value: idx.choice_outcome_value >= 0 ? cells[idx.choice_outcome_value]?.trim() : undefined
+            }
+          }
+
+          nodes[nid].choices.push(choice)
+        }
+
+        processedRows++
+
+        // Update progress every 100 rows
+        if (processedRows % 100 === 0) {
+          setStatus(`CSV読み込み中... (${processedRows}/${totalRows})`)
+          // Allow UI to update
+          await new Promise(resolve => setTimeout(resolve, 0))
+        }
       }
     }
-    
+
     // バリデーション
     const validationErrors = validateModel(nodes)
     errors.push(...validationErrors)
-    
+
     if (errors.length > 0) {
       showErrors(errors)
       setStatus(`CSV読み込みに失敗しました（${errors.length}件のエラー）`, 'warn')
@@ -532,7 +646,7 @@ async function importCsvFile(file) {
       hideErrors()
       setStatus('CSV を読み込みました', 'success')
     }
-    
+
     // グローバルメタデータのパース（最初の行）
     let globalMetadata = {}
     if (rows.length > 1 && idx.global_metadata >= 0) {
@@ -541,7 +655,7 @@ async function importCsvFile(file) {
         globalMetadata = parseKeyValuePairs(firstRow[idx.global_metadata])
       }
     }
-    
+
     const firstNode = Object.keys(nodes)[0]
     _model = {
       modelType: 'adventure-playthrough',
@@ -1057,7 +1171,69 @@ function appendStoryFromCurrentNode() {
 
 function renderStory() {
   if (!storyView) return
-  storyView.textContent = storyLog.join('\n\n')
+
+  // Performance optimization: Virtual scrolling for long stories
+  const maxVisibleEntries = 50
+  const shouldVirtualize = storyLog.length > maxVisibleEntries
+
+  let visibleEntries: string[]
+  let startIndex = 0
+
+  if (shouldVirtualize) {
+    // Show the most recent entries by default
+    startIndex = Math.max(0, storyLog.length - maxVisibleEntries)
+    visibleEntries = storyLog.slice(startIndex)
+  } else {
+    visibleEntries = storyLog
+  }
+
+  storyView.textContent = visibleEntries.join('\n\n')
+
+  // Add virtualization indicator
+  if (shouldVirtualize) {
+    const indicator = document.createElement('div')
+    indicator.className = 'virtualization-indicator'
+    indicator.textContent = `... (${startIndex} 件の古いエントリが非表示) ...`
+    indicator.style.cssText = `
+      text-align: center;
+      padding: 1rem;
+      color: #666;
+      font-style: italic;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 1rem;
+    `
+
+    // Insert at the beginning
+    storyView.insertBefore(indicator, storyView.firstChild)
+
+    // Add scroll handler for lazy loading more content
+    let scrollTimeout: number
+    const handleScroll = () => {
+      clearTimeout(scrollTimeout)
+      scrollTimeout = setTimeout(() => {
+        if (storyView.scrollTop === 0 && startIndex > 0) {
+          // Load more content when scrolled to top
+          const additionalEntries = Math.min(20, startIndex)
+          const newStartIndex = startIndex - additionalEntries
+          const newVisibleEntries = storyLog.slice(newStartIndex, startIndex + maxVisibleEntries)
+
+          storyView.textContent = newVisibleEntries.join('\n\n')
+
+          // Update indicator
+          const newIndicator = indicator.cloneNode(true) as HTMLElement
+          newIndicator.textContent = `... (${newStartIndex} 件の古いエントリが非表示) ...`
+          storyView.insertBefore(newIndicator, storyView.firstChild)
+
+          startIndex = newStartIndex
+
+          // Scroll to show newly loaded content
+          storyView.scrollTop = 50
+        }
+      }, 100)
+    }
+
+    storyView.addEventListener('scroll', handleScroll)
+  }
 }
 
 // CSVプレビューモーダル

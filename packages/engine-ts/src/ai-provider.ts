@@ -94,7 +94,7 @@ class OpenAIProvider implements AIProvider {
         throw new Error(`OpenAI API error: ${response.status}`)
       }
 
-      const data = await response.json()
+      const data = await response.json() as { choices: { message: { content: string } }[] }
       return data.choices[0]?.message?.content?.trim() || '次のシーンへ進みます。'
     } catch (error) {
       console.error('OpenAI generation error:', error)
@@ -125,11 +125,11 @@ class OpenAIProvider implements AIProvider {
         throw new Error(`OpenAI API error: ${response.status}`)
       }
 
-      const data = await response.json()
+      const data = await response.json() as { choices: { message: { content: string } }[] }
       const content = data.choices[0]?.message?.content?.trim() || ''
 
       // Parse response into variants
-      const variants = content.split('\n').filter(line => line.trim()).slice(0, variantCount)
+      const variants = content.split('\n').filter((line: string) => line.trim()).slice(0, variantCount)
 
       // Ensure we have the requested number of variants
       while (variants.length < variantCount) {

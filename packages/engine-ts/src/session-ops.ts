@@ -1,5 +1,18 @@
 import type { Choice, Condition, Effect, Model, SessionState } from './types.js'
 
+// Performance optimization: Memoization cache
+const conditionCache = new Map<string, boolean>()
+const choicesCache = new Map<string, Choice[]>()
+
+// Cache key generation for session state
+function getSessionKey(session: SessionState): string {
+  return `${session.nodeId}:${session.time}:${JSON.stringify(session.flags)}:${JSON.stringify(session.resources)}`
+}
+
+function getConditionKey(cond: Condition, flags: Record<string, boolean>, resources: Record<string, number>, time: number): string {
+  return `${JSON.stringify(cond)}:${JSON.stringify(flags)}:${JSON.stringify(resources)}:${time}`
+}
+
 function cmp(op: '>=' | '<=' | '>' | '<' | '==', a: number, b: number): boolean {
   switch (op) {
     case '>=':
@@ -23,17 +36,30 @@ function evalCondition(
   resources: Record<string, number>,
   time: number,
 ): boolean {
+  const key = getConditionKey(cond, flags, resources, time)
+  if (conditionCache.has(key)) {
+    return conditionCache.get(key)!
+  }
+
+  let result: boolean
   if (cond.type === 'flag') {
-    return (flags[cond.key] ?? false) === cond.value
-  }
-  if (cond.type === 'resource') {
+    result = (flags[cond.key] ?? false) === cond.value
+  } else if (cond.type === 'resource') {
     const v = resources[cond.key] ?? 0
-    return cmp(cond.op, v, cond.value)
+    result = cmp(cond.op, v, cond.value)
+  } else if (cond.type === 'timeWindow') {
+    result = time >= cond.start && time <= cond.end
+  } else {
+    result = true
   }
-  if (cond.type === 'timeWindow') {
-    return time >= cond.start && time <= cond.end
+
+  // Cache result (limit cache size to prevent memory leaks)
+  if (conditionCache.size > 10000) {
+    conditionCache.clear()
   }
-  return true
+  conditionCache.set(key, result)
+
+  return result
 }
 
 function applyEffect(effect: Effect, session: SessionState): SessionState {
@@ -60,14 +86,30 @@ export function startSession(model: Model, initial?: Partial<SessionState>): Ses
 }
 
 export function getAvailableChoices(session: SessionState, model: Model): Choice[] {
+  const sessionKey = getSessionKey(session)
+  const cacheKey = `${sessionKey}:${session.nodeId}`
+
+  if (choicesCache.has(cacheKey)) {
+    return choicesCache.get(cacheKey)!
+  }
+
   const node = model.nodes[session.nodeId]
   if (!node) return []
+
   const choices = node.choices ?? []
-  return choices.filter((c) =>
+  const available = choices.filter((c) =>
     (c.conditions ?? []).every((cond) =>
       evalCondition(cond, session.flags, session.resources, session.time),
     ),
   )
+
+  // Cache result (limit cache size)
+  if (choicesCache.size > 1000) {
+    choicesCache.clear()
+  }
+  choicesCache.set(cacheKey, available)
+
+  return available
 }
 
 export function applyChoice(session: SessionState, model: Model, choiceId: string): SessionState {
