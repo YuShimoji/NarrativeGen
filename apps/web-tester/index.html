@@ -188,6 +188,34 @@
         border-radius: 4px;
         opacity: 0.6;
       }
+      .ai-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      .ai-container > div {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem;
+      }
+      .ai-container label {
+        display: block;
+        margin: 0.5rem 0;
+      }
+      .ai-container input, .ai-container select {
+        width: 100%;
+        padding: 0.25rem;
+        margin-top: 0.25rem;
+      }
+      .ai-container button {
+        margin: 0.5rem 0.25rem 0 0;
+        padding: 0.5rem 1rem;
+      }
+      #aiOutput {
+        white-space: pre-wrap;
+        font-family: monospace;
+        font-size: 0.9em;
+      }
     </style>
   </head>
   <body>
@@ -216,6 +244,7 @@
         <button id="storyTab" class="tab-btn active">ストーリー</button>
         <button id="graphTab" class="tab-btn">ノードグラフ</button>
         <button id="debugTab" class="tab-btn">デバッグ</button>
+        <button id="aiTab" class="tab-btn">AI支援</button>
       </div>
 
       <div id="storyPanel" class="tab-content active">
@@ -282,6 +311,36 @@
           <div id="reachabilityMap">
             <h3>到達可能性マップ</h3>
             <div id="reachableNodes"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="aiPanel" class="tab-content">
+        <div class="ai-container">
+          <div id="aiSettings">
+            <h3>AI設定</h3>
+            <label>プロバイダー:
+              <select id="aiProvider">
+                <option value="mock">Mock (テスト用)</option>
+                <option value="openai">OpenAI</option>
+                <option value="ollama">Ollama</option>
+              </select>
+            </label>
+            <div id="openaiSettings" style="display: none;">
+              <label>OpenAI API Key: <input type="password" id="openaiApiKey"></label>
+              <label>Model: <select id="openaiModel">
+                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                <option value="gpt-4">GPT-4</option>
+                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+              </select></label>
+            </div>
+            <button id="saveAiSettings">設定を保存</button>
+          </div>
+          <div id="aiActions">
+            <h3>AI支援機能</h3>
+            <button id="generateNextNodeBtn">次のノードを生成</button>
+            <button id="paraphraseCurrentBtn">現在のテキストを言い換え</button>
+            <div id="aiOutput" style="margin-top: 1rem; padding: 1rem; background: #f9fafb; border-radius: 4px; min-height: 100px;"></div>
           </div>
         </div>
       </div>

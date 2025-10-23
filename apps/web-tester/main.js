@@ -50,10 +50,32 @@ const flagsDisplay = document.getElementById('flagsDisplay')
 const resourcesDisplay = document.getElementById('resourcesDisplay')
 const reachableNodes = document.getElementById('reachableNodes')
 
+// AI elements
+const aiTab = document.getElementById('aiTab')
+const aiPanel = document.getElementById('aiPanel')
+const aiProvider = document.getElementById('aiProvider')
+const openaiSettings = document.getElementById('openaiSettings')
+const openaiApiKey = document.getElementById('openaiApiKey')
+const openaiModel = document.getElementById('openaiModel')
+const saveAiSettings = document.getElementById('saveAiSettings')
+const generateNextNodeBtn = document.getElementById('generateNextNodeBtn')
+const paraphraseCurrentBtn = document.getElementById('paraphraseCurrentBtn')
+const aiOutput = document.getElementById('aiOutput')
+
 let session = null
 let currentModelName = null
 let _model = null
 let storyLog = []
+
+// AI configuration
+let aiConfig = {
+  provider: 'mock',
+  openai: {
+    apiKey: '',
+    model: 'gpt-3.5-turbo'
+  }
+}
+let aiProviderInstance = null
 
 function renderState() {
   if (!session) {
@@ -595,26 +617,77 @@ function renderChoices() {
   choicesContainer.appendChild(list)
 }
 
-function resolveVariables(text, session, model) {
-  if (!text) return text
-  
-  return text.replace(/\{([^}]+)\}/g, (match, varName) => {
-    // Check flags first
-    if (session.flags && session.flags.hasOwnProperty(varName)) {
-      return session.flags[varName]
+// AI functions
+async function initAiProvider() {
+  if (!aiProviderInstance || aiConfig.provider !== aiProvider.value) {
+    try {
+      if (aiProvider.value === 'openai') {
+        if (!aiConfig.openai.apiKey) {
+          aiOutput.textContent = 'OpenAI APIキーを設定してください'
+          return
+        }
+        const { createAIProvider } = await import('@narrativegen/engine-ts/dist/browser.js')
+        aiProviderInstance = createAIProvider({
+          provider: 'openai',
+          openai: aiConfig.openai
+        })
+      } else {
+        const { createAIProvider } = await import('@narrativegen/engine-ts/dist/browser.js')
+        aiProviderInstance = createAIProvider({ provider: 'mock' })
+      }
+      aiOutput.textContent = `${aiProvider.value}プロバイダーが初期化されました`
+    } catch (error) {
+      console.error('AIプロバイダー初期化エラー:', error)
+      aiOutput.textContent = `AIプロバイダーの初期化に失敗しました: ${error.message}`
     }
-    
-    // Check resources
-    if (session.resources && session.resources.hasOwnProperty(varName)) {
-      return session.resources[varName]
+  }
+}
+
+async function generateNextNode() {
+  if (!aiProviderInstance || !session || !_model) {
+    aiOutput.textContent = 'モデルを読み込んでから実行してください'
+    return
+  }
+
+  try {
+    const context = {
+      previousNodes: [], // 現在の実装では履歴を保持していない
+      currentNodeText: _model.nodes[session.nodeId]?.text || '',
+      choiceText: '続き'
     }
-    
-    // Check choice variables if available
-    // (This would need to be passed from the choice context)
-    
-    // Return original placeholder if not found
-    return match
-  })
+
+    const generatedText = await aiProviderInstance.generateNextNode(context)
+    aiOutput.textContent = `生成されたテキスト:\n${generatedText}`
+  } catch (error) {
+    console.error('ノード生成エラー:', error)
+    aiOutput.textContent = `ノード生成に失敗しました: ${error.message}`
+  }
+}
+
+async function paraphraseCurrentText() {
+  if (!aiProviderInstance || !session || !_model) {
+    aiOutput.textContent = 'モデルを読み込んでから実行してください'
+    return
+  }
+
+  const currentNode = _model.nodes[session.nodeId]
+  if (!currentNode?.text) {
+    aiOutput.textContent = '現在のノードにテキストがありません'
+    return
+  }
+
+  try {
+    const paraphrases = await aiProviderInstance.paraphrase(currentNode.text, {
+      variantCount: 3,
+      style: 'desu-masu',
+      tone: 'neutral'
+    })
+
+    aiOutput.textContent = `言い換え結果:\n${paraphrases.map((p, i) => `${i + 1}. ${p}`).join('\n')}`
+  } catch (error) {
+    console.error('言い換えエラー:', error)
+    aiOutput.textContent = `言い換えに失敗しました: ${error.message}`
+  }
 }
 
 function formatChoiceLabel(choice) {
@@ -800,15 +873,59 @@ dropZone.addEventListener('drop', async (e) => {
   }
 })
 
-setStatus('サンプルを選択して「サンプルを実行」を押してください')
-renderState()
-renderChoices()
-renderStory()
+// Load AI config from localStorage on startup
+const savedAiConfig = localStorage.getItem('narrativeGenAiConfig')
+if (savedAiConfig) {
+  try {
+    aiConfig = { ...aiConfig, ...JSON.parse(savedAiConfig) }
+    aiProvider.value = aiConfig.provider
+    if (aiConfig.provider === 'openai') {
+      openaiSettings.style.display = 'block'
+      openaiApiKey.value = aiConfig.openai.apiKey || ''
+      openaiModel.value = aiConfig.openai.model || 'gpt-3.5-turbo'
+    }
+  } catch (error) {
+    console.warn('Failed to load AI config from localStorage:', error)
+  }
+}
 
 // Tab event listeners
+function switchTab(tabName) {
+  // Hide all panels
+  storyPanel.classList.remove('active')
+  graphPanel.classList.remove('active')
+  debugPanel.classList.remove('active')
+  aiPanel.classList.remove('active')
+
+  // Remove active class from all tabs
+  storyTab.classList.remove('active')
+  graphTab.classList.remove('active')
+  debugTab.classList.remove('active')
+  aiTab.classList.remove('active')
+
+  // Show selected panel and activate tab
+  if (tabName === 'story') {
+    storyPanel.classList.add('active')
+    storyTab.classList.add('active')
+  } else if (tabName === 'graph') {
+    graphPanel.classList.add('active')
+    graphTab.classList.add('active')
+    renderGraph()
+  } else if (tabName === 'debug') {
+    debugPanel.classList.add('active')
+    debugTab.classList.add('active')
+    renderDebugInfo()
+  } else if (tabName === 'ai') {
+    aiPanel.classList.add('active')
+    aiTab.classList.add('active')
+    initAiProvider()
+  }
+}
+
 storyTab.addEventListener('click', () => switchTab('story'))
 graphTab.addEventListener('click', () => switchTab('graph'))
 debugTab.addEventListener('click', () => switchTab('debug'))
+aiTab.addEventListener('click', () => switchTab('ai'))
 
 guiEditBtn.addEventListener('click', () => {
   if (session == null) {
@@ -819,6 +936,35 @@ guiEditBtn.addEventListener('click', () => {
   guiEditMode.style.display = 'block'
   setControlsEnabled(false)
 })
+
+// AI settings event handlers
+aiProvider.addEventListener('change', () => {
+  if (aiProvider.value === 'openai') {
+    openaiSettings.style.display = 'block'
+  } else {
+    openaiSettings.style.display = 'none'
+  }
+  aiProviderInstance = null // Reset provider when changed
+})
+
+saveAiSettings.addEventListener('click', () => {
+  aiConfig.provider = aiProvider.value
+  if (aiProvider.value === 'openai') {
+    aiConfig.openai.apiKey = openaiApiKey.value
+    aiConfig.openai.model = openaiModel.value
+    if (!aiConfig.openai.apiKey) {
+      aiOutput.textContent = 'OpenAI APIキーを入力してください'
+      return
+    }
+  }
+  // Save to localStorage
+  localStorage.setItem('narrativeGenAiConfig', JSON.stringify(aiConfig))
+  aiOutput.textContent = 'AI設定を保存しました'
+  aiProviderInstance = null // Reset to use new config
+})
+
+generateNextNodeBtn.addEventListener('click', generateNextNode)
+paraphraseCurrentBtn.addEventListener('click', paraphraseCurrentText)
 
 function renderNodeList() {
   nodeList.innerHTML = ''
