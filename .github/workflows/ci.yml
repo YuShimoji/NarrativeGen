@@ -36,6 +36,9 @@ jobs:
       - name: Build
         working-directory: apps/web-tester
         run: npm run build
+      - name: Copy models
+        working-directory: apps/web-tester
+        run: cp -r ../../models dist/models
   sdk-unity:
     runs-on: ubuntu-latest
     steps:
