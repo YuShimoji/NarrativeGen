@@ -13,6 +13,14 @@ import type {
   SessionState,
 } from './types'
 export { chooseParaphrase, paraphraseJa } from './paraphrase'
+export { 
+  createAIProvider, 
+  MockAIProvider, 
+  type AIProvider, 
+  type AIConfig, 
+  type StoryContext, 
+  type ParaphraseOptions 
+} from './ai-provider'
 
 function cmp(op: '>=' | '<=' | '>' | '<' | '==', a: number, b: number): boolean {
   switch (op) {

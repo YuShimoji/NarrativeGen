@@ -1,5 +1,5 @@
 // Error handling and logging
-import { startSession, getAvailableChoices, applyChoice, chooseParaphrase } from '@narrativegen/engine-ts/dist/browser.js'
+import { startSession, getAvailableChoices, applyChoice, chooseParaphrase, createAIProvider } from '@narrativegen/engine-ts/dist/browser.js'
 import * as d3 from 'd3'
 
 // Utility function for resolving variables in text (browser-compatible)
@@ -865,13 +865,11 @@ async function initAiProvider() {
           aiOutput.textContent = 'OpenAI APIキーを設定してください'
           return
         }
-        const { createAIProvider } = await import('@narrativegen/engine-ts/dist/browser.js')
         aiProviderInstance = createAIProvider({
           provider: 'openai',
           openai: aiConfig.openai
         })
       } else {
-        const { createAIProvider } = await import('@narrativegen/engine-ts/dist/browser.js')
         aiProviderInstance = createAIProvider({ provider: 'mock' })
       }
       aiOutput.textContent = `${aiProvider.value}プロバイダーが初期化されました`
@@ -884,9 +882,14 @@ async function initAiProvider() {
 
 async function generateNextNode() {
   if (!aiProviderInstance || !session || !_model) {
-    aiOutput.textContent = 'モデルを読み込んでから実行してください'
+    aiOutput.textContent = '❌ モデルを読み込んでから実行してください'
     return
   }
+
+  // Disable buttons during generation
+  generateNextNodeBtn.disabled = true
+  paraphraseCurrentBtn.disabled = true
+  aiOutput.textContent = '⏳ 生成中...'
 
   try {
     const context = {
@@ -895,37 +898,65 @@ async function generateNextNode() {
       choiceText: '続き'
     }
 
+    const startTime = Date.now()
     const generatedText = await aiProviderInstance.generateNextNode(context)
-    aiOutput.textContent = `生成されたテキスト:\n${generatedText}`
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2)
+    
+    aiOutput.textContent = `✅ 生成されたテキスト (${duration}秒):\n${generatedText}`
+    Logger.info('AI node generated', { duration, provider: aiConfig.provider })
   } catch (error) {
     console.error('ノード生成エラー:', error)
-    aiOutput.textContent = `ノード生成に失敗しました: ${error.message}`
+    const errorMsg = error.message.includes('API error') 
+      ? `APIエラー: ${error.message}\nAPIキーを確認してください。`
+      : `生成に失敗しました: ${error.message}`
+    aiOutput.textContent = `❌ ${errorMsg}`
+    Logger.error('AI generation failed', { error: error.message, provider: aiConfig.provider })
+  } finally {
+    // Re-enable buttons
+    generateNextNodeBtn.disabled = false
+    paraphraseCurrentBtn.disabled = false
   }
 }
 
 async function paraphraseCurrentText() {
   if (!aiProviderInstance || !session || !_model) {
-    aiOutput.textContent = 'モデルを読み込んでから実行してください'
+    aiOutput.textContent = '❌ モデルを読み込んでから実行してください'
     return
   }
 
   const currentNode = _model.nodes[session.nodeId]
   if (!currentNode?.text) {
-    aiOutput.textContent = '現在のノードにテキストがありません'
+    aiOutput.textContent = '❌ 現在のノードにテキストがありません'
     return
   }
 
+  // Disable buttons during generation
+  generateNextNodeBtn.disabled = true
+  paraphraseCurrentBtn.disabled = true
+  aiOutput.textContent = '⏳ 言い換え中...'
+
   try {
+    const startTime = Date.now()
     const paraphrases = await aiProviderInstance.paraphrase(currentNode.text, {
       variantCount: 3,
       style: 'desu-masu',
       tone: 'neutral'
     })
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2)
 
-    aiOutput.textContent = `言い換え結果:\n${paraphrases.map((p, i) => `${i + 1}. ${p}`).join('\n')}`
+    aiOutput.textContent = `✅ 言い換え結果 (${duration}秒):\n${paraphrases.map((p, i) => `${i + 1}. ${p}`).join('\n')}`
+    Logger.info('AI paraphrase completed', { duration, provider: aiConfig.provider, variantCount: paraphrases.length })
   } catch (error) {
     console.error('言い換えエラー:', error)
-    aiOutput.textContent = `言い換えに失敗しました: ${error.message}`
+    const errorMsg = error.message.includes('API error') 
+      ? `APIエラー: ${error.message}\nAPIキーを確認してください。`
+      : `言い換えに失敗しました: ${error.message}`
+    aiOutput.textContent = `❌ ${errorMsg}`
+    Logger.error('AI paraphrase failed', { error: error.message, provider: aiConfig.provider })
+  } finally {
+    // Re-enable buttons
+    generateNextNodeBtn.disabled = false
+    paraphraseCurrentBtn.disabled = false
   }
 }
 

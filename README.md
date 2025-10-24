@@ -210,14 +210,32 @@ npm run build
   - Comprehensive input validation with detailed error contexts
   - Model validation with specific error location reporting
 
-### AI Features (Planned)
+### AI Features
 
-See `docs/ai-features.md` for detailed design. Current status:
+See `docs/ai-features.md` for detailed design and `test-ai-features.md` for testing procedures. Current status:
 
 - ✅ **Phase 1**: Mock AI suggestion (random samples)
-- ⏳ **Phase 2**: Next story generation & paraphrase via OpenAI API
+- ✅ **Phase 2**: Next story generation & paraphrase via OpenAI API
 - ⏳ **Phase 3**: Local LLM integration (Ollama, llama.cpp)
 - ⏳ **Phase 4**: Batch processing & history management
+
+#### Using AI Features
+
+1. **Open AI Tab**: Click the "AI" tab in Web Tester
+2. **Select Provider**:
+   - **mock**: Random sample text (no API key required, instant)
+   - **openai**: OpenAI GPT models (API key required, see [OpenAI Platform](https://platform.openai.com/api-keys))
+3. **Configure Settings**:
+   - Enter API key for OpenAI
+   - Select model (default: gpt-3.5-turbo)
+   - Click "設定を保存" to save
+4. **Generate Content**:
+   - Load a model first
+   - Click "次のノードを生成" to generate next story node
+   - Click "現在のテキストを言い換え" to paraphrase current text
+5. **Review Output**: Generated text appears in the AI output area
+
+**Note**: API keys are stored in browser localStorage and never sent to our servers. They connect directly to the LLM API.
 
 ## Unity SDK
 
