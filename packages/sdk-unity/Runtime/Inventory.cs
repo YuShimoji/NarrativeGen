@@ -111,9 +111,9 @@ namespace NarrativeGen
             return new List<string>(items);
         }
 
-        private static string NormalizeId(string id)
+        private static string NormalizeId(string? id)
         {
-            return id.Trim().ToLowerInvariant();
+            return id?.Trim().ToLowerInvariant() ?? string.Empty;
         }
     }
 }
