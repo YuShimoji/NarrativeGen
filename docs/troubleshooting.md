@@ -173,6 +173,51 @@ export async function loadModel(url: string): Promise<Model> {
 2. `tsconfig.json` の設定を確認
 3. 型定義ファイル（.d.ts）が生成されているか確認
 
+## Git Push タイムアウトエラー
+
+### 問題: "fatal: unable to access ... Connection timed out"
+
+#### 根本原因
+- ネットワーク接続の問題
+- GitHub への接続タイムアウト
+- ファイアウォールやプロキシの設定
+
+#### 解決手順
+
+1. **ネットワーク接続を確認**:
+   ```bash
+   ping github.com
+   # または
+   curl -I https://github.com
+   ```
+
+2. **Git 設定を確認**:
+   ```bash
+   git config --global user.name
+   git config --global user.email
+   git remote -v
+   ```
+
+3. **SSH から HTTPS に変更**（必要に応じて）:
+   ```bash
+   git remote set-url origin https://github.com/YuShimoji/NarrativeGen.git
+   ```
+
+4. **プロキシ設定を確認**（企業環境の場合）:
+   ```bash
+   git config --global http.proxy
+   git config --global https.proxy
+   ```
+
+5. **後でリトライ**:
+   ```bash
+   git push origin master
+   ```
+
+#### 回避策
+- ローカルコミットは正常に行われているので、後でネットワーク復旧時にプッシュ
+- 変更は失われていない
+
 ---
 
 ## デバッグテクニック

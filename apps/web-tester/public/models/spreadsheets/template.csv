@@ -1,0 +1,6 @@
+node_id,node_text,choice_id,choice_text,choice_target
+start,あなたはベッドから起き上がる。,,,
+start,,c1,起き上がる,scene1
+scene1,扉の前に立っている。,,,
+scene1,,c2,扉を開ける,end
+end,物語は終わりを迎えた。,,,

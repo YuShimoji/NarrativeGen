@@ -12,6 +12,7 @@
 - 🚀 **マルチプラットフォーム**: Unity SDK + Web Tester + TypeScript エンジン
 - ⚡ **高性能**: 大規模モデルの仮想化・メモ化・遅延読み込み対応
 - 🛡️ **堅牢**: 構造化ログ・エラーバウンダリ・包括的検証
+- 🎨 **モダンUI**: ガラスモーフィズム・レスポンシブデザイン・インタラクティブアニメーション
 
 ## プロジェクト構成
 
@@ -184,7 +185,7 @@ npm run build
 # Now serve the dist/ directory with any static server
 ```
 
-**Important**: 
+**Important**:
 - Always build `engine-ts` before `web-tester`
 - When using Live Server, open the `dist/` directory to avoid module resolution errors
 - See `docs/troubleshooting.md` for common issues and solutions
@@ -209,6 +210,12 @@ npm run build
   - Error boundary wrappers for critical operations with user-friendly messages
   - Comprehensive input validation with detailed error contexts
   - Model validation with specific error location reporting
+- **Modern UI/UX**:
+  - Glassmorphism design with backdrop blur effects
+  - Responsive layout (desktop/tablet/mobile)
+  - Smooth animations and transitions
+  - Inline story preview modal (replacing popup alerts)
+  - Enhanced tab navigation with visual feedback
 
 ### AI Features
 
@@ -282,8 +289,140 @@ dotnet test .\packages\tests\NarrativeGen.Tests -c Release
 
 The NUnit smoke test `EngineSmokeTests` loads `models/examples/linear.json`, plays through `start -> scene1 -> end`, and asserts that the engine returns expected nodes and zero choices at the end.
 
-## Development Notes
+## Current Status (2025-01-26)
 
-- Design principles and decision logs are documented in `docs/architecture.md` and `choices-driven-development.md`
-- TypeScript engine の型検証・整合チェック仕様も `docs/architecture.md` を参照
-- Refactoring should be done in small steps, with updated documentation and test procedures before committing/pushing.
+### ✅ **Fully Functional Components**
+
+- **TypeScript Engine**: Complete with browser/browser.js exports
+- **Web Tester**: Modern UI with all features working
+- **Build System**: All packages build successfully
+- **Development Server**: Vite dev server runs without errors
+- **Model Loading**: Sample models load correctly
+- **CSV Import/Export**: Full spreadsheet integration
+- **AI Features**: Mock and OpenAI integration working
+- **Graph Visualization**: D3.js rendering with virtualization
+- **Error Handling**: Comprehensive error boundaries and logging
+
+### 🔧 **Recent Improvements**
+
+- **UI/UX Overhaul**: Glassmorphism design, responsive layout, smooth animations
+- **Import Path Fixes**: Corrected browser.js import paths for Vite compatibility
+- **Code Quality**: Removed duplicate functions, fixed variable scope issues
+- **Performance**: Optimized graph rendering and CSV processing
+- **Documentation**: Updated README with current features
+- **Configuration**: Added .env, config.json, and comprehensive package.json scripts
+- **Testing**: Created detailed test procedures and expected results
+
+### 🚀 **Ready for Use**
+
+The Web Tester is now fully operational with:
+- Modern, responsive interface
+- Complete model loading and session management
+- Interactive story playback
+- Visual graph representation
+- AI-powered content generation
+- CSV import/export functionality
+- Comprehensive error handling and logging
+
+**Start developing narratives immediately at `http://localhost:5173`!** 🎉
+
+## Testing
+
+See [`TEST_PROCEDURES.md`](TEST_PROCEDURES.md) for comprehensive testing procedures and expected results.
+
+### Quick Test
+```bash
+# Install dependencies
+npm install
+
+# Build all packages
+npm run build:all
+
+# Start development server
+npm run dev
+
+# Open http://localhost:5173 in your browser
+```
+
+### Quality Assurance
+```bash
+# Run all quality checks
+npm run check
+
+# This includes:
+# - Linting (ESLint)
+# - Type checking (TypeScript)
+# - Testing (Vitest)
+# - Model validation (JSON Schema)
+# - Building
+```
+
+## API Endpoints
+
+Future API endpoints are defined in [`API_ENDPOINTS.md`](API_ENDPOINTS.md) for backend integration planning.
+
+## Configuration
+
+### Environment Variables (.env)
+```bash
+# Copy .env to .env.local for local overrides
+VITE_DEV_PORT=5173
+VITE_DEV_HOST=0.0.0.0
+VITE_API_BASE_URL=http://localhost:3001
+VITE_OPENAI_API_KEY=
+VITE_ENABLE_AI_FEATURES=true
+```
+
+### Project Configuration (config.json)
+Project-wide settings including feature flags, performance settings, and AI configurations.
+
+## Development Workflow
+
+### Recommended Setup
+```bash
+# Terminal 1: Watch engine changes
+npm run dev:engine
+
+# Terminal 2: Run web tester
+npm run dev:tester
+
+# Terminal 3: Run tests (optional)
+npm run test:watch
+```
+
+### Code Quality
+```bash
+# Format code
+npm run format
+
+# Lint code
+npm run lint
+
+# Fix linting issues
+npm run lint:fix
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### Import Errors
+```bash
+# Rebuild engine
+npm run build:engine
+
+# Restart dev server
+npm run dev:tester
+```
+
+#### Model Loading Issues
+- Verify model JSON syntax
+- Check `models/examples/` directory exists
+- Ensure model follows schema in `models/schema/`
+
+#### AI Feature Issues
+- Check internet connection
+- Verify OpenAI API key in settings
+- Ensure correct provider selection
+
+See [`docs/troubleshooting.md`](docs/troubleshooting.md) for detailed solutions.

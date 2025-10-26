@@ -1,6 +1,225 @@
-// Error handling and logging
-import { startSession, getAvailableChoices, applyChoice, chooseParaphrase, createAIProvider } from '@narrativegen/engine-ts/dist/browser.js'
-import * as d3 from 'd3'
+// Handle potential IDE extension conflicts (e.g., migrationWizard.js errors)
+try {
+  // Check if we're in an IDE environment that might have conflicting scripts
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    // Log IDE environment info for debugging (Logger will be available after initialization)
+    console.info('Web Tester loaded in IDE environment', {
+      userAgent: navigator.userAgent,
+      hasMigrationWizard: typeof window.migrationWizard !== 'undefined'
+    })
+  }
+} catch (error) {
+  console.warn('IDE environment check failed', { error: error.message })
+}
+
+// Import required functions from engine
+import {
+  createAIProvider,
+  startSession,
+  getAvailableChoices,
+  applyChoice,
+  chooseParaphrase,
+  paraphraseJa
+} from '@narrativegen/engine-ts/dist/browser.js'
+
+// Key binding configuration - extensible and loosely coupled
+const KEY_BINDINGS = {
+  'inventory': 'z',  // Configurable: can be changed to any key
+  'debug': 'd',
+  'graph': 'g',
+  'story': 's',
+  'ai': 'a'
+}
+
+// Key binding handler - extensible design
+const keyBindingHandlers = {
+  'inventory': () => {
+    // Placeholder for inventory functionality
+    setStatus('インベントリ機能は開発中です', 'info')
+    Logger.info('Inventory key pressed')
+  },
+  
+  'debug': () => {
+    // Toggle debug panel
+    if (debugPanel.classList.contains('active')) {
+      debugPanel.classList.remove('active')
+      debugTab.classList.remove('active')
+    } else {
+      debugPanel.classList.add('active')
+      debugTab.classList.add('active')
+      renderDebugInfo()
+    }
+    Logger.info('Debug panel toggled')
+  },
+
+  'graph': () => {
+    // Toggle graph panel
+    if (graphPanel.classList.contains('active')) {
+      graphPanel.classList.remove('active')
+      graphTab.classList.remove('active')
+    } else {
+      graphPanel.classList.add('active')
+      graphTab.classList.add('active')
+      renderGraph()
+    }
+    Logger.info('Graph panel toggled')
+  },
+
+  'story': () => {
+    // Toggle story panel
+    if (storyPanel.classList.contains('active')) {
+      storyPanel.classList.remove('active')
+      storyTab.classList.remove('active')
+    } else {
+      storyPanel.classList.add('active')
+      storyTab.classList.add('active')
+    }
+    Logger.info('Story panel toggled')
+  },
+
+  'ai': () => {
+    // Toggle AI panel
+    if (aiPanel.classList.contains('active')) {
+      aiPanel.classList.remove('active')
+      aiTab.classList.remove('active')
+    } else {
+      aiPanel.classList.add('active')
+      aiTab.classList.add('active')
+    }
+    Logger.info('AI panel toggled')
+  }
+}
+
+// Global keyboard event handler
+document.addEventListener('keydown', (e) => {
+  // Skip if user is typing in an input field
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+    return
+  }
+
+  const key = e.key.toLowerCase()
+  
+  // Find matching key binding
+  for (const [action, boundKey] of Object.entries(KEY_BINDINGS)) {
+    if (key === boundKey.toLowerCase()) {
+      e.preventDefault() // Prevent default browser behavior
+      const handler = keyBindingHandlers[action]
+      if (handler) {
+        handler()
+      }
+      break
+    }
+  }
+})
+
+// Key binding configuration UI (can be added to settings later)
+function getKeyBindingInfo() {
+  return Object.entries(KEY_BINDINGS)
+    .map(([action, key]) => `${action}: ${key.toUpperCase()}`)
+    .join(', ')
+}
+
+// Display key binding help (can be called from UI)
+function showKeyBindingHelp() {
+  const helpText = `キーバインド:\n${getKeyBindingInfo()}\n\n入力フィールド内では無効化されます。`
+  alert(helpText)
+}
+
+// Initialize key binding UI
+function initKeyBindingUI() {
+  // Load current bindings to UI
+  inventoryKey.value = KEY_BINDINGS.inventory
+  debugKey.value = KEY_BINDINGS.debug
+  graphKey.value = KEY_BINDINGS.graph
+  storyKey.value = KEY_BINDINGS.story
+  aiKey.value = KEY_BINDINGS.ai
+  
+  // Update display
+  updateKeyBindingDisplay()
+}
+
+// Update key binding display
+function updateKeyBindingDisplay() {
+  keyBindingDisplay.textContent = getKeyBindingInfo()
+}
+
+// Save key bindings
+function saveKeyBindingsToStorage() {
+  const newBindings = {
+    inventory: inventoryKey.value.toLowerCase() || 'z',
+    debug: debugKey.value.toLowerCase() || 'd',
+    graph: graphKey.value.toLowerCase() || 'g',
+    story: storyKey.value.toLowerCase() || 's',
+    ai: aiKey.value.toLowerCase() || 'a'
+  }
+  
+  // Validate no duplicates
+  const values = Object.values(newBindings)
+  const uniqueValues = new Set(values)
+  if (values.length !== uniqueValues.size) {
+    setStatus('❌ 同じキーを複数回使用することはできません', 'error')
+    return false
+  }
+  
+  // Update global bindings
+  Object.assign(KEY_BINDINGS, newBindings)
+  
+  // Save to localStorage
+  try {
+    localStorage.setItem('narrativeGenKeyBindings', JSON.stringify(KEY_BINDINGS))
+    setStatus('✅ キーバインドを保存しました', 'success')
+    updateKeyBindingDisplay()
+    Logger.info('Key bindings saved', { bindings: KEY_BINDINGS })
+    return true
+  } catch (error) {
+    setStatus('❌ キーバインドの保存に失敗しました', 'error')
+    Logger.error('Failed to save key bindings', { error: error.message })
+    return false
+  }
+}
+
+// Reset key bindings to defaults
+function resetKeyBindingsToDefault() {
+  const defaultBindings = {
+    inventory: 'z',
+    debug: 'd',
+    graph: 'g',
+    story: 's',
+    ai: 'a'
+  }
+  
+  Object.assign(KEY_BINDINGS, defaultBindings)
+  initKeyBindingUI()
+  
+  try {
+    localStorage.removeItem('narrativeGenKeyBindings')
+    setStatus('✅ キーバインドをデフォルトにリセットしました', 'success')
+    Logger.info('Key bindings reset to default')
+  } catch (error) {
+    setStatus('❌ リセットに失敗しました', 'error')
+    Logger.error('Failed to reset key bindings', { error: error.message })
+  }
+}
+
+// Load key bindings from localStorage
+function loadKeyBindingsFromStorage() {
+  try {
+    const stored = localStorage.getItem('narrativeGenKeyBindings')
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      // Validate structure
+      const requiredKeys = ['inventory', 'debug', 'graph', 'story', 'ai']
+      if (requiredKeys.every(key => typeof parsed[key] === 'string' && parsed[key].length === 1)) {
+        Object.assign(KEY_BINDINGS, parsed)
+        Logger.info('Key bindings loaded from storage', { bindings: KEY_BINDINGS })
+      } else {
+        Logger.warn('Invalid key binding data in storage, using defaults')
+      }
+    }
+  } catch (error) {
+    Logger.warn('Failed to load key bindings from storage', { error: error.message })
+  }
+}
 
 // Utility function for resolving variables in text (browser-compatible)
 function resolveVariables(text, session, model) {
@@ -29,7 +248,7 @@ function resolveVariables(text, session, model) {
 
 // Browser-compatible model loading (no fs module)
 async function loadModel(modelName) {
-  const url = new URL(`../../models/examples/${modelName}.json`, import.meta.url)
+  const url = `/models/examples/${modelName}.json`
   const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`Failed to load model: ${response.status} ${response.statusText}`)
@@ -120,6 +339,11 @@ const csvPreviewContent = document.getElementById('csvPreviewContent')
 const confirmImportBtn = document.getElementById('confirmImportBtn')
 const cancelPreviewBtn = document.getElementById('cancelPreviewBtn')
 
+// Story preview modal elements
+const storyPreviewModal = document.getElementById('storyPreviewModal')
+const storyPreviewContent = document.getElementById('storyPreviewContent')
+const closePreviewBtn = document.getElementById('closePreviewBtn')
+
 // Tab elements
 const storyTab = document.getElementById('storyTab')
 const graphTab = document.getElementById('graphTab')
@@ -150,6 +374,16 @@ const saveAiSettings = document.getElementById('saveAiSettings')
 const generateNextNodeBtn = document.getElementById('generateNextNodeBtn')
 const paraphraseCurrentBtn = document.getElementById('paraphraseCurrentBtn')
 const aiOutput = document.getElementById('aiOutput')
+
+// Key binding elements
+const keyBindingDisplay = document.getElementById('keyBindingDisplay')
+const inventoryKey = document.getElementById('inventoryKey')
+const debugKey = document.getElementById('debugKey')
+const graphKey = document.getElementById('graphKey')
+const storyKey = document.getElementById('storyKey')
+const aiKey = document.getElementById('aiKey')
+const saveKeyBindings = document.getElementById('saveKeyBindings')
+const resetKeyBindings = document.getElementById('resetKeyBindings')
 
 let session = null
 let currentModelName = null
@@ -352,8 +586,9 @@ function renderGraph() {
     .attr('stroke-width', shouldVirtualize ? 1 : 2)
 
   // Add condition labels to links (only if enabled and not virtualized)
+  let linkLabels
   if (showConditions.checked && !shouldVirtualize) {
-    const linkLabels = svg.append('g')
+    linkLabels = svg.append('g')
       .selectAll('text')
       .data(links.filter(l => l.condition))
       .enter().append('text')
@@ -427,7 +662,7 @@ function renderGraph() {
       .attr('cx', d => d.x)
       .attr('cy', d => d.y)
 
-    if (showConditions.checked && !shouldVirtualize) {
+    if (showConditions.checked && !shouldVirtualize && linkLabels) {
       linkLabels
         .attr('x', d => (d.source.x + d.target.x) / 2)
         .attr('y', d => (d.source.y + d.target.y) / 2)
@@ -475,22 +710,14 @@ function renderGraph() {
   showConditions.onchange = () => renderGraph()
 }
 
-function isConnectedToCurrent(nodeId) {
-  if (!session) return nodeId === _model.startNode
-  const currentNode = session.nodeId
-
-  // Direct connection
-  if (nodeId === currentNode) return true
-
-  // Current node connects to this node
-  const currentNodeObj = _model.nodes[currentNode]
-  if (currentNodeObj?.choices?.some(c => c.target === nodeId)) return true
-
-  // This node connects to current node
-  const nodeObj = _model.nodes[nodeId]
-  if (nodeObj?.choices?.some(c => c.target === currentNode)) return true
-
-  return false
+function getConditionText(conditions) {
+  if (!conditions || conditions.length === 0) return ''
+  return conditions.map(cond => {
+    if (cond.type === 'flag') return `flag:${cond.key}=${cond.value}`
+    if (cond.type === 'resource') return `res:${cond.key}${cond.op}${cond.value}`
+    if (cond.type === 'timeWindow') return `time:${cond.start}-${cond.end}`
+    return cond.type
+  }).join(', ')
 }
 
 function renderDebugInfo() {
@@ -984,7 +1211,7 @@ async function loadCustomModel(file) {
 }
 
 async function loadSampleModel(sampleId) {
-  const url = new URL(`../../models/examples/${sampleId}.json`, import.meta.url)
+  const url = `/models/examples/${sampleId}.json`
   const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`モデルの読み込みに失敗しました (${response.status})`)
@@ -993,7 +1220,7 @@ async function loadSampleModel(sampleId) {
 }
 
 async function loadEntitiesCatalog() {
-  const url = new URL('../../models/entities/Entities.csv', import.meta.url)
+  const url = '/models/entities/Entities.csv'
   const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`Entities.csv の読み込みに失敗しました (${response.status})`)
@@ -1780,7 +2007,13 @@ previewTopBtn.addEventListener('click', () => {
     if (node?.choices?.length === 1) current = node.choices[0].target
     else break
   }
-  alert('小説プレビュー:\n\n' + story)
+  storyPreviewContent.textContent = story
+  storyPreviewModal.classList.add('show')
+})
+
+// Close story preview modal
+closePreviewBtn.addEventListener('click', () => {
+  storyPreviewModal.classList.remove('show')
 })
 
 downloadTopBtn.addEventListener('click', () => {
@@ -1799,3 +2032,61 @@ downloadTopBtn.addEventListener('click', () => {
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
 })
+
+// Initialize key binding system
+loadKeyBindingsFromStorage()
+initKeyBindingUI()
+
+// Tab event listeners
+storyTab.addEventListener('click', () => {
+  // Remove active class from all tabs and panels
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'))
+  document.querySelectorAll('.tab-content').forEach(panel => panel.classList.remove('active'))
+  
+  // Add active class to clicked tab and panel
+  storyTab.classList.add('active')
+  storyPanel.classList.add('active')
+})
+
+graphTab.addEventListener('click', () => {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'))
+  document.querySelectorAll('.tab-content').forEach(panel => panel.classList.remove('active'))
+  
+  graphTab.classList.add('active')
+  graphPanel.classList.add('active')
+  renderGraph()
+})
+
+debugTab.addEventListener('click', () => {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'))
+  document.querySelectorAll('.tab-content').forEach(panel => panel.classList.remove('active'))
+  
+  debugTab.classList.add('active')
+  debugPanel.classList.add('active')
+  renderDebugInfo()
+})
+
+aiTab.addEventListener('click', () => {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'))
+  document.querySelectorAll('.tab-content').forEach(panel => panel.classList.remove('active'))
+  
+  aiTab.classList.add('active')
+  aiPanel.classList.add('active')
+  // Initialize key binding system
+  loadKeyBindingsFromStorage()
+  initKeyBindingUI()
+})
+
+// Key binding event listeners
+saveKeyBindings.addEventListener('click', () => {
+  saveKeyBindingsToStorage()
+})
+
+resetKeyBindings.addEventListener('click', () => {
+  if (confirm('キーバインドをデフォルト設定にリセットしますか？')) {
+    resetKeyBindingsToDefault()
+  }
+})
+
+// Initialize status
+setStatus('初期化完了 - モデルを読み込んでください', 'info')

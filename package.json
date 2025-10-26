@@ -1,18 +1,59 @@
 {
   "name": "narrativegen",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Interactive narrative engine with spreadsheet-driven story creation",
+  "author": "YuShimoji",
+  "license": "MIT",
+  "keywords": [
+    "narrative",
+    "game-engine",
+    "storytelling",
+    "spreadsheet",
+    "csv",
+    "typescript",
+    "web-tester"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YuShimoji/NarrativeGen.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YuShimoji/NarrativeGen/issues"
+  },
+  "homepage": "https://github.com/YuShimoji/NarrativeGen#readme",
   "private": true,
   "workspaces": [
     "packages/engine-ts",
     "apps/*"
   ],
   "scripts": {
+    "build": "npm run build:all",
+    "build:all": "npm run build:engine && npm run build:tester",
     "build:engine": "npm run build -w @narrativegen/engine-ts",
     "build:tester": "npm run build -w @narrativegen/web-tester",
-    "build:all": "npm run build:engine && npm run build:tester",
+    "dev": "npm run dev:tester",
     "dev:engine": "npm run build -w @narrativegen/engine-ts -- --watch",
     "dev:tester": "npm run dev -w @narrativegen/web-tester",
+    "dev:all": "run-p dev:engine dev:tester",
     "clean": "pwsh -Command \"Get-ChildItem -Path . -Include node_modules,dist -Recurse -Directory | Remove-Item -Recurse -Force\"",
-    "fresh-install": "npm run clean && npm install && npm run build:all"
+    "fresh-install": "npm run clean && npm install && npm run build:all",
+    "lint": "npm run lint:engine && npm run lint:tester",
+    "lint:engine": "npm run lint -w @narrativegen/engine-ts",
+    "lint:tester": "npm run lint -w @narrativegen/web-tester",
+    "lint:fix": "npm run lint:engine -- --fix && npm run lint:tester -- --fix",
+    "test": "npm run test:engine",
+    "test:engine": "npm run test -w @narrativegen/engine-ts",
+    "test:watch": "npm run test -w @narrativegen/engine-ts -- --watch",
+    "validate": "npm run validate:engine",
+    "validate:engine": "npm run validate:models -w @narrativegen/engine-ts",
+    "format": "npm run format:engine && npm run format:tester",
+    "format:engine": "npm run format -w @narrativegen/engine-ts",
+    "format:tester": "npm run format -w @narrativegen/web-tester",
+    "check": "npm run lint && npm run test && npm run validate && npm run build",
+    "preview": "npm run build:all && npm run preview:tester",
+    "preview:tester": "npm run preview -w @narrativegen/web-tester"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
   }
 }
