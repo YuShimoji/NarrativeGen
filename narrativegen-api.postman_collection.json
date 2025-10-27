@@ -1,0 +1,519 @@
+{
+  "info": {
+    "name": "NarrativeGen API Collection",
+    "description": "Complete API test suite for NarrativeGen interactive narrative engine",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "narrativegen"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "GET Health Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Check if the API is running and healthy"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/health",
+                  "host": ["{{base_url}}"],
+                  "path": ["health"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"status\": \"healthy\",\n    \"timestamp\": \"2025-01-26T10:27:00.000Z\",\n    \"version\": \"1.0.0\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Model Management",
+      "item": [
+        {
+          "name": "GET List Models",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/models?limit=10&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["models"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Get a list of all available narrative models"
+          }
+        },
+        {
+          "name": "POST Create Model",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"test-model-001\",\n  \"name\": \"Test Narrative Model\",\n  \"description\": \"A simple test model for API validation\",\n  \"version\": \"1.0.0\",\n  \"startNode\": \"node1\",\n  \"nodes\": {\n    \"node1\": {\n      \"id\": \"node1\",\n      \"text\": \"You find yourself at a crossroads. Which path do you choose?\",\n      \"choices\": [\n        {\n          \"id\": \"choice1\",\n          \"text\": \"Take the left path\",\n          \"target\": \"node2\"\n        },\n        {\n          \"id\": \"choice2\",\n          \"text\": \"Take the right path\",\n          \"target\": \"node3\"\n        }\n      ]\n    },\n    \"node2\": {\n      \"id\": \"node2\",\n      \"text\": \"You find a hidden treasure! The end.\",\n      \"type\": \"ending\"\n    },\n    \"node3\": {\n      \"id\": \"node3\",\n      \"text\": \"You encounter a dragon and must flee. The end.\",\n      \"type\": \"ending\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/models",
+              "host": ["{{base_url}}"],
+              "path": ["models"]
+            },
+            "description": "Create a new narrative model"
+          }
+        },
+        {
+          "name": "GET Get Model by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/models/{{model_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["models", "{{model_id}}"]
+            },
+            "description": "Get details of a specific model"
+          }
+        },
+        {
+          "name": "PUT Update Model",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Test Model\",\n  \"description\": \"Updated description for the test model\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/models/{{model_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["models", "{{model_id}}"]
+            },
+            "description": "Update an existing model"
+          }
+        },
+        {
+          "name": "POST Import Model",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "name",
+                  "value": "Imported Model",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/models/import",
+              "host": ["{{base_url}}"],
+              "path": ["models", "import"]
+            },
+            "description": "Import a model from CSV or JSON file"
+          }
+        },
+        {
+          "name": "GET Export Model",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/models/{{model_id}}/export?format=json",
+              "host": ["{{base_url}}"],
+              "path": ["models", "{{model_id}}", "export"],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "json"
+                }
+              ]
+            },
+            "description": "Export a model in JSON or CSV format"
+          }
+        },
+        {
+          "name": "DELETE Delete Model",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/models/{{model_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["models", "{{model_id}}"]
+            },
+            "description": "Delete a model"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Session Management",
+      "item": [
+        {
+          "name": "POST Create Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"modelId\": \"{{model_id}}\",\n  \"initialFlags\": {\n    \"visited_forest\": false\n  },\n  \"initialResources\": {\n    \"health\": 100,\n    \"gold\": 50\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/sessions",
+              "host": ["{{base_url}}"],
+              "path": ["sessions"]
+            },
+            "description": "Start a new narrative session"
+          }
+        },
+        {
+          "name": "GET Get Session",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/sessions/{{session_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["sessions", "{{session_id}}"]
+            },
+            "description": "Get current session state"
+          }
+        },
+        {
+          "name": "POST Apply Choice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"choiceId\": \"choice1\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/sessions/{{session_id}}/choice",
+              "host": ["{{base_url}}"],
+              "path": ["sessions", "{{session_id}}", "choice"]
+            },
+            "description": "Apply a choice to advance the narrative"
+          }
+        },
+        {
+          "name": "GET Session History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/sessions/{{session_id}}/history?limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["sessions", "{{session_id}}", "history"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Get the complete history of choices in a session"
+          }
+        },
+        {
+          "name": "DELETE Delete Session",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/sessions/{{session_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["sessions", "{{session_id}}"]
+            },
+            "description": "End and delete a session"
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Features",
+      "item": [
+        {
+          "name": "GET List AI Providers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ai/providers",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "providers"]
+            },
+            "description": "Get list of available AI providers"
+          }
+        },
+        {
+          "name": "POST Generate Content",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provider\": \"openai\",\n  \"context\": {\n    \"previousNodes\": [\n      \"You wake up in a mysterious forest.\",\n      \"You see a path leading north.\"\n    ],\n    \"currentNodeText\": \"You encounter a fork in the road.\",\n    \"choiceText\": \"Go left towards the mountains\"\n  },\n  \"options\": {\n    \"maxTokens\": 150,\n    \"temperature\": 0.7\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ai/generate",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "generate"]
+            },
+            "description": "Generate narrative content using AI"
+          }
+        },
+        {
+          "name": "POST Paraphrase Text",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"You find a mysterious glowing orb on the ground.\",\n  \"style\": \"formal\",\n  \"count\": 3\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/ai/paraphrase",
+              "host": ["{{base_url}}"],
+              "path": ["ai", "paraphrase"]
+            },
+            "description": "Generate paraphrased versions of text"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics & Debug",
+      "item": [
+        {
+          "name": "GET Session Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/analytics/sessions?startDate=2025-01-01&endDate=2025-01-31",
+              "host": ["{{base_url}}"],
+              "path": ["analytics", "sessions"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2025-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2025-01-31"
+                }
+              ]
+            },
+            "description": "Get session analytics data"
+          }
+        },
+        {
+          "name": "GET Debug Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/debug/logs?level=error&limit=100",
+              "host": ["{{base_url}}"],
+              "path": ["debug", "logs"],
+              "query": [
+                {
+                  "key": "level",
+                  "value": "error"
+                },
+                {
+                  "key": "limit",
+                  "value": "100"
+                }
+              ]
+            },
+            "description": "Get debug logs for troubleshooting"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001/api",
+      "type": "string"
+    },
+    {
+      "key": "bearer_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "model_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "session_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-update model_id and session_id from responses",
+          "if (pm.response.code === 201 && pm.request.url.path.includes('models')) {",
+          "    const response = pm.response.json();",
+          "    if (response.id) {",
+          "        pm.collectionVariables.set('model_id', response.id);",
+          "    }",
+          "}",
+          "",
+          "if (pm.response.code === 201 && pm.request.url.path.includes('sessions')) {",
+          "    const response = pm.response.json();",
+          "    if (response.id) {",
+          "        pm.collectionVariables.set('session_id', response.id);",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ]
+}
