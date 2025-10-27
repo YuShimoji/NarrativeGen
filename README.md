@@ -357,9 +357,32 @@ npm run check
 # - Building
 ```
 
-## API Endpoints
+## API Specification
 
-Future API endpoints are defined in [`API_ENDPOINTS.md`](API_ENDPOINTS.md) for backend integration planning.
+NarrativeGen provides a comprehensive REST API for backend integration. See the complete OpenAPI 3.0 specification:
+
+### API Documentation
+- **Interactive API Docs**: `http://localhost:5173/api-docs.html` (when dev server is running)
+- **Static API Docs**: [`docs/api/index.html`](docs/api/index.html) (generated)
+- **OpenAPI Specification**: [`openapi-spec.json`](openapi-spec.json)
+
+### API Testing
+- **Postman Collection**: [`narrativegen-api.postman_collection.json`](narrativegen-api.postman_collection.json)
+- **Development Workflow**: [`API_DEVELOPMENT_WORKFLOW.md`](API_DEVELOPMENT_WORKFLOW.md)
+
+### Generate API Documentation
+```bash
+# Validate OpenAPI specification
+npm run validate:spec
+
+# Generate static API documentation
+npm run docs:api
+
+# Serve interactive documentation
+npm run docs:api:serve
+```
+
+## Development Workflow
 
 ## Configuration
 
