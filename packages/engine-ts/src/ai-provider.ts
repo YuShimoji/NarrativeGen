@@ -210,13 +210,143 @@ ${text}
 }
 
 class OllamaProvider implements AIProvider {
-  constructor(private _config?: AIConfig['ollama']) {}
+  constructor(private config?: AIConfig['ollama']) {}
 
-  async generateNextNode(_context: StoryContext): Promise<string> {
-    throw new Error('Ollama integration not implemented yet')
+  async generateNextNode(context: StoryContext): Promise<string> {
+    const prompt = this.buildGenerationPrompt(context)
+    const baseUrl = this.config?.baseUrl || 'http://localhost:11434'
+    const model = this.config?.model || 'llama2'
+
+    try {
+      const response = await fetch(`${baseUrl}/api/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: model,
+          prompt: prompt,
+          stream: false,
+          options: {
+            temperature: 0.7,
+            num_predict: 200,
+          }
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Ollama API error: ${response.status}`)
+      }
+
+      const data = await response.json() as { response: string }
+      return data.response?.trim() || '次のシーンへ進みます。'
+    } catch (error) {
+      console.error('Ollama generation error:', error)
+      throw new Error(`Ollamaとの通信に失敗しました: ${error.message}`)
+    }
   }
 
-  async paraphrase(_text: string, _options?: ParaphraseOptions): Promise<string[]> {
-    throw new Error('Ollama integration not implemented yet')
+  async paraphrase(text: string, options?: ParaphraseOptions): Promise<string[]> {
+    const variantCount = options?.variantCount ?? 3
+    const baseUrl = this.config?.baseUrl || 'http://localhost:11434'
+    const model = this.config?.model || 'llama2'
+
+    const prompt = this.buildParaphrasePrompt(text, options)
+
+    try {
+      const variants: string[] = []
+
+      // Generate multiple variants by calling Ollama multiple times with slight variations
+      for (let i = 0; i < variantCount; i++) {
+        const response = await fetch(`${baseUrl}/api/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: model,
+            prompt: prompt + `\n\nバリエーション ${i + 1}:`,
+            stream: false,
+            options: {
+              temperature: 0.8,
+              num_predict: 100,
+            }
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error(`Ollama API error: ${response.status}`)
+        }
+
+        const data = await response.json() as { response: string }
+        const variant = data.response?.trim() || `${text} (バリエーション ${i + 1})`
+        variants.push(variant)
+      }
+
+      return variants
+    } catch (error) {
+      console.error('Ollama paraphrase error:', error)
+      // Fallback to simple variants
+      return Array.from({ length: variantCount }, (_, i) => `${text} (${i + 1})`)
+    }
+  }
+
+  private buildGenerationPrompt(context: StoryContext): string {
+    const previousText = context.previousNodes.map(n => n.text).join('\n')
+    const currentText = context.currentNodeText
+    const choiceText = context.choiceText || '続き'
+
+    return `あなたはインタラクティブな物語の執筆者です。以下の文脈を基に、次のノードのテキストを生成してください。
+
+これまでの物語:
+${previousText}
+
+現在の状況:
+${currentText}
+
+プレイヤーの選択:
+${choiceText}
+
+指示:
+- 日本語で、自然な物語調で書いてください
+- 長さは2-4文程度に収めてください
+- 選択肢を導くような終わり方にしてください
+- 物語の雰囲気を保ちつつ、新しい展開を加えてください
+
+次のノードのテキスト:`
+  }
+
+  private buildParaphrasePrompt(text: string, options?: ParaphraseOptions): string {
+    const style = options?.style || 'plain'
+    const tone = options?.tone || 'neutral'
+    const emotion = options?.emotion || 'neutral'
+
+    let styleInstruction = ''
+    if (style === 'desu-masu') styleInstruction = 'です・ます調で'
+    else if (style === 'da-dearu') styleInstruction = 'だ・である調で'
+    else styleInstruction = '自然な形で'
+
+    let toneInstruction = ''
+    if (tone === 'formal') toneInstruction = '改まった'
+    else if (tone === 'casual') toneInstruction = 'カジュアルな'
+    else toneInstruction = '標準的な'
+
+    let emotionInstruction = ''
+    if (emotion === 'angry') emotionInstruction = '怒りを帯びた'
+    else if (emotion === 'happy') emotionInstruction = '喜びを込めた'
+    else if (emotion === 'sad') emotionInstruction = '悲しみを帯びた'
+    else if (emotion === 'anxious') emotionInstruction = '不安を帯びた'
+    else emotionInstruction = 'ニュートラルな'
+
+    return `以下の日本語テキストを言い換えてください。
+
+元のテキスト:
+${text}
+
+指示:
+- ${styleInstruction}言い換えを作成してください
+- ${toneInstruction}トーンを保ってください
+- ${emotionInstruction}感情表現を加えてください
+- 意味は変えずに表現だけを変化させてください`
   }
 }

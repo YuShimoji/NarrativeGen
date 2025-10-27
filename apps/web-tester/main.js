@@ -1434,15 +1434,137 @@ guiEditBtn.addEventListener('click', () => {
   setControlsEnabled(false)
 })
 
-// AI settings event handlers
-aiProvider.addEventListener('change', () => {
-  if (aiProvider.value === 'openai') {
-    openaiSettings.style.display = 'block'
-  } else {
-    openaiSettings.style.display = 'none'
+function initAiProvider() {
+  if (!aiProviderInstance) {
+    aiProviderInstance = createAIProvider(aiConfig)
   }
-  aiProviderInstance = null // Reset provider when changed
-})
+}
+
+async function generateNextNode() {
+  if (!aiProviderInstance) {
+    initAiProvider()
+  }
+
+  if (!session || !_model) {
+    setStatus('まずモデルを読み込んでセッションを開始してください', 'warn')
+    return
+  }
+
+  const currentNode = _model.nodes[session.nodeId]
+  if (!currentNode) {
+    setStatus('現在のノードが見つかりません', 'error')
+    return
+  }
+
+  // Disable button during generation
+  generateNextNodeBtn.disabled = true
+  generateNextNodeBtn.textContent = '生成中...'
+
+  try {
+    setStatus('AIで次のノードを生成中...', 'info')
+
+    // Prepare context for AI generation
+    const context = {
+      previousNodes: storyLog.slice(-3).map(text => ({ id: 'previous', text })), // Last 3 story entries
+      currentNodeText: currentNode.text,
+      choiceText: '次のシーンへ進む' // Default choice text
+    }
+
+    const generatedText = await aiProviderInstance.generateNextNode(context)
+
+    // Create new node with AI-generated content
+    const newNodeId = `ai_generated_${Date.now()}`
+    const newChoiceId = `c_ai_${Date.now()}`
+
+    // Add AI-generated node to model
+    _model.nodes[newNodeId] = {
+      id: newNodeId,
+      text: generatedText,
+      choices: [
+        {
+          id: newChoiceId,
+          text: '続ける',
+          target: newNodeId // Loop back to self for now (can be edited later)
+        }
+      ]
+    }
+
+    // Update current node's choice to point to new node
+    const currentChoices = currentNode.choices || []
+    if (currentChoices.length > 0) {
+      // Update the first choice to point to AI-generated node
+      currentChoices[0].target = newNodeId
+    } else {
+      // Add new choice if none exist
+      currentNode.choices = [{
+        id: newChoiceId,
+        text: 'AI生成シーンへ',
+        target: newNodeId
+      }]
+    }
+
+    setStatus(`AIで新しいノードを生成しました: ${newNodeId}`, 'success')
+    aiOutput.textContent = `生成されたテキスト:\n${generatedText}`
+
+    // Optionally update graph if visible
+    if (graphPanel.classList.contains('active')) {
+      renderGraph()
+    }
+
+  } catch (error) {
+    console.error('AI generation error:', error)
+    setStatus(`AI生成に失敗しました: ${error.message}`, 'error')
+    aiOutput.textContent = `エラー: ${error.message}`
+  } finally {
+    generateNextNodeBtn.disabled = false
+    generateNextNodeBtn.textContent = '次のノードを生成'
+  }
+}
+
+async function paraphraseCurrentText() {
+  if (!aiProviderInstance) {
+    initAiProvider()
+  }
+
+  if (!session || !_model) {
+    setStatus('まずモデルを読み込んでセッションを開始してください', 'warn')
+    return
+  }
+
+  const currentNode = _model.nodes[session.nodeId]
+  if (!currentNode || !currentNode.text) {
+    setStatus('現在のノードにテキストがありません', 'warn')
+    return
+  }
+
+  // Disable button during paraphrasing
+  paraphraseCurrentBtn.disabled = true
+  paraphraseCurrentBtn.textContent = '言い換え中...'
+
+  try {
+    setStatus('AIでテキストを言い換え中...', 'info')
+
+    const paraphrasedVersions = await aiProviderInstance.paraphrase(currentNode.text, {
+      variantCount: 3,
+      style: 'plain',
+      tone: 'neutral'
+    })
+
+    // Display paraphrased versions
+    const paraphrasedText = paraphrasedVersions.map((text, i) => `${i + 1}. ${text}`).join('\n\n')
+    aiOutput.textContent = `言い換えバリエーション:\n\n${paraphrasedText}`
+
+    setStatus('テキストの言い換えが完了しました', 'success')
+
+  } catch (error) {
+    console.error('AI paraphrase error:', error)
+    setStatus(`言い換えに失敗しました: ${error.message}`, 'error')
+    aiOutput.textContent = `エラー: ${error.message}`
+  } finally {
+    paraphraseCurrentBtn.disabled = false
+    paraphraseCurrentBtn.textContent = '現在のテキストを言い換え'
+  }
+}
 
 saveAiSettings.addEventListener('click', () => {
   aiConfig.provider = aiProvider.value
