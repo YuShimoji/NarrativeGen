@@ -217,7 +217,14 @@ npm run build
   - Inline story preview modal (replacing popup alerts)
   - Enhanced tab navigation with visual feedback
 
-### AI Features
+### AI Features (支援機能)
+
+**重要**: AI機能は物語作成の**支援ツール**であり、本来の機能ではありません。本プロジェクトのコアは**スプレッドシート駆動の手動物語作成**です。
+
+AIは以下の場面で支援します:
+- 執筆中の表現の改善案提示
+- 選択肢テキストの言い換え支援
+- 創造的ブロック時のアイデア出し
 
 See `docs/ai-features.md` for detailed design and `test-ai-features.md` for testing procedures. Current status:
 
@@ -226,7 +233,7 @@ See `docs/ai-features.md` for detailed design and `test-ai-features.md` for test
 - ⏳ **Phase 3**: Local LLM integration (Ollama, llama.cpp)
 - ⏳ **Phase 4**: Batch processing & history management
 
-#### Using AI Features
+#### Using AI Features (任意利用)
 
 1. **Open AI Tab**: Click the "AI" tab in Web Tester
 2. **Select Provider**:
@@ -317,12 +324,10 @@ The NUnit smoke test `EngineSmokeTests` loads `models/examples/linear.json`, pla
 
 The Web Tester is now fully operational with:
 - Modern, responsive interface
-- Complete model loading and session management
-- Interactive story playback
-- Visual graph representation
-- AI-powered content generation
-- CSV import/export functionality
-- Comprehensive error handling and logging
+- **GUI editor**: Visual node/choice editing with preview functionality
+- **CSV import/export**: Full spreadsheet integration for story authoring
+- **Graph visualization**: Interactive node relationship display
+- **Error handling**: Comprehensive validation and user feedback
 
 **Start developing narratives immediately at `http://localhost:5173`!** 🎉
 
