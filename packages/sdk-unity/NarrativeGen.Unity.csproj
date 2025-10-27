@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Runtime\**\*.cs" Exclude="Runtime\MinimalNarrativeController.cs" />
+    <Compile Include="Editor\**\*.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
