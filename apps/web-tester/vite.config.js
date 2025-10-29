@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url'
 const rootDir = fileURLToPath(new URL('.', import.meta.url))
 
 export default defineConfig({
+  root: rootDir,
   resolve: {
     alias: {
       '@narrativegen/engine-ts': path.resolve(rootDir, '../../packages/engine-ts'),

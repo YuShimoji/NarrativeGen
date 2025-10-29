@@ -1,6 +1,5 @@
 // Error handling and logging
-import { startSession, getAvailableChoices, applyChoice, chooseParaphrase, createAIProvider } from '@narrativegen/engine-ts/dist/browser.js'
-import * as d3 from 'd3'
+import { startSession, getAvailableChoices, applyChoice, chooseParaphrase, createAIProvider } from '@narrativegen/engine-ts/browser'
 
 // Utility function for resolving variables in text (browser-compatible)
 function resolveVariables(text, session, model) {
@@ -122,17 +121,42 @@ const cancelPreviewBtn = document.getElementById('cancelPreviewBtn')
 
 // Tab elements
 const storyTab = document.getElementById('storyTab')
-const graphTab = document.getElementById('graphTab')
 const debugTab = document.getElementById('debugTab')
+const graphTab = document.getElementById('graphTab')
+const aiTab = document.getElementById('aiTab')
 const storyPanel = document.getElementById('storyPanel')
-const graphPanel = document.getElementById('graphPanel')
 const debugPanel = document.getElementById('debugPanel')
+const graphPanel = document.getElementById('graphPanel')
+const aiPanel = document.getElementById('aiPanel')
+
+// Additional tab elements
+const nodeListTab = document.getElementById('nodeListTab')
+const nodeListPanel = document.getElementById('nodeListPanel')
+
+// Node list elements
+const nodeSearch = document.getElementById('nodeSearch')
+const refreshNodeList = document.getElementById('refreshNodeList')
+const nodeOverview = document.getElementById('nodeOverview')
+
+// Split view elements (story panel inline split view)
+const toggleSplitViewBtn = document.getElementById('toggleSplitViewBtn')
+const storyMainContainer = document.getElementById('storyMainContainer')
+const storyResizer = document.getElementById('storyResizer')
+const storyJsonPanel = document.getElementById('storyJsonPanel')
+const storyJsonEditor = document.getElementById('storyJsonEditor')
+const applyStoryJsonBtn = document.getElementById('applyStoryJsonBtn')
+
+// Split view state
+let splitModeActive = false
+let storyResizerInitialized = false
 
 // Graph elements
 const graphSvg = document.getElementById('graphSvg')
-const fitGraphBtn = document.getElementById('fitGraphBtn')
-const resetGraphBtn = document.getElementById('resetGraphBtn')
-const showConditions = document.getElementById('showConditions')
+const zoomInBtn = document.getElementById('zoomInBtn')
+const zoomOutBtn = document.getElementById('zoomOutBtn')
+const resetViewBtn = document.getElementById('resetViewBtn')
+
+let highlightedNodes = new Set()
 
 // Debug elements
 const flagsDisplay = document.getElementById('flagsDisplay')
@@ -140,8 +164,6 @@ const resourcesDisplay = document.getElementById('resourcesDisplay')
 const reachableNodes = document.getElementById('reachableNodes')
 
 // AI elements
-const aiTab = document.getElementById('aiTab')
-const aiPanel = document.getElementById('aiPanel')
 const aiProvider = document.getElementById('aiProvider')
 const openaiSettings = document.getElementById('openaiSettings')
 const openaiApiKey = document.getElementById('openaiApiKey')
@@ -190,11 +212,9 @@ function renderState() {
 
 function setStatus(message, type = 'info') {
   statusText.textContent = message
-  statusText.dataset.type = type
+  statusText.className = `status-text ${type}`
 }
 
-<<<<<<< HEAD
-=======
 function showErrors(errors) {
   if (!errors || errors.length === 0) {
     hideErrors()
@@ -254,245 +274,6 @@ function showCsvPreview(file) {
 
 function hideCsvPreview() {
   csvPreviewModal.classList.remove('show')
-}
-
-function renderGraph() {
-  if (!_model) {
-    d3.select(graphSvg).selectAll('*').remove()
-    return
-  }
-
-  const width = graphSvg.clientWidth
-  const height = graphSvg.clientHeight
-
-  // Performance optimization: Limit nodes for large graphs
-  const maxNodes = 100
-  const allNodes = Object.keys(_model.nodes)
-  const shouldVirtualize = allNodes.length > maxNodes
-
-  let nodesToShow
-  if (shouldVirtualize) {
-    // Show current node and its direct connections, plus some random nodes
-    const currentNode = session?.nodeId || _model.startNode
-    const connectedNodes = new Set([currentNode])
-
-    // Add directly connected nodes
-    const currentNodeObj = _model.nodes[currentNode]
-    if (currentNodeObj?.choices) {
-      currentNodeObj.choices.forEach(choice => {
-        if (choice.target) connectedNodes.add(choice.target)
-      })
-    }
-
-    // Add nodes that connect to current node
-    Object.entries(_model.nodes).forEach(([id, node]) => {
-      if (node.choices?.some(c => c.target === currentNode)) {
-        connectedNodes.add(id)
-      }
-    })
-
-    // Fill remaining slots with random nodes
-    const remaining = Array.from(allNodes.filter(id => !connectedNodes.has(id)))
-    const randomNodes = remaining
-      .sort(() => Math.random() - 0.5)
-      .slice(0, maxNodes - connectedNodes.size)
-
-    nodesToShow = Array.from(connectedNodes).concat(randomNodes)
-  } else {
-    nodesToShow = allNodes
-  }
-
-  // Clear previous graph
-  d3.select(graphSvg).selectAll('*').remove()
-
-  const svg = d3.select(graphSvg)
-    .attr('width', width)
-    .attr('height', height)
-
-  // Create nodes and links data (only for visible nodes)
-  const nodes = []
-  const links = []
-
-  nodesToShow.forEach(id => {
-    const node = _model.nodes[id]
-    if (!node) return
-
-    nodes.push({
-      id: id,
-      text: node.text?.substring(0, 50) + (node.text?.length > 50 ? '...' : ''),
-      x: Math.random() * (width - 200) + 100,
-      y: Math.random() * (height - 200) + 100,
-      isVirtualized: shouldVirtualize && !isConnectedToCurrent(id)
-    })
-
-    node.choices?.forEach(choice => {
-      if (choice.target && nodesToShow.includes(choice.target)) {
-        links.push({
-          source: id,
-          target: choice.target,
-          condition: showConditions.checked ? getConditionText(choice.conditions) : null
-        })
-      }
-    })
-  })
-
-  // Performance optimization: Use efficient force simulation settings
-  const simulation = d3.forceSimulation(nodes)
-    .force('link', d3.forceLink(links).id(d => d.id).distance(shouldVirtualize ? 100 : 150).strength(0.5))
-    .force('charge', d3.forceManyBody().strength(shouldVirtualize ? -200 : -300))
-    .force('center', d3.forceCenter(width / 2, height / 2))
-    .force('collision', d3.forceCollide().radius(shouldVirtualize ? 40 : 60))
-    .alphaDecay(0.02) // Faster convergence for better performance
-
-  // Create links with optimized rendering
-  const link = svg.append('g')
-    .selectAll('line')
-    .data(links)
-    .enter().append('line')
-    .attr('stroke', '#999')
-    .attr('stroke-opacity', 0.6)
-    .attr('stroke-width', shouldVirtualize ? 1 : 2)
-
-  // Add condition labels to links (only if enabled and not virtualized)
-  if (showConditions.checked && !shouldVirtualize) {
-    const linkLabels = svg.append('g')
-      .selectAll('text')
-      .data(links.filter(l => l.condition))
-      .enter().append('text')
-      .attr('font-size', '10px')
-      .attr('fill', '#666')
-      .attr('text-anchor', 'middle')
-      .text(d => d.condition)
-  }
-
-  // Create nodes with performance optimizations
-  const node = svg.append('g')
-    .selectAll('circle')
-    .data(nodes)
-    .enter().append('circle')
-    .attr('r', d => d.isVirtualized ? 20 : 30)
-    .attr('fill', d => {
-      if (d.id === _model.startNode) return '#4ade80'
-      if (d.isVirtualized) return '#94a3b8'
-      return '#60a5fa'
-    })
-    .attr('stroke', d => d.id === (session?.nodeId || _model.startNode) ? '#ef4444' : '#fff')
-    .attr('stroke-width', d => d.id === (session?.nodeId || _model.startNode) ? 3 : 2)
-    .call(d3.drag()
-      .on('start', (event, d) => {
-        if (!event.active) simulation.alphaTarget(0.3).restart()
-        d.fx = d.x
-        d.fy = d.y
-      })
-      .on('drag', (event, d) => {
-        d.fx = event.x
-        d.fy = event.y
-      })
-      .on('end', (event, d) => {
-        if (!event.active) simulation.alphaTarget(0)
-        d.fx = null
-        d.fy = null
-      }))
-
-  // Add node labels with conditional rendering
-  if (!shouldVirtualize) {
-    const labels = svg.append('g')
-      .selectAll('text')
-      .data(nodes)
-      .enter().append('text')
-      .attr('text-anchor', 'middle')
-      .attr('dy', '0.35em')
-      .attr('font-size', '10px')
-      .attr('fill', '#333')
-      .text(d => d.id)
-  }
-
-  // Update positions on simulation tick with throttled updates
-  let tickCount = 0
-  simulation.on('tick', () => {
-    tickCount++
-    if (tickCount % 3 !== 0) return // Update every 3 ticks for performance
-
-    link
-      .attr('x1', d => d.source.x)
-      .attr('y1', d => d.source.y)
-      .attr('x2', d => d.target.x)
-      .attr('y2', d => d.target.y)
-
-    if (!shouldVirtualize) {
-      labels
-        .attr('x', d => d.x)
-        .attr('y', d => d.y)
-    }
-
-    node
-      .attr('cx', d => d.x)
-      .attr('cy', d => d.y)
-
-    if (showConditions.checked && !shouldVirtualize) {
-      linkLabels
-        .attr('x', d => (d.source.x + d.target.x) / 2)
-        .attr('y', d => (d.source.y + d.target.y) / 2)
-    }
-  })
-
-  // Add virtualization notice
-  if (shouldVirtualize) {
-    svg.append('text')
-      .attr('x', width - 10)
-      .attr('y', 20)
-      .attr('text-anchor', 'end')
-      .attr('font-size', '12px')
-      .attr('fill', '#666')
-      .text(`表示中: ${nodesToShow.length}/${allNodes.length} ノード`)
-  }
-
-  // Graph controls
-  fitGraphBtn.onclick = () => {
-    const bounds = svg.node().getBBox()
-    const fullWidth = bounds.width
-    const fullHeight = bounds.height
-    const midX = bounds.x + fullWidth / 2
-    const midY = bounds.y + fullHeight / 2
-
-    const scale = 0.8 / Math.max(fullWidth / width, fullHeight / height)
-    const translate = [width / 2 - scale * midX, height / 2 - scale * midY]
-
-    svg.transition().duration(750).call(
-      d3.zoom().transform,
-      d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
-    )
-  }
-
-  resetGraphBtn.onclick = () => {
-    nodes.forEach(n => {
-      n.x = Math.random() * (width - 200) + 100
-      n.y = Math.random() * (height - 200) + 100
-      n.fx = null
-      n.fy = null
-    })
-    simulation.restart()
-  }
-
-  showConditions.onchange = () => renderGraph()
-}
-
-function isConnectedToCurrent(nodeId) {
-  if (!session) return nodeId === _model.startNode
-  const currentNode = session.nodeId
-
-  // Direct connection
-  if (nodeId === currentNode) return true
-
-  // Current node connects to this node
-  const currentNodeObj = _model.nodes[currentNode]
-  if (currentNodeObj?.choices?.some(c => c.target === nodeId)) return true
-
-  // This node connects to current node
-  const nodeObj = _model.nodes[nodeId]
-  if (nodeObj?.choices?.some(c => c.target === currentNode)) return true
-
-  return false
 }
 
 function renderDebugInfo() {
@@ -568,6 +349,104 @@ function renderDebugInfo() {
     reachableNodes.appendChild(div)
   })
 }
+
+let graphScale = 1
+let graphTranslateX = 0
+let graphTranslateY = 0
+
+function renderGraph() {
+  if (!graphSvg || !_model) {
+    graphSvg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#666">モデルを読み込んでください</text>'
+    return
+  }
+
+  const svg = graphSvg
+  svg.innerHTML = ''
+
+  const nodes = Object.values(_model.nodes)
+  const nodeMap = new Map()
+  nodes.forEach((node, i) => {
+    nodeMap.set(node.id, { ...node, x: 100 + (i % 5) * 150, y: 100 + Math.floor(i / 5) * 150 })
+  })
+
+  // Draw connections
+  nodes.forEach(node => {
+    const sourcePos = nodeMap.get(node.id)
+    node.choices?.forEach(choice => {
+      const targetPos = nodeMap.get(choice.target)
+      if (targetPos) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+        line.setAttribute('x1', sourcePos.x)
+        line.setAttribute('y1', sourcePos.y)
+        line.setAttribute('x2', targetPos.x)
+        line.setAttribute('y2', targetPos.y)
+        line.setAttribute('stroke', '#999')
+        line.setAttribute('stroke-width', '2')
+        svg.appendChild(line)
+
+        // Arrow head
+        const dx = targetPos.x - sourcePos.x
+        const dy = targetPos.y - sourcePos.y
+        const angle = Math.atan2(dy, dx)
+        const arrowLength = 10
+        const arrowX = targetPos.x - arrowLength * Math.cos(angle)
+        const arrowY = targetPos.y - arrowLength * Math.sin(angle)
+
+        const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+        arrow.setAttribute('points', `${targetPos.x},${targetPos.y} ${arrowX - 5 * Math.sin(angle)},${arrowY + 5 * Math.cos(angle)} ${arrowX + 5 * Math.sin(angle)},${arrowY - 5 * Math.cos(angle)}`)
+        arrow.setAttribute('fill', '#999')
+        svg.appendChild(arrow)
+      }
+    })
+  })
+
+  // Draw nodes
+  nodes.forEach(node => {
+    const pos = nodeMap.get(node.id)
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+    const isCurrent = node.id === session?.nodeId
+    const isHighlighted = highlightedNodes.has(node.id)
+    
+    circle.setAttribute('cx', pos.x)
+    circle.setAttribute('cy', pos.y)
+    circle.setAttribute('r', isHighlighted ? '35' : '30')
+    circle.setAttribute('fill', isCurrent ? '#4CAF50' : isHighlighted ? '#FF9800' : '#2196F3')
+    circle.setAttribute('stroke', isHighlighted ? '#FF9800' : '#fff')
+    circle.setAttribute('stroke-width', isHighlighted ? '4' : '2')
+    svg.appendChild(circle)
+
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+    text.setAttribute('x', pos.x)
+    text.setAttribute('y', pos.y + 5)
+    text.setAttribute('text-anchor', 'middle')
+    text.setAttribute('fill', isCurrent ? '#4CAF50' : isHighlighted ? '#FF9800' : '#fff')
+    text.setAttribute('font-size', '12')
+    text.setAttribute('font-weight', isHighlighted ? 'bold' : 'normal')
+    text.textContent = node.id
+    svg.appendChild(text)
+  })
+
+  // Apply transform
+  svg.style.transform = `translate(${graphTranslateX}px, ${graphTranslateY}px) scale(${graphScale})`
+}
+
+// Graph controls
+zoomInBtn?.addEventListener('click', () => {
+  graphScale *= 1.2
+  renderGraph()
+})
+
+zoomOutBtn?.addEventListener('click', () => {
+  graphScale /= 1.2
+  renderGraph()
+})
+
+resetViewBtn?.addEventListener('click', () => {
+  graphScale = 1
+  graphTranslateX = 0
+  graphTranslateY = 0
+  renderGraph()
+})
 
 // CSVファイルのインポート処理
 async function importCsvFile(file) {
@@ -768,7 +647,6 @@ async function importCsvFile(file) {
   }
 }
 
->>>>>>> master
 function setControlsEnabled(enabled) {
   startBtn.disabled = !enabled
   modelSelect.disabled = !enabled
@@ -1118,8 +996,6 @@ dropZone.addEventListener('drop', async (e) => {
       loadEntitiesCatalog(),
     ])
 
-<<<<<<< HEAD
-=======
     // Validate model
     const validationErrors = validateModel(model.nodes)
     if (validationErrors.length > 0) {
@@ -1129,7 +1005,6 @@ dropZone.addEventListener('drop', async (e) => {
     }
 
     hideErrors()
->>>>>>> master
     _model = model
     session = startSession(_model)
     currentModelName = file.name
@@ -1137,10 +1012,7 @@ dropZone.addEventListener('drop', async (e) => {
     initStory()
   } catch (err) {
     console.error(err)
-<<<<<<< HEAD
-=======
     showErrors([err?.message ?? err])
->>>>>>> master
     session = null
     currentModelName = null
     setStatus(`ファイルの初期化に失敗しました: ${err?.message ?? err}`, 'warn')
@@ -1152,12 +1024,6 @@ dropZone.addEventListener('drop', async (e) => {
   }
 })
 
-<<<<<<< HEAD
-setStatus('サンプルを選択して「サンプルを実行」を押してください')
-renderState()
-renderChoices()
-renderStory()
-=======
 // Load AI config from localStorage on startup
 const savedAiConfig = localStorage.getItem('narrativeGenAiConfig')
 if (savedAiConfig) {
@@ -1178,28 +1044,34 @@ if (savedAiConfig) {
 function switchTab(tabName) {
   // Hide all panels
   storyPanel.classList.remove('active')
-  graphPanel.classList.remove('active')
   debugPanel.classList.remove('active')
+  graphPanel.classList.remove('active')
+  nodeListPanel.classList.remove('active')
   aiPanel.classList.remove('active')
 
   // Remove active class from all tabs
   storyTab.classList.remove('active')
-  graphTab.classList.remove('active')
   debugTab.classList.remove('active')
+  graphTab.classList.remove('active')
+  nodeListTab.classList.remove('active')
   aiTab.classList.remove('active')
 
   // Show selected panel and activate tab
   if (tabName === 'story') {
     storyPanel.classList.add('active')
     storyTab.classList.add('active')
-  } else if (tabName === 'graph') {
-    graphPanel.classList.add('active')
-    graphTab.classList.add('active')
-    renderGraph()
   } else if (tabName === 'debug') {
     debugPanel.classList.add('active')
     debugTab.classList.add('active')
     renderDebugInfo()
+  } else if (tabName === 'graph') {
+    graphPanel.classList.add('active')
+    graphTab.classList.add('active')
+    renderGraph()
+  } else if (tabName === 'nodeList') {
+    nodeListPanel.classList.add('active')
+    nodeListTab.classList.add('active')
+    renderNodeOverview()
   } else if (tabName === 'ai') {
     aiPanel.classList.add('active')
     aiTab.classList.add('active')
@@ -1208,11 +1080,218 @@ function switchTab(tabName) {
 }
 
 storyTab.addEventListener('click', () => switchTab('story'))
-graphTab.addEventListener('click', () => switchTab('graph'))
 debugTab.addEventListener('click', () => switchTab('debug'))
+graphTab.addEventListener('click', () => switchTab('graph'))
+nodeListTab.addEventListener('click', () => switchTab('nodeList'))
 aiTab.addEventListener('click', () => switchTab('ai'))
->>>>>>> master
 
+// Split View Mode Toggle
+toggleSplitViewBtn.addEventListener('click', () => {
+  splitModeActive = !splitModeActive
+  
+  if (splitModeActive) {
+    // Enable split mode
+    toggleSplitViewBtn.classList.add('active')
+    toggleSplitViewBtn.textContent = '分割ビュー: ON'
+    storyMainContainer.classList.add('split-mode')
+    
+    // Update JSON editor with current model
+    storyJsonEditor.value = _model ? JSON.stringify(_model, null, 2) : '{}'
+    
+    // Initialize resizer (once)
+    initStoryResizer()
+    storyResizer.style.cursor = 'ew-resize'
+  } else {
+    // Disable split mode
+    toggleSplitViewBtn.classList.remove('active')
+    toggleSplitViewBtn.textContent = '分割ビュー'
+    storyMainContainer.classList.remove('split-mode')
+    storyResizer.style.cursor = 'default'
+  }
+})
+
+function initStoryResizer() {
+  if (storyResizerInitialized) return
+  
+  let isResizing = false
+  const leftPanel = storyMainContainer.querySelector('.story-left-panel')
+  
+  storyResizer.addEventListener('mousedown', (e) => {
+    isResizing = true
+    document.body.style.cursor = 'ew-resize'
+    document.body.style.userSelect = 'none'
+  })
+  
+  document.addEventListener('mousemove', (e) => {
+    if (!isResizing) return
+    
+    const containerRect = storyMainContainer.getBoundingClientRect()
+    const newLeftWidth = e.clientX - containerRect.left
+    const minWidth = 300
+    const maxWidth = containerRect.width - 300
+    
+    if (newLeftWidth >= minWidth && newLeftWidth <= maxWidth) {
+      const percentage = (newLeftWidth / containerRect.width * 100).toFixed(2)
+      leftPanel.style.flex = `0 0 ${percentage}%`
+    }
+  })
+  
+  document.addEventListener('mouseup', () => {
+    if (isResizing) {
+      isResizing = false
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+  })
+  
+  storyResizerInitialized = true
+}
+
+applyStoryJsonBtn.addEventListener('click', () => {
+  try {
+    const jsonText = storyJsonEditor.value.trim()
+    if (!jsonText) {
+      setStatus('JSONが空です', 'warn')
+      return
+    }
+
+    const newModel = JSON.parse(jsonText)
+
+    // Basic validation
+    if (!newModel.nodes || typeof newModel.nodes !== 'object') {
+      throw new Error('有効なnodesオブジェクトが必要です')
+    }
+
+    // Validate model structure
+    const validationErrors = validateModel(newModel.nodes)
+    if (validationErrors.length > 0) {
+      showErrors(validationErrors)
+      setStatus(`JSONにエラーがあります: ${validationErrors.length}件`, 'warn')
+      return
+    }
+
+    hideErrors()
+    _model = newModel
+    session = startSession(_model)
+    currentModelName = 'json-edited'
+    setStatus('JSONを適用しました', 'success')
+
+    // Update all views
+    renderState()
+    renderChoices()
+    initStory()
+    renderStory()
+    if (graphPanel.classList.contains('active')) {
+      renderGraph()
+    }
+  } catch (err) {
+    console.error('JSON parse error:', err)
+    showErrors([err?.message ?? 'JSONパースエラー'])
+    setStatus(`JSON適用に失敗しました: ${err?.message ?? err}`, 'warn')
+  }
+})
+
+function renderNodeOverview() {
+  if (!nodeOverview || !_model) return
+
+  const searchTerm = nodeSearch.value.toLowerCase()
+  const filteredNodes = Object.entries(_model.nodes).filter(([id, node]) => {
+    if (searchTerm) {
+      return id.toLowerCase().includes(searchTerm) ||
+             node.text?.toLowerCase().includes(searchTerm)
+    }
+    return true
+  })
+
+  nodeOverview.innerHTML = ''
+
+  filteredNodes.forEach(([nodeId, node]) => {
+    const card = document.createElement('div')
+    card.className = 'node-card'
+    card.dataset.nodeId = nodeId
+    card.innerHTML = `
+      <h4>${nodeId}</h4>
+      <div class="node-text">${node.text || '（テキストなし）'}</div>
+      <div class="node-stats">
+        選択肢: ${node.choices?.length || 0}個
+      </div>
+      <div class="node-actions">
+        <button data-action="switch-tab" data-tab="graph" data-node-id="${nodeId}">グラフで表示</button>
+        <button data-action="switch-tab" data-tab="story" data-node-id="${nodeId}">ストーリーで表示</button>
+      </div>
+    `
+    nodeOverview.appendChild(card)
+  })
+}
+
+function highlightNode(nodeId) {
+  highlightedNodes.clear()
+  highlightedNodes.add(nodeId)
+  renderGraph()
+}
+
+function jumpToNode(nodeId) {
+  if (!_model) return
+  if (!session) {
+    session = startSession(_model)
+  }
+  try {
+    session.nodeId = nodeId
+    setStatus(`ノード '${nodeId}' に移動しました`, 'success')
+  } catch (e) {
+    // fall back: no-op if session structure differs
+  }
+  renderState()
+  renderChoices()
+  initStory()
+  renderStory()
+}
+
+nodeOverview.addEventListener('click', (e) => {
+  const action = e.target.dataset.action
+  if (action === 'switch-tab') {
+    const tab = e.target.dataset.tab
+    const nodeId = e.target.dataset.nodeId
+    switchTab(tab)
+    if (tab === 'graph') {
+      renderGraph()
+      highlightNode(nodeId)
+    } else if (tab === 'story') {
+      jumpToNode(nodeId)
+    }
+  }
+})
+
+nodeSearch.addEventListener('input', () => {
+  renderNodeOverview()
+})
+
+refreshNodeList.addEventListener('click', () => {
+  renderNodeOverview()
+})
+
+// Hover linking between Node List and Graph
+nodeOverview.addEventListener('mouseover', (e) => {
+  const card = e.target.closest('.node-card')
+  if (!card) return
+  const nid = card.dataset.nodeId
+  highlightedNodes.clear()
+  if (nid) highlightedNodes.add(nid)
+  if (graphPanel.classList.contains('active')) {
+    renderGraph()
+  }
+})
+
+nodeOverview.addEventListener('mouseout', (e) => {
+  const card = e.target.closest('.node-card')
+  if (!card) return
+  highlightedNodes.clear()
+  if (graphPanel.classList.contains('active')) {
+    renderGraph()
+  }
+})
+
+// GUI編集モード開始ボタンのハンドラ
 guiEditBtn.addEventListener('click', () => {
   if (session == null) {
     setStatus('GUI編集するにはまずモデルを読み込んでください', 'warn')
@@ -1223,8 +1302,6 @@ guiEditBtn.addEventListener('click', () => {
   setControlsEnabled(false)
 })
 
-<<<<<<< HEAD
-=======
 // AI settings event handlers
 aiProvider.addEventListener('change', () => {
   if (aiProvider.value === 'openai') {
@@ -1254,7 +1331,6 @@ saveAiSettings.addEventListener('click', () => {
 generateNextNodeBtn.addEventListener('click', generateNextNode)
 paraphraseCurrentBtn.addEventListener('click', paraphraseCurrentText)
 
->>>>>>> master
 function renderNodeList() {
   nodeList.innerHTML = ''
   for (const [nodeId, node] of Object.entries(_model.nodes)) {
@@ -1271,6 +1347,32 @@ function renderNodeList() {
     nodeList.appendChild(nodeDiv)
     renderChoicesForNode(nodeId)
   }
+
+  // Add input listeners for real-time validation
+  nodeList.addEventListener('input', (e) => {
+    const input = e.target
+    if (input.tagName === 'INPUT') {
+      const nodeId = input.dataset.nodeId
+      const field = input.dataset.field
+      const choiceIndex = input.dataset.choiceIndex
+
+      if (field === 'text') {
+        _model.nodes[nodeId].text = input.value
+      } else if (field === 'target') {
+        _model.nodes[nodeId].choices[choiceIndex].target = input.value
+      } else if (field === 'choice-text') {
+        _model.nodes[nodeId].choices[choiceIndex].text = input.value
+      }
+
+      // Real-time validation
+      const errors = validateModel(_model.nodes)
+      if (errors.length > 0) {
+        showErrors(errors)
+      } else {
+        hideErrors()
+      }
+    }
+  })
 }
 
 function renderChoicesForNode(nodeId) {
@@ -1281,7 +1383,7 @@ function renderChoicesForNode(nodeId) {
     const choiceDiv = document.createElement('div')
     choiceDiv.className = 'choice-editor'
     choiceDiv.innerHTML = `
-      <label>テキスト: <input type="text" value="${choice.text}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="text"></label>
+      <label>テキスト: <input type="text" value="${choice.text}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="choice-text"></label>
       <label>ターゲット: <input type="text" value="${choice.target}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="target"></label>
       <button class="paraphrase-btn" data-node-id="${nodeId}" data-choice-index="${index}">言い換え</button>
       <button class="delete-choice-btn" data-node-id="${nodeId}" data-choice-index="${index}">削除</button>
@@ -1339,24 +1441,14 @@ function initStory() {
 function appendStoryFromCurrentNode() {
   const node = _model?.nodes?.[session?.nodeId]
   if (node?.text) {
-<<<<<<< HEAD
-    storyLog.push(node.text)
-=======
     const resolvedText = resolveVariables(node.text, session, _model)
     storyLog.push(resolvedText)
->>>>>>> master
   }
 }
 
 function renderStory() {
   if (!storyView) return
-<<<<<<< HEAD
   storyView.textContent = storyLog.join('\n\n')
-}
-
-// CSV / TSV import/export
-importCsvBtn.addEventListener('click', () => csvFileInput.click())
-=======
 
   // Performance optimization: Virtual scrolling for long stories
   const maxVisibleEntries = 50
@@ -1433,136 +1525,13 @@ confirmImportBtn.addEventListener('click', async () => {
 cancelPreviewBtn.addEventListener('click', () => {
   hideCsvPreview()
 })
->>>>>>> master
 
 csvFileInput.addEventListener('change', async (e) => {
   const file = e.target.files[0]
   if (!file) return
-<<<<<<< HEAD
-  try {
-    const text = await file.text()
-    const delim = file.name.endsWith('.tsv') || text.includes('\t') ? '\t' : ','
-    const rows = text.split(/\r?\n/).filter((l) => l.trim().length > 0)
-    if (rows.length === 0) throw new Error('空のファイルです')
-    
-    const headers = rows[0].split(delim).map((h) => h.trim())
-    const idx = {
-      node_id: headers.indexOf('node_id'),
-      node_text: headers.indexOf('node_text'),
-      choice_id: headers.indexOf('choice_id'),
-      choice_text: headers.indexOf('choice_text'),
-      choice_target: headers.indexOf('choice_target'),
-      choice_conditions: headers.indexOf('choice_conditions'),
-      choice_effects: headers.indexOf('choice_effects'),
-      choice_outcome_type: headers.indexOf('choice_outcome_type'),
-      choice_outcome_value: headers.indexOf('choice_outcome_value'),
-      initial_flags: headers.indexOf('initial_flags'),
-      initial_resources: headers.indexOf('initial_resources'),
-    }
-    
-    // 初期値の抽出（最初の行）
-    let initialFlags = {}
-    let initialResources = {}
-    if (rows.length > 1) {
-      const firstRow = parseCsvLine(rows[1], delim)
-      if (idx.initial_flags >= 0 && firstRow[idx.initial_flags]) {
-        initialFlags = parseKeyValuePairs(firstRow[idx.initial_flags], 'boolean')
-      }
-      if (idx.initial_resources >= 0 && firstRow[idx.initial_resources]) {
-        initialResources = parseKeyValuePairs(firstRow[idx.initial_resources], 'number')
-      }
-    }
-    
-    const nodes = {}
-    const errors = []
-    
-    for (let i = 1; i < rows.length; i++) {
-      const cells = parseCsvLine(rows[i], delim)
-      const nid = (cells[idx.node_id] || '').trim()
-      if (!nid) continue
-      
-      if (!nodes[nid]) nodes[nid] = { id: nid, text: '', choices: [] }
-      
-      const ntext = (cells[idx.node_text] || '').trim()
-      if (ntext) nodes[nid].text = ntext
-      
-      const cid = (cells[idx.choice_id] || '').trim()
-      const ctext = (cells[idx.choice_text] || '').trim()
-      const ctgt = (cells[idx.choice_target] || '').trim()
-      
-      if (ctgt || ctext || cid) {
-        const choice = {
-          id: cid || `c${nodes[nid].choices.length + 1}`,
-          text: ctext || '',
-          target: ctgt || nid
-        }
-        
-        // 条件のパース
-        if (idx.choice_conditions >= 0 && cells[idx.choice_conditions]) {
-          try {
-            choice.conditions = parseConditions(cells[idx.choice_conditions])
-          } catch (err) {
-            errors.push(`行${i + 1}: 条件パースエラー: ${err.message}`)
-          }
-        }
-        
-        // 効果のパース
-        if (idx.choice_effects >= 0 && cells[idx.choice_effects]) {
-          try {
-            choice.effects = parseEffects(cells[idx.choice_effects])
-          } catch (err) {
-            errors.push(`行${i + 1}: 効果パースエラー: ${err.message}`)
-          }
-        }
-        
-        // アウトカムのパース
-        if (idx.choice_outcome_type >= 0 && cells[idx.choice_outcome_type]) {
-          choice.outcome = {
-            type: cells[idx.choice_outcome_type].trim(),
-            value: idx.choice_outcome_value >= 0 ? cells[idx.choice_outcome_value]?.trim() : undefined
-          }
-        }
-        
-        nodes[nid].choices.push(choice)
-      }
-    }
-    
-    // バリデーション
-    const validationErrors = validateModel(nodes)
-    errors.push(...validationErrors)
-    
-    if (errors.length > 0) {
-      console.warn('CSV検証警告:', errors)
-      setStatus(`CSV読み込み成功（警告${errors.length}件あり）`, 'warn')
-    } else {
-      setStatus('CSV を読み込みました', 'success')
-    }
-    
-    const firstNode = Object.keys(nodes)[0]
-    _model = {
-      modelType: 'adventure-playthrough',
-      startNode: firstNode,
-      flags: initialFlags,
-      resources: initialResources,
-      nodes
-    }
-    session = startSession(_model)
-    currentModelName = file.name
-    initStory()
-    renderState()
-    renderChoices()
-    renderStory()
-  } catch (err) {
-    console.error(err)
-    setStatus(`CSV 読み込みに失敗: ${err?.message ?? err}`, 'warn')
-  }
-})
-
-// CSV行のパース（引用符対応）
-=======
   showCsvPreview(file)
 })
->>>>>>> master
+
 function parseCsvLine(line, delim) {
   const cells = []
   let current = ''
@@ -1641,8 +1610,6 @@ function parseEffects(text) {
     } else if (eff.startsWith('addResource:')) {
       const [key, val] = eff.slice(12).split('=')
       effects.push({ type: 'addResource', key: key.trim(), delta: parseFloat(val) })
-<<<<<<< HEAD
-=======
     } else if (eff.startsWith('multiplyResource:')) {
       const [key, val] = eff.slice(16).split('=')
       effects.push({ type: 'multiplyResource', key: key.trim(), factor: parseFloat(val) })
@@ -1663,7 +1630,6 @@ function parseEffects(text) {
           effects.push({ type: 'conditionalEffect', condition, effect })
         }
       }
->>>>>>> master
     } else if (eff.startsWith('goto:')) {
       effects.push({ type: 'goto', target: eff.slice(5).trim() })
     } else {
@@ -1695,17 +1661,11 @@ exportCsvBtn.addEventListener('click', () => {
     return
   }
   const header = [
-<<<<<<< HEAD
-    'node_id', 'node_text', 'choice_id', 'choice_text', 'choice_target',
-    'choice_conditions', 'choice_effects', 'choice_outcome_type', 'choice_outcome_value',
-    'initial_flags', 'initial_resources'
-=======
     'node_id', 'node_text', 'node_type', 'node_tags', 'node_assets',
     'choice_id', 'choice_text', 'choice_target',
     'choice_conditions', 'choice_effects', 'choice_outcome_type', 'choice_outcome_value',
     'choice_metadata', 'choice_variables',
     'initial_flags', 'initial_resources', 'global_metadata'
->>>>>>> master
   ]
   const rows = [header.join(',')]
   
@@ -1713,14 +1673,6 @@ exportCsvBtn.addEventListener('click', () => {
   for (const [nid, node] of Object.entries(_model.nodes)) {
     const initialFlags = firstRow && _model.flags ? serializeKeyValuePairs(_model.flags) : ''
     const initialResources = firstRow && _model.resources ? serializeKeyValuePairs(_model.resources) : ''
-<<<<<<< HEAD
-    firstRow = false
-    
-    if (!node.choices || node.choices.length === 0) {
-      rows.push([
-        nid, escapeCsv(node.text ?? ''), '', '', '',
-        '', '', '', '', initialFlags, initialResources
-=======
     const globalMetadata = firstRow && _model.metadata ? serializeKeyValuePairs(_model.metadata) : ''
     firstRow = false
     
@@ -1736,7 +1688,6 @@ exportCsvBtn.addEventListener('click', () => {
         '', '', '', '',
         '', '',
         initialFlags, initialResources, globalMetadata
->>>>>>> master
       ].join(','))
       continue
     }
@@ -1747,12 +1698,6 @@ exportCsvBtn.addEventListener('click', () => {
       const outcomeType = ch.outcome?.type || ''
       const outcomeValue = ch.outcome?.value || ''
       
-<<<<<<< HEAD
-      rows.push([
-        nid, escapeCsv(node.text ?? ''), ch.id ?? '', escapeCsv(ch.text ?? ''), ch.target ?? '',
-        escapeCsv(conditions), escapeCsv(effects), outcomeType, outcomeValue,
-        initialFlags, initialResources
-=======
       // Choice metadata and variables
       const choiceMetadata = ch.metadata ? serializeKeyValuePairs(ch.metadata) : ''
       const choiceVariables = ch.variables ? serializeKeyValuePairs(ch.variables) : ''
@@ -1763,7 +1708,6 @@ exportCsvBtn.addEventListener('click', () => {
         escapeCsv(conditions), escapeCsv(effects), outcomeType, outcomeValue,
         escapeCsv(choiceMetadata), escapeCsv(choiceVariables),
         initialFlags, initialResources, globalMetadata
->>>>>>> master
       ].join(','))
     }
   }
@@ -1795,8 +1739,6 @@ function serializeEffects(effects) {
   return effects.map((eff) => {
     if (eff.type === 'setFlag') return `setFlag:${eff.key}=${eff.value}`
     if (eff.type === 'addResource') return `addResource:${eff.key}=${eff.delta}`
-<<<<<<< HEAD
-=======
     if (eff.type === 'multiplyResource') return `multiplyResource:${eff.key}=${eff.factor}`
     if (eff.type === 'setResource') return `setResource:${eff.key}=${eff.value}`
     if (eff.type === 'randomEffect') {
@@ -1808,7 +1750,6 @@ function serializeEffects(effects) {
       const effectStr = serializeEffects([eff.effect])[0]
       return `conditionalEffect:${conditionStr}?${effectStr}`
     }
->>>>>>> master
     if (eff.type === 'goto') return `goto:${eff.target}`
     return ''
   }).filter(Boolean).join(';')
@@ -1828,8 +1769,6 @@ function escapeCsv(s) {
 
 saveGuiBtn.addEventListener('click', () => {
   try {
-<<<<<<< HEAD
-=======
     // Validate model before saving
     const validationErrors = validateModel(_model.nodes)
     if (validationErrors.length > 0) {
@@ -1840,7 +1779,6 @@ saveGuiBtn.addEventListener('click', () => {
 
     hideErrors()
     // Restart session with current model
->>>>>>> master
     session = startSession(_model)
     currentModelName = 'gui-edited'
     guiEditMode.style.display = 'none'
@@ -1851,10 +1789,7 @@ saveGuiBtn.addEventListener('click', () => {
     initStory()
     renderStory()
   } catch (err) {
-<<<<<<< HEAD
-=======
     showErrors([err?.message ?? err])
->>>>>>> master
     setStatus(`GUI保存に失敗しました: ${err?.message ?? err}`, 'warn')
   }
 })
@@ -1880,10 +1815,6 @@ nodeList.addEventListener('click', (e) => {
       setStatus(`言い換えに失敗しました: ${err?.message ?? err}`, 'warn')
     }
   }
-<<<<<<< HEAD
-})
-
-=======
 
   if (e.target.classList.contains('add-choice-btn')) {
     const nodeId = e.target.dataset.nodeId
@@ -1956,7 +1887,6 @@ function updateModelFromInput(input) {
   }
 }
 
->>>>>>> master
 // トップレベルのプレビュー/ダウンロード
 previewTopBtn.addEventListener('click', () => {
   if (!_model) {
@@ -1991,4 +1921,14 @@ downloadTopBtn.addEventListener('click', () => {
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
+})
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key === 's') {
+    e.preventDefault()
+    if (guiEditMode.style.display !== 'none') {
+      saveGuiBtn.click()
+    }
+  }
 })

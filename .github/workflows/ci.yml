@@ -48,6 +48,17 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+      - name: Setup Unity
+        uses: game-ci/unity-builder@v4
+        with:
+          unityVersion: 2022.3.10f1
+          targetPlatform: StandaloneLinux64
+      - name: Activate Unity License
+        uses: game-ci/unity-activate@v1
+        with:
+          unityUsername: ${{ secrets.UNITY_USERNAME }}
+          unityPassword: ${{ secrets.UNITY_PASSWORD }}
+          unitySerial: ${{ secrets.UNITY_SERIAL }}
       - name: Restore dependencies
         working-directory: packages/tests/NarrativeGen.Tests
         run: dotnet restore

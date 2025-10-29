@@ -4,14 +4,14 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "build": "vite build",
+    "postbuild": "npm run copy:models",
+    "copy:models": "node copy-models.js",
     "dev": "vite",
-    "build": "vite build && npm run copy:models",
-    "copy:models": "pwsh -Command \"Copy-Item -Path '../../models' -Destination 'dist/models' -Recurse -Force\"",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@narrativegen/engine-ts": "file:../../packages/engine-ts",
-    "d3": "^7.9.0"
+    "@narrativegen/engine-ts": "file:../../packages/engine-ts"
   },
   "devDependencies": {
     "vite": "^5.4.9"
