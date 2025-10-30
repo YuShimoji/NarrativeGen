@@ -1,5 +1,5 @@
 // Error handling and logging
-import { startSession, getAvailableChoices, applyChoice, chooseParaphrase, createAIProvider } from '@narrativegen/engine-ts/browser'
+import { startSession, getAvailableChoices, applyChoice, chooseParaphrase, createAIProvider } from '@narrativegen/engine-ts/dist/browser.js'
 
 // Utility function for resolving variables in text (browser-compatible)
 function resolveVariables(text, session, model) {
@@ -28,7 +28,7 @@ function resolveVariables(text, session, model) {
 
 // Browser-compatible model loading (no fs module)
 async function loadModel(modelName) {
-  const url = new URL(`../../models/examples/${modelName}.json`, import.meta.url)
+  const url = new URL(`./models/examples/${modelName}.json`, window.location.origin)
   const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`Failed to load model: ${response.status} ${response.statusText}`)
@@ -865,7 +865,8 @@ async function loadCustomModel(file) {
 }
 
 async function loadSampleModel(sampleId) {
-  const url = new URL(`../../models/examples/${sampleId}.json`, import.meta.url)
+  // Use fetch with public URL for build compatibility
+  const url = new URL(`./models/examples/${sampleId}.json`, window.location.origin)
   const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`モデルの読み込みに失敗しました (${response.status})`)
@@ -874,7 +875,8 @@ async function loadSampleModel(sampleId) {
 }
 
 async function loadEntitiesCatalog() {
-  const url = new URL('../../models/entities/Entities.csv', import.meta.url)
+  // Use fetch with public URL for build compatibility
+  const url = new URL('./models/entities/Entities.csv', window.location.origin)
   const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`Entities.csv の読み込みに失敗しました (${response.status})`)
