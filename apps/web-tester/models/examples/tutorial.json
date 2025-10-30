@@ -1,0 +1,46 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "intro",
+  "flags": {
+    "learnedChoices": false,
+    "learnedResources": false
+  },
+  "resources": {
+    "knowledge": 0,
+    "energy": 100
+  },
+  "nodes": {
+    "intro": {
+      "id": "intro",
+      "text": "ようこそNarrativeGenへ！これは基本機能を学ぶためのチュートリアルです。\n\nあなたは新しい学習者です。選択肢を選んで物語を進めましょう。",
+      "choices": [
+        { "id": "learnChoices", "text": "選択肢について学ぶ", "target": "choicesLesson" },
+        { "id": "learnResources", "text": "リソースについて学ぶ", "target": "resourcesLesson" },
+        { "id": "skipTutorial", "text": "チュートリアルをスキップ", "target": "graduation" }
+      ]
+    },
+    "choicesLesson": {
+      "id": "choicesLesson",
+      "text": "選択肢は物語の分岐点です。各選択肢は特定の条件を満たすことで利用可能になります。\n\n条件にはフラグやリソースの値などがあります。",
+      "choices": [
+        { "id": "backToIntro", "text": "イントロに戻る", "target": "intro" },
+        { "id": "continueToResources", "text": "リソースについて学ぶ", "target": "resourcesLesson" }
+      ]
+    },
+    "resourcesLesson": {
+      "id": "resourcesLesson",
+      "text": "リソースは数値の変数です。選択肢によって増減したり、他の選択肢の条件になったりします。\n\n例：エネルギー、知識、お金など",
+      "choices": [
+        { "id": "backToIntro", "text": "イントロに戻る", "target": "intro" },
+        { "id": "continueToChoices", "text": "選択肢について学ぶ", "target": "choicesLesson" }
+      ]
+    },
+    "graduation": {
+      "id": "graduation",
+      "text": "おめでとうございます！チュートリアルを完了しました。\n\n基本操作を理解したので、自由にサンプルモデルを試してみましょう。",
+      "choices": [
+        { "id": "restart", "text": "チュートリアルを再開", "target": "intro" }
+      ]
+    }
+  }
+}

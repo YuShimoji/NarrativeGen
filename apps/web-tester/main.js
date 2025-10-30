@@ -865,8 +865,8 @@ async function loadCustomModel(file) {
 }
 
 async function loadSampleModel(sampleId) {
-  // Use fetch with direct URL for public directory access
-  const url = `http://localhost:5173/models/examples/${sampleId}.json`
+  // Use fetch with relative path for local models directory
+  const url = `./models/examples/${sampleId}.json`
   const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`モデルの読み込みに失敗しました (${response.status})`)
@@ -875,8 +875,8 @@ async function loadSampleModel(sampleId) {
 }
 
 async function loadEntitiesCatalog() {
-  // Use fetch with direct URL for public directory access
-  const url = 'http://localhost:5173/models/entities/Entities.csv'
+  // Use fetch with relative path for local models directory
+  const url = './models/entities/Entities.csv'
   const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`Entities.csv の読み込みに失敗しました (${response.status})`)

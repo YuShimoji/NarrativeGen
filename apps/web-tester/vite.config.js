@@ -22,4 +22,6 @@ export default defineConfig({
       ],
     },
   },
+  // publicDir disabled - using local models directory instead
+  publicDir: false,
 })
