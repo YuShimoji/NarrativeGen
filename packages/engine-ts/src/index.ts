@@ -3,7 +3,6 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import Ajv from 'ajv'
-import type { JSONSchemaType } from 'ajv'
 
 import type {
   Choice,
@@ -73,7 +72,7 @@ function assertModelIntegrity(model: Model): void {
   }
 }
 
-function loadSchema(): JSONSchemaType<Model> {
+function loadSchema(): any {
   const schemaPath = path.resolve(
     __dirname,
     '../../..',
@@ -82,18 +81,18 @@ function loadSchema(): JSONSchemaType<Model> {
     'playthrough.schema.json',
   )
   const json = fs.readFileSync(schemaPath, 'utf-8')
-  return JSON.parse(json) as JSONSchemaType<Model>
+  return JSON.parse(json) as any
 }
 
 export function loadModel(modelData: unknown): Model {
-  const ajv = new Ajv({ allErrors: true, strict: false })
+  const ajv = new Ajv({ allErrors: true })
   const schema = loadSchema()
-  const validate = ajv.compile<Model>(schema)
+  const validate = ajv.compile(schema)
   if (!validate(modelData)) {
     const err = ajv.errorsText(validate.errors ?? [], { separator: '\n' })
     throw new Error(`Model validation failed:\n${err}`)
   }
-  const model = modelData
+  const model = modelData as Model
   assertModelIntegrity(model)
   return model
 }

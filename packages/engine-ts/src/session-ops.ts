@@ -6,11 +6,11 @@ const choicesCache = new Map<string, Choice[]>()
 
 // Cache key generation for session state
 function getSessionKey(session: SessionState): string {
-  return `${session.nodeId}:${session.time}:${JSON.stringify(session.flags)}:${JSON.stringify(session.resources)}`
+  return `${session.nodeId}:${session.time}:${JSON.stringify(session.flags)}:${JSON.stringify(session.resources)}:${JSON.stringify(session.variables)}`
 }
 
-function getConditionKey(cond: Condition, flags: Record<string, boolean>, resources: Record<string, number>, time: number): string {
-  return `${JSON.stringify(cond)}:${JSON.stringify(flags)}:${JSON.stringify(resources)}:${time}`
+function getConditionKey(cond: Condition, flags: Record<string, boolean>, resources: Record<string, number>, variables: Record<string, string>, time: number): string {
+  return `${JSON.stringify(cond)}:${JSON.stringify(flags)}:${JSON.stringify(resources)}:${JSON.stringify(variables)}:${time}`
 }
 
 function cmp(op: '>=' | '<=' | '>' | '<' | '==', a: number, b: number): boolean {
@@ -34,9 +34,10 @@ function evalCondition(
   cond: Condition,
   flags: Record<string, boolean>,
   resources: Record<string, number>,
+  variables: Record<string, string>,
   time: number,
 ): boolean {
-  const key = getConditionKey(cond, flags, resources, time)
+  const key = getConditionKey(cond, flags, resources, variables, time)
   if (conditionCache.has(key)) {
     return conditionCache.get(key)!
   }
@@ -47,8 +48,32 @@ function evalCondition(
   } else if (cond.type === 'resource') {
     const v = resources[cond.key] ?? 0
     result = cmp(cond.op, v, cond.value)
+  } else if (cond.type === 'variable') {
+    const v = variables[cond.key] ?? ''
+    switch (cond.op) {
+      case '==':
+        result = v === cond.value
+        break
+      case '!=':
+        result = v !== cond.value
+        break
+      case 'contains':
+        result = v.includes(cond.value)
+        break
+      case '!contains':
+        result = !v.includes(cond.value)
+        break
+      default:
+        result = false
+    }
   } else if (cond.type === 'timeWindow') {
     result = time >= cond.start && time <= cond.end
+  } else if (cond.type === 'and') {
+    result = cond.conditions.every(c => evalCondition(c, flags, resources, variables, time))
+  } else if (cond.type === 'or') {
+    result = cond.conditions.some(c => evalCondition(c, flags, resources, variables, time))
+  } else if (cond.type === 'not') {
+    result = !evalCondition(cond.condition, flags, resources, variables, time)
   } else {
     result = true
   }
@@ -70,6 +95,9 @@ function applyEffect(effect: Effect, session: SessionState): SessionState {
     const cur = session.resources[effect.key] ?? 0
     return { ...session, resources: { ...session.resources, [effect.key]: cur + effect.delta } }
   }
+  if (effect.type === 'setVariable') {
+    return { ...session, variables: { ...session.variables, [effect.key]: effect.value } }
+  }
   if (effect.type === 'goto') {
     return { ...session, nodeId: effect.target }
   }
@@ -81,6 +109,7 @@ export function startSession(model: Model, initial?: Partial<SessionState>): Ses
     nodeId: initial?.nodeId ?? model.startNode,
     flags: { ...(model.flags ?? {}), ...(initial?.flags ?? {}) },
     resources: { ...(model.resources ?? {}), ...(initial?.resources ?? {}) },
+    variables: initial?.variables ?? {},
     time: initial?.time ?? 0,
   }
 }
@@ -99,7 +128,7 @@ export function getAvailableChoices(session: SessionState, model: Model): Choice
   const choices = node.choices ?? []
   const available = choices.filter((c) =>
     (c.conditions ?? []).every((cond) =>
-      evalCondition(cond, session.flags, session.resources, session.time),
+      evalCondition(cond, session.flags, session.resources, session.variables, session.time),
     ),
   )
 

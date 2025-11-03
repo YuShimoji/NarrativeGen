@@ -96,8 +96,8 @@ NarrativeGen エンジンに AI アシスト機能を統合し、ライター/�
 ### 実装フェーズ
 
 - **Phase 1 (完了)**: モック実装（ランダムサンプル）
-- **Phase 2**: プロンプト設計 + OpenAI API 統合（API Key 設定 UI 含む）
-- **Phase 3**: ローカル LLM 統合（Ollama など）
+- **Phase 2 (完了)**: プロンプト設計 + OpenAI API 統合（API Key 設定 UI 含む）
+- **Phase 3 (完了)**: ローカル LLM 統合（Ollama）
 - **Phase 4**: 生成履歴・再生成機能
 
 ## 機能2: 言い換え（Paraphrase）
@@ -182,9 +182,9 @@ NarrativeGen エンジンに AI アシスト機能を統合し、ライター/�
 
 ### 実装フェーズ
 
-- **Phase 1**: プロンプト設計 + モック実装（固定サンプルを返す）
-- **Phase 2**: OpenAI API 統合（API Key 設定 UI 含む）
-- **Phase 3**: ローカル LLM 統合
+- **Phase 1 (完了)**: プロンプト設計 + モック実装（固定サンプルを返す）
+- **Phase 2 (完了)**: OpenAI API 統合（API Key 設定 UI 含む）
+- **Phase 3 (完了)**: ローカル LLM 統合
 - **Phase 4**: バッチ言い換え（全ノード一括変換）機能
 
 ## セキュリティ・プライバシー考慮
@@ -209,9 +209,9 @@ NarrativeGen エンジンに AI アシスト機能を統合し、ライター/�
 
 ## 実装優先度
 
-1. **Phase 1 (現在)**: モック実装（完了済み: AI提案ボタンでランダムサンプル）
-2. **Phase 2**: プロンプト設計 + OpenAI API 統合
-3. **Phase 3**: ローカル LLM 統合
+1. **Phase 1 (完了)**: モック実装
+2. **Phase 2 (完了)**: OpenAI API 統合
+3. **Phase 3 (完了)**: ローカル LLM 統合
 4. **Phase 4**: バッチ処理・履歴管理
 
 ## 参考実装

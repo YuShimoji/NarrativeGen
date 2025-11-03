@@ -88,7 +88,9 @@ AI アシスト機能（次の物語展開生成・言い換え）の設計に�
   - Web Tester AI タブで API キー設定可能
   - 次のノード生成と言い換え機能が動作
   - エラーハンドリングとフォールバック実装済み
-- ⏳ **Phase 3**: ローカル LLM 統合（Ollama など）
+- ✅ **Phase 3**: ローカル LLM 統合（Ollama）
+  - OllamaProvider 実装、Web Tester で選択可能
+  - ローカルLLMとの通信でプライバシー保護
 - ⏳ **Phase 4**: バッチ処理・履歴管理
 
 ## Future Work

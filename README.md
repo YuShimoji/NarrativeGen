@@ -296,7 +296,7 @@ dotnet test .\packages\tests\NarrativeGen.Tests -c Release
 
 The NUnit smoke test `EngineSmokeTests` loads `models/examples/linear.json`, plays through `start -> scene1 -> end`, and asserts that the engine returns expected nodes and zero choices at the end.
 
-## Current Status (2025-01-26)
+## Current Status (2025-10-28)
 
 ### ✅ **Fully Functional Components**
 
@@ -306,15 +306,19 @@ The NUnit smoke test `EngineSmokeTests` loads `models/examples/linear.json`, pla
 - **Development Server**: Vite dev server runs without errors
 - **Model Loading**: Sample models load correctly
 - **CSV Import/Export**: Full spreadsheet integration
-- **AI Features**: Mock and OpenAI integration working
+- **AI Features**: Mock, OpenAI, and Ollama integration working (AI as supporting tool, not core)
 - **Graph Visualization**: D3.js rendering with virtualization
 - **Error Handling**: Comprehensive error boundaries and logging
+- **Automated Tests**: 15 tests passing with Vitest
 
 ### 🔧 **Recent Improvements**
 
+- **Critical Verification**: AI positioned as supporting tool, not core functionality
+- **OpenAPI Alignment**: Spec aligned with actual engine implementation, marked as documentation-only
+- **Schema Refinement**: Effect schema restricted to implemented types (setFlag, addResource, goto only)
 - **UI/UX Overhaul**: Glassmorphism design, responsive layout, smooth animations
 - **Import Path Fixes**: Corrected browser.js import paths for Vite compatibility
-- **Code Quality**: Removed duplicate functions, fixed variable scope issues
+- **Code Quality**: Removed duplicate functions, fixed variable scope issues, TypeScript error fixes
 - **Performance**: Optimized graph rendering and CSV processing
 - **Documentation**: Updated README with current features
 - **Configuration**: Added .env, config.json, and comprehensive package.json scripts
@@ -328,6 +332,7 @@ The Web Tester is now fully operational with:
 - **CSV import/export**: Full spreadsheet integration for story authoring
 - **Graph visualization**: Interactive node relationship display
 - **Error handling**: Comprehensive validation and user feedback
+- **AI support**: Optional AI features for content generation (OpenAI/Ollama integration)
 
 **Start developing narratives immediately at `http://localhost:5173`!** 🎉
 

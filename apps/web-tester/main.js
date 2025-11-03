@@ -20,7 +20,7 @@ import {
   applyChoice,
   chooseParaphrase,
   paraphraseJa
-} from '@narrativegen/engine-ts/dist/browser.js'
+} from '../../packages/engine-ts/dist/browser.js'
 
 // Key binding configuration - extensible and loosely coupled
 const KEY_BINDINGS = {
@@ -237,6 +237,11 @@ function resolveVariables(text, session, model) {
     resolved = resolved.replace(new RegExp(`\\{resource:${key}\\}`, 'g'), String(value))
   })
   
+  // Replace variable variables: {variable:key}
+  Object.entries(session.variables || {}).forEach(([key, value]) => {
+    resolved = resolved.replace(new RegExp(`\\{variable:${key}\\}`, 'g'), String(value))
+  })
+  
   // Replace node ID variable: {nodeId}
   resolved = resolved.replace(/\{nodeId\}/g, session.nodeId)
   
@@ -343,6 +348,8 @@ const cancelPreviewBtn = document.getElementById('cancelPreviewBtn')
 const storyPreviewModal = document.getElementById('storyPreviewModal')
 const storyPreviewContent = document.getElementById('storyPreviewContent')
 const closePreviewBtn = document.getElementById('closePreviewBtn')
+const storyContent = document.getElementById('storyContent')
+const toggleSidebarBtn = document.getElementById('toggleSidebarBtn')
 
 // Tab elements
 const storyTab = document.getElementById('storyTab')
@@ -357,11 +364,22 @@ const graphSvg = document.getElementById('graphSvg')
 const fitGraphBtn = document.getElementById('fitGraphBtn')
 const resetGraphBtn = document.getElementById('resetGraphBtn')
 const showConditions = document.getElementById('showConditions')
+const graphSettingsBtn = document.getElementById('graphSettingsBtn')
+const graphSettings = document.getElementById('graphSettings')
+const nodeShape = document.getElementById('nodeShape')
+const fontSize = document.getElementById('fontSize')
+const saveGraphPreset = document.getElementById('saveGraphPreset')
+const loadGraphPreset = document.getElementById('loadGraphPreset')
 
 // Debug elements
 const flagsDisplay = document.getElementById('flagsDisplay')
 const resourcesDisplay = document.getElementById('resourcesDisplay')
+const variablesDisplay = document.getElementById('variablesDisplay')
+const editVariablesBtn = document.getElementById('editVariablesBtn')
 const reachableNodes = document.getElementById('reachableNodes')
+const saveLoadSection = document.getElementById('saveLoadSection')
+const saveSlots = document.getElementById('saveSlots')
+const refreshSavesBtn = document.getElementById('refreshSavesBtn')
 
 // AI elements
 const aiTab = document.getElementById('aiTab')
@@ -370,6 +388,9 @@ const aiProvider = document.getElementById('aiProvider')
 const openaiSettings = document.getElementById('openaiSettings')
 const openaiApiKey = document.getElementById('openaiApiKey')
 const openaiModel = document.getElementById('openaiModel')
+const ollamaSettings = document.getElementById('ollamaSettings')
+const ollamaUrl = document.getElementById('ollamaUrl')
+const ollamaModel = document.getElementById('ollamaModel')
 const saveAiSettings = document.getElementById('saveAiSettings')
 const generateNextNodeBtn = document.getElementById('generateNextNodeBtn')
 const paraphraseCurrentBtn = document.getElementById('paraphraseCurrentBtn')
@@ -396,6 +417,10 @@ let aiConfig = {
   openai: {
     apiKey: '',
     model: 'gpt-3.5-turbo'
+  },
+  ollama: {
+    url: 'http://localhost:11434',
+    model: 'llama2'
   }
 }
 let aiProviderInstance = null
@@ -413,6 +438,7 @@ function renderState() {
     time: snapshot.time,
     flags: snapshot.flags,
     resources: snapshot.resources,
+    variables: snapshot.variables,
   }
   stateView.textContent = JSON.stringify(view, null, 2)
 
@@ -541,6 +567,36 @@ function renderGraph() {
     .attr('width', width)
     .attr('height', height)
 
+  // Add defs for gradients and filters
+  const defs = svg.append('defs')
+
+  // Gradient for nodes
+  const gradient = defs.append('linearGradient')
+    .attr('id', 'nodeGradient')
+    .attr('x1', '0%').attr('y1', '0%').attr('x2', '100%').attr('y2', '100%')
+  gradient.append('stop').attr('offset', '0%').attr('stop-color', '#60a5fa')
+  gradient.append('stop').attr('offset', '100%').attr('stop-color', '#3b82f6')
+
+  // Filter for shadow
+  const filter = defs.append('filter')
+    .attr('id', 'nodeShadow')
+    .attr('x', '-50%').attr('y', '-50%').attr('width', '200%').attr('height', '200%')
+  filter.append('feDropShadow')
+    .attr('dx', '2').attr('dy', '2').attr('stdDeviation', '3')
+    .attr('flood-color', 'rgba(0,0,0,0.3)')
+
+  // Add zoom behavior
+  const zoom = d3.zoom()
+    .scaleExtent([0.1, 4])
+    .on('zoom', (event) => {
+      svg.select('g').attr('transform', event.transform)
+    })
+
+  svg.call(zoom)
+
+  // Create container group for zoom
+  const container = svg.append('g')
+
   // Create nodes and links data (only for visible nodes)
   const nodes = []
   const links = []
@@ -574,10 +630,11 @@ function renderGraph() {
     .force('charge', d3.forceManyBody().strength(shouldVirtualize ? -200 : -300))
     .force('center', d3.forceCenter(width / 2, height / 2))
     .force('collision', d3.forceCollide().radius(shouldVirtualize ? 40 : 60))
-    .alphaDecay(0.02) // Faster convergence for better performance
+    .alphaDecay(0.05) // Faster convergence for better performance
+    .velocityDecay(0.4) 
 
   // Create links with optimized rendering
-  const link = svg.append('g')
+  const link = container.append('g')
     .selectAll('line')
     .data(links)
     .enter().append('line')
@@ -588,32 +645,36 @@ function renderGraph() {
   // Add condition labels to links (only if enabled and not virtualized)
   let linkLabels
   if (showConditions.checked && !shouldVirtualize) {
-    linkLabels = svg.append('g')
+    linkLabels = container.append('g')
       .selectAll('text')
       .data(links.filter(l => l.condition))
       .enter().append('text')
-      .attr('font-size', '10px')
+      .attr('font-size', `${fontSize.value}px`)
       .attr('fill', '#666')
       .attr('text-anchor', 'middle')
       .text(d => d.condition)
   }
 
   // Create nodes with performance optimizations
-  const node = svg.append('g')
-    .selectAll('circle')
+  const node = container.append('g')
+    .selectAll(nodeShape.value === 'rect' ? 'rect' : 'circle')
     .data(nodes)
-    .enter().append('circle')
-    .attr('r', d => d.isVirtualized ? 20 : 30)
-    .attr('fill', d => {
-      if (d.id === _model.startNode) return '#4ade80'
-      if (d.isVirtualized) return '#94a3b8'
-      return '#60a5fa'
-    })
-    .attr('stroke', d => d.id === (session?.nodeId || _model.startNode) ? '#ef4444' : '#fff')
-    .attr('stroke-width', d => d.id === (session?.nodeId || _model.startNode) ? 3 : 2)
+    .enter().append(nodeShape.value === 'rect' ? 'rect' : 'circle')
+
+  if (nodeShape.value === 'circle') {
+    node.attr('r', d => d.isVirtualized ? 20 : 30)
+  } else {
+    node.attr('width', d => d.isVirtualized ? 40 : 60)
+       .attr('height', d => d.isVirtualized ? 40 : 60)
+       .attr('x', d => d.isVirtualized ? -20 : -30)
+       .attr('y', d => d.isVirtualized ? -20 : -30)
+  }
+
+  node.attr('fill', 'url(#nodeGradient)')
+    .attr('filter', 'url(#nodeShadow)')
     .call(d3.drag()
       .on('start', (event, d) => {
-        if (!event.active) simulation.alphaTarget(0.3).restart()
+        if (!event.active) simulation.alphaTarget(0.1).restart()
         d.fx = d.x
         d.fy = d.y
       })
@@ -628,16 +689,24 @@ function renderGraph() {
       }))
 
   // Add node labels with conditional rendering
+  let labels
   if (!shouldVirtualize) {
-    const labels = svg.append('g')
+    labels = container.append('g')
       .selectAll('text')
       .data(nodes)
       .enter().append('text')
       .attr('text-anchor', 'middle')
       .attr('dy', '0.35em')
-      .attr('font-size', '10px')
+      .attr('font-size', `${fontSize.value}px`)
       .attr('fill', '#333')
       .text(d => d.id)
+
+    // Position labels based on shape
+    if (nodeShape.value === 'circle') {
+      labels.attr('x', d => d.x).attr('y', d => d.y)
+    } else {
+      labels.attr('x', d => d.x + (d.isVirtualized ? 20 : 30)).attr('y', d => d.y + (d.isVirtualized ? 20 : 30))
+    }
   }
 
   // Update positions on simulation tick with throttled updates
@@ -653,14 +722,16 @@ function renderGraph() {
       .attr('y2', d => d.target.y)
 
     if (!shouldVirtualize) {
-      labels
-        .attr('x', d => d.x)
-        .attr('y', d => d.y)
+      if (nodeShape.value === 'circle') {
+        labels.attr('x', d => d.x).attr('y', d => d.y)
+      } else {
+        labels.attr('x', d => d.x + (d.isVirtualized ? 20 : 30)).attr('y', d => d.y + (d.isVirtualized ? 20 : 30))
+      }
     }
 
     node
-      .attr('cx', d => d.x)
-      .attr('cy', d => d.y)
+      .attr(nodeShape.value === 'circle' ? 'cx' : 'x', d => d.x)
+      .attr(nodeShape.value === 'circle' ? 'cy' : 'y', d => d.y)
 
     if (showConditions.checked && !shouldVirtualize && linkLabels) {
       linkLabels
@@ -682,17 +753,18 @@ function renderGraph() {
 
   // Graph controls
   fitGraphBtn.onclick = () => {
-    const bounds = svg.node().getBBox()
+    if (!container.node()) return
+    const bounds = container.node().getBBox()
     const fullWidth = bounds.width
     const fullHeight = bounds.height
     const midX = bounds.x + fullWidth / 2
     const midY = bounds.y + fullHeight / 2
 
-    const scale = 0.8 / Math.max(fullWidth / width, fullHeight / height)
+    const scale = Math.min(width / fullWidth, height / fullHeight) * 0.8
     const translate = [width / 2 - scale * midX, height / 2 - scale * midY]
 
     svg.transition().duration(750).call(
-      d3.zoom().transform,
+      zoom.transform,
       d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
     )
   }
@@ -710,12 +782,45 @@ function renderGraph() {
   showConditions.onchange = () => renderGraph()
 }
 
+graphSettingsBtn.onclick = () => {
+  graphSettings.style.display = graphSettings.style.display === 'none' ? 'block' : 'none'
+}
+
+nodeShape.onchange = () => renderGraph()
+fontSize.oninput = () => renderGraph()
+
+saveGraphPreset.onclick = () => {
+  const preset = {
+    nodeShape: nodeShape.value,
+    fontSize: fontSize.value
+  }
+  localStorage.setItem('graphPreset', JSON.stringify(preset))
+  setStatus('グラフプリセットを保存しました', 'success')
+}
+
+loadGraphPreset.onclick = () => {
+  const stored = localStorage.getItem('graphPreset')
+  if (stored) {
+    const preset = JSON.parse(stored)
+    nodeShape.value = preset.nodeShape
+    fontSize.value = preset.fontSize
+    renderGraph()
+    setStatus('グラフプリセットを読み込みました', 'success')
+  } else {
+    setStatus('保存されたプリセットがありません', 'warn')
+  }
+}
+
 function getConditionText(conditions) {
   if (!conditions || conditions.length === 0) return ''
   return conditions.map(cond => {
     if (cond.type === 'flag') return `flag:${cond.key}=${cond.value}`
     if (cond.type === 'resource') return `res:${cond.key}${cond.op}${cond.value}`
+    if (cond.type === 'variable') return `var:${cond.key}${cond.op}${cond.value}`
     if (cond.type === 'timeWindow') return `time:${cond.start}-${cond.end}`
+    if (cond.type === 'and') return `AND(${cond.conditions.map(c => getConditionText([c])).join(',')})`
+    if (cond.type === 'or') return `OR(${cond.conditions.map(c => getConditionText([c])).join(',')})`
+    if (cond.type === 'not') return `NOT(${getConditionText([cond.condition])})`
     return cond.type
   }).join(', ')
 }
@@ -741,17 +846,17 @@ function renderDebugInfo() {
     flagsDisplay.innerHTML += '<p>フラグなし</p>'
   }
 
-  // Render resources
-  resourcesDisplay.innerHTML = '<h4>リソース</h4>'
-  if (session.resources && Object.keys(session.resources).length > 0) {
-    Object.entries(session.resources).forEach(([key, value]) => {
+  // Render variables
+  variablesDisplay.innerHTML = '<h4>変数</h4>'
+  if (session.variables && Object.keys(session.variables).length > 0) {
+    Object.entries(session.variables).forEach(([key, value]) => {
       const div = document.createElement('div')
-      div.className = 'resource-item'
+      div.className = 'variable-item'
       div.innerHTML = `<span>${key}</span><span>${value}</span>`
-      resourcesDisplay.appendChild(div)
+      variablesDisplay.appendChild(div)
     })
   } else {
-    resourcesDisplay.innerHTML += '<p>リソースなし</p>'
+    variablesDisplay.innerHTML += '<p>変数なし</p>'
   }
 
   // Render reachability map
@@ -1096,6 +1201,11 @@ async function initAiProvider() {
           provider: 'openai',
           openai: aiConfig.openai
         })
+      } else if (aiProvider.value === 'ollama') {
+        aiProviderInstance = createAIProvider({
+          provider: 'ollama',
+          ollama: aiConfig.ollama
+        })
       } else {
         aiProviderInstance = createAIProvider({ provider: 'mock' })
       }
@@ -1145,7 +1255,7 @@ async function generateNextNode() {
   }
 }
 
-async function paraphraseCurrentText() {
+async function paraphraseCurrentTextUI() {
   if (!aiProviderInstance || !session || !_model) {
     aiOutput.textContent = '❌ モデルを読み込んでから実行してください'
     return
@@ -1270,10 +1380,12 @@ startBtn.addEventListener('click', async () => {
     currentModelName = sampleId
     setStatus(`サンプル ${sampleId} を実行中`, 'success')
     initStory()
+    startAutoSave() // Start auto-save when session begins
   } catch (err) {
     console.error(err)
     session = null
     currentModelName = null
+    stopAutoSave() // Stop auto-save when session ends
     setStatus(`サンプルの初期化に失敗しました: ${err?.message ?? err}`, 'warn')
   } finally {
     setControlsEnabled(true)
@@ -1308,6 +1420,7 @@ fileInput.addEventListener('change', async (e) => {
     console.error(err)
     session = null
     currentModelName = null
+    stopAutoSave() // Stop auto-save when session ends
     setStatus(`ファイルの初期化に失敗しました: ${err?.message ?? err}`, 'warn')
   } finally {
     setControlsEnabled(true)
@@ -1356,11 +1469,13 @@ dropZone.addEventListener('drop', async (e) => {
     currentModelName = file.name
     setStatus(`ファイル ${file.name} を実行中`, 'success')
     initStory()
+    startAutoSave() // Start auto-save when session begins
   } catch (err) {
     console.error(err)
     showErrors([err?.message ?? err])
     session = null
     currentModelName = null
+    stopAutoSave() // Stop auto-save when session ends
     setStatus(`ファイルの初期化に失敗しました: ${err?.message ?? err}`, 'warn')
   } finally {
     setControlsEnabled(true)
@@ -1380,6 +1495,10 @@ if (savedAiConfig) {
       openaiSettings.style.display = 'block'
       openaiApiKey.value = aiConfig.openai.apiKey || ''
       openaiModel.value = aiConfig.openai.model || 'gpt-3.5-turbo'
+    } else if (aiConfig.provider === 'ollama') {
+      ollamaSettings.style.display = 'block'
+      ollamaUrl.value = aiConfig.ollama.url || 'http://localhost:11434'
+      ollamaModel.value = aiConfig.ollama.model || 'llama2'
     }
   } catch (error) {
     console.warn('Failed to load AI config from localStorage:', error)
@@ -1434,15 +1553,15 @@ guiEditBtn.addEventListener('click', () => {
   setControlsEnabled(false)
 })
 
-function initAiProvider() {
+function initAIProviderInstance() {
   if (!aiProviderInstance) {
     aiProviderInstance = createAIProvider(aiConfig)
   }
 }
 
-async function generateNextNode() {
+async function generateNextNodeUI() {
   if (!aiProviderInstance) {
-    initAiProvider()
+    initAIProviderInstance()
   }
 
   if (!session || !_model) {
@@ -1521,50 +1640,6 @@ async function generateNextNode() {
   }
 }
 
-async function paraphraseCurrentText() {
-  if (!aiProviderInstance) {
-    initAiProvider()
-  }
-
-  if (!session || !_model) {
-    setStatus('まずモデルを読み込んでセッションを開始してください', 'warn')
-    return
-  }
-
-  const currentNode = _model.nodes[session.nodeId]
-  if (!currentNode || !currentNode.text) {
-    setStatus('現在のノードにテキストがありません', 'warn')
-    return
-  }
-
-  // Disable button during paraphrasing
-  paraphraseCurrentBtn.disabled = true
-  paraphraseCurrentBtn.textContent = '言い換え中...'
-
-  try {
-    setStatus('AIでテキストを言い換え中...', 'info')
-
-    const paraphrasedVersions = await aiProviderInstance.paraphrase(currentNode.text, {
-      variantCount: 3,
-      style: 'plain',
-      tone: 'neutral'
-    })
-
-    // Display paraphrased versions
-    const paraphrasedText = paraphrasedVersions.map((text, i) => `${i + 1}. ${text}`).join('\n\n')
-    aiOutput.textContent = `言い換えバリエーション:\n\n${paraphrasedText}`
-
-    setStatus('テキストの言い換えが完了しました', 'success')
-
-  } catch (error) {
-    console.error('AI paraphrase error:', error)
-    setStatus(`言い換えに失敗しました: ${error.message}`, 'error')
-    aiOutput.textContent = `エラー: ${error.message}`
-  } finally {
-    paraphraseCurrentBtn.disabled = false
-    paraphraseCurrentBtn.textContent = '現在のテキストを言い換え'
-  }
-}
 
 saveAiSettings.addEventListener('click', () => {
   aiConfig.provider = aiProvider.value
@@ -1575,6 +1650,9 @@ saveAiSettings.addEventListener('click', () => {
       aiOutput.textContent = 'OpenAI APIキーを入力してください'
       return
     }
+  } else if (aiProvider.value === 'ollama') {
+    aiConfig.ollama.url = ollamaUrl.value
+    aiConfig.ollama.model = ollamaModel.value
   }
   // Save to localStorage
   localStorage.setItem('narrativeGenAiConfig', JSON.stringify(aiConfig))
@@ -1582,8 +1660,8 @@ saveAiSettings.addEventListener('click', () => {
   aiProviderInstance = null // Reset to use new config
 })
 
-generateNextNodeBtn.addEventListener('click', generateNextNode)
-paraphraseCurrentBtn.addEventListener('click', paraphraseCurrentText)
+generateNextNodeBtn.addEventListener('click', generateNextNodeUI)
+paraphraseCurrentBtn.addEventListener('click', paraphraseCurrentTextUI)
 
 function renderNodeList() {
   nodeList.innerHTML = ''
@@ -1813,9 +1891,26 @@ function parseConditions(text) {
       const match = cond.slice(9).match(/^(\w+)(>=|<=|>|<|==)(.+)$/)
       if (!match) throw new Error(`不正なリソース条件: ${cond}`)
       conditions.push({ type: 'resource', key: match[1].trim(), op: match[2], value: parseFloat(match[3]) })
+    } else if (cond.startsWith('variable:')) {
+      const match = cond.slice(9).match(/^(\w+)(==|!=|contains|!contains)(.+)$/)
+      if (!match) throw new Error(`不正な変数条件: ${cond}`)
+      conditions.push({ type: 'variable', key: match[1].trim(), op: match[2], value: match[3].trim() })
     } else if (cond.startsWith('timeWindow:')) {
       const [start, end] = cond.slice(11).split('-').map((s) => parseInt(s.trim()))
       conditions.push({ type: 'timeWindow', start, end })
+    } else if (cond.startsWith('and(') && cond.endsWith(')')) {
+      const innerText = cond.slice(4, -1)
+      const subConditions = parseConditions(innerText)
+      conditions.push({ type: 'and', conditions: subConditions })
+    } else if (cond.startsWith('or(') && cond.endsWith(')')) {
+      const innerText = cond.slice(3, -1)
+      const subConditions = parseConditions(innerText)
+      conditions.push({ type: 'or', conditions: subConditions })
+    } else if (cond.startsWith('not(') && cond.endsWith(')')) {
+      const innerText = cond.slice(4, -1)
+      const subCondition = parseConditions(innerText)[0]
+      if (!subCondition) throw new Error(`不正な否定条件: ${cond}`)
+      conditions.push({ type: 'not', condition: subCondition })
     } else {
       throw new Error(`不明な条件タイプ: ${cond}`)
     }
@@ -1836,6 +1931,9 @@ function parseEffects(text) {
     } else if (eff.startsWith('addResource:')) {
       const [key, val] = eff.slice(12).split('=')
       effects.push({ type: 'addResource', key: key.trim(), delta: parseFloat(val) })
+    } else if (eff.startsWith('setVariable:')) {
+      const [key, val] = eff.slice(12).split('=')
+      effects.push({ type: 'setVariable', key: key.trim(), value: val.trim() })
     } else if (eff.startsWith('multiplyResource:')) {
       const [key, val] = eff.slice(16).split('=')
       effects.push({ type: 'multiplyResource', key: key.trim(), factor: parseFloat(val) })
@@ -1955,7 +2053,11 @@ function serializeConditions(conditions) {
   return conditions.map((cond) => {
     if (cond.type === 'flag') return `flag:${cond.key}=${cond.value}`
     if (cond.type === 'resource') return `resource:${cond.key}${cond.op}${cond.value}`
+    if (cond.type === 'variable') return `variable:${cond.key}${cond.op}${cond.value}`
     if (cond.type === 'timeWindow') return `timeWindow:${cond.start}-${cond.end}`
+    if (cond.type === 'and') return `and(${serializeConditions(cond.conditions)})`
+    if (cond.type === 'or') return `or(${serializeConditions(cond.conditions)})`
+    if (cond.type === 'not') return `not(${serializeConditions([cond.condition])})`
     return ''
   }).filter(Boolean).join(';')
 }
@@ -1965,6 +2067,7 @@ function serializeEffects(effects) {
   return effects.map((eff) => {
     if (eff.type === 'setFlag') return `setFlag:${eff.key}=${eff.value}`
     if (eff.type === 'addResource') return `addResource:${eff.key}=${eff.delta}`
+    if (eff.type === 'setVariable') return `setVariable:${eff.key}=${eff.value}`
     if (eff.type === 'multiplyResource') return `multiplyResource:${eff.key}=${eff.factor}`
     if (eff.type === 'setResource') return `setResource:${eff.key}=${eff.value}`
     if (eff.type === 'randomEffect') {
@@ -2113,6 +2216,43 @@ function updateModelFromInput(input) {
   }
 }
 
+function showVariableEditor() {
+  const variables = session.variables || {}
+  const varKeys = Object.keys(variables)
+  
+  let message = '変数を編集してください (key=value の形式で入力)\n\n現在の変数:\n'
+  message += varKeys.length > 0 ? varKeys.map(key => `${key}=${variables[key]}`).join('\n') : 'なし'
+  message += '\n\n新しい変数を追加または既存の変数を編集 (空行でスキップ):'
+  
+  const input = prompt(message)
+  if (input === null) return // Cancelled
+  
+  const newVariables = { ...variables }
+  
+  if (input.trim()) {
+    const parts = input.split('=')
+    if (parts.length === 2) {
+      const key = parts[0].trim()
+      const value = parts[1].trim()
+      if (key) {
+        newVariables[key] = value
+        setStatus(`変数 ${key} を ${value} に設定しました`, 'success')
+      } else {
+        setStatus('変数キーが無効です', 'warn')
+        return
+      }
+    } else {
+      setStatus('形式が正しくありません (key=value)', 'warn')
+      return
+    }
+  }
+  
+  // Update session
+  session = { ...session, variables: newVariables }
+  renderState()
+  renderDebugInfo()
+}
+
 // トップレベルのプレビュー/ダウンロード
 previewTopBtn.addEventListener('click', () => {
   if (!_model) {
@@ -2136,6 +2276,10 @@ previewTopBtn.addEventListener('click', () => {
 // Close story preview modal
 closePreviewBtn.addEventListener('click', () => {
   storyPreviewModal.classList.remove('show')
+})
+
+toggleSidebarBtn.addEventListener('click', () => {
+  storyContent.classList.toggle('sidebar-hidden')
 })
 
 downloadTopBtn.addEventListener('click', () => {
@@ -2184,8 +2328,8 @@ debugTab.addEventListener('click', () => {
   document.querySelectorAll('.tab-content').forEach(panel => panel.classList.remove('active'))
   
   debugTab.classList.add('active')
-  debugPanel.classList.add('active')
   renderDebugInfo()
+  renderSaveSlots()
 })
 
 aiTab.addEventListener('click', () => {
@@ -2209,6 +2353,291 @@ resetKeyBindings.addEventListener('click', () => {
     resetKeyBindingsToDefault()
   }
 })
+
+aiProvider.addEventListener('change', () => {
+  openaiSettings.style.display = aiProvider.value === 'openai' ? 'block' : 'none'
+  ollamaSettings.style.display = aiProvider.value === 'ollama' ? 'block' : 'none'
+})
+
+// Save/Load event listeners
+refreshSavesBtn.addEventListener('click', renderSaveSlots)
+saveSlots.addEventListener('click', handleSaveSlotClick)
+document.addEventListener('click', handleAutoSaveClick)
+
+// ============================================================================
+// Save/Load System
+// ============================================================================
+
+const SAVE_SLOTS = 5
+const SAVE_KEY_PREFIX = 'narrativeGen_save_slot_'
+const AUTOSAVE_KEY = 'narrativeGen_autosave'
+
+// Save data structure
+function createSaveData(session, modelName) {
+  return {
+    version: '1.0',
+    timestamp: new Date().toISOString(),
+    modelName: modelName || currentModelName,
+    session: {
+      nodeId: session.nodeId,
+      flags: { ...session.flags },
+      resources: { ...session.resources },
+      variables: { ...session.variables },
+      time: session.time
+    },
+    storyLog: [...storyLog]
+  }
+}
+
+// Save to specific slot
+function saveToSlot(slotId) {
+  if (!session || !_model) {
+    setStatus('保存するセッションがありません', 'warn')
+    return false
+  }
+
+  try {
+    const saveData = createSaveData(session, currentModelName)
+    const key = `${SAVE_KEY_PREFIX}${slotId}`
+    localStorage.setItem(key, JSON.stringify(saveData))
+
+    setStatus(`スロット ${slotId} に保存しました`, 'success')
+    Logger.info('Game saved', { slotId, nodeId: session.nodeId })
+    return true
+  } catch (error) {
+    setStatus(`保存に失敗しました: ${error.message}`, 'error')
+    Logger.error('Save failed', { slotId, error: error.message })
+    return false
+  }
+}
+
+// Load from specific slot
+function loadFromSlot(slotId) {
+  try {
+    const key = `${SAVE_KEY_PREFIX}${slotId}`
+    const savedData = localStorage.getItem(key)
+
+    if (!savedData) {
+      setStatus(`スロット ${slotId} にセーブデータがありません`, 'warn')
+      return false
+    }
+
+    const saveData = JSON.parse(savedData)
+
+    // Validate save data
+    if (!saveData.session || !saveData.modelName) {
+      throw new Error('不正なセーブデータです')
+    }
+
+    // Restore session
+    session = {
+      nodeId: saveData.session.nodeId,
+      flags: { ...saveData.session.flags },
+      resources: { ...saveData.session.resources },
+      variables: { ...saveData.session.variables },
+      time: saveData.session.time
+    }
+
+    // Restore story log
+    storyLog = saveData.storyLog || []
+
+    currentModelName = saveData.modelName
+
+    // Update UI
+    renderState()
+    renderChoices()
+    renderStory()
+    renderDebugInfo()
+
+    setStatus(`スロット ${slotId} から読み込みました`, 'success')
+    Logger.info('Game loaded', { slotId, nodeId: session.nodeId })
+    return true
+  } catch (error) {
+    setStatus(`読み込みに失敗しました: ${error.message}`, 'error')
+    Logger.error('Load failed', { slotId, error: error.message })
+    return false
+  }
+}
+
+// Auto-save functionality
+function autoSave() {
+  if (!session || !_model) return
+
+  try {
+    const saveData = createSaveData(session, currentModelName)
+    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(saveData))
+    Logger.info('Auto-saved', { nodeId: session.nodeId })
+  } catch (error) {
+    Logger.error('Auto-save failed', { error: error.message })
+  }
+}
+
+// Load auto-save
+function loadAutoSave() {
+  try {
+    const savedData = localStorage.getItem(AUTOSAVE_KEY)
+    if (!savedData) return false
+
+    const saveData = JSON.parse(savedData)
+    if (!saveData.session) return false
+
+    // Restore session
+    session = {
+      nodeId: saveData.session.nodeId,
+      flags: { ...saveData.session.flags },
+      resources: { ...saveData.session.resources },
+      variables: { ...saveData.session.variables },
+      time: saveData.session.time
+    }
+
+    storyLog = saveData.storyLog || []
+    currentModelName = saveData.modelName
+
+    Logger.info('Auto-save loaded', { nodeId: session.nodeId })
+    return true
+  } catch (error) {
+    Logger.error('Auto-save load failed', { error: error.message })
+    return false
+  }
+}
+
+// Get save slot info
+function getSaveSlotInfo(slotId) {
+  try {
+    const key = `${SAVE_KEY_PREFIX}${slotId}`
+    const savedData = localStorage.getItem(key)
+
+    if (!savedData) return null
+
+    const saveData = JSON.parse(savedData)
+    return {
+      slotId,
+      timestamp: saveData.timestamp,
+      modelName: saveData.modelName,
+      nodeId: saveData.session?.nodeId,
+      time: saveData.session?.time
+    }
+  } catch (error) {
+    Logger.error('Failed to read save slot info', { slotId, error: error.message })
+    return null
+  }
+}
+
+// Clear save slot
+function clearSaveSlot(slotId) {
+  try {
+    const key = `${SAVE_KEY_PREFIX}${slotId}`
+    localStorage.removeItem(key)
+    setStatus(`スロット ${slotId} をクリアしました`, 'info')
+    Logger.info('Save slot cleared', { slotId })
+    return true
+  } catch (error) {
+    setStatus(`スロットのクリアに失敗しました: ${error.message}`, 'error')
+    return false
+  }
+}
+
+// Initialize auto-save (save every 30 seconds when session is active)
+let autoSaveInterval = null
+
+function startAutoSave() {
+  stopAutoSave() // Clear existing interval
+  autoSaveInterval = setInterval(autoSave, 30000) // 30 seconds
+  Logger.info('Auto-save started')
+}
+
+function stopAutoSave() {
+  if (autoSaveInterval) {
+    clearInterval(autoSaveInterval)
+    autoSaveInterval = null
+    Logger.info('Auto-save stopped')
+  }
+}
+
+// Render save slots UI
+function renderSaveSlots() {
+  saveSlots.innerHTML = ''
+
+  for (let i = 1; i <= SAVE_SLOTS; i++) {
+    const slotInfo = getSaveSlotInfo(i)
+    const slotDiv = document.createElement('div')
+    slotDiv.className = 'save-slot'
+    slotDiv.innerHTML = `
+      <div class="slot-header">
+        <strong>スロット ${i}</strong>
+        ${slotInfo ? `<span class="slot-info">${slotInfo.modelName} - ${slotInfo.nodeId} (時間: ${slotInfo.time})</span>` : '<span class="slot-empty">空</span>'}
+      </div>
+      <div class="slot-timestamp">
+        ${slotInfo ? `保存日時: ${new Date(slotInfo.timestamp).toLocaleString()}` : ''}
+      </div>
+      <div class="slot-buttons">
+        <button class="save-btn" data-slot="${i}" ${!session ? 'disabled' : ''}>保存</button>
+        <button class="load-btn" data-slot="${i}" ${!slotInfo ? 'disabled' : ''}>読み込み</button>
+        <button class="clear-btn" data-slot="${i}" ${!slotInfo ? 'disabled' : ''}>クリア</button>
+      </div>
+    `
+    saveSlots.appendChild(slotDiv)
+  }
+
+  // Add auto-save info
+  const autoSaveDiv = document.createElement('div')
+  autoSaveDiv.className = 'auto-save-info'
+  autoSaveDiv.innerHTML = `
+    <div class="slot-header">
+      <strong>オートセーブ</strong>
+      <span class="slot-info">${session ? '有効' : '無効'}</span>
+    </div>
+    <div class="slot-buttons">
+      <button id="loadAutoSaveBtn" ${!localStorage.getItem(AUTOSAVE_KEY) ? 'disabled' : ''}>オートセーブから読み込み</button>
+      <button id="clearAutoSaveBtn" ${!localStorage.getItem(AUTOSAVE_KEY) ? 'disabled' : ''}>オートセーブをクリア</button>
+    </div>
+  `
+  saveSlots.appendChild(autoSaveDiv)
+}
+
+// Handle save slot button clicks
+function handleSaveSlotClick(event) {
+  const button = event.target
+  if (!button.classList.contains('save-btn') && !button.classList.contains('load-btn') && !button.classList.contains('clear-btn')) return
+
+  const slotId = parseInt(button.dataset.slot)
+
+  if (button.classList.contains('save-btn')) {
+    saveToSlot(slotId)
+    renderSaveSlots()
+  } else if (button.classList.contains('load-btn')) {
+    if (loadFromSlot(slotId)) {
+      renderSaveSlots()
+    }
+  } else if (button.classList.contains('clear-btn')) {
+    if (confirm(`スロット ${slotId} のセーブデータを削除しますか？`)) {
+      clearSaveSlot(slotId)
+      renderSaveSlots()
+    }
+  }
+}
+
+// Handle auto-save buttons
+function handleAutoSaveClick(event) {
+  const button = event.target
+
+  if (button.id === 'loadAutoSaveBtn') {
+    if (loadAutoSave()) {
+      renderState()
+      renderChoices()
+      renderStory()
+      renderDebugInfo()
+      setStatus('オートセーブから読み込みました', 'success')
+      renderSaveSlots()
+    }
+  } else if (button.id === 'clearAutoSaveBtn') {
+    if (confirm('オートセーブデータを削除しますか？')) {
+      localStorage.removeItem(AUTOSAVE_KEY)
+      setStatus('オートセーブをクリアしました', 'info')
+      renderSaveSlots()
+    }
+  }
+}
 
 // Initialize status
 setStatus('初期化完了 - モデルを読み込んでください', 'info')

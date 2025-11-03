@@ -242,7 +242,7 @@ class OllamaProvider implements AIProvider {
       return data.response?.trim() || '次のシーンへ進みます。'
     } catch (error) {
       console.error('Ollama generation error:', error)
-      throw new Error(`Ollamaとの通信に失敗しました: ${error.message}`)
+      throw new Error(`Ollamaとの通信に失敗しました: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 

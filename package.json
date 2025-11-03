@@ -23,7 +23,8 @@
   "homepage": "https://github.com/YuShimoji/NarrativeGen#readme",
   "private": true,
   "workspaces": [
-    "packages/engine-ts",
+    "Packages/engine-ts",
+    "Packages/backend",
     "apps/*"
   ],
   "scripts": {
