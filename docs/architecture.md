@@ -83,7 +83,11 @@ AI アシスト機能（次の物語展開生成・言い換え）の設計に�
 ### 実装状況
 
 - ✅ **Phase 1**: モック実装（Web Tester の AI提案ボタンでランダムサンプル）
-- ⏳ **Phase 2**: プロンプト設計 + OpenAI API 統合
+- ✅ **Phase 2**: プロンプト設計 + OpenAI API 統合
+  - `packages/engine-ts/src/ai-provider.ts` に OpenAIProvider 実装
+  - Web Tester AI タブで API キー設定可能
+  - 次のノード生成と言い換え機能が動作
+  - エラーハンドリングとフォールバック実装済み
 - ⏳ **Phase 3**: ローカル LLM 統合（Ollama など）
 - ⏳ **Phase 4**: バッチ処理・履歴管理
 

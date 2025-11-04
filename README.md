@@ -10,6 +10,8 @@
 - 🎮 **条件分岐・リソース管理**: フラグ、リソース、時間ゲート等をCSV列で直接記述
 - 🔧 **プログラミング不要**: ライター・デザイナーが直接ストーリーを構築
 - 🚀 **マルチプラットフォーム**: Unity SDK + Web Tester + TypeScript エンジン
+- ⚡ **高性能**: 大規模モデルの仮想化・メモ化・遅延読み込み対応
+- 🛡️ **堅牢**: 構造化ログ・エラーバウンダリ・包括的検証
 
 ## プロジェクト構成
 
@@ -130,27 +132,62 @@ cmd /c npm run validate:models
 
 ## Web Tester
 
-### Option 1: Development Server (Recommended)
+### Recommended Workflow (From Project Root)
+
+**First-time setup**:
+```powershell
+npm install
+npm run build:all
+```
+
+**Development** (recommended for active development):
+```powershell
+# Terminal 1: Watch and rebuild engine on changes
+npm run dev:engine
+
+# Terminal 2: Run web tester dev server
+npm run dev:tester
+```
+
+**Production build**:
+```powershell
+npm run build:all
+```
+
+### Alternative: Manual Commands
+
+**Option 1: Development Server**
 
 ```powershell
-cd .\apps\web-tester
-cmd /c npm install
-cmd /c npm run dev
+# Build engine first
+cd .\packages\engine-ts
+npm run build
+
+# Then start web tester
+cd ..\..\apps\web-tester
+npm install
+npm run dev
 ```
 
 Then open **http://localhost:5173** (or the port shown in terminal) in your browser.
 
-### Option 2: Static Build & Serve
+**Option 2: Static Build & Serve**
 
 ```powershell
-cd .\apps\web-tester
-cmd /c npm install
-cmd /c npm run build
+# Build both packages
+cd .\packages\engine-ts
+npm run build
+
+cd ..\..\apps\web-tester
+npm install
+npm run build
 # Now serve the dist/ directory with any static server
-# e.g., VSCode Live Server, python -m http.server, etc.
 ```
 
-**Important**: When using Live Server or other static servers, open the `dist/` directory (not the project root) to avoid module resolution errors.
+**Important**: 
+- Always build `engine-ts` before `web-tester`
+- When using Live Server, open the `dist/` directory to avoid module resolution errors
+- See `docs/troubleshooting.md` for common issues and solutions
 
 ### Features
 
@@ -161,17 +198,44 @@ cmd /c npm run build
   - Add/delete nodes and choices
   - Preview story flow (連続ノードを小説風に表示)
   - Download edited JSON
-  - AI suggestion for choice text (Phase 1: mock implementation)
+- AI suggestion for choice text (Phase 1: mock implementation)
+- **Performance Optimizations**:
+  - Graph virtualization for large models (>100 nodes) with smart node selection
+  - Virtual scrolling for long story logs with lazy loading
+  - Chunked CSV import with progress indicators for large files
+  - Memoized condition evaluation and choice availability checking
+- **Error Handling & Logging**:
+  - Structured logging system with sessionStorage persistence for debugging
+  - Error boundary wrappers for critical operations with user-friendly messages
+  - Comprehensive input validation with detailed error contexts
+  - Model validation with specific error location reporting
 
-### AI Features (Planned)
+### AI Features
 
-See `docs/ai-features.md` for detailed design. Current status:
+See `docs/ai-features.md` for detailed design and `test-ai-features.md` for testing procedures. Current status:
 
 - ✅ **Phase 1**: Mock AI suggestion (random samples)
-- ⏳ **Phase 2**: Next story generation & paraphrase via OpenAI API
+- ✅ **Phase 2**: Next story generation & paraphrase via OpenAI API
 - ⏳ **Phase 3**: Local LLM integration (Ollama, llama.cpp)
 - ⏳ **Phase 4**: Batch processing & history management
 
+#### Using AI Features
+
+1. **Open AI Tab**: Click the "AI" tab in Web Tester
+2. **Select Provider**:
+   - **mock**: Random sample text (no API key required, instant)
+   - **openai**: OpenAI GPT models (API key required, see [OpenAI Platform](https://platform.openai.com/api-keys))
+3. **Configure Settings**:
+   - Enter API key for OpenAI
+   - Select model (default: gpt-3.5-turbo)
+   - Click "設定を保存" to save
+4. **Generate Content**:
+   - Load a model first
+   - Click "次のノードを生成" to generate next story node
+   - Click "現在のテキストを言い換え" to paraphrase current text
+5. **Review Output**: Generated text appears in the AI output area
+
+**Note**: API keys are stored in browser localStorage and never sent to our servers. They connect directly to the LLM API.
 ## Unity SDK
 
 Install as a UPM package:

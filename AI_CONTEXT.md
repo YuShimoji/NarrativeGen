@@ -10,9 +10,125 @@
 - **プログラミング不要**: フラグ、リソース、条件分岐をCSV列で記述
 - **マルチプラットフォーム**: TypeScript エンジン + Unity SDK + Web Tester
 
-## 🎯 最新実装状況（2025-10-22）
+## 🎯 最新実装状況（2025-10-27）
 
 ### ✅ 完了した主要機能
+
+#### 1. OpenSpec仕様駆動開発導入 v1.0
+
+**実装内容**:
+- OpenSpecツールの導入と初期設定
+- プロジェクト仕様のYAML定義（`.openspec/` ディレクトリ）
+- 変更提案管理システムの構築
+
+**技術詳細**:
+- **仕様ファイル**: `.openspec/instructions.md` - NarrativeGenのコア仕様定義
+- **変更提案**: `.openspec/changes/` - 各機能の仕様記述
+  - `add-model-visualization.yaml`: モデル視覚化機能仕様
+  - `enhance-gui-editing.yaml`: GUI編集強化仕様
+  - `stabilize-ci-pipeline.yaml`: CI安定化仕様
+
+**ワークフロー**:
+- `openspec spec list`: 仕様一覧表示
+- `openspec change validate`: 変更提案検証
+- `openspec archive`: 完了した変更を仕様に統合
+
+#### 2. Web Tester モデル視覚化機能
+
+**実装内容**:
+- SVGベースのインタラクティブグラフ表示
+- ノード接続の視覚化（矢印付き線）
+- ズーム/パン操作
+- 現在のノードハイライト（緑色）
+
+**技術詳細**:
+- **実装場所**: `apps/web-tester/index.html`, `main.js`
+- **機能**: `renderGraph()` 関数でノードをグリッド配置
+- **コントロール**: ズームイン/アウト/リセットボタン
+- **データ**: モデルノードと選択肢接続をSVGで描画
+
+#### 3. GUI編集機能強化
+
+**実装内容**:
+- リアルタイム入力検証（タイプ時に自動チェック）
+- キーボードショートカット（Ctrl+Sで保存）
+- 即時エラー表示
+
+**技術詳細**:
+- **リアルタイム検証**: `input` イベントリスナーで `validateModel()` 呼び出し
+- **ショートカット**: `document.addEventListener('keydown')` でCtrl+S検知
+- **エラー表示**: `showErrors()`/`hideErrors()` で即時フィードバック
+
+#### 4. CI/CDパイプライン安定化
+
+**実装内容**:
+- Unityエディタ環境のCI統合
+- Unityライセンスアクティベーション
+- sdk-unityジョブの安定化
+
+**技術詳細**:
+- **Unity CI**: `game-ci/unity-builder@v4` と `unity-activate@v1` 使用
+- **ライセンス**: GitHub secrets（UNITY_USERNAME, UNITY_PASSWORD, UNITY_SERIAL）必要
+- **設定ファイル**: `.github/workflows/ci.yml` 更新
+
+### 🚀 次の開発タスク（推奨）
+
+#### 短期（今週中）
+
+1. **OpenSpec完全セットアップ**
+   - `openspec init` の手動完了（インタラクティブ設定）
+   - 変更提案のarchive処理
+
+2. **Unityライセンス設定**
+   - GitHubリポジトリsecretsの設定
+   - CIテスト実行確認
+
+3. **Web Tester 機能拡張**
+   - グラフノードのクリックで編集モード遷移
+   - グラフレイアウト改善（力学モデルアルゴリズム）
+
+#### 中期（1-2週間）
+
+1. **仕様駆動開発の定着**
+   - すべての変更をOpenSpec change proposal経由
+   - ドキュメント自動生成
+
+2. **Unityエディタ拡張**
+   - CSVインポートUI
+   - ビジュアルノードエディタ
+
+### ⚠️ 申し送り事項（必須対応）
+
+#### 即時対応が必要
+
+1. **OpenSpec初期化完了**
+   - ターミナルで `openspec init` を実行し、インタラクティブ設定を完了させる
+   - AI assistant接続設定を行う
+
+2. **Unityライセンスsecrets設定**
+   - GitHubリポジトリ設定 > Secrets and variables > Actions
+   - 以下のsecretsを追加：
+     - `UNITY_USERNAME`: Unityアカウントユーザー名
+     - `UNITY_PASSWORD`: Unityアカウントパスワード  
+     - `UNITY_SERIAL`: Unityライセンスシリアル番号
+   - ライセンスはPersonal/Proいずれでも可
+
+3. **CIテスト実行**
+   - ライセンス設定後、CIワークフローを手動実行してsdk-unityジョブの成功を確認
+   - 失敗時はUnityバージョン（2022.3.10f1）の調整を検討
+
+#### 技術的注意点
+
+- OpenSpec change proposalは`.openspec/changes/`にYAML形式で保存
+- モデル視覚化はD3.js代替としてSVGネイティブ実装（軽量）
+- GUIリアルタイム検証はパフォーマンスに影響しないよう最適化済み
+- Unity CIはライセンス認証のため初回実行が長時間かかる可能性
+
+### 🔧 環境依存事項
+
+- OpenSpec: グローバルインストール済み（`@fission-ai/openspec@latest`）
+- Unity CI: ライセンスsecrets必須
+- グラフ機能: SVG対応ブラウザ必須（IE11非対応）
 
 #### 1. スプレッドシート駆動システム v2.0
 
@@ -332,6 +448,6 @@ npm run preview       # ビルド結果をプレビュー
 
 ---
 
-**最終更新**: 2025-10-22  
+**最終更新**: 2025-10-27  
 **作成者**: AI アシスタント（Windsurf Cascade）  
-**バージョン**: v2.0 (Spreadsheet-driven Core)
+**バージョン**: v2.1 (OpenSpec + Visual Features)

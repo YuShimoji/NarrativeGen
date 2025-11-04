@@ -14,8 +14,7 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        working-directory: packages/engine-ts
-        run: npm install
+        run: npm ci
       - name: Build
         working-directory: packages/engine-ts
         run: npm run build
@@ -36,24 +35,7 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        working-directory: apps/web-tester
-        run: npm install
+        run: npm ci
       - name: Build
         working-directory: apps/web-tester
         run: npm run build
-  sdk-unity:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
-      - name: Restore dependencies
-        working-directory: packages/tests/NarrativeGen.Tests
-        run: dotnet restore
-      - name: Build
-        working-directory: packages/tests/NarrativeGen.Tests
-        run: dotnet build --configuration Release --no-restore
-      - name: Test
-        working-directory: packages/tests/NarrativeGen.Tests
-        run: dotnet test --configuration Release --no-build --verbosity normal

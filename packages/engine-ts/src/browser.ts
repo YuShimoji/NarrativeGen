@@ -12,7 +12,17 @@ import type {
   ResourceState,
   SessionState,
 } from './types'
+import { GameSession } from './game-session'
 export { chooseParaphrase, paraphraseJa } from './paraphrase'
+export { 
+  createAIProvider, 
+  MockAIProvider, 
+  type AIProvider, 
+  type AIConfig, 
+  type StoryContext, 
+  type ParaphraseOptions 
+} from './ai-provider'
+export { GameSession }
 
 function cmp(op: '>=' | '<=' | '>' | '<' | '==', a: number, b: number): boolean {
   switch (op) {
