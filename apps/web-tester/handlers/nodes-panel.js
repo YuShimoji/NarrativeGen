@@ -166,6 +166,8 @@ export function initNodesPanel(deps) {
         ${choice.target ? ` → ${choice.target}` : ''}
       </div>
     `).join('');
+  }
+
   // Render the complete node list
   function renderNodeList() {
     if (!nodeOverview || !_model) return

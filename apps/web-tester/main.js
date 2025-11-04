@@ -4,7 +4,7 @@ import { initStory, appendStoryFromCurrentNode, renderStoryEnhanced } from './ha
 import { exportModelToCsv } from './utils/csv-exporter.js'
 import { initNodesPanel } from './handlers/nodes-panel.js'
 import { initTabs } from './handlers/tabs.js'
-import { initGuiEditor } from './handlers/gui-editor.js'
+// import { initGuiEditor } from './handlers/gui-editor.js'
 import { resolveVariables, validateModel } from './utils/model-utils.js'
 import { parseCsvLine, parseKeyValuePairs, parseConditions, parseEffects, serializeConditions, serializeEffects, serializeKeyValuePairs } from './utils/csv-parser.js'
 

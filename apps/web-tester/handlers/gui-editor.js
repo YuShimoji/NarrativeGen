@@ -16,7 +16,10 @@ export function initGuiEditor(deps) {
     guiEditor,
     saveGuiBtn,
     cancelGuiBtn,
-    storyView
+    storyView,
+    chooseParaphrase,
+    serializeConditions,
+    parseConditions
   } = deps;
 
   let originalModel = null;
@@ -139,7 +142,7 @@ export function initGuiEditor(deps) {
         </div>
       </div>
     `;
-  }
+  };
 
   // Generate HTML for choices editor
   function generateChoicesEditor(choices) {
@@ -151,7 +154,7 @@ export function initGuiEditor(deps) {
         <button class="delete-choice-btn">×</button>
       </div>
     `).join('');
-  }
+  };
 
   // Setup event listeners for editor interactions
   function setupEditorListeners() {
@@ -243,7 +246,7 @@ export function initGuiEditor(deps) {
     }
 
     return true;
-  }
+  };
 
   // Update model from input changes
   function updateModelFromInput(input) {
@@ -298,99 +301,12 @@ export function initGuiEditor(deps) {
         }
       }
     }
-  // Render the node list for GUI editing
-  function renderNodeList() {
-    if (!nodeList) return
+};
 
-    nodeList.innerHTML = ''
-    for (const [nodeId, node] of Object.entries(_model.nodes)) {
-      const nodeDiv = document.createElement('div')
-      nodeDiv.className = 'node-editor'
-      nodeDiv.innerHTML = `
-        <h3>ノード: ${nodeId}</h3>
-        <label>テキスト: <input type="text" value="${node.text || ''}" data-node-id="${nodeId}" data-field="text"></label>
-        <label>タイプ:
-          <select data-node-id="${nodeId}" data-field="type">
-            <option value="normal" ${node.type === 'normal' || !node.type ? 'selected' : ''}>通常</option>
-            <option value="ending" ${node.type === 'ending' ? 'selected' : ''}>エンディング</option>
-            <option value="branch" ${node.type === 'branch' ? 'selected' : ''}>分岐点</option>
-          </select>
-        </label>
-        <label>タグ: <input type="text" placeholder="tag1;tag2;tag3" value="${node.tags ? node.tags.join(';') : ''}" data-node-id="${nodeId}" data-field="tags"></label>
-        <h4>選択肢</h4>
-        <div class="choices-editor" data-node-id="${nodeId}"></div>
-        <button class="add-choice-btn" data-node-id="${nodeId}">選択肢を追加</button>
-        <button class="delete-node-btn" data-node-id="${nodeId}">ノードを削除</button>
-      `
-      nodeList.appendChild(nodeDiv)
-      renderChoicesForNode(nodeId)
-    }
-
-    // Add input listeners for real-time validation
-    nodeList.addEventListener('input', (e) => {
-      const input = e.target
-      if (input.tagName === 'INPUT') {
-        const nodeId = input.dataset.nodeId
-        const field = input.dataset.field
-        const choiceIndex = input.dataset.choiceIndex
-
-        if (field === 'text') {
-          _model.nodes[nodeId].text = input.value
-        } else if (field === 'target') {
-          _model.nodes[nodeId].choices[choiceIndex].target = input.value
-        } else if (field === 'choice-text') {
-          _model.nodes[nodeId].choices[choiceIndex].text = input.value
-        }
-
-        // Real-time validation
-        const errors = validateModel(_model.nodes)
-        if (errors.length > 0) {
-          showErrors(errors)
-        } else {
-          hideErrors()
-        }
-      }
-    })
-  }
-
-  // Render choices for a specific node in GUI editor
-  function renderChoicesForNode(nodeId) {
-    const node = _model.nodes[nodeId]
-    const choicesDiv = nodeList.querySelector(`.choices-editor[data-node-id="${nodeId}"]`)
-    if (!choicesDiv) return
-
-    choicesDiv.innerHTML = ''
-    node.choices?.forEach((choice, index) => {
-      const choiceDiv = document.createElement('div')
-      choiceDiv.className = 'choice-editor'
-      choiceDiv.innerHTML = `
-        <label>テキスト: <input type="text" value="${choice.text}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="choice-text"></label>
-        <label>ターゲット: <input type="text" value="${choice.target}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="target"></label>
-        <div class="outcome-editor">
-          <label>Outcome:
-            <select data-node-id="${nodeId}" data-choice-index="${index}" data-field="outcome-type">
-              <option value="">なし</option>
-              <option value="ADD_ITEM" ${choice.outcome?.type === 'ADD_ITEM' ? 'selected' : ''}>アイテム追加</option>
-              <option value="REMOVE_ITEM" ${choice.outcome?.type === 'REMOVE_ITEM' ? 'selected' : ''}>アイテム削除</option>
-            </select>
-            <input type="text" placeholder="アイテムID" value="${choice.outcome?.value || ''}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="outcome-value">
-          </label>
-        </div>
-        <div class="conditions-editor">
-          <label>条件: <input type="text" placeholder="flag:key=true; resource:health>=10" value="${choice.conditions ? serializeConditions(choice.conditions) : ''}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="conditions"></label>
-        </div>
-        <button class="paraphrase-btn" data-node-id="${nodeId}" data-choice-index="${index}">言い換え</button>
-        <button class="delete-choice-btn" data-node-id="${nodeId}" data-choice-index="${index}">削除</button>
-      `
-      choicesDiv.appendChild(choiceDiv)
-    })
   // Public API
   return {
     startEditing,
     cancelEditing,
     saveEditing,
-    updateModelFromInput,
-    renderNodeList,
-    renderChoicesForNode,
-    isEditing: () => originalModel !== null
+    updateModelFromInput
   };
