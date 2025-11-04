@@ -137,6 +137,7 @@
         margin-bottom: 1.5rem;
         box-shadow: 0 4px 12px rgba(252, 165, 165, 0.2);
         backdrop-filter: blur(10px);
+        display: none;
       }
       .error-panel.show {
         display: block;
@@ -610,7 +611,7 @@
       <h1>NarrativeGen Web Tester</h1>
       <p>GameSession の挙動をブラウザで簡易確認できます。ブラウザで静的にホストしてください。</p>
 
-      <div id="errorPanel" class="error-panel">
+      <div id="errorPanel" class="error-panel" style="display: none;">
         <h3>⚠️ バリデーションエラー</h3>
         <ul id="errorList" class="error-list"></ul>
       </div>
@@ -646,12 +647,13 @@
             <div class="panel">
               <label for="modelSelect">サンプルモデル</label>
               <select id="modelSelect">
+                <option value="tutorial">tutorial.json</option>
                 <option value="linear">linear.json</option>
                 <option value="branching_flags">branching_flags.json</option>
                 <option value="resource_management">resource_management.json</option>
                 <option value="time_gated">time_gated.json</option>
                 <option value="multiple_endings">multiple_endings.json</option>
-                <option value="tutorial">tutorial.json</option>
+                <option value="inventory_demo">inventory_demo.json</option>
               </select>
               <button id="startBtn">サンプルを実行</button>
               <input type="file" id="fileInput" accept=".json" style="display: none;">
@@ -678,7 +680,7 @@
               <button id="cancelGuiBtn">キャンセル</button>
             </div>
 
-            <p id="statusText" class="status-text">初期化中...</p>
+            <p id="statusText" class="status-text info">サンプル未実行</p>
 
             <div id="choices"></div>
 
@@ -701,6 +703,7 @@
             <h3>現在の状態</h3>
             <div id="flagsDisplay"></div>
             <div id="resourcesDisplay"></div>
+            <div id="inventoryDisplay"></div>
           </div>
           <div id="reachabilityMap">
             <h3>到達可能性マップ</h3>

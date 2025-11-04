@@ -1,34 +1,39 @@
 // Error handling and logging
-import { startSession, getAvailableChoices, applyChoice, chooseParaphrase, createAIProvider } from '@narrativegen/engine-ts/dist/browser.js'
+import { startSession, getAvailableChoices, applyChoice, chooseParaphrase, createAIProvider, GameSession } from '@narrativegen/engine-ts/dist/browser.js'
+import { initStory, appendStoryFromCurrentNode, renderStoryEnhanced } from './handlers/story-handler.js'
+import { exportModelToCsv } from './utils/csv-exporter.js'
+import { initNodesPanel } from './handlers/nodes-panel.js'
+import { initTabs } from './handlers/tabs.js'
+import { initGuiEditor } from './handlers/gui-editor.js'
 
 // Utility function for resolving variables in text (browser-compatible)
-function resolveVariables(text, session, model) {
-  if (!text || !session) return text
+function resolveVariables(text, sessionState, model) {
+  if (!text || !sessionState) return text
   
   let resolved = text
   
   // Replace flag variables: {flag:key}
-  Object.entries(session.flags || {}).forEach(([key, value]) => {
+  Object.entries(sessionState.flags || {}).forEach(([key, value]) => {
     resolved = resolved.replace(new RegExp(`\\{flag:${key}\\}`, 'g'), value ? 'true' : 'false')
   })
   
   // Replace resource variables: {resource:key}
-  Object.entries(session.resources || {}).forEach(([key, value]) => {
+  Object.entries(sessionState.resources || {}).forEach(([key, value]) => {
     resolved = resolved.replace(new RegExp(`\\{resource:${key}\\}`, 'g'), String(value))
   })
   
   // Replace node ID variable: {nodeId}
-  resolved = resolved.replace(/\{nodeId\}/g, session.nodeId)
+  resolved = resolved.replace(/\{nodeId\}/g, sessionState.nodeId)
   
   // Replace time variable: {time}
-  resolved = resolved.replace(/\{time\}/g, String(session.time))
+  resolved = resolved.replace(/\{time\}/g, String(sessionState.time))
   
   return resolved
 }
 
 // Browser-compatible model loading (no fs module)
 async function loadModel(modelName) {
-  const url = new URL(`./models/examples/${modelName}.json`, window.location.origin)
+  const url = `./models/examples/${modelName}.json`
   const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`Failed to load model: ${response.status} ${response.statusText}`)
@@ -178,6 +183,9 @@ let currentModelName = null
 let _model = null
 let storyLog = []
 
+// Inventory UI elements
+const inventoryDisplay = document.getElementById('inventoryDisplay')
+
 // AI configuration
 let aiConfig = {
   provider: 'mock',
@@ -194,7 +202,7 @@ function renderState() {
     return
   }
 
-  const snapshot = session
+  const snapshot = session.state
   const view = {
     model: currentModelName,
     nodeId: snapshot.nodeId,
@@ -280,14 +288,15 @@ function renderDebugInfo() {
   if (!session || !_model) {
     flagsDisplay.innerHTML = '<p>セッションを開始してください</p>'
     resourcesDisplay.innerHTML = ''
+    inventoryDisplay.innerHTML = ''
     reachableNodes.innerHTML = '<p>モデルを読み込んでください</p>'
     return
   }
 
   // Render flags
   flagsDisplay.innerHTML = '<h4>フラグ</h4>'
-  if (session.flags && Object.keys(session.flags).length > 0) {
-    Object.entries(session.flags).forEach(([key, value]) => {
+  if (session.state.flags && Object.keys(session.state.flags).length > 0) {
+    Object.entries(session.state.flags).forEach(([key, value]) => {
       const div = document.createElement('div')
       div.className = 'flag-item'
       div.innerHTML = `<span>${key}</span><span>${value}</span>`
@@ -299,8 +308,8 @@ function renderDebugInfo() {
 
   // Render resources
   resourcesDisplay.innerHTML = '<h4>リソース</h4>'
-  if (session.resources && Object.keys(session.resources).length > 0) {
-    Object.entries(session.resources).forEach(([key, value]) => {
+  if (session.state.resources && Object.keys(session.state.resources).length > 0) {
+    Object.entries(session.state.resources).forEach(([key, value]) => {
       const div = document.createElement('div')
       div.className = 'resource-item'
       div.innerHTML = `<span>${key}</span><span>${value}</span>`
@@ -310,11 +319,25 @@ function renderDebugInfo() {
     resourcesDisplay.innerHTML += '<p>リソースなし</p>'
   }
 
+  // Render inventory
+  inventoryDisplay.innerHTML = '<h4>インベントリ</h4>'
+  const inventory = session.listInventory()
+  if (inventory && inventory.length > 0) {
+    inventory.forEach((item) => {
+      const div = document.createElement('div')
+      div.className = 'resource-item'
+      div.innerHTML = `<span>${item.id}</span><span>${item.brand} - ${item.description}</span>`
+      inventoryDisplay.appendChild(div)
+    })
+  } else {
+    inventoryDisplay.innerHTML += '<p>アイテムなし</p>'
+  }
+
   // Render reachability map
   reachableNodes.innerHTML = '<h4>到達可能性</h4>'
-  const visited = new Set([session.nodeId])
-  const queue = [session.nodeId]
-  const reachable = new Set([session.nodeId])
+  const visited = new Set([session.state.nodeId])
+  const queue = [session.state.nodeId]
+  const reachable = new Set([session.state.nodeId])
 
   // BFS to find all reachable nodes
   while (queue.length > 0) {
@@ -327,7 +350,7 @@ function renderDebugInfo() {
         visited.add(choice.target)
         // Check if choice is available in current state
         try {
-          const availableChoices = getAvailableChoices(session, _model)
+          const availableChoices = session.getAvailableChoices()
           const isAvailable = availableChoices.some(c => c.id === choice.id)
           if (isAvailable) {
             queue.push(choice.target)
@@ -404,7 +427,7 @@ function renderGraph() {
   nodes.forEach(node => {
     const pos = nodeMap.get(node.id)
     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
-    const isCurrent = node.id === session?.nodeId
+    const isCurrent = node.id === session?.state?.nodeId
     const isHighlighted = highlightedNodes.has(node.id)
     
     circle.setAttribute('cx', pos.x)
@@ -635,12 +658,12 @@ async function importCsvFile(file) {
       nodes,
       metadata: globalMetadata
     }
-    session = startSession(_model)
+    session = new GameSession(_model, { entities })
     currentModelName = file.name
-    initStory()
+    initStory(session, _model)
     renderState()
     renderChoices()
-    renderStory()
+    renderStoryEnhanced(storyView)
   } catch (err) {
     console.error(err)
     setStatus(`CSV 読み込みに失敗: ${err?.message ?? err}`, 'warn')
@@ -666,7 +689,7 @@ function renderChoices() {
     return
   }
 
-  const choices = getAvailableChoices(session, _model)
+  const choices = session.getAvailableChoices()
   if (!choices || choices.length === 0) {
     const empty = document.createElement('p')
     empty.textContent = '利用可能な選択肢はありません'
@@ -684,16 +707,16 @@ function renderChoices() {
     button.textContent = formatChoiceLabel(choice)
     button.addEventListener('click', () => {
       try {
-        session = applyChoice(session, _model, choice.id)
+        session.applyChoice(choice.id)
         setStatus(`選択肢「${choice.text}」を適用しました`, 'success')
-        appendStoryFromCurrentNode()
+        appendStoryFromCurrentNode(session, _model)
       } catch (err) {
         console.error(err)
         setStatus(`選択肢の適用に失敗しました: ${err?.message ?? err}`, 'warn')
       }
       renderState()
       renderChoices()
-      renderStory()
+      renderStoryEnhanced(storyView)
     })
     list.appendChild(button)
   })
@@ -709,17 +732,17 @@ const safeStartSession = ErrorBoundary.wrap(async (modelName) => {
   initStory()
   renderState()
   renderChoices()
-  renderStory()
+  renderStoryEnhanced(storyView)
   Logger.info('Session started', { modelName, nodeCount: Object.keys(model.nodes).length })
 })
 
 const safeApplyChoice = ErrorBoundary.wrap(async (choiceId) => {
   if (!session || !_model) throw new Error('セッションが開始されていません')
   session = applyChoice(session, _model, choiceId)
-  appendStoryFromCurrentNode()
+  appendStoryFromCurrentNode(session, _model)
   renderState()
   renderChoices()
-  renderStory()
+  renderStoryEnhanced(storyView)
   Logger.info('Choice applied', { choiceId, newNodeId: session.nodeId })
 })
 
@@ -775,7 +798,7 @@ async function generateNextNode() {
   try {
     const context = {
       previousNodes: [], // 現在の実装では履歴を保持していない
-      currentNodeText: _model.nodes[session.nodeId]?.text || '',
+      currentNodeText: _model.nodes[session.state.nodeId]?.text || '',
       choiceText: '続き'
     }
 
@@ -805,7 +828,7 @@ async function paraphraseCurrentText() {
     return
   }
 
-  const currentNode = _model.nodes[session.nodeId]
+  const currentNode = _model.nodes[session.state.nodeId]
   if (!currentNode?.text) {
     aiOutput.textContent = '❌ 現在のノードにテキストがありません'
     return
@@ -922,10 +945,10 @@ startBtn.addEventListener('click', async () => {
     ])
 
     _model = model
-    session = startSession(_model)
+    session = new GameSession(model, { entities })
     currentModelName = sampleId
     setStatus(`サンプル ${sampleId} を実行中`, 'success')
-    initStory()
+    initStory(session, _model)
   } catch (err) {
     console.error(err)
     session = null
@@ -935,7 +958,7 @@ startBtn.addEventListener('click', async () => {
     setControlsEnabled(true)
     renderState()
     renderChoices()
-    renderStory()
+    renderStoryEnhanced(storyView)
   }
 })
 
@@ -956,10 +979,10 @@ fileInput.addEventListener('change', async (e) => {
     ])
 
     _model = model
-    session = startSession(_model)
+    session = new GameSession(model, { entities })
     currentModelName = file.name
     setStatus(`ファイル ${file.name} を実行中`, 'success')
-    initStory()
+    initStory(session, _model)
   } catch (err) {
     console.error(err)
     session = null
@@ -1008,10 +1031,10 @@ dropZone.addEventListener('drop', async (e) => {
 
     hideErrors()
     _model = model
-    session = startSession(_model)
+    session = new GameSession(model, { entities })
     currentModelName = file.name
     setStatus(`ファイル ${file.name} を実行中`, 'success')
-    initStory()
+    initStory(session, _model)
   } catch (err) {
     console.error(err)
     showErrors([err?.message ?? err])
@@ -1022,7 +1045,7 @@ dropZone.addEventListener('drop', async (e) => {
     setControlsEnabled(true)
     renderState()
     renderChoices()
-    renderStory()
+    renderStoryEnhanced(storyView)
   }
 })
 
@@ -1181,8 +1204,8 @@ applyStoryJsonBtn.addEventListener('click', () => {
     // Update all views
     renderState()
     renderChoices()
-    initStory()
-    renderStory()
+    initStory(session, _model)
+    renderStoryEnhanced(storyView)
     if (graphPanel.classList.contains('active')) {
       renderGraph()
     }
@@ -1235,18 +1258,20 @@ function highlightNode(nodeId) {
 function jumpToNode(nodeId) {
   if (!_model) return
   if (!session) {
-    session = startSession(_model)
+    session = new GameSession(_model)
   }
   try {
-    session.nodeId = nodeId
+    // For GameSession, we need to set the node through applyChoice or direct state manipulation
+    // Since applyChoice expects a choice ID, we'll directly manipulate the state for jumping
+    session.state.nodeId = nodeId
     setStatus(`ノード '${nodeId}' に移動しました`, 'success')
   } catch (e) {
     // fall back: no-op if session structure differs
   }
   renderState()
   renderChoices()
-  initStory()
-  renderStory()
+  initStory(session, _model)
+  renderStoryEnhanced(storyView)
 }
 
 nodeOverview.addEventListener('click', (e) => {
@@ -1341,6 +1366,14 @@ function renderNodeList() {
     nodeDiv.innerHTML = `
       <h3>ノード: ${nodeId}</h3>
       <label>テキスト: <input type="text" value="${node.text || ''}" data-node-id="${nodeId}" data-field="text"></label>
+      <label>タイプ:
+        <select data-node-id="${nodeId}" data-field="type">
+          <option value="normal" ${node.type === 'normal' || !node.type ? 'selected' : ''}>通常</option>
+          <option value="ending" ${node.type === 'ending' ? 'selected' : ''}>エンディング</option>
+          <option value="branch" ${node.type === 'branch' ? 'selected' : ''}>分岐点</option>
+        </select>
+      </label>
+      <label>タグ: <input type="text" placeholder="tag1;tag2;tag3" value="${node.tags ? node.tags.join(';') : ''}" data-node-id="${nodeId}" data-field="tags"></label>
       <h4>選択肢</h4>
       <div class="choices-editor" data-node-id="${nodeId}"></div>
       <button class="add-choice-btn" data-node-id="${nodeId}">選択肢を追加</button>
@@ -1387,6 +1420,19 @@ function renderChoicesForNode(nodeId) {
     choiceDiv.innerHTML = `
       <label>テキスト: <input type="text" value="${choice.text}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="choice-text"></label>
       <label>ターゲット: <input type="text" value="${choice.target}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="target"></label>
+      <div class="outcome-editor">
+        <label>Outcome:
+          <select data-node-id="${nodeId}" data-choice-index="${index}" data-field="outcome-type">
+            <option value="">なし</option>
+            <option value="ADD_ITEM" ${choice.outcome?.type === 'ADD_ITEM' ? 'selected' : ''}>アイテム追加</option>
+            <option value="REMOVE_ITEM" ${choice.outcome?.type === 'REMOVE_ITEM' ? 'selected' : ''}>アイテム削除</option>
+          </select>
+          <input type="text" placeholder="アイテムID" value="${choice.outcome?.value || ''}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="outcome-value">
+        </label>
+      </div>
+      <div class="conditions-editor">
+        <label>条件: <input type="text" placeholder="flag:key=true; resource:health>=10" value="${choice.conditions ? serializeConditions(choice.conditions) : ''}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="conditions"></label>
+      </div>
       <button class="paraphrase-btn" data-node-id="${nodeId}" data-choice-index="${index}">言い換え</button>
       <button class="delete-choice-btn" data-node-id="${nodeId}" data-choice-index="${index}">削除</button>
     `
@@ -1397,7 +1443,13 @@ function renderChoicesForNode(nodeId) {
 addNodeBtn.addEventListener('click', () => {
   const nodeId = prompt('新しいノードIDを入力してください:')
   if (nodeId && !_model.nodes[nodeId]) {
-    _model.nodes[nodeId] = { id: nodeId, text: '新しいノード', choices: [] }
+    _model.nodes[nodeId] = {
+      id: nodeId,
+      text: `ノード ${nodeId} のテキスト`,
+      choices: [],
+      type: 'normal',
+      tags: []
+    }
     renderNodeList()
   }
 })
@@ -1435,86 +1487,7 @@ downloadBtn.addEventListener('click', () => {
 })
 
 // Story log helpers
-function initStory() {
-  storyLog = []
-  appendStoryFromCurrentNode()
-}
-
-function appendStoryFromCurrentNode() {
-  const node = _model?.nodes?.[session?.nodeId]
-  if (node?.text) {
-    const resolvedText = resolveVariables(node.text, session, _model)
-    storyLog.push(resolvedText)
-  }
-}
-
-function renderStory() {
-  if (!storyView) return
-  storyView.textContent = storyLog.join('\n\n')
-
-  // Performance optimization: Virtual scrolling for long stories
-  const maxVisibleEntries = 50
-  const shouldVirtualize = storyLog.length > maxVisibleEntries
-
-  let visibleEntries
-  let startIndex = 0
-
-  if (shouldVirtualize) {
-    // Show the most recent entries by default
-    startIndex = Math.max(0, storyLog.length - maxVisibleEntries)
-    visibleEntries = storyLog.slice(startIndex)
-  } else {
-    visibleEntries = storyLog
-  }
-
-  storyView.textContent = visibleEntries.join('\n\n')
-
-  // Add virtualization indicator
-  if (shouldVirtualize) {
-    const indicator = document.createElement('div')
-    indicator.className = 'virtualization-indicator'
-    indicator.textContent = `... (${startIndex} 件の古いエントリが非表示) ...`
-    indicator.style.cssText = `
-      text-align: center;
-      padding: 1rem;
-      color: #666;
-      font-style: italic;
-      border-top: 1px solid #e5e7eb;
-      margin-top: 1rem;
-    `
-
-    // Insert at the beginning
-    storyView.insertBefore(indicator, storyView.firstChild)
-
-    // Add scroll handler for lazy loading more content
-    let scrollTimeout
-    const handleScroll = () => {
-      clearTimeout(scrollTimeout)
-      scrollTimeout = setTimeout(() => {
-        if (storyView.scrollTop === 0 && startIndex > 0) {
-          // Load more content when scrolled to top
-          const additionalEntries = Math.min(20, startIndex)
-          const newStartIndex = startIndex - additionalEntries
-          const newVisibleEntries = storyLog.slice(newStartIndex, startIndex + maxVisibleEntries)
-
-          storyView.textContent = newVisibleEntries.join('\n\n')
-
-          // Update indicator
-          const newIndicator = indicator.cloneNode(true)
-          newIndicator.textContent = `... (${newStartIndex} 件の古いエントリが非表示) ...`
-          storyView.insertBefore(newIndicator, storyView.firstChild)
-
-          startIndex = newStartIndex
-
-          // Scroll to show newly loaded content
-          storyView.scrollTop = 50
-        }
-      }, 100)
-    }
-
-    storyView.addEventListener('scroll', handleScroll)
-  }
-}
+// Note: initStory, appendStoryFromCurrentNode, renderStory are now imported from story-handler.js
 
 // CSVプレビューモーダル
 confirmImportBtn.addEventListener('click', async () => {
@@ -1645,15 +1618,63 @@ function parseEffects(text) {
 function validateModel(nodes) {
   const errors = []
   const nodeIds = Object.keys(nodes)
-  
+
   for (const [nid, node] of Object.entries(nodes)) {
+    // ノードIDの妥当性チェック
+    if (!nid || nid.trim() === '') {
+      errors.push(`ノードIDが空です`)
+      continue
+    }
+
+    // ノードテキストの存在チェック
+    if (!node.text || node.text.trim() === '') {
+      errors.push(`ノード'${nid}'のテキストが空です`)
+    }
+
+    // 選択肢のチェック
     for (const choice of node.choices || []) {
-      if (choice.target && !nodeIds.includes(choice.target)) {
+      // 選択肢IDのチェック
+      if (!choice.id || choice.id.trim() === '') {
+        errors.push(`ノード'${nid}'の選択肢にIDがありません`)
+      }
+
+      // 選択肢テキストのチェック
+      if (!choice.text || choice.text.trim() === '') {
+        errors.push(`ノード'${nid}'の選択肢'${choice.id}'のテキストが空です`)
+      }
+
+      // ターゲットノードの存在チェック
+      if (!choice.target || !nodeIds.includes(choice.target)) {
         errors.push(`ノード'${nid}'の選択肢'${choice.id}': 存在しないターゲット'${choice.target}'`)
       }
+
+      // outcomeの妥当性チェック
+      if (choice.outcome) {
+        if (!choice.outcome.type) {
+          errors.push(`ノード'${nid}'の選択肢'${choice.id}': outcomeタイプが指定されていません`)
+        } else if (['ADD_ITEM', 'REMOVE_ITEM'].includes(choice.outcome.type)) {
+          if (!choice.outcome.value || choice.outcome.value.trim() === '') {
+            errors.push(`ノード'${nid}'の選択肢'${choice.id}': ${choice.outcome.type}の値が空です`)
+          }
+        }
+      }
+
+      // conditionsの妥当性チェック
+      if (choice.conditions && choice.conditions.length > 0) {
+        for (const condition of choice.conditions) {
+          if (!condition.type) {
+            errors.push(`ノード'${nid}'の選択肢'${choice.id}': 条件タイプが不明です`)
+          }
+        }
+      }
+    }
+
+    // エンディングノードのチェック
+    if (node.type === 'ending' && node.choices && node.choices.length > 0) {
+      errors.push(`エンディングノード'${nid}'に選択肢が設定されています`)
     }
   }
-  
+
   return errors
 }
 
@@ -1662,68 +1683,12 @@ exportCsvBtn.addEventListener('click', () => {
     setStatus('まずモデルを読み込んでください', 'warn')
     return
   }
-  const header = [
-    'node_id', 'node_text', 'node_type', 'node_tags', 'node_assets',
-    'choice_id', 'choice_text', 'choice_target',
-    'choice_conditions', 'choice_effects', 'choice_outcome_type', 'choice_outcome_value',
-    'choice_metadata', 'choice_variables',
-    'initial_flags', 'initial_resources', 'global_metadata'
-  ]
-  const rows = [header.join(',')]
-  
-  let firstRow = true
-  for (const [nid, node] of Object.entries(_model.nodes)) {
-    const initialFlags = firstRow && _model.flags ? serializeKeyValuePairs(_model.flags) : ''
-    const initialResources = firstRow && _model.resources ? serializeKeyValuePairs(_model.resources) : ''
-    const globalMetadata = firstRow && _model.metadata ? serializeKeyValuePairs(_model.metadata) : ''
-    firstRow = false
-    
-    // Node metadata
-    const nodeType = node.type || 'normal'
-    const nodeTags = node.tags ? node.tags.join(';') : ''
-    const nodeAssets = node.assets ? serializeKeyValuePairs(node.assets) : ''
-    
-    if (!node.choices || node.choices.length === 0) {
-      rows.push([
-        nid, escapeCsv(node.text ?? ''), nodeType, escapeCsv(nodeTags), escapeCsv(nodeAssets),
-        '', '', '',
-        '', '', '', '',
-        '', '',
-        initialFlags, initialResources, globalMetadata
-      ].join(','))
-      continue
-    }
-    
-    for (const ch of node.choices) {
-      const conditions = ch.conditions ? serializeConditions(ch.conditions) : ''
-      const effects = ch.effects ? serializeEffects(ch.effects) : ''
-      const outcomeType = ch.outcome?.type || ''
-      const outcomeValue = ch.outcome?.value || ''
-      
-      // Choice metadata and variables
-      const choiceMetadata = ch.metadata ? serializeKeyValuePairs(ch.metadata) : ''
-      const choiceVariables = ch.variables ? serializeKeyValuePairs(ch.variables) : ''
-      
-      rows.push([
-        nid, escapeCsv(node.text ?? ''), nodeType, escapeCsv(nodeTags), escapeCsv(nodeAssets),
-        ch.id ?? '', escapeCsv(ch.text ?? ''), ch.target ?? '',
-        escapeCsv(conditions), escapeCsv(effects), outcomeType, outcomeValue,
-        escapeCsv(choiceMetadata), escapeCsv(choiceVariables),
-        initialFlags, initialResources, globalMetadata
-      ].join(','))
-    }
+  try {
+    exportModelToCsv(_model, currentModelName)
+  } catch (err) {
+    console.error('CSVエクスポート失敗:', err)
+    setStatus(`CSVエクスポートに失敗しました: ${err?.message ?? err}`, 'warn')
   }
-  
-  const csv = rows.join('\n')
-  const blob = new Blob([csv], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = (currentModelName ? currentModelName.replace(/\.[^.]+$/, '') : 'model') + '.csv'
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
 })
 
 // 条件のシリアライズ
@@ -1781,15 +1746,15 @@ saveGuiBtn.addEventListener('click', () => {
 
     hideErrors()
     // Restart session with current model
-    session = startSession(_model)
+    session = new GameSession(_model)
     currentModelName = 'gui-edited'
     guiEditMode.style.display = 'none'
     setStatus('GUI編集を保存しました', 'success')
     setControlsEnabled(true)
     renderState()
     renderChoices()
-    initStory()
-    renderStory()
+    initStory(session, _model)
+    renderStoryEnhanced(storyView)
   } catch (err) {
     showErrors([err?.message ?? err])
     setStatus(`GUI保存に失敗しました: ${err?.message ?? err}`, 'warn')
@@ -1822,9 +1787,10 @@ nodeList.addEventListener('click', (e) => {
     const nodeId = e.target.dataset.nodeId
     const node = _model.nodes[nodeId]
     if (!node.choices) node.choices = []
+    const choiceId = `c${node.choices.length + 1}`
     node.choices.push({
-      id: `c${node.choices.length + 1}`,
-      text: '新しい選択肢',
+      id: choiceId,
+      text: `選択肢 ${choiceId}`,
       target: nodeId
     })
     renderChoicesForNode(nodeId)
@@ -1878,13 +1844,43 @@ function updateModelFromInput(input) {
     const node = _model.nodes[nodeId]
     const choice = node.choices[parseInt(choiceIndex)]
     if (choice) {
-      choice[field] = value
+      if (field === 'choice-text') {
+        choice.text = value
+      } else if (field === 'target') {
+        choice.target = value
+      } else if (field === 'outcome-type') {
+        if (value) {
+          if (!choice.outcome) choice.outcome = {}
+          choice.outcome.type = value
+        } else {
+          delete choice.outcome
+        }
+      } else if (field === 'outcome-value') {
+        if (choice.outcome && value) {
+          choice.outcome.value = value
+        } else if (choice.outcome && !value) {
+          delete choice.outcome.value
+        }
+      } else if (field === 'conditions') {
+        try {
+          choice.conditions = value ? parseConditions(value) : undefined
+        } catch (err) {
+          console.warn('条件パースエラー:', err.message)
+          choice.conditions = undefined
+        }
+      }
     }
   } else {
     // ノードのフィールド更新
     const node = _model.nodes[nodeId]
     if (node) {
-      node[field] = value
+      if (field === 'type') {
+        node.type = value || 'normal'
+      } else if (field === 'tags') {
+        node.tags = value ? value.split(';').map(t => t.trim()).filter(Boolean) : []
+      } else {
+        node[field] = value
+      }
     }
   }
 }
@@ -1934,3 +1930,60 @@ document.addEventListener('keydown', (e) => {
     }
   }
 })
+
+// Initialize handlers with dependency injection
+const nodesPanel = initNodesPanel({
+  _model,
+  session,
+  setStatus,
+  renderGraph,
+  renderState,
+  renderChoices,
+  initStory,
+  renderStoryEnhanced,
+  nodeOverview,
+  nodeSearch,
+  storyView
+})
+
+// Override global jumpToNode function
+window.jumpToNode = nodesPanel.jumpToNode
+
+const tabs = initTabs({
+  renderGraph,
+  renderDebugInfo,
+  renderNodeOverview: nodesPanel.renderNodeOverview,
+  initAiProvider,
+  storyTab,
+  debugTab,
+  graphTab,
+  aiTab,
+  storyPanel,
+  debugPanel,
+  graphPanel,
+  aiPanel
+})
+
+// Initialize tabs
+tabs.initialize()
+
+const guiEditor = initGuiEditor({
+  _model,
+  session,
+  setStatus,
+  setControlsEnabled,
+  renderState,
+  renderChoices,
+  initStory,
+  renderStoryEnhanced,
+  guiEditMode,
+  guiEditor,
+  saveGuiBtn,
+  cancelGuiBtn,
+  storyView
+})
+
+// Setup GUI editor buttons
+editGuiBtn.addEventListener('click', () => guiEditor.startEditing())
+saveGuiBtn.addEventListener('click', () => guiEditor.saveEditing())
+cancelGuiBtn.addEventListener('click', () => guiEditor.cancelEditing())

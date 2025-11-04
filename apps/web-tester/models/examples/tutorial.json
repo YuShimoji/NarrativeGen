@@ -21,26 +21,47 @@
     },
     "choicesLesson": {
       "id": "choicesLesson",
-      "text": "選択肢は物語の分岐点です。各選択肢は特定の条件を満たすことで利用可能になります。\n\n条件にはフラグやリソースの値などがあります。",
+      "text": "選択肢とは：\n物語を進めるための重要な決断です。選択肢を選ぶことでストーリーが分岐します。\n\nこの選択肢を選ぶと、フラグが設定されます。",
       "choices": [
-        { "id": "backToIntro", "text": "イントロに戻る", "target": "intro" },
-        { "id": "continueToResources", "text": "リソースについて学ぶ", "target": "resourcesLesson" }
+        { "id": "understandChoices", "text": "選択肢を理解した", "target": "backToIntro", "effects": [{ "type": "setFlag", "key": "learnedChoices", "value": true }] },
+        { "id": "confused", "text": "よくわからない", "target": "choicesHelp" }
+      ]
+    },
+    "choicesHelp": {
+      "id": "choicesHelp",
+      "text": "選択肢の例：\n・「ドアを開ける」\n・「鍵を探す」\n・「待つ」\n\n各選択肢は異なる結果をもたらします。",
+      "choices": [
+        { "id": "nowUnderstand", "text": "今わかった", "target": "backToIntro", "effects": [{ "type": "setFlag", "key": "learnedChoices", "value": true }] }
       ]
     },
     "resourcesLesson": {
       "id": "resourcesLesson",
-      "text": "リソースは数値の変数です。選択肢によって増減したり、他の選択肢の条件になったりします。\n\n例：エネルギー、知識、お金など",
+      "text": "リソースとは：\nゲーム内の数値データです。体力、ゴールド、経験値などが該当します。\n\nリソースは選択肢の条件になったり、変化したりします。",
       "choices": [
-        { "id": "backToIntro", "text": "イントロに戻る", "target": "intro" },
-        { "id": "continueToChoices", "text": "選択肢について学ぶ", "target": "choicesLesson" }
+        { "id": "understandResources", "text": "リソースを理解した", "target": "backToIntro", "effects": [{ "type": "setFlag", "key": "learnedResources", "value": true }, { "type": "addResource", "key": "knowledge", "delta": 10 }] },
+        { "id": "resourceExample", "text": "例を見せて", "target": "resourceExample" }
+      ]
+    },
+    "resourceExample": {
+      "id": "resourceExample",
+      "text": "リソースの例：\n現在のエネルギー: {{energy}}\n知識: {{knowledge}}\n\nこの選択肢を選ぶとエネルギーが減ります。",
+      "choices": [
+        { "id": "loseEnergy", "text": "エネルギーを消費する", "target": "backToIntro", "effects": [{ "type": "addResource", "key": "energy", "delta": -20 }, { "type": "addResource", "key": "knowledge", "delta": 5 }] },
+        { "id": "keepEnergy", "text": "エネルギーを温存", "target": "backToIntro" }
+      ]
+    },
+    "backToIntro": {
+      "id": "backToIntro",
+      "text": "チュートリアルに戻ります。",
+      "choices": [
+        { "id": "continueTutorial", "text": "続ける", "target": "intro" },
+        { "id": "finishTutorial", "text": "終了する", "target": "graduation" }
       ]
     },
     "graduation": {
       "id": "graduation",
-      "text": "おめでとうございます！チュートリアルを完了しました。\n\n基本操作を理解したので、自由にサンプルモデルを試してみましょう。",
-      "choices": [
-        { "id": "restart", "text": "チュートリアルを再開", "target": "intro" }
-      ]
+      "text": "チュートリアル完了！\n\n学習内容:\n・選択肢: {{learnedChoices}}\n・リソース: {{learnedResources}}\n・最終知識: {{knowledge}}\n・残りエネルギー: {{energy}}\n\nこれで基本機能をマスターしました！",
+      "choices": []
     }
   }
 }

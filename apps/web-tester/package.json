@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "postbuild": "npm run copy:models",
+    "postbuild": "",
     "copy:models": "node copy-models.js",
     "dev": "vite",
     "preview": "vite preview"
