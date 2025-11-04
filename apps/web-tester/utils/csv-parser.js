@@ -120,3 +120,28 @@ export function serializeConditions(conditions) {
     return ''
   }).filter(Boolean).join('; ')
 }
+
+export function serializeEffects(effects) {
+  if (!effects || effects.length === 0) return ''
+  return effects.map((eff) => {
+    if (eff.type === 'setFlag') return `setFlag:${eff.key}=${eff.value}`
+    if (eff.type === 'addResource') return `addResource:${eff.key}=${eff.delta}`
+    if (eff.type === 'multiplyResource') return `multiplyResource:${eff.key}=${eff.factor}`
+    if (eff.type === 'setResource') return `setResource:${eff.key}=${eff.value}`
+    if (eff.type === 'randomEffect') {
+      const effectStrings = eff.effects.map(e => serializeEffects([e])[0])
+      return `randomEffect:${effectStrings.join('|')}`
+    }
+    if (eff.type === 'conditionalEffect') {
+      const conditionStr = serializeConditions([eff.condition])[0]
+      const effectStr = serializeEffects([eff.effect])[0]
+      return `conditionalEffect:${conditionStr}?${effectStr}`
+    }
+    if (eff.type === 'goto') return `goto:${eff.target}`
+    return ''
+  }).filter(Boolean).join('; ')
+}
+
+export function serializeKeyValuePairs(obj) {
+  return Object.entries(obj).map(([k, v]) => `${k}=${v}`).join(';')
+}

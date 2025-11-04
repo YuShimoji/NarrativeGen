@@ -5,31 +5,8 @@ import { exportModelToCsv } from './utils/csv-exporter.js'
 import { initNodesPanel } from './handlers/nodes-panel.js'
 import { initTabs } from './handlers/tabs.js'
 import { initGuiEditor } from './handlers/gui-editor.js'
-
-// Utility function for resolving variables in text (browser-compatible)
-function resolveVariables(text, sessionState, model) {
-  if (!text || !sessionState) return text
-  
-  let resolved = text
-  
-  // Replace flag variables: {flag:key}
-  Object.entries(sessionState.flags || {}).forEach(([key, value]) => {
-    resolved = resolved.replace(new RegExp(`\\{flag:${key}\\}`, 'g'), value ? 'true' : 'false')
-  })
-  
-  // Replace resource variables: {resource:key}
-  Object.entries(sessionState.resources || {}).forEach(([key, value]) => {
-    resolved = resolved.replace(new RegExp(`\\{resource:${key}\\}`, 'g'), String(value))
-  })
-  
-  // Replace node ID variable: {nodeId}
-  resolved = resolved.replace(/\{nodeId\}/g, sessionState.nodeId)
-  
-  // Replace time variable: {time}
-  resolved = resolved.replace(/\{time\}/g, String(sessionState.time))
-  
-  return resolved
-}
+import { resolveVariables, validateModel } from './utils/model-utils.js'
+import { parseCsvLine, parseKeyValuePairs, parseConditions, parseEffects, serializeConditions, serializeEffects, serializeKeyValuePairs } from './utils/csv-parser.js'
 
 // Browser-compatible model loading (no fs module)
 async function loadModel(modelName) {
@@ -1324,7 +1301,7 @@ guiEditBtn.addEventListener('click', () => {
     setStatus('GUI編集するにはまずモデルを読み込んでください', 'warn')
     return
   }
-  renderNodeList()
+  guiEditor.renderNodeList()
   guiEditMode.style.display = 'block'
   setControlsEnabled(false)
 })
@@ -1358,99 +1335,23 @@ saveAiSettings.addEventListener('click', () => {
 generateNextNodeBtn.addEventListener('click', generateNextNode)
 paraphraseCurrentBtn.addEventListener('click', paraphraseCurrentText)
 
-function renderNodeList() {
-  nodeList.innerHTML = ''
-  for (const [nodeId, node] of Object.entries(_model.nodes)) {
-    const nodeDiv = document.createElement('div')
-    nodeDiv.className = 'node-editor'
-    nodeDiv.innerHTML = `
-      <h3>ノード: ${nodeId}</h3>
-      <label>テキスト: <input type="text" value="${node.text || ''}" data-node-id="${nodeId}" data-field="text"></label>
-      <label>タイプ:
-        <select data-node-id="${nodeId}" data-field="type">
-          <option value="normal" ${node.type === 'normal' || !node.type ? 'selected' : ''}>通常</option>
-          <option value="ending" ${node.type === 'ending' ? 'selected' : ''}>エンディング</option>
-          <option value="branch" ${node.type === 'branch' ? 'selected' : ''}>分岐点</option>
-        </select>
-      </label>
-      <label>タグ: <input type="text" placeholder="tag1;tag2;tag3" value="${node.tags ? node.tags.join(';') : ''}" data-node-id="${nodeId}" data-field="tags"></label>
-      <h4>選択肢</h4>
-      <div class="choices-editor" data-node-id="${nodeId}"></div>
-      <button class="add-choice-btn" data-node-id="${nodeId}">選択肢を追加</button>
-      <button class="delete-node-btn" data-node-id="${nodeId}">ノードを削除</button>
-    `
-    nodeList.appendChild(nodeDiv)
-    renderChoicesForNode(nodeId)
-  }
-
-  // Add input listeners for real-time validation
-  nodeList.addEventListener('input', (e) => {
-    const input = e.target
-    if (input.tagName === 'INPUT') {
-      const nodeId = input.dataset.nodeId
-      const field = input.dataset.field
-      const choiceIndex = input.dataset.choiceIndex
-
-      if (field === 'text') {
-        _model.nodes[nodeId].text = input.value
-      } else if (field === 'target') {
-        _model.nodes[nodeId].choices[choiceIndex].target = input.value
-      } else if (field === 'choice-text') {
-        _model.nodes[nodeId].choices[choiceIndex].text = input.value
+nodeOverview.addEventListener('click', (e) => {
+  const action = e.target.dataset.action
+  if (action === 'switch-tab') {
+    const tab = e.target.dataset.tab
+    const nodeId = e.target.dataset.nodeId
+    switchTab(tab)
+    if (tab === 'graph') {
+      renderGraph()
+      if (nodesPanel && nodesPanel.highlightNode) {
+        nodesPanel.highlightNode(nodeId)
+      } else if (window.highlightNode) {
+        window.highlightNode(nodeId)
       }
-
-      // Real-time validation
-      const errors = validateModel(_model.nodes)
-      if (errors.length > 0) {
-        showErrors(errors)
-      } else {
-        hideErrors()
-      }
+    } else if (tab === 'story') {
+      jumpToNode(nodeId)
     }
-  })
-}
-
-function renderChoicesForNode(nodeId) {
-  const node = _model.nodes[nodeId]
-  const choicesDiv = nodeList.querySelector(`.choices-editor[data-node-id="${nodeId}"]`)
-  choicesDiv.innerHTML = ''
-  node.choices?.forEach((choice, index) => {
-    const choiceDiv = document.createElement('div')
-    choiceDiv.className = 'choice-editor'
-    choiceDiv.innerHTML = `
-      <label>テキスト: <input type="text" value="${choice.text}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="choice-text"></label>
-      <label>ターゲット: <input type="text" value="${choice.target}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="target"></label>
-      <div class="outcome-editor">
-        <label>Outcome:
-          <select data-node-id="${nodeId}" data-choice-index="${index}" data-field="outcome-type">
-            <option value="">なし</option>
-            <option value="ADD_ITEM" ${choice.outcome?.type === 'ADD_ITEM' ? 'selected' : ''}>アイテム追加</option>
-            <option value="REMOVE_ITEM" ${choice.outcome?.type === 'REMOVE_ITEM' ? 'selected' : ''}>アイテム削除</option>
-          </select>
-          <input type="text" placeholder="アイテムID" value="${choice.outcome?.value || ''}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="outcome-value">
-        </label>
-      </div>
-      <div class="conditions-editor">
-        <label>条件: <input type="text" placeholder="flag:key=true; resource:health>=10" value="${choice.conditions ? serializeConditions(choice.conditions) : ''}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="conditions"></label>
-      </div>
-      <button class="paraphrase-btn" data-node-id="${nodeId}" data-choice-index="${index}">言い換え</button>
-      <button class="delete-choice-btn" data-node-id="${nodeId}" data-choice-index="${index}">削除</button>
-    `
-    choicesDiv.appendChild(choiceDiv)
-  })
-}
-
-addNodeBtn.addEventListener('click', () => {
-  const nodeId = prompt('新しいノードIDを入力してください:')
-  if (nodeId && !_model.nodes[nodeId]) {
-    _model.nodes[nodeId] = {
-      id: nodeId,
-      text: `ノード ${nodeId} のテキスト`,
-      choices: [],
-      type: 'normal',
-      tags: []
-    }
-    renderNodeList()
+    guiEditor.renderNodeList()
   }
 })
 
@@ -1497,242 +1398,99 @@ confirmImportBtn.addEventListener('click', async () => {
   await importCsvFile(file)
 })
 
-cancelPreviewBtn.addEventListener('click', () => {
-  hideCsvPreview()
-})
-
-csvFileInput.addEventListener('change', async (e) => {
-  const file = e.target.files[0]
-  if (!file) return
-  showCsvPreview(file)
-})
-
-function parseCsvLine(line, delim) {
-  const cells = []
-  let current = ''
-  let inQuotes = false
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i]
-    if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"'
-        i++
-      } else {
-        inQuotes = !inQuotes
-      }
-    } else if (char === delim && !inQuotes) {
-      cells.push(current)
-      current = ''
-    } else {
-      current += char
-    }
-  }
-  cells.push(current)
-  return cells
-}
-
-// キー=値ペアのパース（セミコロン区切り）
-function parseKeyValuePairs(text, type = 'string') {
-  const result = {}
-  text.split(';').forEach((pair) => {
-    const [key, val] = pair.split('=').map((s) => s.trim())
-    if (!key || val === undefined) return
-    if (type === 'boolean') {
-      result[key] = val.toLowerCase() === 'true'
-    } else if (type === 'number') {
-      result[key] = parseFloat(val)
-    } else {
-      result[key] = val
-    }
-  })
-  return result
-}
-
-// 条件のパース
-function parseConditions(text) {
-  const conditions = []
-  text.split(';').forEach((cond) => {
-    cond = cond.trim()
-    if (!cond) return
-    
-    if (cond.startsWith('flag:')) {
-      const [key, val] = cond.slice(5).split('=')
-      conditions.push({ type: 'flag', key: key.trim(), value: val.trim().toLowerCase() === 'true' })
-    } else if (cond.startsWith('resource:')) {
-      const match = cond.slice(9).match(/^(\w+)(>=|<=|>|<|==)(.+)$/)
-      if (!match) throw new Error(`不正なリソース条件: ${cond}`)
-      conditions.push({ type: 'resource', key: match[1].trim(), op: match[2], value: parseFloat(match[3]) })
-    } else if (cond.startsWith('timeWindow:')) {
-      const [start, end] = cond.slice(11).split('-').map((s) => parseInt(s.trim()))
-      conditions.push({ type: 'timeWindow', start, end })
-    } else {
-      throw new Error(`不明な条件タイプ: ${cond}`)
-    }
-  })
-  return conditions
-}
-
-// 効果のパース
-function parseEffects(text) {
-  const effects = []
-  text.split(';').forEach((eff) => {
-    eff = eff.trim()
-    if (!eff) return
-    
-    if (eff.startsWith('setFlag:')) {
-      const [key, val] = eff.slice(8).split('=')
-      effects.push({ type: 'setFlag', key: key.trim(), value: val.trim().toLowerCase() === 'true' })
-    } else if (eff.startsWith('addResource:')) {
-      const [key, val] = eff.slice(12).split('=')
-      effects.push({ type: 'addResource', key: key.trim(), delta: parseFloat(val) })
-    } else if (eff.startsWith('multiplyResource:')) {
-      const [key, val] = eff.slice(16).split('=')
-      effects.push({ type: 'multiplyResource', key: key.trim(), factor: parseFloat(val) })
-    } else if (eff.startsWith('setResource:')) {
-      const [key, val] = eff.slice(12).split('=')
-      effects.push({ type: 'setResource', key: key.trim(), value: parseFloat(val) })
-    } else if (eff.startsWith('randomEffect:')) {
-      const effectList = eff.slice(12).split('|').map(e => e.trim())
-      const parsedEffects = effectList.map(e => parseEffects(e)[0]).filter(Boolean)
-      effects.push({ type: 'randomEffect', effects: parsedEffects })
-    } else if (eff.startsWith('conditionalEffect:')) {
-      const parts = eff.slice(17).split('?')
-      if (parts.length === 2) {
-        const condition = parseConditions(parts[0])[0]
-        const effectText = parts[1]
-        const effect = parseEffects(effectText)[0]
-        if (condition && effect) {
-          effects.push({ type: 'conditionalEffect', condition, effect })
-        }
-      }
-    } else if (eff.startsWith('goto:')) {
-      effects.push({ type: 'goto', target: eff.slice(5).trim() })
-    } else {
-      throw new Error(`不明な効果タイプ: ${eff}`)
-    }
-  })
-  return effects
-}
-
-// モデル検証
-function validateModel(nodes) {
-  const errors = []
-  const nodeIds = Object.keys(nodes)
-
-  for (const [nid, node] of Object.entries(nodes)) {
-    // ノードIDの妥当性チェック
-    if (!nid || nid.trim() === '') {
-      errors.push(`ノードIDが空です`)
-      continue
-    }
-
-    // ノードテキストの存在チェック
-    if (!node.text || node.text.trim() === '') {
-      errors.push(`ノード'${nid}'のテキストが空です`)
-    }
-
-    // 選択肢のチェック
-    for (const choice of node.choices || []) {
-      // 選択肢IDのチェック
-      if (!choice.id || choice.id.trim() === '') {
-        errors.push(`ノード'${nid}'の選択肢にIDがありません`)
-      }
-
-      // 選択肢テキストのチェック
-      if (!choice.text || choice.text.trim() === '') {
-        errors.push(`ノード'${nid}'の選択肢'${choice.id}'のテキストが空です`)
-      }
-
-      // ターゲットノードの存在チェック
-      if (!choice.target || !nodeIds.includes(choice.target)) {
-        errors.push(`ノード'${nid}'の選択肢'${choice.id}': 存在しないターゲット'${choice.target}'`)
-      }
-
-      // outcomeの妥当性チェック
-      if (choice.outcome) {
-        if (!choice.outcome.type) {
-          errors.push(`ノード'${nid}'の選択肢'${choice.id}': outcomeタイプが指定されていません`)
-        } else if (['ADD_ITEM', 'REMOVE_ITEM'].includes(choice.outcome.type)) {
-          if (!choice.outcome.value || choice.outcome.value.trim() === '') {
-            errors.push(`ノード'${nid}'の選択肢'${choice.id}': ${choice.outcome.type}の値が空です`)
-          }
-        }
-      }
-
-      // conditionsの妥当性チェック
-      if (choice.conditions && choice.conditions.length > 0) {
-        for (const condition of choice.conditions) {
-          if (!condition.type) {
-            errors.push(`ノード'${nid}'の選択肢'${choice.id}': 条件タイプが不明です`)
-          }
-        }
-      }
-    }
-
-    // エンディングノードのチェック
-    if (node.type === 'ending' && node.choices && node.choices.length > 0) {
-      errors.push(`エンディングノード'${nid}'に選択肢が設定されています`)
-    }
-  }
-
-  return errors
-}
-
-exportCsvBtn.addEventListener('click', () => {
+// トップレベルのプレビュー/ダウンロード
+previewTopBtn.addEventListener('click', () => {
   if (!_model) {
     setStatus('まずモデルを読み込んでください', 'warn')
     return
   }
-  try {
-    exportModelToCsv(_model, currentModelName)
-  } catch (err) {
-    console.error('CSVエクスポート失敗:', err)
-    setStatus(`CSVエクスポートに失敗しました: ${err?.message ?? err}`, 'warn')
+  let current = _model.startNode
+  let story = ''
+  const visited = new Set()
+  while (current && !visited.has(current)) {
+    visited.add(current)
+    const node = _model.nodes[current]
+    if (node?.text) story += node.text + '\n\n'
+    if (node?.choices?.length === 1) current = node.choices[0].target
+    else break
+  }
+  alert('小説プレビュー:\n\n' + story)
+})
+
+downloadTopBtn.addEventListener('click', () => {
+  if (!_model) {
+    setStatus('まずモデルを読み込んでください', 'warn')
+    return
+  }
+  const json = JSON.stringify(_model, null, 2)
+  const blob = new Blob([json], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = currentModelName ? `${currentModelName}.json` : 'model.json'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+})
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key === 's') {
+    e.preventDefault()
+    if (guiEditMode.style.display !== 'none') {
+      saveGuiBtn.click()
+    }
   }
 })
 
-// 条件のシリアライズ
-function serializeConditions(conditions) {
-  return conditions.map((cond) => {
-    if (cond.type === 'flag') return `flag:${cond.key}=${cond.value}`
-    if (cond.type === 'resource') return `resource:${cond.key}${cond.op}${cond.value}`
-    if (cond.type === 'timeWindow') return `timeWindow:${cond.start}-${cond.end}`
-    return ''
-  }).filter(Boolean).join(';')
-}
+// Initialize handlers with dependency injection
+const nodesPanel = initNodesPanel({
+  _model,
+  session,
+  setStatus,
+  renderGraph,
+  renderState,
+  renderChoices,
+  initStory,
+  renderStoryEnhanced,
+  nodeOverview,
+  nodeSearch,
+  storyView,
+  guiEditor
+})
 
-// 効果のシリアライズ
-function serializeEffects(effects) {
-  return effects.map((eff) => {
-    if (eff.type === 'setFlag') return `setFlag:${eff.key}=${eff.value}`
-    if (eff.type === 'addResource') return `addResource:${eff.key}=${eff.delta}`
-    if (eff.type === 'multiplyResource') return `multiplyResource:${eff.key}=${eff.factor}`
-    if (eff.type === 'setResource') return `setResource:${eff.key}=${eff.value}`
-    if (eff.type === 'randomEffect') {
-      const effectStrings = eff.effects.map(e => serializeEffects([e])[0])
-      return `randomEffect:${effectStrings.join('|')}`
-    }
-    if (eff.type === 'conditionalEffect') {
-      const conditionStr = serializeConditions([eff.condition])[0]
-      const effectStr = serializeEffects([eff.effect])[0]
-      return `conditionalEffect:${conditionStr}?${effectStr}`
-    }
-    if (eff.type === 'goto') return `goto:${eff.target}`
-    return ''
-  }).filter(Boolean).join(';')
-}
+// Setup node list events
+nodesPanel.setupNodeListEvents(nodeList)
 
-// キー=値ペアのシリアライズ
-function serializeKeyValuePairs(obj) {
-  return Object.entries(obj).map(([k, v]) => `${k}=${v}`).join(';')
-}
+// Override global jumpToNode function
+window.jumpToNode = nodesPanel.jumpToNode
 
-function escapeCsv(s) {
-  if (s == null) return ''
-  const needsQuote = /[",\n]/.test(s)
-  const t = String(s).replace(/"/g, '""')
-  return needsQuote ? '"' + t + '"' : t
-}
+// Override global highlightNode function
+window.highlightNode = nodesPanel.highlightNode
+
+const tabs = initTabs({
+  renderGraph,
+  renderDebugInfo,
+  renderNodeOverview: nodesPanel.renderNodeOverview,
+  initAiProvider,
+  storyTab,
+  debugTab,
+  graphTab,
+  aiTab,
+  storyPanel,
+  debugPanel,
+  graphPanel,
+  aiPanel
+})
+
+// Initialize tabs
+tabs.initialize()
+
+// Setup GUI editor buttons
+editGuiBtn.addEventListener('click', () => guiEditor.startEditing())
+saveGuiBtn.addEventListener('click', () => guiEditor.saveEditing())
+cancelGuiBtn.addEventListener('click', () => guiEditor.cancelEditing())
 
 saveGuiBtn.addEventListener('click', () => {
   try {
@@ -1793,7 +1551,7 @@ nodeList.addEventListener('click', (e) => {
       text: `選択肢 ${choiceId}`,
       target: nodeId
     })
-    renderChoicesForNode(nodeId)
+    guiEditor.renderChoicesForNode(nodeId)
   }
 
   if (e.target.classList.contains('delete-node-btn')) {
@@ -1807,7 +1565,7 @@ nodeList.addEventListener('click', (e) => {
     for (const [nid, node] of Object.entries(_model.nodes)) {
       node.choices = node.choices?.filter(c => c.target !== nodeId) ?? []
     }
-    renderNodeList()
+    guiEditor.renderNodeList()
   }
 
   if (e.target.classList.contains('delete-choice-btn')) {
@@ -1815,75 +1573,9 @@ nodeList.addEventListener('click', (e) => {
     const choiceIndex = parseInt(e.target.dataset.choiceIndex)
     const node = _model.nodes[nodeId]
     node.choices.splice(choiceIndex, 1)
-    renderChoicesForNode(nodeId)
+    guiEditor.renderChoicesForNode(nodeId)
   }
 })
-
-// 入力変更でモデル更新
-nodeList.addEventListener('input', (e) => {
-  updateModelFromInput(e.target)
-})
-
-// フォーカス外れ時にもモデル更新（フォールバック）
-nodeList.addEventListener('blur', (e) => {
-  if (e.target.tagName === 'INPUT') {
-    updateModelFromInput(e.target)
-  }
-}, true)
-
-function updateModelFromInput(input) {
-  if (!input.dataset.nodeId) return
-
-  const nodeId = input.dataset.nodeId
-  const choiceIndex = input.dataset.choiceIndex
-  const field = input.dataset.field
-  const value = input.value
-
-  if (choiceIndex !== undefined) {
-    // 選択肢のフィールド更新
-    const node = _model.nodes[nodeId]
-    const choice = node.choices[parseInt(choiceIndex)]
-    if (choice) {
-      if (field === 'choice-text') {
-        choice.text = value
-      } else if (field === 'target') {
-        choice.target = value
-      } else if (field === 'outcome-type') {
-        if (value) {
-          if (!choice.outcome) choice.outcome = {}
-          choice.outcome.type = value
-        } else {
-          delete choice.outcome
-        }
-      } else if (field === 'outcome-value') {
-        if (choice.outcome && value) {
-          choice.outcome.value = value
-        } else if (choice.outcome && !value) {
-          delete choice.outcome.value
-        }
-      } else if (field === 'conditions') {
-        try {
-          choice.conditions = value ? parseConditions(value) : undefined
-        } catch (err) {
-          console.warn('条件パースエラー:', err.message)
-          choice.conditions = undefined
-        }
-      }
-    }
-  } else {
-    // ノードのフィールド更新
-    const node = _model.nodes[nodeId]
-    if (node) {
-      if (field === 'type') {
-        node.type = value || 'normal'
-      } else if (field === 'tags') {
-        node.tags = value ? value.split(';').map(t => t.trim()).filter(Boolean) : []
-      } else {
-        node[field] = value
-      }
-    }
-  }
-}
 
 // トップレベルのプレビュー/ダウンロード
 previewTopBtn.addEventListener('click', () => {
@@ -1930,60 +1622,3 @@ document.addEventListener('keydown', (e) => {
     }
   }
 })
-
-// Initialize handlers with dependency injection
-const nodesPanel = initNodesPanel({
-  _model,
-  session,
-  setStatus,
-  renderGraph,
-  renderState,
-  renderChoices,
-  initStory,
-  renderStoryEnhanced,
-  nodeOverview,
-  nodeSearch,
-  storyView
-})
-
-// Override global jumpToNode function
-window.jumpToNode = nodesPanel.jumpToNode
-
-const tabs = initTabs({
-  renderGraph,
-  renderDebugInfo,
-  renderNodeOverview: nodesPanel.renderNodeOverview,
-  initAiProvider,
-  storyTab,
-  debugTab,
-  graphTab,
-  aiTab,
-  storyPanel,
-  debugPanel,
-  graphPanel,
-  aiPanel
-})
-
-// Initialize tabs
-tabs.initialize()
-
-const guiEditor = initGuiEditor({
-  _model,
-  session,
-  setStatus,
-  setControlsEnabled,
-  renderState,
-  renderChoices,
-  initStory,
-  renderStoryEnhanced,
-  guiEditMode,
-  guiEditor,
-  saveGuiBtn,
-  cancelGuiBtn,
-  storyView
-})
-
-// Setup GUI editor buttons
-editGuiBtn.addEventListener('click', () => guiEditor.startEditing())
-saveGuiBtn.addEventListener('click', () => guiEditor.saveEditing())
-cancelGuiBtn.addEventListener('click', () => guiEditor.cancelEditing())

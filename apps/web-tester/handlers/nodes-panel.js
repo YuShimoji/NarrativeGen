@@ -166,14 +166,132 @@ export function initNodesPanel(deps) {
         ${choice.target ? ` → ${choice.target}` : ''}
       </div>
     `).join('');
+  // Render the complete node list
+  function renderNodeList() {
+    if (!nodeOverview || !_model) return
+
+    const nodes = Object.keys(_model.nodes)
+    let html = '<h3>ノード一覧</h3>'
+
+    if (nodes.length === 0) {
+      html += '<p>ノードがありません</p>'
+    } else {
+      html += '<div class="node-list">'
+      nodes.forEach(nodeId => {
+        const node = _model.nodes[nodeId]
+        const isCurrent = session?.state?.nodeId === nodeId
+        html += `
+          <div class="node-item ${isCurrent ? 'current-node' : ''}" data-node-id="${nodeId}">
+            <div class="node-header">
+              <span class="node-id">${nodeId}</span>
+              <div class="node-actions">
+                <button class="jump-btn" onclick="jumpToNode('${nodeId}')">Jump</button>
+                <button class="delete-node-btn" data-node-id="${nodeId}">削除</button>
+              </div>
+            </div>
+            <div class="node-content">
+              <div class="node-text">${node.text?.substring(0, 100) || '(テキストなし)'}...</div>
+              <div class="node-choices">
+                ${node.choices?.map((choice, idx) => `
+                  <div class="choice-preview">
+                    <span>${choice.id}: ${choice.text?.substring(0, 50) || '(テキストなし)'}...</span>
+                    <button class="delete-choice-btn" data-node-id="${nodeId}" data-choice-index="${idx}">×</button>
+                  </div>
+                `).join('') || '<em>選択肢なし</em>'}
+              </div>
+            </div>
+          </div>
+        `
+      })
+      html += '</div>'
+    }
+
+    nodeOverview.innerHTML = html
+
+    // Highlight current node if exists
+    if (session?.state?.nodeId) {
+      highlightNode(session.state.nodeId)
+    }
+  }
+
+  // Setup node list event handlers
+  function setupNodeListEvents(nodeList) {
+    // 言い換えイベント（非AI）
+    nodeList.addEventListener('click', (e) => {
+      if (e.target.classList.contains('paraphrase-btn')) {
+        const nodeId = e.target.dataset.nodeId
+        const choiceIndex = e.target.dataset.choiceIndex
+        const input = nodeList.querySelector(
+          `input[data-node-id="${nodeId}"][data-choice-index="${choiceIndex}"][data-field="text"]`,
+        )
+        if (!input) return
+        try {
+          input.value = chooseParaphrase(input.value, { style: 'desu-masu' })
+        } catch (err) {
+          console.error('言い換えエラー:', err)
+          setStatus(`言い換えに失敗しました: ${err?.message ?? err}`, 'warn')
+        }
+      }
+
+      if (e.target.classList.contains('add-choice-btn')) {
+        const nodeId = e.target.dataset.nodeId
+        const node = _model.nodes[nodeId]
+        if (!node.choices) node.choices = []
+        const choiceId = `c${node.choices.length + 1}`
+        node.choices.push({
+          id: choiceId,
+          text: `選択肢 ${choiceId}`,
+          target: nodeId
+        })
+        renderChoicesForNode(nodeId)
+      }
+
+      if (e.target.classList.contains('delete-node-btn')) {
+        const nodeId = e.target.dataset.nodeId
+        if (Object.keys(_model.nodes).length <= 1) {
+          setStatus('少なくとも1つのノードが必要です', 'warn')
+          return
+        }
+        delete _model.nodes[nodeId]
+        // Remove references to deleted node
+        for (const [nid, node] of Object.entries(_model.nodes)) {
+          node.choices = node.choices?.filter(c => c.target !== nodeId) ?? []
+        }
+        renderNodeList()
+      }
+
+      if (e.target.classList.contains('delete-choice-btn')) {
+        const nodeId = e.target.dataset.nodeId
+        const choiceIndex = parseInt(e.target.dataset.choiceIndex)
+        const node = _model.nodes[nodeId]
+        node.choices.splice(choiceIndex, 1)
+        renderChoicesForNode(nodeId)
+      }
+    })
+
+    // 入力変更でモデル更新
+    nodeList.addEventListener('input', (e) => {
+      if (guiEditor?.updateModelFromInput) {
+        guiEditor.updateModelFromInput(e.target)
+      }
+    })
+
+    // フォーカス外れ時にもモデル更新（フォールバック）
+    nodeList.addEventListener('blur', (e) => {
+      if (e.target.tagName === 'INPUT' && guiEditor?.updateModelFromInput) {
+        guiEditor.updateModelFromInput(e.target)
+      }
+    }, true)
   }
 
   // Public API
   return {
     renderNodeOverview,
+    renderNodeList,
     highlightNode,
     jumpToNode,
     renderChoicesForNode,
+    setupNodeListEvents,
     clearHighlights
   };
 }
@@ -182,4 +300,10 @@ export function initNodesPanel(deps) {
 window.jumpToNode = function(nodeId) {
   // This will be overridden when initNodesPanel is called
   console.warn('jumpToNode called before nodes panel initialized');
+};
+
+// Global highlightNode function
+window.highlightNode = function(nodeId) {
+  // This will be overridden when initNodesPanel is called
+  console.warn('highlightNode called before nodes panel initialized');
 };
