@@ -29,6 +29,7 @@ jobs:
         run: node dist/tools/validate-models.js
   web-tester:
     runs-on: ubuntu-latest
+    needs: engine-ts
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -36,6 +37,8 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm ci
+      - name: Build engine
+        run: npm run build:engine
       - name: Build
         working-directory: apps/web-tester
         run: npm run build
