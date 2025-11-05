@@ -50,8 +50,10 @@ jobs:
         with:
           dotnet-version: 8.0.x
       - name: Restore dependencies
-        run: dotnet restore packages/sdk-unity/NarrativeGen.Unity.csproj
+        working-directory: packages/sdk-unity
+        run: dotnet restore
       - name: Build SDK-Unity
-        run: dotnet build packages/sdk-unity/NarrativeGen.Unity.csproj --configuration Release --no-restore
+        working-directory: packages/sdk-unity
+        run: dotnet build --configuration Release --no-restore
       - name: Test SDK-Unity
         run: dotnet test packages/tests/ --configuration Release --no-build
