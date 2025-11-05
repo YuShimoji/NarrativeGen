@@ -463,6 +463,7 @@ async function importCsvFile(file) {
       node_type: headers.indexOf('node_type'),
       node_tags: headers.indexOf('node_tags'),
       node_assets: headers.indexOf('node_assets'),
+      node_group: headers.indexOf('node_group'),
       choice_id: headers.indexOf('choice_id'),
       choice_text: headers.indexOf('choice_text'),
       choice_target: headers.indexOf('choice_target'),
@@ -540,6 +541,10 @@ async function importCsvFile(file) {
 
         if (idx.node_assets >= 0 && cells[idx.node_assets]) {
           node.assets = parseKeyValuePairs(cells[idx.node_assets])
+        }
+
+        if (idx.node_group >= 0 && cells[idx.node_group]) {
+          node.group = cells[idx.node_group].trim()
         }
 
         const cid = (cells[idx.choice_id] || '').trim()
