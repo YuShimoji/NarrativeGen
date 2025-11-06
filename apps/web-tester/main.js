@@ -1042,51 +1042,6 @@ if (savedAiConfig) {
   }
 }
 
-// Tab event listeners
-function switchTab(tabName) {
-  // Hide all panels
-  storyPanel.classList.remove('active')
-  debugPanel.classList.remove('active')
-  graphPanel.classList.remove('active')
-  nodeListPanel.classList.remove('active')
-  aiPanel.classList.remove('active')
-
-  // Remove active class from all tabs
-  storyTab.classList.remove('active')
-  debugTab.classList.remove('active')
-  graphTab.classList.remove('active')
-  nodeListTab.classList.remove('active')
-  aiTab.classList.remove('active')
-
-  // Show selected panel and activate tab
-  if (tabName === 'story') {
-    storyPanel.classList.add('active')
-    storyTab.classList.add('active')
-  } else if (tabName === 'debug') {
-    debugPanel.classList.add('active')
-    debugTab.classList.add('active')
-    renderDebugInfo()
-  } else if (tabName === 'graph') {
-    graphPanel.classList.add('active')
-    graphTab.classList.add('active')
-    renderGraph()
-  } else if (tabName === 'nodeList') {
-    nodeListPanel.classList.add('active')
-    nodeListTab.classList.add('active')
-    renderNodeOverview()
-  } else if (tabName === 'ai') {
-    aiPanel.classList.add('active')
-    aiTab.classList.add('active')
-    initAiProvider()
-  }
-}
-
-storyTab.addEventListener('click', () => switchTab('story'))
-debugTab.addEventListener('click', () => switchTab('debug'))
-graphTab.addEventListener('click', () => switchTab('graph'))
-nodeListTab.addEventListener('click', () => switchTab('nodeList'))
-aiTab.addEventListener('click', () => switchTab('ai'))
-
 // Split View Mode Toggle
 toggleSplitViewBtn.addEventListener('click', () => {
   splitModeActive = !splitModeActive
@@ -1375,10 +1330,12 @@ const tabs = initTabs({
   storyTab,
   debugTab,
   graphTab,
+  nodeListTab,
   aiTab,
   storyPanel,
   debugPanel,
   graphPanel,
+  nodeListPanel,
   aiPanel
 })
 
