@@ -19,6 +19,40 @@ export function initNodesPanel(deps) {
   let currentSearchTerm = '';
   let lastHighlightedNode = null;
 
+  // Render the node overview list
+  function renderNodeOverview() {
+    if (!nodeOverview || !_model) return
+
+    const searchTerm = nodeSearch.value.toLowerCase()
+    const filteredNodes = Object.entries(_model.nodes).filter(([id, node]) => {
+      if (searchTerm) {
+        return id.toLowerCase().includes(searchTerm) ||
+               node.text?.toLowerCase().includes(searchTerm)
+      }
+      return true
+    })
+
+    nodeOverview.innerHTML = ''
+
+    filteredNodes.forEach(([nodeId, node]) => {
+      const card = document.createElement('div')
+      card.className = 'node-card'
+      card.dataset.nodeId = nodeId
+      card.innerHTML = `
+        <h4>${nodeId}</h4>
+        <div class="node-text">${node.text || '（テキストなし）'}</div>
+        <div class="node-stats">
+          選択肢: ${node.choices?.length || 0}個
+        </div>
+        <div class="node-actions">
+          <button data-action="switch-tab" data-tab="graph" data-node-id="${nodeId}">グラフで表示</button>
+          <button data-action="switch-tab" data-tab="story" data-node-id="${nodeId}">ストーリーで表示</button>
+        </div>
+      `
+      nodeOverview.appendChild(card)
+    })
+  }
+
   // Clear any existing highlights
   function clearHighlights() {
     const allNodes = nodeOverview.querySelectorAll('.node-item');
@@ -298,14 +332,62 @@ export function initNodesPanel(deps) {
   };
 }
 
-// Global helper for onclick handlers (temporary bridge)
-window.jumpToNode = function(nodeId) {
-  // This will be overridden when initNodesPanel is called
-  console.warn('jumpToNode called before nodes panel initialized');
-};
+  // Setup event listeners for node list interactions
+  function setupNodeListEvents(nodeListElement) {
+    // Node overview click events
+    nodeOverview.addEventListener('click', (e) => {
+      const action = e.target.dataset.action
+      if (action === 'switch-tab') {
+        const tab = e.target.dataset.tab
+        const nodeId = e.target.dataset.nodeId
+        // Note: switchTab is not in deps, this needs to be handled by the caller
+        // For now, we'll call the global function if available
+        if (window.switchTab) {
+          window.switchTab(tab)
+          if (tab === 'graph') {
+            renderGraph()
+            highlightNode(nodeId)
+          } else if (tab === 'story') {
+            jumpToNode(nodeId)
+          }
+        }
+      }
+    })
 
-// Global highlightNode function
-window.highlightNode = function(nodeId) {
-  // This will be overridden when initNodesPanel is called
-  console.warn('highlightNode called before nodes panel initialized');
-};
+    // Search input event
+    nodeSearch.addEventListener('input', () => {
+      renderNodeOverview()
+    })
+
+    // Refresh button event
+    if (window.refreshNodeList) {
+      window.refreshNodeList.addEventListener('click', () => {
+        renderNodeOverview()
+      })
+    }
+
+    // Hover events for graph linking
+    nodeOverview.addEventListener('mouseover', (e) => {
+      const card = e.target.closest('.node-card')
+      if (!card) return
+      const nid = card.dataset.nodeId
+      if (window.highlightedNodes) {
+        window.highlightedNodes.clear()
+        if (nid) window.highlightedNodes.add(nid)
+      }
+      if (window.graphPanel && window.graphPanel.classList.contains('active')) {
+        renderGraph()
+      }
+    })
+
+    nodeOverview.addEventListener('mouseout', (e) => {
+      const card = e.target.closest('.node-card')
+      if (!card) return
+      if (window.highlightedNodes) {
+        window.highlightedNodes.clear()
+      }
+      if (window.graphPanel && window.graphPanel.classList.contains('active')) {
+        renderGraph()
+      }
+    })
+  }
