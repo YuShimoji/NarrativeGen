@@ -4,7 +4,7 @@ import { initStory, appendStoryFromCurrentNode, renderStoryEnhanced } from './ha
 import { exportModelToCsv } from './utils/csv-exporter.js'
 import { initNodesPanel } from './handlers/nodes-panel.js'
 import { initTabs } from './handlers/tabs.js'
-// import { initGuiEditor } from './handlers/gui-editor.js'
+import { initGuiEditor } from './handlers/gui-editor.js'
 import { resolveVariables, validateModel } from './utils/model-utils.js'
 import { parseCsvLine, parseKeyValuePairs, parseConditions, parseEffects, serializeConditions, serializeEffects, serializeKeyValuePairs } from './utils/csv-parser.js'
 
@@ -1342,42 +1342,30 @@ const tabs = initTabs({
 // Initialize tabs
 tabs.initialize()
 
+const guiEditor = initGuiEditor({
+  _model,
+  session,
+  setStatus,
+  setControlsEnabled,
+  renderState,
+  renderChoices,
+  initStory,
+  renderStoryEnhanced,
+  // DOM references
+  guiEditMode,
+  guiEditor,
+  saveGuiBtn,
+  cancelGuiBtn,
+  storyView,
+  chooseParaphrase,
+  serializeConditions,
+  parseConditions
+})
+
 // Setup GUI editor buttons
 editGuiBtn.addEventListener('click', () => guiEditor.startEditing())
 saveGuiBtn.addEventListener('click', () => guiEditor.saveEditing())
 cancelGuiBtn.addEventListener('click', () => guiEditor.cancelEditing())
-
-saveGuiBtn.addEventListener('click', () => {
-  try {
-    // Validate model before saving
-    const validationErrors = validateModel(_model.nodes)
-    if (validationErrors.length > 0) {
-      showErrors(validationErrors)
-      setStatus(`モデルにエラーがあります: ${validationErrors.length}件`, 'warn')
-      return
-    }
-
-    hideErrors()
-    // Restart session with current model
-    session = new GameSession(_model)
-    currentModelName = 'gui-edited'
-    guiEditMode.style.display = 'none'
-    setStatus('GUI編集を保存しました', 'success')
-    setControlsEnabled(true)
-    renderState()
-    renderChoices()
-    initStory(session, _model)
-    renderStoryEnhanced(storyView)
-  } catch (err) {
-    showErrors([err?.message ?? err])
-    setStatus(`GUI保存に失敗しました: ${err?.message ?? err}`, 'warn')
-  }
-})
-
-cancelGuiBtn.addEventListener('click', () => {
-  guiEditMode.style.display = 'none'
-  setControlsEnabled(true)
-})
 
 // 言い換えイベント（非AI）
 nodeList.addEventListener('click', (e) => {
@@ -1396,40 +1384,6 @@ nodeList.addEventListener('click', (e) => {
     }
   }
 
-  if (e.target.classList.contains('add-choice-btn')) {
-    const nodeId = e.target.dataset.nodeId
-    const node = _model.nodes[nodeId]
-    if (!node.choices) node.choices = []
-    const choiceId = `c${node.choices.length + 1}`
-    node.choices.push({
-      id: choiceId,
-      text: `選択肢 ${choiceId}`,
-      target: nodeId
-    })
-    guiEditor.renderChoicesForNode(nodeId)
-  }
-
-  if (e.target.classList.contains('delete-node-btn')) {
-    const nodeId = e.target.dataset.nodeId
-    if (Object.keys(_model.nodes).length <= 1) {
-      setStatus('少なくとも1つのノードが必要です', 'warn')
-      return
-    }
-    delete _model.nodes[nodeId]
-    // Remove references to deleted node
-    for (const [nid, node] of Object.entries(_model.nodes)) {
-      node.choices = node.choices?.filter(c => c.target !== nodeId) ?? []
-    }
-    guiEditor.renderNodeList()
-  }
-
-  if (e.target.classList.contains('delete-choice-btn')) {
-    const nodeId = e.target.dataset.nodeId
-    const choiceIndex = parseInt(e.target.dataset.choiceIndex)
-    const node = _model.nodes[nodeId]
-    node.choices.splice(choiceIndex, 1)
-    guiEditor.renderChoicesForNode(nodeId)
-  }
 })
 
 // トップレベルのプレビュー/ダウンロード

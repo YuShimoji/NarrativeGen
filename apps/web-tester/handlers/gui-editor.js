@@ -303,10 +303,131 @@ export function initGuiEditor(deps) {
     }
 };
 
-  // Public API
-  return {
-    startEditing,
-    cancelEditing,
-    saveEditing,
-    updateModelFromInput
-  };
+  // Render the node list for editing
+  function renderNodeList() {
+    const container = guiEditor.querySelector('.node-list') || document.createElement('div')
+    container.className = 'node-list'
+    container.innerHTML = ''
+
+    for (const [nodeId, node] of Object.entries(_model.nodes)) {
+      const nodeDiv = document.createElement('div')
+      nodeDiv.className = 'node-item'
+      nodeDiv.dataset.nodeId = nodeId
+
+      nodeDiv.innerHTML = `
+        <div class="node-header">
+          <input type="text" value="${nodeId}" data-node-id="${nodeId}" data-field="id" placeholder="ノードID">
+          <button class="delete-node-btn" data-node-id="${nodeId}">削除</button>
+        </div>
+        <div class="node-fields">
+          <label>テキスト:</label>
+          <textarea data-node-id="${nodeId}" data-field="text">${node.text || ''}</textarea>
+          <label>タイプ:</label>
+          <select data-node-id="${nodeId}" data-field="type">
+            <option value="normal" ${node.type === 'normal' ? 'selected' : ''}>normal</option>
+            <option value="ending" ${node.type === 'ending' ? 'selected' : ''}>ending</option>
+            <option value="start" ${node.type === 'start' ? 'selected' : ''}>start</option>
+          </select>
+          <label>タグ:</label>
+          <input type="text" value="${node.tags ? node.tags.join(';') : ''}" data-node-id="${nodeId}" data-field="tags" placeholder="タグ（セミコロン区切り）">
+        </div>
+        <div class="choices-section">
+          <h4>選択肢 <button class="add-choice-btn" data-node-id="${nodeId}">追加</button></h4>
+          <div class="choices-list" data-node-id="${nodeId}">
+            ${renderChoicesForNode(nodeId)}
+          </div>
+        </div>
+      `
+
+      container.appendChild(nodeDiv)
+    }
+
+    if (!guiEditor.querySelector('.node-list')) {
+      guiEditor.appendChild(container)
+    }
+  }
+
+  // Render choices for a specific node
+  function renderChoicesForNode(nodeId) {
+    const node = _model.nodes[nodeId]
+    if (!node || !node.choices) return '<p>選択肢なし</p>'
+
+    return node.choices.map((choice, index) => `
+      <div class="choice-item" data-choice-index="${index}">
+        <div class="choice-header">
+          <input type="text" value="${choice.id || ''}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="choice-id" placeholder="選択肢ID">
+          <button class="delete-choice-btn" data-node-id="${nodeId}" data-choice-index="${index}">削除</button>
+        </div>
+        <div class="choice-fields">
+          <label>テキスト:</label>
+          <input type="text" value="${choice.text || ''}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="choice-text" placeholder="選択肢テキスト">
+          <label>ターゲット:</label>
+          <select data-node-id="${nodeId}" data-choice-index="${index}" data-field="choice-target">
+            <option value="">-- 選択 --</option>
+            ${Object.keys(_model.nodes).map(nid => `<option value="${nid}" ${choice.target === nid ? 'selected' : ''}>${nid}</option>`).join('')}
+          </select>
+          <label>条件:</label>
+          <input type="text" value="${choice.conditions ? serializeConditions(choice.conditions) : ''}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="conditions" placeholder="条件（例: flag:key=true）">
+          <label>効果:</label>
+          <input type="text" value="${choice.effects ? serializeEffects(choice.effects) : ''}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="effects" placeholder="効果（例: setFlag:key=true）">
+          <label>アウトカム:</label>
+          <select data-node-id="${nodeId}" data-choice-index="${index}" data-field="outcome-type">
+            <option value="" ${!choice.outcome ? 'selected' : ''}>-- なし --</option>
+            <option value="success" ${choice.outcome?.type === 'success' ? 'selected' : ''}>success</option>
+            <option value="failure" ${choice.outcome?.type === 'failure' ? 'selected' : ''}>failure</option>
+            <option value="ending" ${choice.outcome?.type === 'ending' ? 'selected' : ''}>ending</option>
+          </select>
+          <input type="text" value="${choice.outcome?.value || ''}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="outcome-value" placeholder="値（任意）">
+        </div>
+      </div>
+    `).join('')
+  }
+
+  // Setup GUI editor event listeners
+  function setupGuiEditorEvents() {
+    guiEditor.addEventListener('input', updateModelFromInput)
+    guiEditor.addEventListener('change', updateModelFromInput)
+
+    guiEditor.addEventListener('click', (e) => {
+      if (e.target.classList.contains('add-choice-btn')) {
+        const nodeId = e.target.dataset.nodeId
+        const node = _model.nodes[nodeId]
+        if (!node.choices) node.choices = []
+        const choiceId = `c${node.choices.length + 1}`
+        node.choices.push({
+          id: choiceId,
+          text: `選択肢 ${choiceId}`,
+          target: nodeId
+        })
+        renderNodeList()
+      }
+
+      if (e.target.classList.contains('delete-node-btn')) {
+        const nodeId = e.target.dataset.nodeId
+        if (Object.keys(_model.nodes).length <= 1) {
+          setStatus('少なくとも1つのノードが必要です', 'warn')
+          return
+        }
+        delete _model.nodes[nodeId]
+        // Remove references to deleted node
+        for (const [nid, node] of Object.entries(_model.nodes)) {
+          node.choices = node.choices?.filter(c => c.target !== nodeId) ?? []
+        }
+        renderNodeList()
+      }
+
+      if (e.target.classList.contains('delete-choice-btn')) {
+        const nodeId = e.target.dataset.nodeId
+        const choiceIndex = parseInt(e.target.dataset.choiceIndex)
+        const node = _model.nodes[nodeId]
+        node.choices.splice(choiceIndex, 1)
+        renderNodeList()
+      }
+    })
+  }
+
+  // Populate editor with current model
+  function populateEditor() {
+    renderNodeList()
+    setupGuiEditorEvents()
+  }
