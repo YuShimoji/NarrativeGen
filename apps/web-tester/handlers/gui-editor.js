@@ -321,7 +321,7 @@ export function initGuiEditor(deps) {
 };
 
   // Render the node list for editing
-  function renderNodeList() {
+  const renderNodeList = () => {
     const _model = getModel();
     const container = guiEditor.querySelector('.node-list') || document.createElement('div')
     container.className = 'node-list'
@@ -366,7 +366,7 @@ export function initGuiEditor(deps) {
   }
 
   // Render choices for a specific node
-  function renderChoicesForNode(nodeId) {
+  const renderChoicesForNode = (nodeId) => {
     const _model = getModel();
     const node = _model.nodes[nodeId]
     if (!node || !node.choices) return '<p>選択肢なし</p>'
