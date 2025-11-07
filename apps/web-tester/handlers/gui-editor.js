@@ -456,3 +456,14 @@ export function initGuiEditor(deps) {
     renderNodeList()
     setupGuiEditorEvents()
   }
+
+  // Public API
+  return {
+    startEditing,
+    cancelEditing,
+    saveEditing,
+    updateModelFromInput,
+    renderNodeList,
+    renderChoicesForNode
+  };
+}

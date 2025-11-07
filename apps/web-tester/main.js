@@ -978,7 +978,17 @@ fileInput.addEventListener('change', async (e) => {
     setSession(new GameSession(model, { entities }))
     currentModelName = file.name
     setStatus(`ファイル ${file.name} を実行中`, 'success')
-  dropZone.style.backgroundColor = ''
+  } catch (err) {
+    console.error(err)
+    session = null
+    currentModelName = null
+    setStatus(`ファイルの初期化に失敗しました: ${err?.message ?? err}`, 'warn')
+  } finally {
+    setControlsEnabled(true)
+    renderState()
+    renderChoices()
+    renderStoryEnhanced(storyView)
+  }
 })
 
 dropZone.addEventListener('drop', async (e) => {
@@ -1053,7 +1063,7 @@ toggleSplitViewBtn.addEventListener('click', () => {
     storyMainContainer.classList.add('split-mode')
     
     // Update JSON editor with current model
-    storyJsonEditor.value = _model ? JSON.stringify(_model, null, 2) : '{}'
+    storyJsonEditor.value = getModel() ? JSON.stringify(getModel(), null, 2) : '{}'
     
     // Initialize resizer (once)
     initStoryResizer()
@@ -1253,16 +1263,16 @@ confirmImportBtn.addEventListener('click', async () => {
 
 // トップレベルのプレビュー/ダウンロード
 previewTopBtn.addEventListener('click', () => {
-  if (!_model) {
+  if (!getModel()) {
     setStatus('まずモデルを読み込んでください', 'warn')
     return
   }
-  let current = _model.startNode
+  let current = getModel().startNode
   let story = ''
   const visited = new Set()
   while (current && !visited.has(current)) {
     visited.add(current)
-    const node = _model.nodes[current]
+    const node = getModel().nodes[current]
     if (node?.text) story += node.text + '\n\n'
     if (node?.choices?.length === 1) current = node.choices[0].target
     else break
@@ -1271,11 +1281,11 @@ previewTopBtn.addEventListener('click', () => {
 })
 
 downloadTopBtn.addEventListener('click', () => {
-  if (!_model) {
+  if (!getModel()) {
     setStatus('まずモデルを読み込んでください', 'warn')
     return
   }
-  const json = JSON.stringify(_model, null, 2)
+  const json = JSON.stringify(getModel(), null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -1391,16 +1401,16 @@ nodeList.addEventListener('click', (e) => {
 
 // トップレベルのプレビュー/ダウンロード
 previewTopBtn.addEventListener('click', () => {
-  if (!_model) {
+  if (!getModel()) {
     setStatus('まずモデルを読み込んでください', 'warn')
     return
   }
-  let current = _model.startNode
+  let current = getModel().startNode
   let story = ''
   const visited = new Set()
   while (current && !visited.has(current)) {
     visited.add(current)
-    const node = _model.nodes[current]
+    const node = getModel().nodes[current]
     if (node?.text) story += node.text + '\n\n'
     if (node?.choices?.length === 1) current = node.choices[0].target
     else break
@@ -1409,11 +1419,11 @@ previewTopBtn.addEventListener('click', () => {
 })
 
 downloadTopBtn.addEventListener('click', () => {
-  if (!_model) {
+  if (!getModel()) {
     setStatus('まずモデルを読み込んでください', 'warn')
     return
   }
-  const json = JSON.stringify(_model, null, 2)
+  const json = JSON.stringify(getModel(), null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
