@@ -20,10 +20,17 @@ export function initGuiEditor(deps) {
     cancelGuiBtn,
     storyView,
     chooseParaphrase,
-    parseConditions
+    parseConditions,
+    parseEffects
   } = deps;
 
   let originalModel = null;
+  function saveDraft() {
+    try {
+      const m = getModel();
+      if (m) localStorage.setItem('ng_model_draft', JSON.stringify(m));
+    } catch (_) {}
+  }
 
   // Start GUI editing mode
   function startEditing() {
@@ -86,8 +93,8 @@ export function initGuiEditor(deps) {
     }
   }
 
-  // Populate editor with current model data
-  function populateEditor() {
+  // Populate editor with current model data (legacy - replaced by renderNodeList based UI)
+  function populateEditorLegacy() {
     const _model = getModel();
     if (!guiEditor || !_model) return;
 
@@ -260,6 +267,30 @@ export function initGuiEditor(deps) {
     return true;
   };
 
+  function renameNodeId(oldId, newId) {
+    const model = getModel();
+    if (!model?.nodes?.[oldId]) return false;
+    if (!newId || newId === oldId) return false;
+    if (model.nodes[newId]) {
+      setStatus(`重複するノードIDです: ${newId}`, 'warn');
+      return false;
+    }
+    model.nodes[newId] = model.nodes[oldId];
+    delete model.nodes[oldId];
+    for (const [, n] of Object.entries(model.nodes)) {
+      n.choices?.forEach(c => { if (c.target === oldId) c.target = newId; });
+    }
+    if (model.startNode === oldId) model.startNode = newId;
+    if (model.metadata && Array.isArray(model.metadata.nodeOrder)) {
+      const i = model.metadata.nodeOrder.indexOf(oldId);
+      if (i !== -1) model.metadata.nodeOrder.splice(i, 1, newId);
+    }
+    setModel(model);
+    saveDraft();
+    renderNodeList();
+    return true;
+  }
+
   // Update model from input changes
   function updateModelFromInput(input) {
     if (!input.dataset.nodeId) return
@@ -275,10 +306,26 @@ export function initGuiEditor(deps) {
       const node = _model.nodes[nodeId]
       const choice = node.choices[parseInt(choiceIndex)]
       if (choice) {
-        if (field === 'choice-text') {
-          choice.text = value
-        } else if (field === 'target') {
+        if (field === 'choice-id') {
+          choice.id = value
+        } else if (field === 'choice-target' || field === 'target') {
           choice.target = value
+        } else if (field === 'effects') {
+          try {
+            choice.effects = value ? parseEffects(value) : undefined
+          } catch (err) {
+            console.warn('効果パースエラー:', err.message)
+            choice.effects = undefined
+          }
+        } else if (field === 'conditions') {
+          try {
+            choice.conditions = value ? parseConditions(value) : undefined
+          } catch (err) {
+            console.warn('条件パースエラー:', err.message)
+            choice.conditions = undefined
+          }
+        } else if (field === 'choice-text') {
+          choice.text = value
         } else if (field === 'outcome-type') {
           if (value) {
             if (!choice.outcome) choice.outcome = {}
@@ -292,29 +339,32 @@ export function initGuiEditor(deps) {
           } else if (choice.outcome && !value) {
             delete choice.outcome.value
           }
-        } else if (field === 'conditions') {
-          try {
-            choice.conditions = value ? parseConditions(value) : undefined
-          } catch (err) {
-            console.warn('条件パースエラー:', err.message)
-            choice.conditions = undefined
-          }
         }
       }
     } else {
-      // ノードのフィールド更新
       const node = _model.nodes[nodeId]
       if (node) {
-        if (field === 'type') {
+        if (field === 'id') {
+          if (renameNodeId(nodeId, value.trim())) {
+            renderNodeList();
+          }
+        } else if (field === 'type') {
           node.type = value || 'normal'
+          setModel(_model);
+          saveDraft();
         } else if (field === 'tags') {
           node.tags = value ? value.split(';').map(t => t.trim()).filter(Boolean) : []
+          setModel(_model);
+          saveDraft();
         } else {
           node[field] = value
+          setModel(_model);
+          saveDraft();
         }
       }
     }
-    setModel(_model);
+    if (field !== 'id') setModel(_model);
+    if (field !== 'id') saveDraft();
 };
 
   // Render the node list for editing
@@ -324,10 +374,14 @@ export function initGuiEditor(deps) {
     container.className = 'node-list'
     container.innerHTML = ''
 
-    for (const [nodeId, node] of Object.entries(_model.nodes)) {
+    const order = _model.metadata?.nodeOrder ?? Object.keys(_model.nodes)
+    for (const nodeId of order) {
+      const node = _model.nodes[nodeId]
+      if (!node) continue
       const nodeDiv = document.createElement('div')
       nodeDiv.className = 'node-item'
       nodeDiv.dataset.nodeId = nodeId
+      nodeDiv.setAttribute('draggable', 'true')
 
       nodeDiv.innerHTML = `
         <div class="node-header">
@@ -369,7 +423,7 @@ export function initGuiEditor(deps) {
     if (!node || !node.choices) return '<p>選択肢なし</p>'
 
     return node.choices.map((choice, index) => `
-      <div class="choice-item" data-choice-index="${index}">
+      <div class="choice-item" data-choice-index="${index}" draggable="true">
         <div class="choice-header">
           <input type="text" value="${choice.id || ''}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="choice-id" placeholder="選択肢ID">
           <button class="delete-choice-btn" data-node-id="${nodeId}" data-choice-index="${index}">削除</button>
@@ -445,6 +499,66 @@ export function initGuiEditor(deps) {
         setModel(_model);
         renderNodeList()
       }
+    })
+
+    let dragInfo = null
+    guiEditor.addEventListener('dragstart', (e) => {
+      const choiceItem = e.target.closest('.choice-item')
+      if (choiceItem) {
+        const list = choiceItem.closest('.choices-list')
+        dragInfo = {
+          type: 'choice',
+          fromNodeId: list?.dataset.nodeId,
+          fromIndex: parseInt(choiceItem.dataset.choiceIndex)
+        }
+        e.dataTransfer.effectAllowed = 'move'
+        return
+      }
+      const nodeItem = e.target.closest('.node-item')
+      if (nodeItem) {
+        dragInfo = { type: 'node', fromNodeId: nodeItem.dataset.nodeId }
+        e.dataTransfer.effectAllowed = 'move'
+      }
+    })
+
+    guiEditor.addEventListener('dragover', (e) => {
+      if (dragInfo) e.preventDefault()
+    })
+
+    guiEditor.addEventListener('drop', (e) => {
+      if (!dragInfo) return
+      e.preventDefault()
+      const _model = getModel();
+      if (dragInfo.type === 'choice') {
+        const targetItem = e.target.closest('.choice-item')
+        const list = e.target.closest('.choices-list')
+        const toNodeId = list?.dataset.nodeId
+        if (!targetItem || !toNodeId || toNodeId !== dragInfo.fromNodeId) { dragInfo = null; return }
+        const toIndex = parseInt(targetItem.dataset.choiceIndex)
+        const arr = _model.nodes[toNodeId].choices || []
+        const [moved] = arr.splice(dragInfo.fromIndex, 1)
+        arr.splice(toIndex, 0, moved)
+        setModel(_model)
+        renderNodeList()
+        saveDraft()
+      } else if (dragInfo.type === 'node') {
+        const targetNodeItem = e.target.closest('.node-item')
+        const toId = targetNodeItem?.dataset.nodeId
+        if (!toId || toId === dragInfo.fromNodeId) { dragInfo = null; return }
+        if (!_model.metadata) _model.metadata = {}
+        if (!Array.isArray(_model.metadata.nodeOrder)) _model.metadata.nodeOrder = Object.keys(_model.nodes)
+        const order = _model.metadata.nodeOrder
+        const fromIdx = order.indexOf(dragInfo.fromNodeId)
+        const toIdx = order.indexOf(toId)
+        if (fromIdx !== -1 && toIdx !== -1) {
+          const [moved] = order.splice(fromIdx, 1)
+          order.splice(toIdx, 0, moved)
+          setModel(_model)
+          renderNodeList()
+          saveDraft()
+        }
+      }
+      dragInfo = null
     })
   }
 

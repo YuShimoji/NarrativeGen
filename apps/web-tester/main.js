@@ -84,6 +84,7 @@ const downloadTopBtn = document.getElementById('downloadTopBtn')
 const importCsvBtn = document.getElementById('importCsvBtn')
 const csvFileInput = document.getElementById('csvFileInput')
 const exportCsvBtn = document.getElementById('exportCsvBtn')
+const editBtn = document.getElementById('editBtn')
 const nodeList = document.getElementById('nodeList')
 const addNodeBtn = document.getElementById('addNodeBtn')
 const previewBtn = document.getElementById('previewBtn')
@@ -670,7 +671,7 @@ function setControlsEnabled(enabled) {
   uploadBtn.disabled = !enabled
   dropZone.style.pointerEvents = enabled ? 'auto' : 'none'
   dropZone.style.opacity = enabled ? '1' : '0.5'
-  guiEditBtn.disabled = !enabled
+  if (editBtn) editBtn.disabled = !enabled
 }
 
 function renderChoices() {
@@ -1156,17 +1157,6 @@ applyStoryJsonBtn.addEventListener('click', () => {
   }
 })
 
-// GUI編集モード開始ボタンのハンドラ
-guiEditBtn.addEventListener('click', () => {
-  if (session == null) {
-    setStatus('GUI編集するにはまずモデルを読み込んでください', 'warn')
-    return
-  }
-  guiEditor.renderNodeList()
-  guiEditMode.style.display = 'block'
-  setControlsEnabled(false)
-})
-
 // AI settings event handlers
 aiProvider.addEventListener('change', () => {
   if (aiProvider.value === 'openai') {
@@ -1366,18 +1356,24 @@ const guiEditor = initGuiEditor({
   // DOM references
   guiEditMode,
   guiEditor: nodeList,
+  addNodeBtn,
+  previewBtn,
+  downloadBtn,
   saveGuiBtn,
   cancelGuiBtn,
   storyView,
   chooseParaphrase,
-  parseConditions
+  parseConditions,
+  parseEffects
 })
 
 // Set guiEditor reference in nodesPanel
 nodesPanel.setGuiEditor(guiEditor);
 
 // Setup GUI editor buttons
-editGuiBtn.addEventListener('click', () => guiEditor.startEditing())
+if (editBtn) {
+  editBtn.addEventListener('click', () => guiEditor.startEditing())
+}
 saveGuiBtn.addEventListener('click', () => guiEditor.saveEditing())
 cancelGuiBtn.addEventListener('click', () => guiEditor.cancelEditing())
 
