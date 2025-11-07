@@ -84,8 +84,6 @@ const downloadTopBtn = document.getElementById('downloadTopBtn')
 const importCsvBtn = document.getElementById('importCsvBtn')
 const csvFileInput = document.getElementById('csvFileInput')
 const exportCsvBtn = document.getElementById('exportCsvBtn')
-const guiEditBtn = document.getElementById('editBtn')
-const guiEditMode = document.getElementById('guiEditMode')
 const nodeList = document.getElementById('nodeList')
 const addNodeBtn = document.getElementById('addNodeBtn')
 const previewBtn = document.getElementById('previewBtn')
@@ -1367,7 +1365,7 @@ const guiEditor = initGuiEditor({
   renderStoryEnhanced,
   // DOM references
   guiEditMode,
-  guiEditor,
+  guiEditor: nodeList,
   saveGuiBtn,
   cancelGuiBtn,
   storyView,
