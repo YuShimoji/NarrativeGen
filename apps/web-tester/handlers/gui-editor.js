@@ -13,9 +13,6 @@ export function initGuiEditor(deps) {
     renderChoices,
     initStory,
     renderStoryEnhanced,
-    // Public API
-    renderNodeList,
-    renderChoicesForNode,
     // DOM references
     guiEditMode,
     guiEditor,
