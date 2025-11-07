@@ -1321,8 +1321,8 @@ const nodesPanel = initNodesPanel({
   renderStoryEnhanced,
   nodeOverview,
   nodeSearch,
-  storyView,
-  guiEditor
+  storyView
+  // guiEditor removed
 })
 
 // Setup node list events
@@ -1374,6 +1374,9 @@ const guiEditor = initGuiEditor({
   chooseParaphrase,
   parseConditions
 })
+
+// Set guiEditor reference in nodesPanel
+nodesPanel.setGuiEditor(guiEditor);
 
 // Setup GUI editor buttons
 editGuiBtn.addEventListener('click', () => guiEditor.startEditing())

@@ -15,9 +15,11 @@ export function initNodesPanel(deps) {
     renderStoryEnhanced,
     nodeOverview,
     nodeSearch,
-    storyView,
-    guiEditor
+    storyView
+    // guiEditor removed from deps
   } = deps;
+
+  let guiEditor = null; // Will be set later
 
   let currentSearchTerm = '';
   let lastHighlightedNode = null;
@@ -346,7 +348,8 @@ export function initNodesPanel(deps) {
     jumpToNode,
     renderChoicesForNode,
     setupNodeListEvents,
-    clearHighlights
+    clearHighlights,
+    setGuiEditor: (editor) => { guiEditor = editor; }
   };
 }
 
