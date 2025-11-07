@@ -3,8 +3,10 @@
 
 export function initNodesPanel(deps) {
   const {
-    _model,
-    session,
+    getModel,
+    setModel,
+    getSession,
+    setSession,
     setStatus,
     renderGraph,
     renderState,
@@ -13,7 +15,8 @@ export function initNodesPanel(deps) {
     renderStoryEnhanced,
     nodeOverview,
     nodeSearch,
-    storyView
+    storyView,
+    guiEditor
   } = deps;
 
   let currentSearchTerm = '';
@@ -21,6 +24,7 @@ export function initNodesPanel(deps) {
 
   // Render the node overview list
   function renderNodeOverview() {
+    const _model = getModel();
     if (!nodeOverview || !_model) return
 
     const searchTerm = nodeSearch.value.toLowerCase()
@@ -78,6 +82,8 @@ export function initNodesPanel(deps) {
 
   // Jump to a specific node
   function jumpToNode(nodeId) {
+    const _model = getModel();
+    const session = getSession();
     if (!_model || !session) {
       setStatus('モデルが読み込まれていません', 'warn');
       return;
@@ -91,6 +97,7 @@ export function initNodesPanel(deps) {
     try {
       // Update session state to jump to the node
       session.state.nodeId = nodeId;
+      setSession(session);
       setStatus(`ノード '${nodeId}' に移動しました`, 'success');
 
       // Update UI
@@ -114,6 +121,8 @@ export function initNodesPanel(deps) {
 
   // Render node overview with search and filtering
   function renderNodeOverview() {
+    const _model = getModel();
+    const session = getSession();
     if (!_model || !nodeOverview) return;
 
     const nodes = _model.nodes;
@@ -189,6 +198,7 @@ export function initNodesPanel(deps) {
 
   // Render choices for a specific node (used in node details)
   function renderChoicesForNode(nodeId) {
+    const _model = getModel();
     if (!_model) return;
 
     const node = _model.nodes[nodeId];
@@ -204,6 +214,8 @@ export function initNodesPanel(deps) {
 
   // Render the complete node list
   function renderNodeList() {
+    const _model = getModel();
+    const session = getSession();
     if (!nodeOverview || !_model) return
 
     const nodes = Object.keys(_model.nodes)
@@ -271,6 +283,7 @@ export function initNodesPanel(deps) {
 
       if (e.target.classList.contains('add-choice-btn')) {
         const nodeId = e.target.dataset.nodeId
+        const _model = getModel();
         const node = _model.nodes[nodeId]
         if (!node.choices) node.choices = []
         const choiceId = `c${node.choices.length + 1}`
@@ -279,11 +292,13 @@ export function initNodesPanel(deps) {
           text: `選択肢 ${choiceId}`,
           target: nodeId
         })
+        setModel(_model);
         renderChoicesForNode(nodeId)
       }
 
       if (e.target.classList.contains('delete-node-btn')) {
         const nodeId = e.target.dataset.nodeId
+        const _model = getModel();
         if (Object.keys(_model.nodes).length <= 1) {
           setStatus('少なくとも1つのノードが必要です', 'warn')
           return
@@ -293,14 +308,17 @@ export function initNodesPanel(deps) {
         for (const [nid, node] of Object.entries(_model.nodes)) {
           node.choices = node.choices?.filter(c => c.target !== nodeId) ?? []
         }
+        setModel(_model);
         renderNodeList()
       }
 
       if (e.target.classList.contains('delete-choice-btn')) {
         const nodeId = e.target.dataset.nodeId
         const choiceIndex = parseInt(e.target.dataset.choiceIndex)
+        const _model = getModel();
         const node = _model.nodes[nodeId]
         node.choices.splice(choiceIndex, 1)
+        setModel(_model);
         renderChoicesForNode(nodeId)
       }
     })

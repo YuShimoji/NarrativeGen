@@ -1,16 +1,21 @@
-// GUI Editor Handler - manages GUI editing mode and model manipulation
-// Extracted from main.js for better maintainability
+import { GameSession } from '../engine-ts/GameSession.js';
+import { serializeConditions, serializeEffects } from '../utils/csv-parser.js';
 
 export function initGuiEditor(deps) {
   const {
-    _model,
-    session,
+    getModel,
+    setModel,
+    getSession,
+    setSession,
     setStatus,
     setControlsEnabled,
     renderState,
     renderChoices,
     initStory,
     renderStoryEnhanced,
+    // Public API
+    renderNodeList,
+    renderChoicesForNode,
     // DOM references
     guiEditMode,
     guiEditor,
@@ -18,7 +23,6 @@ export function initGuiEditor(deps) {
     cancelGuiBtn,
     storyView,
     chooseParaphrase,
-    serializeConditions,
     parseConditions
   } = deps;
 
@@ -26,6 +30,7 @@ export function initGuiEditor(deps) {
 
   // Start GUI editing mode
   function startEditing() {
+    const _model = getModel();
     if (!_model) {
       setStatus('編集するモデルがありません', 'warn');
       return;
@@ -45,7 +50,7 @@ export function initGuiEditor(deps) {
   function cancelEditing() {
     if (!originalModel) return;
 
-    _model = originalModel;
+    setModel(originalModel);
     originalModel = null;
     guiEditMode.style.display = 'none';
     setControlsEnabled(true);
@@ -57,19 +62,20 @@ export function initGuiEditor(deps) {
   function saveEditing() {
     if (!originalModel) return;
 
+    const _model = getModel();
     try {
       // Validate the model before saving
-      if (!validateEditedModel()) {
+      if (!validateEditedModel(_model)) {
         return;
       }
 
       // Restart session with updated model
-      session = new GameSession(_model);
+      setSession(new GameSession(_model));
 
       // Update UI
       renderState();
       renderChoices();
-      initStory(session, _model);
+      initStory(getSession(), _model);
       renderStoryEnhanced(storyView);
 
       originalModel = null;
@@ -85,6 +91,7 @@ export function initGuiEditor(deps) {
 
   // Populate editor with current model data
   function populateEditor() {
+    const _model = getModel();
     if (!guiEditor || !_model) return;
 
     const editorContent = generateEditorContent(_model);
@@ -192,13 +199,16 @@ export function initGuiEditor(deps) {
     const startNodeSelect = guiEditor.querySelector('.start-node-select');
     if (startNodeSelect) {
       startNodeSelect.addEventListener('change', (e) => {
+        const _model = getModel();
         _model.startNode = e.target.value || undefined;
+        setModel(_model);
       });
     }
   }
 
   // Add a new node
   function addNewNode() {
+    const _model = getModel();
     const nodeId = prompt('Enter new node ID:');
     if (!nodeId || _model.nodes[nodeId]) {
       setStatus('無効または重複するノードIDです', 'warn');
@@ -206,11 +216,13 @@ export function initGuiEditor(deps) {
     }
 
     _model.nodes[nodeId] = { text: '', choices: [] };
+    setModel(_model);
     populateEditor();
   }
 
   // Add a new choice to a node
   function addNewChoice(nodeId) {
+    const _model = getModel();
     if (!_model.nodes[nodeId]) return;
 
     if (!_model.nodes[nodeId].choices) {
@@ -218,27 +230,30 @@ export function initGuiEditor(deps) {
     }
 
     _model.nodes[nodeId].choices.push({ id: '', text: '', target: '' });
+    setModel(_model);
     populateEditor();
   }
 
   // Delete a node
   function deleteNode(nodeId) {
+    const _model = getModel();
     if (!confirm(`ノード "${nodeId}" を削除しますか？`)) return;
 
     delete _model.nodes[nodeId];
+    setModel(_model);
     populateEditor();
   }
 
   // Validate the edited model
-  function validateEditedModel() {
+  function validateEditedModel(model) {
     // Basic validation - can be expanded
-    if (!_model.startNode || !_model.nodes[_model.startNode]) {
+    if (!model.startNode || !model.nodes[model.startNode]) {
       setStatus('開始ノードが設定されていないか無効です', 'warn');
       return false;
     }
 
     // Check for empty required fields
-    for (const [nodeId, node] of Object.entries(_model.nodes)) {
+    for (const [nodeId, node] of Object.entries(model.nodes)) {
       if (!node.text?.trim()) {
         setStatus(`ノード "${nodeId}" のテキストが空です`, 'warn');
         return false;
@@ -252,6 +267,7 @@ export function initGuiEditor(deps) {
   function updateModelFromInput(input) {
     if (!input.dataset.nodeId) return
 
+    const _model = getModel();
     const nodeId = input.dataset.nodeId
     const choiceIndex = input.dataset.choiceIndex
     const field = input.dataset.field
@@ -301,10 +317,12 @@ export function initGuiEditor(deps) {
         }
       }
     }
+    setModel(_model);
 };
 
   // Render the node list for editing
   function renderNodeList() {
+    const _model = getModel();
     const container = guiEditor.querySelector('.node-list') || document.createElement('div')
     container.className = 'node-list'
     container.innerHTML = ''
@@ -349,6 +367,7 @@ export function initGuiEditor(deps) {
 
   // Render choices for a specific node
   function renderChoicesForNode(nodeId) {
+    const _model = getModel();
     const node = _model.nodes[nodeId]
     if (!node || !node.choices) return '<p>選択肢なし</p>'
 
@@ -391,6 +410,7 @@ export function initGuiEditor(deps) {
     guiEditor.addEventListener('click', (e) => {
       if (e.target.classList.contains('add-choice-btn')) {
         const nodeId = e.target.dataset.nodeId
+        const _model = getModel();
         const node = _model.nodes[nodeId]
         if (!node.choices) node.choices = []
         const choiceId = `c${node.choices.length + 1}`
@@ -399,11 +419,13 @@ export function initGuiEditor(deps) {
           text: `選択肢 ${choiceId}`,
           target: nodeId
         })
+        setModel(_model);
         renderNodeList()
       }
 
       if (e.target.classList.contains('delete-node-btn')) {
         const nodeId = e.target.dataset.nodeId
+        const _model = getModel();
         if (Object.keys(_model.nodes).length <= 1) {
           setStatus('少なくとも1つのノードが必要です', 'warn')
           return
@@ -413,14 +435,17 @@ export function initGuiEditor(deps) {
         for (const [nid, node] of Object.entries(_model.nodes)) {
           node.choices = node.choices?.filter(c => c.target !== nodeId) ?? []
         }
+        setModel(_model);
         renderNodeList()
       }
 
       if (e.target.classList.contains('delete-choice-btn')) {
         const nodeId = e.target.dataset.nodeId
         const choiceIndex = parseInt(e.target.dataset.choiceIndex)
+        const _model = getModel();
         const node = _model.nodes[nodeId]
         node.choices.splice(choiceIndex, 1)
+        setModel(_model);
         renderNodeList()
       }
     })

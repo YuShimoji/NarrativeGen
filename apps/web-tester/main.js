@@ -160,6 +160,23 @@ let currentModelName = null
 let _model = null
 let storyLog = []
 
+// Model and session accessors
+function getModel() {
+  return _model
+}
+
+function setModel(newModel) {
+  _model = newModel
+}
+
+function getSession() {
+  return session
+}
+
+function setSession(newSession) {
+  session = newSession
+}
+
 // Inventory UI elements
 const inventoryDisplay = document.getElementById('inventoryDisplay')
 
@@ -262,6 +279,7 @@ function hideCsvPreview() {
 }
 
 function renderDebugInfo() {
+  const _model = getModel();
   if (!session || !_model) {
     flagsDisplay.innerHTML = '<p>セッションを開始してください</p>'
     resourcesDisplay.innerHTML = ''
@@ -355,6 +373,7 @@ let graphTranslateX = 0
 let graphTranslateY = 0
 
 function renderGraph() {
+  const _model = getModel();
   if (!graphSvg || !_model) {
     graphSvg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#666">モデルを読み込んでください</text>'
     return
@@ -627,17 +646,17 @@ async function importCsvFile(file) {
     }
 
     const firstNode = Object.keys(nodes)[0]
-    _model = {
+    setModel({
       modelType: 'adventure-playthrough',
       startNode: firstNode,
       flags: initialFlags,
       resources: initialResources,
       nodes,
       metadata: globalMetadata
-    }
-    session = new GameSession(_model, { entities })
+    })
+    setSession(new GameSession(getModel(), { entities }))
     currentModelName = file.name
-    initStory(session, _model)
+    initStory(getSession(), getModel())
     renderState()
     renderChoices()
     renderStoryEnhanced(storyView)
@@ -921,11 +940,11 @@ startBtn.addEventListener('click', async () => {
       loadEntitiesCatalog(),
     ])
 
-    _model = model
-    session = new GameSession(model, { entities })
+    setModel(model)
+    setSession(new GameSession(model, { entities }))
     currentModelName = sampleId
     setStatus(`サンプル ${sampleId} を実行中`, 'success')
-    initStory(session, _model)
+    initStory(getSession(), getModel())
   } catch (err) {
     console.error(err)
     session = null
@@ -955,29 +974,10 @@ fileInput.addEventListener('change', async (e) => {
       loadEntitiesCatalog(),
     ])
 
-    _model = model
-    session = new GameSession(model, { entities })
+    setModel(model)
+    setSession(new GameSession(model, { entities }))
     currentModelName = file.name
     setStatus(`ファイル ${file.name} を実行中`, 'success')
-    initStory(session, _model)
-  } catch (err) {
-    console.error(err)
-    session = null
-    currentModelName = null
-    setStatus(`ファイルの初期化に失敗しました: ${err?.message ?? err}`, 'warn')
-  } finally {
-    setControlsEnabled(true)
-    renderState()
-    renderChoices()
-  }
-})
-
-dropZone.addEventListener('dragover', (e) => {
-  e.preventDefault()
-  dropZone.style.backgroundColor = '#e0e0e0'
-})
-
-dropZone.addEventListener('dragleave', () => {
   dropZone.style.backgroundColor = ''
 })
 
@@ -1007,11 +1007,11 @@ dropZone.addEventListener('drop', async (e) => {
     }
 
     hideErrors()
-    _model = model
-    session = new GameSession(model, { entities })
+    setModel(model)
+    setSession(new GameSession(model, { entities }))
     currentModelName = file.name
     setStatus(`ファイル ${file.name} を実行中`, 'success')
-    initStory(session, _model)
+    initStory(getSession(), getModel())
   } catch (err) {
     console.error(err)
     showErrors([err?.message ?? err])
@@ -1128,15 +1128,15 @@ applyStoryJsonBtn.addEventListener('click', () => {
     }
 
     hideErrors()
-    _model = newModel
-    session = startSession(_model)
+    setModel(newModel)
+    setSession(startSession(getModel()))
     currentModelName = 'json-edited'
     setStatus('JSONを適用しました', 'success')
 
     // Update all views
     renderState()
     renderChoices()
-    initStory(session, _model)
+    initStory(getSession(), getModel())
     renderStoryEnhanced(storyView)
     if (graphPanel.classList.contains('active')) {
       renderGraph()
@@ -1209,13 +1209,13 @@ nodeOverview.addEventListener('click', (e) => {
 })
 
 previewBtn.addEventListener('click', () => {
-  if (!_model) return
-  let current = _model.startNode
+  if (!getModel()) return
+  let current = getModel().startNode
   let story = ''
   const visited = new Set()
   while (current && !visited.has(current)) {
     visited.add(current)
-    const node = _model.nodes[current]
+    const node = getModel().nodes[current]
     if (node?.text) story += node.text + '\n\n'
     if (node?.choices?.length === 1) {
       current = node.choices[0].target
@@ -1227,8 +1227,8 @@ previewBtn.addEventListener('click', () => {
 })
 
 downloadBtn.addEventListener('click', () => {
-  if (!_model) return
-  const json = JSON.stringify(_model, null, 2)
+  if (!getModel()) return
+  const json = JSON.stringify(getModel(), null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -1299,8 +1299,10 @@ document.addEventListener('keydown', (e) => {
 
 // Initialize handlers with dependency injection
 const nodesPanel = initNodesPanel({
-  _model,
-  session,
+  getModel,
+  setModel,
+  getSession,
+  setSession,
   setStatus,
   renderGraph,
   renderState,
@@ -1343,8 +1345,10 @@ const tabs = initTabs({
 tabs.initialize()
 
 const guiEditor = initGuiEditor({
-  _model,
-  session,
+  getModel,
+  setModel,
+  getSession,
+  setSession,
   setStatus,
   setControlsEnabled,
   renderState,
@@ -1358,7 +1362,6 @@ const guiEditor = initGuiEditor({
   cancelGuiBtn,
   storyView,
   chooseParaphrase,
-  serializeConditions,
   parseConditions
 })
 
