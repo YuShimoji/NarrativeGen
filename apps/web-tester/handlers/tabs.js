@@ -11,10 +11,12 @@ export function initTabs(deps) {
     storyTab,
     debugTab,
     graphTab,
+    nodeListTab,
     aiTab,
     storyPanel,
     debugPanel,
     graphPanel,
+    nodeListPanel,
     aiPanel
   } = deps;
 
@@ -23,18 +25,18 @@ export function initTabs(deps) {
   // Switch to a specific tab
   function switchTab(tabName) {
     // Hide all panels
-    [storyPanel, debugPanel, graphPanel, aiPanel].forEach(panel => {
+    [storyPanel, debugPanel, graphPanel, nodeListPanel, aiPanel].forEach(panel => {
       if (panel) panel.classList.remove('active');
     });
 
     // Remove active class from all tab buttons
-    [storyTab, debugTab, graphTab, aiTab].forEach(tab => {
+    [storyTab, debugTab, graphTab, nodeListTab, aiTab].forEach(tab => {
       if (tab) tab.classList.remove('active');
     });
 
     // Show selected panel and activate tab
-    const panels = { story: storyPanel, debug: debugPanel, graph: graphPanel, ai: aiPanel };
-    const tabs = { story: storyTab, debug: debugTab, graph: graphTab, ai: aiTab };
+    const panels = { story: storyPanel, debug: debugPanel, graph: graphPanel, nodeList: nodeListPanel, ai: aiPanel };
+    const tabs = { story: storyTab, debug: debugTab, graph: graphTab, nodeList: nodeListTab, ai: aiTab };
 
     const targetPanel = panels[tabName];
     const targetTab = tabs[tabName];
@@ -51,6 +53,9 @@ export function initTabs(deps) {
         break;
       case 'debug':
         if (renderDebugInfo) renderDebugInfo();
+        break;
+      case 'nodeList':
+        if (renderNodeOverview) renderNodeOverview();
         break;
       case 'ai':
         if (initAiProvider) initAiProvider();
@@ -79,6 +84,7 @@ export function initTabs(deps) {
       { element: storyTab, name: 'story' },
       { element: debugTab, name: 'debug' },
       { element: graphTab, name: 'graph' },
+      { element: nodeListTab, name: 'nodeList' },
       { element: aiTab, name: 'ai' }
     ];
 

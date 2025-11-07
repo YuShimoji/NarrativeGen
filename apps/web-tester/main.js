@@ -4,7 +4,7 @@ import { initStory, appendStoryFromCurrentNode, renderStoryEnhanced } from './ha
 import { exportModelToCsv } from './utils/csv-exporter.js'
 import { initNodesPanel } from './handlers/nodes-panel.js'
 import { initTabs } from './handlers/tabs.js'
-// import { initGuiEditor } from './handlers/gui-editor.js'
+import { initGuiEditor } from './handlers/gui-editor.js'
 import { resolveVariables, validateModel } from './utils/model-utils.js'
 import { parseCsvLine, parseKeyValuePairs, parseConditions, parseEffects, serializeConditions, serializeEffects, serializeKeyValuePairs } from './utils/csv-parser.js'
 
@@ -84,8 +84,7 @@ const downloadTopBtn = document.getElementById('downloadTopBtn')
 const importCsvBtn = document.getElementById('importCsvBtn')
 const csvFileInput = document.getElementById('csvFileInput')
 const exportCsvBtn = document.getElementById('exportCsvBtn')
-const guiEditBtn = document.getElementById('editBtn')
-const guiEditMode = document.getElementById('guiEditMode')
+const editBtn = document.getElementById('editBtn')
 const nodeList = document.getElementById('nodeList')
 const addNodeBtn = document.getElementById('addNodeBtn')
 const previewBtn = document.getElementById('previewBtn')
@@ -159,6 +158,23 @@ let session = null
 let currentModelName = null
 let _model = null
 let storyLog = []
+
+// Model and session accessors
+function getModel() {
+  return _model
+}
+
+function setModel(newModel) {
+  _model = newModel
+}
+
+function getSession() {
+  return session
+}
+
+function setSession(newSession) {
+  session = newSession
+}
 
 // Inventory UI elements
 const inventoryDisplay = document.getElementById('inventoryDisplay')
@@ -262,6 +278,7 @@ function hideCsvPreview() {
 }
 
 function renderDebugInfo() {
+  const _model = getModel();
   if (!session || !_model) {
     flagsDisplay.innerHTML = '<p>セッションを開始してください</p>'
     resourcesDisplay.innerHTML = ''
@@ -355,6 +372,7 @@ let graphTranslateX = 0
 let graphTranslateY = 0
 
 function renderGraph() {
+  const _model = getModel();
   if (!graphSvg || !_model) {
     graphSvg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#666">モデルを読み込んでください</text>'
     return
@@ -627,17 +645,17 @@ async function importCsvFile(file) {
     }
 
     const firstNode = Object.keys(nodes)[0]
-    _model = {
+    setModel({
       modelType: 'adventure-playthrough',
       startNode: firstNode,
       flags: initialFlags,
       resources: initialResources,
       nodes,
       metadata: globalMetadata
-    }
-    session = new GameSession(_model, { entities })
+    })
+    setSession(new GameSession(getModel(), { entities }))
     currentModelName = file.name
-    initStory(session, _model)
+    initStory(getSession(), getModel())
     renderState()
     renderChoices()
     renderStoryEnhanced(storyView)
@@ -653,7 +671,7 @@ function setControlsEnabled(enabled) {
   uploadBtn.disabled = !enabled
   dropZone.style.pointerEvents = enabled ? 'auto' : 'none'
   dropZone.style.opacity = enabled ? '1' : '0.5'
-  guiEditBtn.disabled = !enabled
+  if (editBtn) editBtn.disabled = !enabled
 }
 
 function renderChoices() {
@@ -921,11 +939,11 @@ startBtn.addEventListener('click', async () => {
       loadEntitiesCatalog(),
     ])
 
-    _model = model
-    session = new GameSession(model, { entities })
+    setModel(model)
+    setSession(new GameSession(model, { entities }))
     currentModelName = sampleId
     setStatus(`サンプル ${sampleId} を実行中`, 'success')
-    initStory(session, _model)
+    initStory(getSession(), getModel())
   } catch (err) {
     console.error(err)
     session = null
@@ -955,11 +973,10 @@ fileInput.addEventListener('change', async (e) => {
       loadEntitiesCatalog(),
     ])
 
-    _model = model
-    session = new GameSession(model, { entities })
+    setModel(model)
+    setSession(new GameSession(model, { entities }))
     currentModelName = file.name
     setStatus(`ファイル ${file.name} を実行中`, 'success')
-    initStory(session, _model)
   } catch (err) {
     console.error(err)
     session = null
@@ -969,16 +986,8 @@ fileInput.addEventListener('change', async (e) => {
     setControlsEnabled(true)
     renderState()
     renderChoices()
+    renderStoryEnhanced(storyView)
   }
-})
-
-dropZone.addEventListener('dragover', (e) => {
-  e.preventDefault()
-  dropZone.style.backgroundColor = '#e0e0e0'
-})
-
-dropZone.addEventListener('dragleave', () => {
-  dropZone.style.backgroundColor = ''
 })
 
 dropZone.addEventListener('drop', async (e) => {
@@ -1007,11 +1016,11 @@ dropZone.addEventListener('drop', async (e) => {
     }
 
     hideErrors()
-    _model = model
-    session = new GameSession(model, { entities })
+    setModel(model)
+    setSession(new GameSession(model, { entities }))
     currentModelName = file.name
     setStatus(`ファイル ${file.name} を実行中`, 'success')
-    initStory(session, _model)
+    initStory(getSession(), getModel())
   } catch (err) {
     console.error(err)
     showErrors([err?.message ?? err])
@@ -1042,51 +1051,6 @@ if (savedAiConfig) {
   }
 }
 
-// Tab event listeners
-function switchTab(tabName) {
-  // Hide all panels
-  storyPanel.classList.remove('active')
-  debugPanel.classList.remove('active')
-  graphPanel.classList.remove('active')
-  nodeListPanel.classList.remove('active')
-  aiPanel.classList.remove('active')
-
-  // Remove active class from all tabs
-  storyTab.classList.remove('active')
-  debugTab.classList.remove('active')
-  graphTab.classList.remove('active')
-  nodeListTab.classList.remove('active')
-  aiTab.classList.remove('active')
-
-  // Show selected panel and activate tab
-  if (tabName === 'story') {
-    storyPanel.classList.add('active')
-    storyTab.classList.add('active')
-  } else if (tabName === 'debug') {
-    debugPanel.classList.add('active')
-    debugTab.classList.add('active')
-    renderDebugInfo()
-  } else if (tabName === 'graph') {
-    graphPanel.classList.add('active')
-    graphTab.classList.add('active')
-    renderGraph()
-  } else if (tabName === 'nodeList') {
-    nodeListPanel.classList.add('active')
-    nodeListTab.classList.add('active')
-    renderNodeOverview()
-  } else if (tabName === 'ai') {
-    aiPanel.classList.add('active')
-    aiTab.classList.add('active')
-    initAiProvider()
-  }
-}
-
-storyTab.addEventListener('click', () => switchTab('story'))
-debugTab.addEventListener('click', () => switchTab('debug'))
-graphTab.addEventListener('click', () => switchTab('graph'))
-nodeListTab.addEventListener('click', () => switchTab('nodeList'))
-aiTab.addEventListener('click', () => switchTab('ai'))
-
 // Split View Mode Toggle
 toggleSplitViewBtn.addEventListener('click', () => {
   splitModeActive = !splitModeActive
@@ -1098,7 +1062,7 @@ toggleSplitViewBtn.addEventListener('click', () => {
     storyMainContainer.classList.add('split-mode')
     
     // Update JSON editor with current model
-    storyJsonEditor.value = _model ? JSON.stringify(_model, null, 2) : '{}'
+    storyJsonEditor.value = getModel() ? JSON.stringify(getModel(), null, 2) : '{}'
     
     // Initialize resizer (once)
     initStoryResizer()
@@ -1173,15 +1137,15 @@ applyStoryJsonBtn.addEventListener('click', () => {
     }
 
     hideErrors()
-    _model = newModel
-    session = startSession(_model)
+    setModel(newModel)
+    setSession(startSession(getModel()))
     currentModelName = 'json-edited'
     setStatus('JSONを適用しました', 'success')
 
     // Update all views
     renderState()
     renderChoices()
-    initStory(session, _model)
+    initStory(getSession(), getModel())
     renderStoryEnhanced(storyView)
     if (graphPanel.classList.contains('active')) {
       renderGraph()
@@ -1191,119 +1155,6 @@ applyStoryJsonBtn.addEventListener('click', () => {
     showErrors([err?.message ?? 'JSONパースエラー'])
     setStatus(`JSON適用に失敗しました: ${err?.message ?? err}`, 'warn')
   }
-})
-
-function renderNodeOverview() {
-  if (!nodeOverview || !_model) return
-
-  const searchTerm = nodeSearch.value.toLowerCase()
-  const filteredNodes = Object.entries(_model.nodes).filter(([id, node]) => {
-    if (searchTerm) {
-      return id.toLowerCase().includes(searchTerm) ||
-             node.text?.toLowerCase().includes(searchTerm)
-    }
-    return true
-  })
-
-  nodeOverview.innerHTML = ''
-
-  filteredNodes.forEach(([nodeId, node]) => {
-    const card = document.createElement('div')
-    card.className = 'node-card'
-    card.dataset.nodeId = nodeId
-    card.innerHTML = `
-      <h4>${nodeId}</h4>
-      <div class="node-text">${node.text || '（テキストなし）'}</div>
-      <div class="node-stats">
-        選択肢: ${node.choices?.length || 0}個
-      </div>
-      <div class="node-actions">
-        <button data-action="switch-tab" data-tab="graph" data-node-id="${nodeId}">グラフで表示</button>
-        <button data-action="switch-tab" data-tab="story" data-node-id="${nodeId}">ストーリーで表示</button>
-      </div>
-    `
-    nodeOverview.appendChild(card)
-  })
-}
-
-function highlightNode(nodeId) {
-  highlightedNodes.clear()
-  highlightedNodes.add(nodeId)
-  renderGraph()
-}
-
-function jumpToNode(nodeId) {
-  if (!_model) return
-  if (!session) {
-    session = new GameSession(_model)
-  }
-  try {
-    // For GameSession, we need to set the node through applyChoice or direct state manipulation
-    // Since applyChoice expects a choice ID, we'll directly manipulate the state for jumping
-    session.state.nodeId = nodeId
-    setStatus(`ノード '${nodeId}' に移動しました`, 'success')
-  } catch (e) {
-    // fall back: no-op if session structure differs
-  }
-  renderState()
-  renderChoices()
-  initStory(session, _model)
-  renderStoryEnhanced(storyView)
-}
-
-nodeOverview.addEventListener('click', (e) => {
-  const action = e.target.dataset.action
-  if (action === 'switch-tab') {
-    const tab = e.target.dataset.tab
-    const nodeId = e.target.dataset.nodeId
-    switchTab(tab)
-    if (tab === 'graph') {
-      renderGraph()
-      highlightNode(nodeId)
-    } else if (tab === 'story') {
-      jumpToNode(nodeId)
-    }
-  }
-})
-
-nodeSearch.addEventListener('input', () => {
-  renderNodeOverview()
-})
-
-refreshNodeList.addEventListener('click', () => {
-  renderNodeOverview()
-})
-
-// Hover linking between Node List and Graph
-nodeOverview.addEventListener('mouseover', (e) => {
-  const card = e.target.closest('.node-card')
-  if (!card) return
-  const nid = card.dataset.nodeId
-  highlightedNodes.clear()
-  if (nid) highlightedNodes.add(nid)
-  if (graphPanel.classList.contains('active')) {
-    renderGraph()
-  }
-})
-
-nodeOverview.addEventListener('mouseout', (e) => {
-  const card = e.target.closest('.node-card')
-  if (!card) return
-  highlightedNodes.clear()
-  if (graphPanel.classList.contains('active')) {
-    renderGraph()
-  }
-})
-
-// GUI編集モード開始ボタンのハンドラ
-guiEditBtn.addEventListener('click', () => {
-  if (session == null) {
-    setStatus('GUI編集するにはまずモデルを読み込んでください', 'warn')
-    return
-  }
-  guiEditor.renderNodeList()
-  guiEditMode.style.display = 'block'
-  setControlsEnabled(false)
 })
 
 // AI settings event handlers
@@ -1356,13 +1207,13 @@ nodeOverview.addEventListener('click', (e) => {
 })
 
 previewBtn.addEventListener('click', () => {
-  if (!_model) return
-  let current = _model.startNode
+  if (!getModel()) return
+  let current = getModel().startNode
   let story = ''
   const visited = new Set()
   while (current && !visited.has(current)) {
     visited.add(current)
-    const node = _model.nodes[current]
+    const node = getModel().nodes[current]
     if (node?.text) story += node.text + '\n\n'
     if (node?.choices?.length === 1) {
       current = node.choices[0].target
@@ -1374,8 +1225,8 @@ previewBtn.addEventListener('click', () => {
 })
 
 downloadBtn.addEventListener('click', () => {
-  if (!_model) return
-  const json = JSON.stringify(_model, null, 2)
+  if (!getModel()) return
+  const json = JSON.stringify(getModel(), null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -1400,16 +1251,16 @@ confirmImportBtn.addEventListener('click', async () => {
 
 // トップレベルのプレビュー/ダウンロード
 previewTopBtn.addEventListener('click', () => {
-  if (!_model) {
+  if (!getModel()) {
     setStatus('まずモデルを読み込んでください', 'warn')
     return
   }
-  let current = _model.startNode
+  let current = getModel().startNode
   let story = ''
   const visited = new Set()
   while (current && !visited.has(current)) {
     visited.add(current)
-    const node = _model.nodes[current]
+    const node = getModel().nodes[current]
     if (node?.text) story += node.text + '\n\n'
     if (node?.choices?.length === 1) current = node.choices[0].target
     else break
@@ -1418,11 +1269,11 @@ previewTopBtn.addEventListener('click', () => {
 })
 
 downloadTopBtn.addEventListener('click', () => {
-  if (!_model) {
+  if (!getModel()) {
     setStatus('まずモデルを読み込んでください', 'warn')
     return
   }
-  const json = JSON.stringify(_model, null, 2)
+  const json = JSON.stringify(getModel(), null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -1446,8 +1297,10 @@ document.addEventListener('keydown', (e) => {
 
 // Initialize handlers with dependency injection
 const nodesPanel = initNodesPanel({
-  _model,
-  session,
+  getModel,
+  setModel,
+  getSession,
+  setSession,
   setStatus,
   renderGraph,
   renderState,
@@ -1456,8 +1309,8 @@ const nodesPanel = initNodesPanel({
   renderStoryEnhanced,
   nodeOverview,
   nodeSearch,
-  storyView,
-  guiEditor
+  storyView
+  // guiEditor removed
 })
 
 // Setup node list events
@@ -1477,52 +1330,52 @@ const tabs = initTabs({
   storyTab,
   debugTab,
   graphTab,
+  nodeListTab,
   aiTab,
   storyPanel,
   debugPanel,
   graphPanel,
+  nodeListPanel,
   aiPanel
 })
 
 // Initialize tabs
 tabs.initialize()
 
+const guiEditor = initGuiEditor({
+  getModel,
+  setModel,
+  getSession,
+  setSession,
+  setStatus,
+  setControlsEnabled,
+  renderState,
+  renderChoices,
+  initStory,
+  renderStoryEnhanced,
+  // DOM references
+  guiEditMode,
+  guiEditor: nodeList,
+  addNodeBtn,
+  previewBtn,
+  downloadBtn,
+  saveGuiBtn,
+  cancelGuiBtn,
+  storyView,
+  chooseParaphrase,
+  parseConditions,
+  parseEffects
+})
+
+// Set guiEditor reference in nodesPanel
+nodesPanel.setGuiEditor(guiEditor);
+
 // Setup GUI editor buttons
-editGuiBtn.addEventListener('click', () => guiEditor.startEditing())
+if (editBtn) {
+  editBtn.addEventListener('click', () => guiEditor.startEditing())
+}
 saveGuiBtn.addEventListener('click', () => guiEditor.saveEditing())
 cancelGuiBtn.addEventListener('click', () => guiEditor.cancelEditing())
-
-saveGuiBtn.addEventListener('click', () => {
-  try {
-    // Validate model before saving
-    const validationErrors = validateModel(_model.nodes)
-    if (validationErrors.length > 0) {
-      showErrors(validationErrors)
-      setStatus(`モデルにエラーがあります: ${validationErrors.length}件`, 'warn')
-      return
-    }
-
-    hideErrors()
-    // Restart session with current model
-    session = new GameSession(_model)
-    currentModelName = 'gui-edited'
-    guiEditMode.style.display = 'none'
-    setStatus('GUI編集を保存しました', 'success')
-    setControlsEnabled(true)
-    renderState()
-    renderChoices()
-    initStory(session, _model)
-    renderStoryEnhanced(storyView)
-  } catch (err) {
-    showErrors([err?.message ?? err])
-    setStatus(`GUI保存に失敗しました: ${err?.message ?? err}`, 'warn')
-  }
-})
-
-cancelGuiBtn.addEventListener('click', () => {
-  guiEditMode.style.display = 'none'
-  setControlsEnabled(true)
-})
 
 // 言い換えイベント（非AI）
 nodeList.addEventListener('click', (e) => {
@@ -1541,54 +1394,20 @@ nodeList.addEventListener('click', (e) => {
     }
   }
 
-  if (e.target.classList.contains('add-choice-btn')) {
-    const nodeId = e.target.dataset.nodeId
-    const node = _model.nodes[nodeId]
-    if (!node.choices) node.choices = []
-    const choiceId = `c${node.choices.length + 1}`
-    node.choices.push({
-      id: choiceId,
-      text: `選択肢 ${choiceId}`,
-      target: nodeId
-    })
-    guiEditor.renderChoicesForNode(nodeId)
-  }
-
-  if (e.target.classList.contains('delete-node-btn')) {
-    const nodeId = e.target.dataset.nodeId
-    if (Object.keys(_model.nodes).length <= 1) {
-      setStatus('少なくとも1つのノードが必要です', 'warn')
-      return
-    }
-    delete _model.nodes[nodeId]
-    // Remove references to deleted node
-    for (const [nid, node] of Object.entries(_model.nodes)) {
-      node.choices = node.choices?.filter(c => c.target !== nodeId) ?? []
-    }
-    guiEditor.renderNodeList()
-  }
-
-  if (e.target.classList.contains('delete-choice-btn')) {
-    const nodeId = e.target.dataset.nodeId
-    const choiceIndex = parseInt(e.target.dataset.choiceIndex)
-    const node = _model.nodes[nodeId]
-    node.choices.splice(choiceIndex, 1)
-    guiEditor.renderChoicesForNode(nodeId)
-  }
 })
 
 // トップレベルのプレビュー/ダウンロード
 previewTopBtn.addEventListener('click', () => {
-  if (!_model) {
+  if (!getModel()) {
     setStatus('まずモデルを読み込んでください', 'warn')
     return
   }
-  let current = _model.startNode
+  let current = getModel().startNode
   let story = ''
   const visited = new Set()
   while (current && !visited.has(current)) {
     visited.add(current)
-    const node = _model.nodes[current]
+    const node = getModel().nodes[current]
     if (node?.text) story += node.text + '\n\n'
     if (node?.choices?.length === 1) current = node.choices[0].target
     else break
@@ -1597,11 +1416,11 @@ previewTopBtn.addEventListener('click', () => {
 })
 
 downloadTopBtn.addEventListener('click', () => {
-  if (!_model) {
+  if (!getModel()) {
     setStatus('まずモデルを読み込んでください', 'warn')
     return
   }
-  const json = JSON.stringify(_model, null, 2)
+  const json = JSON.stringify(getModel(), null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
