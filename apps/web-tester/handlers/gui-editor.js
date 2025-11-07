@@ -1,4 +1,4 @@
-import { GameSession } from '../engine-ts/GameSession.js';
+import { GameSession } from '@narrativegen/engine-ts/dist/browser.js';
 import { serializeConditions, serializeEffects } from '../utils/csv-parser.js';
 
 export function initGuiEditor(deps) {
