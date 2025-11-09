@@ -12,6 +12,7 @@ import type {
   Model,
   ResourceState,
   SessionState,
+  VariableState,
 } from './types'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -30,16 +31,23 @@ function isResourceStateRecord(value: unknown): value is ResourceState {
   return Object.values(value).every((entry) => typeof entry === 'number' && Number.isFinite(entry))
 }
 
+function isVariableStateRecord(value: unknown): value is VariableState {
+  if (!isRecord(value)) return false
+  return Object.values(value).every((entry) => typeof entry === 'string')
+}
+
 function isSessionState(value: unknown): value is SessionState {
   if (!isRecord(value)) return false
   const nodeId = value.nodeId
   const time = value.time
   const flags = value.flags
   const resources = value.resources
+  const variables = value.variables
   if (typeof nodeId !== 'string') return false
   if (typeof time !== 'number' || Number.isNaN(time)) return false
   if (!isFlagStateRecord(flags)) return false
   if (!isResourceStateRecord(resources)) return false
+  if (!isVariableStateRecord(variables)) return false
   return true
 }
 
@@ -72,7 +80,7 @@ function assertModelIntegrity(model: Model): void {
   }
 }
 
-function loadSchema(): any {
+function loadSchema(): unknown {
   const schemaPath = path.resolve(
     __dirname,
     '../../..',
@@ -81,12 +89,12 @@ function loadSchema(): any {
     'playthrough.schema.json',
   )
   const json = fs.readFileSync(schemaPath, 'utf-8')
-  return JSON.parse(json) as any
+  return JSON.parse(json)
 }
 
 export function loadModel(modelData: unknown): Model {
   const ajv = new Ajv({ allErrors: true })
-  const schema = loadSchema()
+  const schema = loadSchema() as any
   const validate = ajv.compile(schema)
   if (!validate(modelData)) {
     const err = ajv.errorsText(validate.errors ?? [], { separator: '\n' })
@@ -102,6 +110,7 @@ export function startSession(model: Model, initial?: Partial<SessionState>): Ses
     nodeId: initial?.nodeId ?? model.startNode,
     flags: { ...(model.flags ?? {}), ...(initial?.flags ?? {}) },
     resources: { ...(model.resources ?? {}), ...(initial?.resources ?? {}) },
+    variables: initial?.variables ?? {},
     time: initial?.time ?? 0,
   }
 }
@@ -125,6 +134,7 @@ function evalCondition(
   cond: Condition,
   flags: FlagState,
   resources: ResourceState,
+  variables: VariableState,
   time: number,
 ): boolean {
   if (cond.type === 'flag') {
@@ -137,6 +147,21 @@ function evalCondition(
   if (cond.type === 'timeWindow') {
     return time >= cond.start && time <= cond.end
   }
+  if (cond.type === 'variable') {
+    const v = variables[cond.key] ?? ''
+    switch (cond.op) {
+      case '==':
+        return v === cond.value
+      case '!=':
+        return v !== cond.value
+      case 'contains':
+        return v.includes(cond.value)
+      case '!contains':
+        return !v.includes(cond.value)
+      default:
+        return false
+    }
+  }
   return true
 }
 
@@ -147,6 +172,9 @@ function applyEffect(effect: Effect, session: SessionState): SessionState {
   if (effect.type === 'addResource') {
     const cur = session.resources[effect.key] ?? 0
     return { ...session, resources: { ...session.resources, [effect.key]: cur + effect.delta } }
+  }
+  if (effect.type === 'setVariable') {
+    return { ...session, variables: { ...session.variables, [effect.key]: effect.value } }
   }
   if (effect.type === 'goto') {
     return { ...session, nodeId: effect.target }
@@ -160,7 +188,7 @@ export function getAvailableChoices(session: SessionState, model: Model): Choice
   const choices = node.choices ?? []
   return choices.filter((c) =>
     (c.conditions ?? []).every((cond) =>
-      evalCondition(cond, session.flags, session.resources, session.time),
+      evalCondition(cond, session.flags, session.resources, session.variables, session.time),
     ),
   )
 }

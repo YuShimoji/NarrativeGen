@@ -1,15 +1,15 @@
-# AI 機能設計
+# 言い換え・バリアント生成 機能設計（非AI中心）
 
 ## 概要
 
-NarrativeGen エンジンに AI アシスト機能を統合し、ライター/デザイナーのコンテンツ制作を加速する。
+NarrativeGen の言い換えは「非AIの決定的（deterministic）なバリアント生成」を中核とし、ライター/デザイナーが安全に文体統一・表現バリエーションを作るための支援機能です。AI 連携（OpenAI/Ollama 等）は任意の追加オプションであり、プロジェクトや開発をブロックしません。
 
 ## 設計原則
 
-- **エンジン本体は AI 非依存**: コア実行ロジック（`packages/engine-ts`, `packages/sdk-unity`）は AI API を呼ばず、決定論的に動作する。
-- **AI 機能はツール層**: Web Tester や専用エディタツールが AI API を呼び、結果を JSON モデルに反映する。
-- **プライバシー保護**: AI API への送信内容を明示し、ユーザーが送信可否を選択できるようにする。
-- **段階的導入**: モック実装 → ローカルLLM → クラウドAPI の順で展開し、各段階で動作確認する。
+- **非AIを中核**: 同義語置換・文体変換・文単位の入れ替えなどを、決定的なルールと乱数シードで生成。
+- **デザイナー主導**: 同義語辞書・置換ルール・テンプレートはプロジェクト側で管理・拡張可能。
+- **オフライン動作**: 外部API不要。バージョン管理・再現性確保が容易。
+- **AIは補助のみ**: 必要に応じてAIアダプタを追加可能だが、未設定でも全機能が動作。
 
 ## 機能1: 次の妥当な物語展開を自然に生成
 
@@ -100,7 +100,7 @@ NarrativeGen エンジンに AI アシスト機能を統合し、ライター/�
 - **Phase 3 (完了)**: ローカル LLM 統合（Ollama）
 - **Phase 4**: 生成履歴・再生成機能
 
-## 機能2: 言い換え（Paraphrase）
+## 機能: 言い換え（Paraphrase / Variant Generation）
 
 ### 目的
 
@@ -121,71 +121,62 @@ NarrativeGen エンジンに AI アシスト機能を統合し、ライター/�
 
 3. **バリエーション生成**
    - 同じ選択肢を複数の表現で提示（プレイヤーの選択履歴に応じて変える等）
-   - AI が 3～5 パターンの言い換えを生成
+   - 非AIが 3～5 パターンの言い換えを生成
    - ライターが最適な表現を選択
 
-### 技術設計
+### 技術設計（非AI）
 
 #### データフロー
 
+```bash
+[元テキスト + 置換ルール/同義語辞書/文体指定/乱数シード]
+           ↓
+[Variant Generator（決定的）]
+           ↓
+[複数バリアント]
+           ↓
+[ライターが採用・編集]
 ```
-[元テキスト + 言い換え指示] → [AI Provider] → [言い換えテキスト]
-                                      ↓
-                                 [ライター確認]
-                                      ↓
-                                 [Model JSON に反映]
+
+#### インターフェース（実装済み: packages/engine-ts/src/paraphrase.ts）
+
+```typescript
+export type ParaphraseStyle = 'desu-masu' | 'da-dearu' | 'plain'
+
+export interface ParaphraseOptions {
+  variantCount?: number
+  style?: ParaphraseStyle
+  seed?: number
+}
+
+export function paraphraseJa(text: string, options?: ParaphraseOptions): string[]
+export function chooseParaphrase(text: string, options?: ParaphraseOptions): string
 ```
 
-#### AI Provider Adapter
+- 同義語辞書を元に単語置換
+- 文体変換（です・ます調/だ・である調）
+- 乱数シードに基づく決定的なバリアント生成（再現性）
 
-- インターフェース拡張:
-  ```typescript
-  interface AIProvider {
-    paraphrase(text: string, options: ParaphraseOptions): Promise<string[]>
-  }
-  
-  interface ParaphraseOptions {
-    tone?: 'formal' | 'casual' | 'neutral'
-    emotion?: 'angry' | 'happy' | 'sad' | 'anxious' | 'neutral'
-    style?: 'desu-masu' | 'da-dearu' | 'informal'
-    variantCount?: number // 生成する言い換えパターン数
-  }
-  ```
+#### 使用例（GUI/非AI）
+- Web Tester の GUI 編集内「言い換え」ボタンは `chooseParaphrase()` を呼び出し、即時に代替表現を挿入します（API不要・オフライン）。
 
-#### プロンプト設計
-
-```
-以下のテキストを、指定された条件で言い換えてください。
-
-【元のテキスト】
-{originalText}
-
-【言い換え条件】
-- 文体: {style}
-- トーン: {tone}
-- 感情: {emotion}
-- 生成パターン数: {variantCount}
-
-【言い換えテキスト】:
-1. ...
-2. ...
-```
 
 #### Web Tester UI 拡張
 
 - 各テキストフィールドに「言い換え」ボタンを追加
 - クリックでモーダル表示:
   - 言い換えオプション選択（文体・トーン・感情）
+  - 「生成」ボタンで非AIを呼び出し
   - 「生成」ボタンで AI 呼び出し
   - 複数パターンをリスト表示
   - ライターがクリックで採用
 
 ### 実装フェーズ
 
-- **Phase 1 (完了)**: プロンプト設計 + モック実装（固定サンプルを返す）
-- **Phase 2 (完了)**: OpenAI API 統合（API Key 設定 UI 含む）
-- **Phase 3 (完了)**: ローカル LLM 統合
-- **Phase 4**: バッチ言い換え（全ノード一括変換）機能
+- ✅ 非AIバリアント生成（同義語置換・文体変換・決定的乱数）
+- ✅ GUI統合（ノード/選択肢の「言い換え」ボタン）
+- ⏳ バッチ言い換え（全ノード一括変換）
+- ◇ オプション: AIアダプタ（OpenAI/Ollama）。未設定でも全機能利用可能。
 
 ## セキュリティ・プライバシー考慮
 

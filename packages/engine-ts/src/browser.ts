@@ -11,6 +11,7 @@ import type {
   Model,
   ResourceState,
   SessionState,
+  VariableState,
 } from './types'
 export { chooseParaphrase, paraphraseJa } from './paraphrase.js'
 export {
@@ -141,4 +142,4 @@ export function applyChoice(session: SessionState, model: Model, choiceId: strin
   return next
 }
 
-export type { Choice, Condition, Effect, FlagState, Model, NodeDef, ResourceState, SessionState } from './types'
+export type { Choice, Condition, Effect, FlagState, Model, NodeDef, ResourceState, SessionState, VariableState } from './types'

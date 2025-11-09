@@ -217,39 +217,30 @@ npm run build
   - Inline story preview modal (replacing popup alerts)
   - Enhanced tab navigation with visual feedback
 
-### AI Features (支援機能)
+### 言い換え・バリアント生成（非AI中心）
 
-**重要**: AI機能は物語作成の**支援ツール**であり、本来の機能ではありません。本プロジェクトのコアは**スプレッドシート駆動の手動物語作成**です。
+**重要**: 本プロジェクトのコアは**スプレッドシート駆動の手動物語作成**です。言い換え機能は**デザイナーが多様な表現バリエーションを作成するための支援ツール**であり、AI連携は任意の補助機能です。
 
-AIは以下の場面で支援します:
-- 執筆中の表現の改善案提示
-- 選択肢テキストの言い換え支援
-- 創造的ブロック時のアイデア出し
+言い換え機能の特徴:
+- **非AIバリアント生成**: 同義語置換・文体変換・決定的乱数による即時生成（API不要・オフライン）
+- **GUI統合**: Web Testerのモデル編集で「言い換え」ボタンクリックで即時置換
+- **AI補助（任意）**: OpenAI/Ollama連携でより高度な言い換え（APIキー必要）
 
 See `docs/ai-features.md` for detailed design and `test-ai-features.md` for testing procedures. Current status:
 
-- ✅ **Phase 1**: Mock AI suggestion (random samples)
-- ✅ **Phase 2**: Next story generation & paraphrase via OpenAI API
-- ⏳ **Phase 3**: Local LLM integration (Ollama, llama.cpp)
-- ⏳ **Phase 4**: Batch processing & history management
+- ✅ **非AI実装**: 決定的バリアント生成（同義語・文体変換・乱数シード）
+- ✅ **GUI統合**: ノード/選択肢テキストの「言い換え」ボタン
+- ⏳ **AI補助**: OpenAI API/Ollama統合（任意）
+- ⏳ **バッチ処理**: 全ノード一括変換
 
-#### Using AI Features (任意利用)
+#### 言い換え機能の使用方法（非AI優先）
 
-1. **Open AI Tab**: Click the "AI" tab in Web Tester
-2. **Select Provider**:
-   - **mock**: Random sample text (no API key required, instant)
-   - **openai**: OpenAI GPT models (API key required, see [OpenAI Platform](https://platform.openai.com/api-keys))
-3. **Configure Settings**:
-   - Enter API key for OpenAI
-   - Select model (default: gpt-3.5-turbo)
-   - Click "設定を保存" to save
-4. **Generate Content**:
-   - Load a model first
-   - Click "次のノードを生成" to generate next story node
-   - Click "現在のテキストを言い換え" to paraphrase current text
-5. **Review Output**: Generated text appears in the AI output area
+1. **基本操作**: Web Tester起動後、サンプルモデルを読み込み
+2. **GUI編集**: 「モデル編集」ボタンクリック → テキスト入力欄横の「言い換え」ボタンクリック
+3. **非AI生成**: 即時に別表現へ置換（オフライン・API不要）
+4. **AI補助（任意）**: 「AI」タブでプロバイダー設定後、「現在のテキストを言い換え」ボタン使用
 
-**Note**: API keys are stored in browser localStorage and never sent to our servers. They connect directly to the LLM API.
+**Note**: 非AIバリアント生成は完全オフライン動作。AI連携は補助機能としてオプションで利用可能。
 
 ## Unity SDK
 

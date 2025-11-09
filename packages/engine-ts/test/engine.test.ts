@@ -41,6 +41,7 @@ describe('NarrativeGen Engine', () => {
     expect(session).toBeDefined()
     expect(session.nodeId).toBe('start')
     expect(session.time).toBe(0)
+    expect(session.variables).toEqual({})
   })
 
   it('should get available choices at start', () => {
