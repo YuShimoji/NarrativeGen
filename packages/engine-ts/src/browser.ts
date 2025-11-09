@@ -13,7 +13,7 @@ import type {
   SessionState,
   VariableState,
 } from './types'
-export { chooseParaphrase, paraphraseJa } from './paraphrase.js'
+export { chooseParaphrase, paraphraseJa, getParaphraseLexicon, setParaphraseLexicon } from './paraphrase.js'
 export {
   createAIProvider,
   MockAIProvider,

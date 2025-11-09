@@ -19,7 +19,9 @@ import {
   getAvailableChoices,
   applyChoice,
   chooseParaphrase,
-  paraphraseJa
+  paraphraseJa,
+  getParaphraseLexicon,
+  setParaphraseLexicon,
 } from '../../packages/engine-ts/dist/browser.js'
 
 // Key binding configuration - extensible and loosely coupled
@@ -396,6 +398,15 @@ const generateNextNodeBtn = document.getElementById('generateNextNodeBtn')
 const paraphraseCurrentBtn = document.getElementById('paraphraseCurrentBtn')
 const aiOutput = document.getElementById('aiOutput')
 
+// Designer lexicon UI elements
+const lexiconLoadBtn = document.getElementById('lexiconLoadBtn')
+const lexiconMergeBtn = document.getElementById('lexiconMergeBtn')
+const lexiconReplaceBtn = document.getElementById('lexiconReplaceBtn')
+const lexiconExportBtn = document.getElementById('lexiconExportBtn')
+const lexiconImportBtn = document.getElementById('lexiconImportBtn')
+const lexiconFileInput = document.getElementById('lexiconFileInput')
+const lexiconTextarea = document.getElementById('lexiconTextarea')
+
 // Key binding elements
 const keyBindingDisplay = document.getElementById('keyBindingDisplay')
 const inventoryKey = document.getElementById('inventoryKey')
@@ -424,6 +435,9 @@ let aiConfig = {
   }
 }
 let aiProviderInstance = null
+
+// Local storage key for designer lexicon
+const LEXICON_KEY = 'designerParaphraseLexicon'
 
 function renderState() {
   if (!session) {
@@ -470,6 +484,108 @@ function showErrors(errors) {
 
 function hideErrors() {
   errorPanel.classList.remove('show')
+}
+
+// =============================================================================
+// Designer Lexicon management
+// =============================================================================
+
+function stringifyLexicon(lex) {
+  try { return JSON.stringify(lex, null, 2) } catch { return '{}' }
+}
+
+function parseLexicon(text) {
+  const obj = JSON.parse(text)
+  if (obj && typeof obj === 'object' && !Array.isArray(obj)) return obj
+  throw new Error('JSON はオブジェクト形式である必要があります')
+}
+
+function saveLexiconToStorage(lex) {
+  try { localStorage.setItem(LEXICON_KEY, JSON.stringify(lex)) } catch {}
+}
+
+function loadLexiconFromStorage() {
+  try {
+    const raw = localStorage.getItem(LEXICON_KEY)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch { return null }
+}
+
+function initLexiconUI() {
+  // Tooltip for sidebar button
+  if (toggleSidebarBtn) toggleSidebarBtn.title = '選択肢と状態パネルの表示/非表示を切り替えます'
+
+  // Load designer lexicon from storage (replace mode to ensure determinism)
+  const stored = loadLexiconFromStorage()
+  if (stored) {
+    try { setParaphraseLexicon(stored, { merge: false }) } catch {}
+  }
+  // Prefill textarea with current runtime lexicon
+  if (lexiconTextarea) {
+    try { lexiconTextarea.value = stringifyLexicon(getParaphraseLexicon()) } catch {}
+  }
+
+  // Wire buttons
+  if (lexiconLoadBtn) {
+    lexiconLoadBtn.addEventListener('click', () => {
+      try { lexiconTextarea.value = stringifyLexicon(getParaphraseLexicon()); setStatus('現在の辞書を読み込みました', 'success') } catch (e) { setStatus('辞書の読み込みに失敗しました', 'error') }
+    })
+  }
+  if (lexiconMergeBtn) {
+    lexiconMergeBtn.addEventListener('click', () => {
+      try {
+        const input = parseLexicon(lexiconTextarea.value || '{}')
+        setParaphraseLexicon(input, { merge: true })
+        const merged = getParaphraseLexicon()
+        saveLexiconToStorage(merged)
+        setStatus('辞書をマージ適用しました', 'success')
+      } catch (e) { setStatus(`辞書の適用に失敗しました: ${e.message}`, 'error') }
+    })
+  }
+  if (lexiconReplaceBtn) {
+    lexiconReplaceBtn.addEventListener('click', () => {
+      try {
+        const input = parseLexicon(lexiconTextarea.value || '{}')
+        setParaphraseLexicon(input, { merge: false })
+        saveLexiconToStorage(input)
+        setStatus('辞書を置換適用しました', 'success')
+      } catch (e) { setStatus(`辞書の適用に失敗しました: ${e.message}`, 'error') }
+    })
+  }
+  if (lexiconExportBtn) {
+    lexiconExportBtn.addEventListener('click', () => {
+      try {
+        const blob = new Blob([lexiconTextarea.value || '{}'], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'synonyms.json'
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        URL.revokeObjectURL(url)
+        setStatus('辞書をエクスポートしました', 'success')
+      } catch (e) { setStatus('エクスポートに失敗しました', 'error') }
+    })
+  }
+  if (lexiconImportBtn && lexiconFileInput) {
+    lexiconImportBtn.addEventListener('click', () => lexiconFileInput.click())
+    lexiconFileInput.addEventListener('change', (ev) => {
+      const file = ev.target.files?.[0]
+      if (!file) return
+      const reader = new FileReader()
+      reader.onload = () => {
+        try {
+          const text = String(reader.result)
+          parseLexicon(text) // validate
+          lexiconTextarea.value = text
+          setStatus('辞書ファイルを読み込みました。適用ボタンで反映します', 'info')
+        } catch { setStatus('JSON の解析に失敗しました', 'error') }
+      }
+      reader.readAsText(file)
+    })
+  }
 }
 
 function showCsvPreview(file) {
@@ -1276,7 +1392,8 @@ async function paraphraseCurrentTextUI() {
     const startTime = Date.now()
     const paraphrases = await aiProviderInstance.paraphrase(currentNode.text, {
       variantCount: 3,
-      style: 'desu-masu',
+      // Prefer plain style here; designer lexicon defines phrasing
+      style: 'plain',
       tone: 'neutral'
     })
     const duration = ((Date.now() - startTime) / 1000).toFixed(2)
@@ -2137,14 +2254,22 @@ nodeList.addEventListener('click', (e) => {
       `input[data-node-id="${nodeId}"][data-choice-index="${choiceIndex}"][data-field="text"]`,
     )
     if (!input) return
+
     try {
-      input.value = chooseParaphrase(input.value, { style: 'desu-masu' })
+      // 複数のバリアントを生成（デザイナー辞書を使用）
+      const variants = paraphraseJa(input.value, { variantCount: 3 })
+      if (variants.length === 0) {
+        setStatus('言い換えバリアントを生成できませんでした', 'warn')
+        return
+      }
+
+      // バリアント選択モーダルを表示
+      showParaphraseVariants(input, variants)
     } catch (err) {
       console.error('言い換えエラー:', err)
       setStatus(`言い換えに失敗しました: ${err?.message ?? err}`, 'warn')
     }
   }
-
   if (e.target.classList.contains('add-choice-btn')) {
     const nodeId = e.target.dataset.nodeId
     const node = _model.nodes[nodeId]
@@ -2639,5 +2764,59 @@ function handleAutoSaveClick(event) {
   }
 }
 
+// ============================================================================
+// 言い換えバリアント選択モーダル
+// ============================================================================
+
+let currentParaphraseTarget = null
+
+function showParaphraseVariants(targetInput, variants) {
+  currentParaphraseTarget = targetInput
+  const variantList = document.getElementById('variantList')
+  variantList.innerHTML = ''
+
+  variants.forEach((variant, index) => {
+    const variantItem = document.createElement('div')
+    variantItem.className = 'variant-item'
+    variantItem.textContent = `${index + 1}. ${variant}`
+    variantItem.addEventListener('click', () => {
+      selectParaphraseVariant(variant)
+    })
+    variantList.appendChild(variantItem)
+  })
+
+  const modal = document.getElementById('paraphraseModal')
+  modal.style.display = 'flex'
+  modal.classList.add('show')
+}
+
+function selectParaphraseVariant(variant) {
+  if (currentParaphraseTarget) {
+    currentParaphraseTarget.value = variant
+    // モデルに変更を反映
+    updateModelFromInput(currentParaphraseTarget)
+    setStatus('言い換えバリアントを適用しました', 'success')
+  }
+  hideParaphraseModal()
+}
+
+function hideParaphraseModal() {
+  const modal = document.getElementById('paraphraseModal')
+  modal.style.display = 'none'
+  modal.classList.remove('show')
+  currentParaphraseTarget = null
+}
+
+// モーダルイベントリスナー
+document.getElementById('cancelParaphraseBtn').addEventListener('click', hideParaphraseModal)
+
+// モーダル外クリックで閉じる
+document.getElementById('paraphraseModal').addEventListener('click', (e) => {
+  if (e.target.id === 'paraphraseModal') {
+    hideParaphraseModal()
+  }
+})
+
 // Initialize status
+initLexiconUI()
 setStatus('初期化完了 - モデルを読み込んでください', 'info')

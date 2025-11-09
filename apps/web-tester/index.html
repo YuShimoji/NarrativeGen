@@ -602,6 +602,45 @@
         background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
         color: white;
       }
+
+      /* 言い換えバリアント選択モーダル */
+      .variant-list {
+        max-height: 300px;
+        overflow-y: auto;
+        margin: 1rem 0;
+      }
+
+      .variant-item {
+        padding: 0.75rem 1rem;
+        margin: 0.5rem 0;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border: 2px solid rgba(59, 130, 246, 0.2);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+        line-height: 1.4;
+      }
+
+      .variant-item:hover {
+        background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+        border-color: #3b82f6;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      }
+
+      .variant-item.selected {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        border-color: #1d4ed8;
+        color: #1e40af;
+      }
+
+      .modal-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
     </style>
   </head>
   <body>
@@ -798,6 +837,19 @@
                 <button id="paraphraseCurrentBtn">現在のテキストを言い換え</button>
                 <div id="aiOutput" style="margin-top: 1rem; padding: 1rem; background: #f9fafb; border-radius: 4px; min-height: 100px;"></div>
               </div>
+              <div id="lexiconEditor" style="margin-top: 1.5rem;">
+                <h3>言い換え辞書（デザイナー定義）</h3>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                  <button id="lexiconLoadBtn" title="現在の実行時辞書を読み込み、下のテキストに表示します">現在の辞書を読み込み</button>
+                  <button id="lexiconMergeBtn" title="下のJSONを既存辞書にマージして適用します">マージ適用</button>
+                  <button id="lexiconReplaceBtn" style="background-color: #ef4444;" title="下のJSONで辞書を置き換えます（元に戻せません）">置換適用</button>
+                  <button id="lexiconExportBtn" title="現在のテキストを synonyms.json としてダウンロード">JSONエクスポート</button>
+                  <button id="lexiconImportBtn" title="synonyms.json を読み込み、下のテキストに表示">JSONインポート</button>
+                  <input type="file" id="lexiconFileInput" accept=".json" style="display: none;">
+                </div>
+                <textarea id="lexiconTextarea" style="width: 100%; min-height: 220px; font-family: 'JetBrains Mono','Fira Code', monospace; font-size: 0.9rem;"></textarea>
+                <p style="font-size: 0.85em; color: #666; margin-top: 0.5rem;">キー完全一致で置換。ここに追加した語彙はローカル保存され、言い換え候補の生成に使用されます。</p>
+              </div>
             </div>
           </div>
         </div>
@@ -813,6 +865,17 @@
         </div>
 
         <p id="statusText">初期化中...</p>
+      </div>
+    </div>
+
+    <!-- 言い換えバリアント選択モーダル -->
+    <div id="paraphraseModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <h3>言い換えバリアントを選択</h3>
+        <div id="variantList" class="variant-list"></div>
+        <div class="modal-buttons">
+          <button id="cancelParaphraseBtn">キャンセル</button>
+        </div>
       </div>
     </div>
 
