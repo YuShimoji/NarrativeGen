@@ -687,7 +687,7 @@
             <button id="storyTab" class="tab-btn active">ストーリー</button>
             <button id="graphTab" class="tab-btn">ノードグラフ</button>
             <button id="debugTab" class="tab-btn">デバッグ</button>
-            <button id="aiTab" class="tab-btn">AI支援</button>
+            <button id="advancedTab" class="tab-btn" style="display: none;">アドバンスド</button>
           </div>
 
           <div id="storyPanel" class="tab-content active">
@@ -785,9 +785,13 @@
             </div>
           </div>
 
-          <div id="aiPanel" class="tab-content">
+          <div id="advancedPanel" class="tab-content">
             <div class="ai-container">
-              <div id="aiSettings">
+              <div id="advancedSettings">
+                <h3>アドバンスド設定</h3>
+                <label><input type="checkbox" id="enableAdvancedFeatures"> アドバンスド機能を有効化 (AI支援を含む)</label>
+              </div>
+              <div id="aiSettings" style="display: none;">
                 <h3>AI設定</h3>
                 <label>プロバイダー:
                   <select id="aiProvider">
@@ -858,6 +862,7 @@
           <h2>GUI モデル編集</h2>
           <div id="nodeList"></div>
           <button id="addNodeBtn">ノードを追加</button>
+          <button id="batchEditBtn">バッチ編集</button>
           <button id="previewBtn">小説プレビュー</button>
           <button id="downloadBtn">編集モデルJSONダウンロード</button>
           <button id="saveGuiBtn">GUI保存して適用</button>
@@ -875,6 +880,34 @@
         <div id="variantList" class="variant-list"></div>
         <div class="modal-buttons">
           <button id="cancelParaphraseBtn">キャンセル</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- バッチ編集モーダル -->
+    <div id="batchEditModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <h3>バッチ編集</h3>
+        <div style="margin-bottom: 1rem;">
+          <h4>ノードテキスト検索・置換</h4>
+          <label>検索: <input type="text" id="searchText" placeholder="検索するテキスト"></label>
+          <label>置換: <input type="text" id="replaceText" placeholder="置換するテキスト"></label>
+          <button id="applyTextReplaceBtn">適用</button>
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <h4>選択肢テキスト一括置換</h4>
+          <label>検索: <input type="text" id="choiceSearchText" placeholder="選択肢内の検索テキスト"></label>
+          <label>置換: <input type="text" id="choiceReplaceText" placeholder="置換するテキスト"></label>
+          <button id="applyChoiceReplaceBtn">適用</button>
+        </div>
+        <div style="margin-bottom: 1rem;">
+          <h4>ターゲットノード一括変更</h4>
+          <label>変更元ノード: <input type="text" id="oldTargetText" placeholder="現在のターゲット"></label>
+          <label>変更先ノード: <input type="text" id="newTargetText" placeholder="新しいターゲット"></label>
+          <button id="applyTargetReplaceBtn">適用</button>
+        </div>
+        <div class="modal-buttons">
+          <button id="closeBatchEditBtn">閉じる</button>
         </div>
       </div>
     </div>

@@ -101,6 +101,13 @@ document.addEventListener('keydown', (e) => {
 
   const key = e.key.toLowerCase()
   
+  // Special handling for Ctrl+S (save) in GUI edit mode
+  if (e.ctrlKey && key === 's' && guiEditMode.style.display !== 'none') {
+    e.preventDefault()
+    saveGuiBtn.click()
+    return
+  }
+  
   // Find matching key binding
   for (const [action, boundKey] of Object.entries(KEY_BINDINGS)) {
     if (key === boundKey.toLowerCase()) {
@@ -384,8 +391,9 @@ const saveSlots = document.getElementById('saveSlots')
 const refreshSavesBtn = document.getElementById('refreshSavesBtn')
 
 // AI elements
-const aiTab = document.getElementById('aiTab')
-const aiPanel = document.getElementById('aiPanel')
+const advancedTab = document.getElementById('advancedTab')
+const advancedPanel = document.getElementById('advancedPanel')
+const enableAdvancedFeatures = document.getElementById('enableAdvancedFeatures')
 const aiProvider = document.getElementById('aiProvider')
 const openaiSettings = document.getElementById('openaiSettings')
 const openaiApiKey = document.getElementById('openaiApiKey')
@@ -438,6 +446,20 @@ let aiProviderInstance = null
 
 // Local storage key for designer lexicon
 const LEXICON_KEY = 'designerParaphraseLexicon'
+
+// Batch edit elements
+const batchEditBtn = document.getElementById('batchEditBtn')
+const batchEditModal = document.getElementById('batchEditModal')
+const searchText = document.getElementById('searchText')
+const replaceText = document.getElementById('replaceText')
+const applyTextReplaceBtn = document.getElementById('applyTextReplaceBtn')
+const choiceSearchText = document.getElementById('choiceSearchText')
+const choiceReplaceText = document.getElementById('choiceReplaceText')
+const applyChoiceReplaceBtn = document.getElementById('applyChoiceReplaceBtn')
+const oldTargetText = document.getElementById('oldTargetText')
+const newTargetText = document.getElementById('newTargetText')
+const applyTargetReplaceBtn = document.getElementById('applyTargetReplaceBtn')
+const closeBatchEditBtn = document.getElementById('closeBatchEditBtn')
 
 function renderState() {
   if (!session) {
@@ -1622,19 +1644,30 @@ if (savedAiConfig) {
   }
 }
 
+// Load advanced features setting
+const advancedEnabled = localStorage.getItem('narrativeGenAdvancedEnabled') === 'true'
+if (enableAdvancedFeatures) {
+  enableAdvancedFeatures.checked = advancedEnabled
+  if (advancedEnabled) {
+    advancedTab.style.display = 'inline-block'
+  }
+  // Trigger change event to set up UI
+  enableAdvancedFeatures.dispatchEvent(new Event('change'))
+}
+
 // Tab event listeners
 function switchTab(tabName) {
   // Hide all panels
   storyPanel.classList.remove('active')
   graphPanel.classList.remove('active')
   debugPanel.classList.remove('active')
-  aiPanel.classList.remove('active')
+  advancedPanel.classList.remove('active')
 
   // Remove active class from all tabs
   storyTab.classList.remove('active')
   graphTab.classList.remove('active')
   debugTab.classList.remove('active')
-  aiTab.classList.remove('active')
+  advancedTab.classList.remove('active')
 
   // Show selected panel and activate tab
   if (tabName === 'story') {
@@ -1648,17 +1681,45 @@ function switchTab(tabName) {
     debugPanel.classList.add('active')
     debugTab.classList.add('active')
     renderDebugInfo()
-  } else if (tabName === 'ai') {
-    aiPanel.classList.add('active')
-    aiTab.classList.add('active')
-    initAiProvider()
+  } else if (tabName === 'advanced') {
+    advancedPanel.classList.add('active')
+    advancedTab.classList.add('active')
+    // Initialize key binding system
+    loadKeyBindingsFromStorage()
+    initKeyBindingUI()
   }
 }
 
 storyTab.addEventListener('click', () => switchTab('story'))
 graphTab.addEventListener('click', () => switchTab('graph'))
 debugTab.addEventListener('click', () => switchTab('debug'))
-aiTab.addEventListener('click', () => switchTab('ai'))
+advancedTab.addEventListener('click', () => switchTab('advanced'))
+
+// Advanced features toggle
+if (enableAdvancedFeatures) {
+  enableAdvancedFeatures.addEventListener('change', (e) => {
+    const enabled = e.target.checked
+    const aiSettings = document.getElementById('aiSettings')
+    const keyBindingSettings = document.getElementById('keyBindingSettings')
+    const aiActions = document.getElementById('aiActions')
+    const lexiconEditor = document.getElementById('lexiconEditor')
+
+    if (enabled) {
+      aiSettings.style.display = 'block'
+      keyBindingSettings.style.display = 'block'
+      aiActions.style.display = 'block'
+      lexiconEditor.style.display = 'block'
+    } else {
+      aiSettings.style.display = 'none'
+      keyBindingSettings.style.display = 'none'
+      aiActions.style.display = 'none'
+      lexiconEditor.style.display = 'none'
+    }
+
+    // Save preference
+    localStorage.setItem('narrativeGenAdvancedEnabled', enabled.toString())
+  })
+}
 
 guiEditBtn.addEventListener('click', () => {
   if (session == null) {
@@ -1781,19 +1842,25 @@ generateNextNodeBtn.addEventListener('click', generateNextNodeUI)
 paraphraseCurrentBtn.addEventListener('click', paraphraseCurrentTextUI)
 
 function renderNodeList() {
-  nodeList.innerHTML = ''
+  const fragment = document.createDocumentFragment()
   for (const [nodeId, node] of Object.entries(_model.nodes)) {
     const nodeDiv = document.createElement('div')
     nodeDiv.className = 'node-editor'
     nodeDiv.innerHTML = `
       <h3>ノード: ${nodeId}</h3>
-      <label>テキスト: <input type="text" value="${node.text || ''}" data-node-id="${nodeId}" data-field="text"></label>
+      <label>テキスト: <input type="text" value="${(node.text || '').replace(/"/g, '&quot;')}" data-node-id="${nodeId}" data-field="text"></label>
       <h4>選択肢</h4>
       <div class="choices-editor" data-node-id="${nodeId}"></div>
       <button class="add-choice-btn" data-node-id="${nodeId}">選択肢を追加</button>
       <button class="delete-node-btn" data-node-id="${nodeId}">ノードを削除</button>
     `
-    nodeList.appendChild(nodeDiv)
+    fragment.appendChild(nodeDiv)
+  }
+  nodeList.innerHTML = ''
+  nodeList.appendChild(fragment)
+
+  // Render choices after DOM is updated
+  for (const [nodeId] of Object.entries(_model.nodes)) {
     renderChoicesForNode(nodeId)
   }
 }
@@ -1801,18 +1868,30 @@ function renderNodeList() {
 function renderChoicesForNode(nodeId) {
   const node = _model.nodes[nodeId]
   const choicesDiv = nodeList.querySelector(`.choices-editor[data-node-id="${nodeId}"]`)
-  choicesDiv.innerHTML = ''
-  node.choices?.forEach((choice, index) => {
+  if (!choicesDiv) {
+    console.warn(`Choices editor not found for node ${nodeId}`)
+    return
+  }
+
+  if (!node.choices || node.choices.length === 0) {
+    choicesDiv.innerHTML = '<p>選択肢なし</p>'
+    return
+  }
+
+  const fragment = document.createDocumentFragment()
+  node.choices.forEach((choice, index) => {
     const choiceDiv = document.createElement('div')
     choiceDiv.className = 'choice-editor'
     choiceDiv.innerHTML = `
-      <label>テキスト: <input type="text" value="${choice.text}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="text"></label>
-      <label>ターゲット: <input type="text" value="${choice.target}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="target"></label>
+      <label>テキスト: <input type="text" value="${(choice.text || '').replace(/"/g, '&quot;')}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="text"></label>
+      <label>ターゲット: <input type="text" value="${choice.target || ''}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="target"></label>
       <button class="paraphrase-btn" data-node-id="${nodeId}" data-choice-index="${index}">言い換え</button>
       <button class="delete-choice-btn" data-node-id="${nodeId}" data-choice-index="${index}">削除</button>
     `
-    choicesDiv.appendChild(choiceDiv)
+    fragment.appendChild(choiceDiv)
   })
+  choicesDiv.innerHTML = ''
+  choicesDiv.appendChild(fragment)
 }
 
 addNodeBtn.addEventListener('click', () => {
@@ -2339,6 +2418,11 @@ function updateModelFromInput(input) {
       node[field] = value
     }
   }
+
+  // Auto-save draft when editing in GUI mode
+  if (guiEditMode.style.display !== 'none') {
+    saveDraftModel()
+  }
 }
 
 function showVariableEditor() {
@@ -2423,71 +2507,6 @@ downloadTopBtn.addEventListener('click', () => {
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
 })
-
-// Initialize key binding system
-loadKeyBindingsFromStorage()
-initKeyBindingUI()
-
-// Tab event listeners
-storyTab.addEventListener('click', () => {
-  // Remove active class from all tabs and panels
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'))
-  document.querySelectorAll('.tab-content').forEach(panel => panel.classList.remove('active'))
-  
-  // Add active class to clicked tab and panel
-  storyTab.classList.add('active')
-  storyPanel.classList.add('active')
-})
-
-graphTab.addEventListener('click', () => {
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'))
-  document.querySelectorAll('.tab-content').forEach(panel => panel.classList.remove('active'))
-  
-  graphTab.classList.add('active')
-  graphPanel.classList.add('active')
-  renderGraph()
-})
-
-debugTab.addEventListener('click', () => {
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'))
-  document.querySelectorAll('.tab-content').forEach(panel => panel.classList.remove('active'))
-  
-  debugTab.classList.add('active')
-  renderDebugInfo()
-  renderSaveSlots()
-})
-
-aiTab.addEventListener('click', () => {
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'))
-  document.querySelectorAll('.tab-content').forEach(panel => panel.classList.remove('active'))
-  
-  aiTab.classList.add('active')
-  aiPanel.classList.add('active')
-  // Initialize key binding system
-  loadKeyBindingsFromStorage()
-  initKeyBindingUI()
-})
-
-// Key binding event listeners
-saveKeyBindings.addEventListener('click', () => {
-  saveKeyBindingsToStorage()
-})
-
-resetKeyBindings.addEventListener('click', () => {
-  if (confirm('キーバインドをデフォルト設定にリセットしますか？')) {
-    resetKeyBindingsToDefault()
-  }
-})
-
-aiProvider.addEventListener('change', () => {
-  openaiSettings.style.display = aiProvider.value === 'openai' ? 'block' : 'none'
-  ollamaSettings.style.display = aiProvider.value === 'ollama' ? 'block' : 'none'
-})
-
-// Save/Load event listeners
-refreshSavesBtn.addEventListener('click', renderSaveSlots)
-saveSlots.addEventListener('click', handleSaveSlotClick)
-document.addEventListener('click', handleAutoSaveClick)
 
 // ============================================================================
 // Save/Load System
@@ -2770,6 +2789,164 @@ function handleAutoSaveClick(event) {
 
 let currentParaphraseTarget = null
 
+// ============================================================================
+// Batch Edit Manager
+// ============================================================================
+
+const batchEditManager = {
+  openModal() {
+    if (guiEditMode.style.display === 'none') {
+      setStatus('GUI編集モードでのみ使用可能です', 'warn')
+      return
+    }
+    batchEditModal.style.display = 'flex'
+    batchEditModal.classList.add('show')
+  },
+
+  closeModal() {
+    batchEditModal.style.display = 'none'
+    batchEditModal.classList.remove('show')
+  },
+
+  applyTextReplace() {
+    const search = searchText.value.trim()
+    const replace = replaceText.value.trim()
+    
+    if (!search) {
+      setStatus('検索テキストを入力してください', 'warn')
+      return
+    }
+    
+    let replacedCount = 0
+    for (const nodeId in _model.nodes) {
+      const node = _model.nodes[nodeId]
+      if (node.text && node.text.includes(search)) {
+        node.text = node.text.replaceAll(search, replace)
+        replacedCount++
+      }
+    }
+    
+    if (replacedCount > 0) {
+      this.refreshUI()
+      setStatus(`${replacedCount}個のノードテキストを置換しました`, 'success')
+    } else {
+      setStatus('該当するテキストが見つかりませんでした', 'info')
+    }
+  },
+
+  applyChoiceReplace() {
+    const search = choiceSearchText.value.trim()
+    const replace = choiceReplaceText.value.trim()
+    
+    if (!search) {
+      setStatus('検索テキストを入力してください', 'warn')
+      return
+    }
+    
+    let replacedCount = 0
+    for (const nodeId in _model.nodes) {
+      const node = _model.nodes[nodeId]
+      if (node.choices) {
+        for (const choice of node.choices) {
+          if (choice.text && choice.text.includes(search)) {
+            choice.text = choice.text.replaceAll(search, replace)
+            replacedCount++
+          }
+        }
+      }
+    }
+    
+    if (replacedCount > 0) {
+      this.refreshUI()
+      setStatus(`${replacedCount}個の選択肢テキストを置換しました`, 'success')
+    } else {
+      setStatus('該当するテキストが見つかりませんでした', 'info')
+    }
+  },
+
+  applyTargetReplace() {
+    const oldTarget = oldTargetText.value.trim()
+    const newTarget = newTargetText.value.trim()
+    
+    if (!oldTarget || !newTarget) {
+      setStatus('変更元と変更先のノードIDを入力してください', 'warn')
+      return
+    }
+    
+    if (!_model.nodes[newTarget]) {
+      setStatus('変更先のノードが存在しません', 'warn')
+      return
+    }
+    
+    let replacedCount = 0
+    for (const nodeId in _model.nodes) {
+      const node = _model.nodes[nodeId]
+      if (node.choices) {
+        for (const choice of node.choices) {
+          if (choice.target === oldTarget) {
+            choice.target = newTarget
+            replacedCount++
+          }
+        }
+      }
+    }
+    
+    if (replacedCount > 0) {
+      this.refreshUI()
+      setStatus(`${replacedCount}個のターゲットを変更しました`, 'success')
+    } else {
+      setStatus('該当するターゲットが見つかりませんでした', 'info')
+    }
+  },
+
+  refreshUI() {
+    renderNodeList()
+  }
+}
+
+function checkForDraftModel() {
+  const draftData = localStorage.getItem('draft_model')
+  if (draftData) {
+    try {
+      const draft = JSON.parse(draftData)
+      if (confirm('未保存のドラフトモデルが見つかりました。読み込みますか？')) {
+        _model = draft.model
+        session = startSession(_model)
+        currentModelName = draft.modelName || 'draft'
+        storyLog = draft.storyLog || []
+        setStatus('ドラフトモデルを読み込みました', 'success')
+        renderState()
+        renderChoices()
+        renderStory()
+        renderDebugInfo()
+        localStorage.removeItem('draft_model') // Clear draft after loading
+      } else {
+        localStorage.removeItem('draft_model') // User declined, clear draft
+      }
+    } catch (error) {
+      console.warn('Failed to load draft model:', error)
+      localStorage.removeItem('draft_model')
+    }
+  }
+}
+
+function saveDraftModel() {
+  if (!_model) return
+
+  try {
+    const draftData = {
+      model: _model,
+      modelName: currentModelName,
+      storyLog: storyLog,
+      timestamp: new Date().toISOString()
+    }
+    localStorage.setItem('draft_model', JSON.stringify(draftData))
+    setStatus('ドラフトを自動保存しました', 'info')
+  } catch (error) {
+    console.warn('Failed to save draft model:', error)
+  }
+}
+
 function showParaphraseVariants(targetInput, variants) {
   currentParaphraseTarget = targetInput
   const variantList = document.getElementById('variantList')
@@ -2817,6 +2994,14 @@ document.getElementById('paraphraseModal').addEventListener('click', (e) => {
   }
 })
 
-// Initialize status
+// Initialize status and check for draft model on load
 initLexiconUI()
+checkForDraftModel()
 setStatus('初期化完了 - モデルを読み込んでください', 'info')
+
+// Batch edit event listeners
+if (batchEditBtn) batchEditBtn.addEventListener('click', () => batchEditManager.openModal())
+if (applyTextReplaceBtn) applyTextReplaceBtn.addEventListener('click', () => batchEditManager.applyTextReplace())
+if (applyChoiceReplaceBtn) applyChoiceReplaceBtn.addEventListener('click', () => batchEditManager.applyChoiceReplace())
+if (applyTargetReplaceBtn) applyTargetReplaceBtn.addEventListener('click', () => batchEditManager.applyTargetReplace())
+if (closeBatchEditBtn) closeBatchEditBtn.addEventListener('click', () => batchEditManager.closeModal())
