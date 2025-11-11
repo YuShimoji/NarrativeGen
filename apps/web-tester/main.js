@@ -24,6 +24,170 @@ import {
   setParaphraseLexicon,
 } from '../../packages/engine-ts/dist/browser.js'
 
+// ===========================
+// Color Palette System
+// ===========================
+
+const COLOR_PALETTES = {
+  default: {
+    name: 'デフォルト',
+    colors: {
+      '--color-primary': '#5a67d8',
+      '--color-primary-dark': '#6b46c1',
+      '--color-secondary': '#2563eb',
+      '--color-secondary-dark': '#1e40af',
+      '--color-text': '#ffffff',
+      '--color-text-muted': '#cbd5e1',
+      '--color-background': '#1a1a2e',
+      '--color-surface': '#16213e',
+      '--color-border': '#334155',
+    }
+  },
+  gray: {
+    name: 'ミニマルグレー',
+    colors: {
+      '--color-primary': '#4B5563',
+      '--color-primary-dark': '#374151',
+      '--color-secondary': '#6B7280',
+      '--color-secondary-dark': '#4B5563',
+      '--color-text': '#ffffff',
+      '--color-text-muted': '#cbd5e1',
+      '--color-background': '#0f172a',
+      '--color-surface': '#1e293b',
+      '--color-border': '#334155',
+    }
+  },
+  green: {
+    name: 'フォレストグリーン',
+    colors: {
+      '--color-primary': '#059669',
+      '--color-primary-dark': '#047857',
+      '--color-secondary': '#10B981',
+      '--color-secondary-dark': '#059669',
+      '--color-text': '#ffffff',
+      '--color-text-muted': '#cbd5e1',
+      '--color-background': '#0f172a',
+      '--color-surface': '#1e293b',
+      '--color-border': '#334155',
+    }
+  },
+  blue: {
+    name: 'オーシャンブルー',
+    colors: {
+      '--color-primary': '#0284C7',
+      '--color-primary-dark': '#0369A1',
+      '--color-secondary': '#0EA5E9',
+      '--color-secondary-dark': '#0284C7',
+      '--color-text': '#ffffff',
+      '--color-text-muted': '#cbd5e1',
+      '--color-background': '#1e293b',
+      '--color-surface': '#334155',
+      '--color-border': '#475569',
+    }
+  },
+  orange: {
+    name: 'サンセットオレンジ',
+    colors: {
+      '--color-primary': '#EA580C',
+      '--color-primary-dark': '#C2410C',
+      '--color-secondary': '#F97316',
+      '--color-secondary-dark': '#EA580C',
+      '--color-text': '#ffffff',
+      '--color-text-muted': '#cbd5e1',
+      '--color-background': '#1a1a2e',
+      '--color-surface': '#16213e',
+      '--color-border': '#334155',
+    }
+  },
+  purple: {
+    name: 'ラベンダーパープル',
+    colors: {
+      '--color-primary': '#8B5CF6',
+      '--color-primary-dark': '#7C3AED',
+      '--color-secondary': '#A78BFA',
+      '--color-secondary-dark': '#8B5CF6',
+      '--color-text': '#ffffff',
+      '--color-text-muted': '#cbd5e1',
+      '--color-background': '#1e293b',
+      '--color-surface': '#334155',
+      '--color-border': '#475569',
+    }
+  }
+}
+
+function applyPalette(paletteKey) {
+  const palette = COLOR_PALETTES[paletteKey]
+  if (!palette) return
+
+  const root = document.documentElement
+  for (const [variable, value] of Object.entries(palette.colors)) {
+    root.style.setProperty(variable, value)
+  }
+
+  // Save to localStorage
+  try {
+    localStorage.setItem('narrativeGenTheme', paletteKey)
+    setStatus(`テーマ「${palette.name}」を適用しました`, 'success')
+  } catch (error) {
+    console.error('Failed to save theme', error)
+  }
+}
+
+function loadSavedPalette() {
+  try {
+    const saved = localStorage.getItem('narrativeGenTheme')
+    if (saved && COLOR_PALETTES[saved]) {
+      applyPalette(saved)
+    }
+  } catch (error) {
+    console.error('Failed to load saved theme', error)
+  }
+}
+
+function initPaletteUI() {
+  const paletteOptions = document.getElementById('paletteOptions')
+  if (!paletteOptions) return
+
+  paletteOptions.innerHTML = ''
+  
+  for (const [key, palette] of Object.entries(COLOR_PALETTES)) {
+    const option = document.createElement('div')
+    option.style.cssText = `
+      padding: 1rem;
+      border-radius: 8px;
+      border: 2px solid rgba(0,0,0,0.15);
+      background: linear-gradient(135deg, ${palette.colors['--color-primary']} 0%, ${palette.colors['--color-primary-dark']} 100%);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+      color: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    `
+    option.innerHTML = `
+      <div style="font-weight: 700; margin-bottom: 0.5rem; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">${palette.name}</div>
+      <div style="display: flex; gap: 4px; justify-content: center;">
+        <div style="width: 30px; height: 30px; border-radius: 4px; background: ${palette.colors['--color-secondary']}; border: 2px solid rgba(255,255,255,0.3);"></div>
+        <div style="width: 30px; height: 30px; border-radius: 4px; background: ${palette.colors['--color-secondary-dark']}; border: 2px solid rgba(255,255,255,0.3);"></div>
+      </div>
+    `
+    
+    option.addEventListener('mouseenter', () => {
+      option.style.transform = 'translateY(-4px) scale(1.02)'
+      option.style.boxShadow = '0 8px 16px rgba(0,0,0,0.2)'
+    })
+    option.addEventListener('mouseleave', () => {
+      option.style.transform = 'translateY(0) scale(1)'
+      option.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)'
+    })
+    option.addEventListener('click', () => {
+      applyPalette(key)
+      document.getElementById('paletteModal').style.display = 'none'
+    })
+    
+    paletteOptions.appendChild(option)
+  }
+}
+
 // Key binding configuration - extensible and loosely coupled
 const KEY_BINDINGS = {
   'inventory': 'z',  // Configurable: can be changed to any key
@@ -658,8 +822,8 @@ function renderGraph() {
     return
   }
 
-  const width = graphSvg.clientWidth
-  const height = graphSvg.clientHeight
+  const width = graphSvg.clientWidth || graphSvg.parentElement.clientWidth || 800
+  const height = graphSvg.clientHeight || graphSvg.parentElement.clientHeight || 600
 
   // Performance optimization: Limit nodes for large graphs
   const maxNodes = 100
@@ -1662,12 +1826,14 @@ function switchTab(tabName) {
   graphPanel.classList.remove('active')
   debugPanel.classList.remove('active')
   advancedPanel.classList.remove('active')
+  if (referencePanel) referencePanel.classList.remove('active')
 
   // Remove active class from all tabs
   storyTab.classList.remove('active')
   graphTab.classList.remove('active')
   debugTab.classList.remove('active')
   advancedTab.classList.remove('active')
+  if (referenceTab) referenceTab.classList.remove('active')
 
   // Show selected panel and activate tab
   if (tabName === 'story') {
@@ -1681,6 +1847,10 @@ function switchTab(tabName) {
     debugPanel.classList.add('active')
     debugTab.classList.add('active')
     renderDebugInfo()
+  } else if (tabName === 'reference') {
+    if (referencePanel) referencePanel.classList.add('active')
+    if (referenceTab) referenceTab.classList.add('active')
+    renderReferenceContent()
   } else if (tabName === 'advanced') {
     advancedPanel.classList.add('active')
     advancedTab.classList.add('active')
@@ -1726,6 +1896,15 @@ guiEditBtn.addEventListener('click', () => {
     setStatus('GUI編集するにはまずモデルを読み込んでください', 'warn')
     return
   }
+  
+  // Hide all tab panels
+  storyPanel.classList.remove('active')
+  graphPanel.classList.remove('active')
+  debugPanel.classList.remove('active')
+  advancedPanel.classList.remove('active')
+  if (referencePanel) referencePanel.classList.remove('active')
+  
+  // Show GUI edit mode
   renderNodeList()
   guiEditMode.style.display = 'block'
   setControlsEnabled(false)
@@ -2307,6 +2486,10 @@ saveGuiBtn.addEventListener('click', () => {
     session = startSession(_model)
     currentModelName = 'gui-edited'
     guiEditMode.style.display = 'none'
+    
+    // Show story panel
+    storyPanel.classList.add('active')
+    
     setStatus('GUI編集を保存しました', 'success')
     setControlsEnabled(true)
     renderState()
@@ -2321,6 +2504,10 @@ saveGuiBtn.addEventListener('click', () => {
 
 cancelGuiBtn.addEventListener('click', () => {
   guiEditMode.style.display = 'none'
+  
+  // Show story panel
+  storyPanel.classList.add('active')
+  
   setControlsEnabled(true)
 })
 
@@ -3005,3 +3192,1031 @@ if (applyTextReplaceBtn) applyTextReplaceBtn.addEventListener('click', () => bat
 if (applyChoiceReplaceBtn) applyChoiceReplaceBtn.addEventListener('click', () => batchEditManager.applyChoiceReplace())
 if (applyTargetReplaceBtn) applyTargetReplaceBtn.addEventListener('click', () => batchEditManager.applyTargetReplace())
 if (closeBatchEditBtn) closeBatchEditBtn.addEventListener('click', () => batchEditManager.closeModal())
+
+// ===========================
+// Color Palette Event Listeners
+// ===========================
+const themeBtn = document.getElementById('themeBtn')
+const paletteModal = document.getElementById('paletteModal')
+const closePaletteBtn = document.getElementById('closePaletteBtn')
+
+if (themeBtn) {
+  themeBtn.addEventListener('click', () => {
+    initPaletteUI()
+    paletteModal.style.display = 'flex'
+    paletteModal.classList.add('show')
+  })
+}
+
+if (closePaletteBtn) {
+  closePaletteBtn.addEventListener('click', () => {
+    paletteModal.style.display = 'none'
+    paletteModal.classList.remove('show')
+  })
+}
+
+if (paletteModal) {
+  paletteModal.addEventListener('click', (e) => {
+    if (e.target.id === 'paletteModal') {
+      paletteModal.style.display = 'none'
+      paletteModal.classList.remove('show')
+    }
+  })
+}
+
+// Load saved theme on startup
+loadSavedPalette()
+
+// ===========================
+// Quick Node Creation
+// ===========================
+const NODE_TEMPLATES = {
+  conversation: { text: '「会話テキストをここに入力」', choices: [] },
+  choice: { text: '選択肢の説明をここに入力', choices: [
+    { id: 'choice1', text: '選択肢1', target: '' },
+    { id: 'choice2', text: '選択肢2', target: '' }
+  ]},
+  info: { text: '状況説明をここに入力', choices: [] },
+  action: { text: 'イベントの説明をここに入力', choices: [] },
+  blank: { text: '', choices: [] }
+}
+
+function generateNodeId() {
+  const timestamp = Date.now().toString(36)
+  const random = Math.random().toString(36).substring(2, 7)
+  return `node_${timestamp}_${random}`
+}
+
+function openQuickNodeModal() {
+  if (!_model) {
+    setStatus('まずモデルを読み込んでください', 'warn')
+    return
+  }
+  
+  const modal = document.getElementById('quickNodeModal')
+  document.getElementById('quickNodeId').value = ''
+  document.getElementById('quickNodeText').value = ''
+  document.getElementById('nodeTemplate').value = 'blank'
+  modal.style.display = 'flex'
+  modal.classList.add('show')
+}
+
+function createQuickNode() {
+  const templateKey = document.getElementById('nodeTemplate').value
+  let nodeId = document.getElementById('quickNodeId').value.trim()
+  const nodeText = document.getElementById('quickNodeText').value.trim()
+  
+  // Generate ID if not provided
+  if (!nodeId) {
+    nodeId = generateNodeId()
+  }
+  
+  // Check if ID already exists
+  if (_model.nodes[nodeId]) {
+    setStatus(`❌ ノードID「${nodeId}」は既に存在します`, 'error')
+    return
+  }
+  
+  // Get template
+  const template = NODE_TEMPLATES[templateKey]
+  const newNode = {
+    id: nodeId,
+    text: nodeText || template.text,
+    choices: JSON.parse(JSON.stringify(template.choices)) // Deep copy
+  }
+  
+  // Add to model
+  _model.nodes[nodeId] = newNode
+  
+  // Close modal
+  document.getElementById('quickNodeModal').style.display = 'none'
+  document.getElementById('quickNodeModal').classList.remove('show')
+  
+  // Refresh UI
+  if (typeof renderNodeList === 'function') {
+    renderNodeList()
+  }
+  
+  setStatus(`✅ ノード「${nodeId}」を作成しました`, 'success')
+  Logger.info('Quick node created', { nodeId, template: templateKey })
+}
+
+// Event listeners for quick node creation
+const cancelQuickNodeBtn = document.getElementById('cancelQuickNodeBtn')
+const createQuickNodeBtn = document.getElementById('createQuickNodeBtn')
+
+if (cancelQuickNodeBtn) {
+  cancelQuickNodeBtn.addEventListener('click', () => {
+    document.getElementById('quickNodeModal').style.display = 'none'
+    document.getElementById('quickNodeModal').classList.remove('show')
+  })
+}
+
+if (createQuickNodeBtn) {
+  createQuickNodeBtn.addEventListener('click', createQuickNode)
+}
+
+// Add keyboard shortcut: N key for quick node creation (in GUI edit mode)
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+  
+  if (e.key.toLowerCase() === 'n' && guiEditMode && guiEditMode.style.display !== 'none') {
+    e.preventDefault()
+    openQuickNodeModal()
+  }
+})
+
+// ===========================
+// Batch Choice Edit
+// ===========================
+function openBatchChoiceModal() {
+  if (!_model) {
+    setStatus('まずモデルを読み込んでください', 'warn')
+    return
+  }
+  
+  const modal = document.getElementById('batchChoiceModal')
+  const nodeSelect = document.getElementById('batchNodeSelect')
+  
+  // Populate node list
+  nodeSelect.innerHTML = '<option value="">ノードを選択...</option>'
+  Object.keys(_model.nodes).forEach(nodeId => {
+    const option = document.createElement('option')
+    option.value = nodeId
+    option.textContent = `${nodeId} - ${_model.nodes[nodeId].text?.substring(0, 30) || '(テキストなし)'}`
+    nodeSelect.appendChild(option)
+  })
+  
+  modal.style.display = 'flex'
+  modal.classList.add('show')
+}
+
+function updateBatchChoiceList() {
+  const nodeId = document.getElementById('batchNodeSelect').value
+  const choiceList = document.getElementById('batchChoiceList')
+  
+  if (!nodeId || !_model.nodes[nodeId]) {
+    choiceList.innerHTML = '<p style="color: #6b7280;">ノードを選択してください</p>'
+    return
+  }
+  
+  const node = _model.nodes[nodeId]
+  const choices = node.choices || []
+  
+  if (choices.length === 0) {
+    choiceList.innerHTML = '<p style="color: #6b7280;">このノードには選択肢がありません</p>'
+    return
+  }
+  
+  choiceList.innerHTML = '<div style="display: flex; flex-direction: column; gap: 0.5rem;"></div>'
+  const container = choiceList.firstElementChild
+  
+  choices.forEach((choice, index) => {
+    const div = document.createElement('div')
+    div.style.cssText = 'padding: 0.75rem; background: rgba(255,255,255,0.5); border-radius: 4px; border: 1px solid rgba(0,0,0,0.1);'
+    div.innerHTML = `
+      <div style="font-weight: 600; margin-bottom: 0.25rem;">選択肢 ${index + 1}</div>
+      <div style="font-size: 0.9em; color: #6b7280;">${choice.text || '(テキストなし)'}</div>
+      <div style="font-size: 0.85em; color: #9ca3af; margin-top: 0.25rem;">→ ${choice.target || '(ターゲットなし)'}</div>
+    `
+    container.appendChild(div)
+  })
+}
+
+function applyBatchChoice() {
+  const nodeId = document.getElementById('batchNodeSelect').value
+  if (!nodeId || !_model.nodes[nodeId]) {
+    setStatus('❌ ノードを選択してください', 'error')
+    return
+  }
+  
+  const node = _model.nodes[nodeId]
+  const applyCondition = document.getElementById('batchCondition').checked
+  const applyEffect = document.getElementById('batchEffect').checked
+  const conditionText = document.getElementById('batchConditionText').value.trim()
+  const effectText = document.getElementById('batchEffectText').value.trim()
+  
+  let modified = 0
+  
+  if (node.choices) {
+    node.choices.forEach(choice => {
+      if (applyCondition && conditionText) {
+        choice.conditions = choice.conditions || []
+        // Simple parsing - in production, use proper parser
+        choice.conditions.push(conditionText)
+        modified++
+      }
+      if (applyEffect && effectText) {
+        choice.effects = choice.effects || []
+        choice.effects.push(effectText)
+        modified++
+      }
+    })
+  }
+  
+  // Close modal
+  document.getElementById('batchChoiceModal').style.display = 'none'
+  document.getElementById('batchChoiceModal').classList.remove('show')
+  
+  // Refresh UI
+  if (typeof renderNodeList === 'function') {
+    renderNodeList()
+  }
+  
+  setStatus(`✅ ${node.choices.length}個の選択肢に変更を適用しました`, 'success')
+  Logger.info('Batch choice edit applied', { nodeId, modified })
+}
+
+// Event listeners for batch choice edit
+const batchNodeSelect = document.getElementById('batchNodeSelect')
+const batchCondition = document.getElementById('batchCondition')
+const batchEffect = document.getElementById('batchEffect')
+const batchConditionText = document.getElementById('batchConditionText')
+const batchEffectText = document.getElementById('batchEffectText')
+const cancelBatchChoiceBtn = document.getElementById('cancelBatchChoiceBtn')
+const applyBatchChoiceBtn = document.getElementById('applyBatchChoiceBtn')
+
+if (batchNodeSelect) {
+  batchNodeSelect.addEventListener('change', updateBatchChoiceList)
+}
+
+if (batchCondition) {
+  batchCondition.addEventListener('change', (e) => {
+    batchConditionText.disabled = !e.target.checked
+  })
+}
+
+if (batchEffect) {
+  batchEffect.addEventListener('change', (e) => {
+    batchEffectText.disabled = !e.target.checked
+  })
+}
+
+if (cancelBatchChoiceBtn) {
+  cancelBatchChoiceBtn.addEventListener('click', () => {
+    document.getElementById('batchChoiceModal').style.display = 'none'
+    document.getElementById('batchChoiceModal').classList.remove('show')
+  })
+}
+
+if (applyBatchChoiceBtn) {
+  applyBatchChoiceBtn.addEventListener('click', applyBatchChoice)
+}
+
+// Add button listeners for quick node and batch choice
+const quickNodeBtn = document.getElementById('quickNodeBtn')
+const batchChoiceBtn = document.getElementById('batchChoiceBtn')
+
+if (quickNodeBtn) {
+  quickNodeBtn.addEventListener('click', openQuickNodeModal)
+}
+
+if (batchChoiceBtn) {
+  batchChoiceBtn.addEventListener('click', openBatchChoiceModal)
+}
+
+// ===========================
+// Reference / API Documentation System
+// ===========================
+
+const REFERENCE_DOCS = [
+  {
+    id: 'model-structure',
+    category: 'basic',
+    title: 'モデルの基本構造',
+    tags: ['モデル', '構造', 'JSON', 'ノード'],
+    content: `
+## モデルの基本構造
+
+NarrativeGenのストーリーモデルは以下の構造を持ちます：
+
+\`\`\`json
+{
+  "metadata": {
+    "title": "ストーリータイトル",
+    "author": "作者名",
+    "version": "1.0.0"
+  },
+  "startNode": "start",
+  "nodes": {
+    "start": {
+      "id": "start",
+      "text": "物語の始まり",
+      "choices": []
+    }
+  }
+}
+\`\`\`
+
+### 必須フィールド
+
+- **startNode**: 開始ノードのID
+- **nodes**: ノードの辞書（キー: ノードID, 値: ノードオブジェクト）
+
+### オプションフィールド
+
+- **metadata**: メタデータ（タイトル、作者、バージョン等）
+`
+  },
+  {
+    id: 'node-structure',
+    category: 'basic',
+    title: 'ノードの構造',
+    tags: ['ノード', 'テキスト', '選択肢'],
+    content: `
+## ノードの構造
+
+各ノードは以下の構造を持ちます：
+
+\`\`\`json
+{
+  "id": "node1",
+  "text": "ノードのテキスト",
+  "choices": [
+    {
+      "id": "choice1",
+      "text": "選択肢のテキスト",
+      "target": "next_node"
+    }
+  ]
+}
+\`\`\`
+
+### フィールド説明
+
+- **id** (必須): ノードの一意なID
+- **text** (必須): ノードに表示されるテキスト
+- **choices** (オプション): 選択肢の配列（空の場合はエンディング）
+`
+  },
+  {
+    id: 'choices',
+    category: 'choice',
+    title: '選択肢の作成',
+    tags: ['選択肢', 'choice', 'ターゲット'],
+    content: `
+## 選択肢の作成
+
+選択肢は\`choices\`配列に定義します：
+
+\`\`\`json
+"choices": [
+  {
+    "id": "choice1",
+    "text": "友好的に話しかける",
+    "target": "friendly_path"
+  },
+  {
+    "id": "choice2",
+    "text": "警戒する",
+    "target": "cautious_path"
+  }
+]
+\`\`\`
+
+### 選択肢の必須フィールド
+
+- **id**: 選択肢の一意なID
+- **text**: プレイヤーに表示される選択肢のテキスト
+- **target**: 選択時に移動する次のノードのID
+
+### 選択肢がないノード
+
+選択肢がない（\`choices: []\`）ノードはエンディングとして扱われます。
+`
+  },
+  {
+    id: 'conditions',
+    category: 'condition',
+    title: '条件分岐',
+    tags: ['条件', 'condition', 'フラグ', 'flag'],
+    content: `
+## 条件分岐
+
+選択肢に条件を設定して、特定の状況でのみ表示できます：
+
+\`\`\`json
+{
+  "id": "special_choice",
+  "text": "特別な選択肢",
+  "target": "special_path",
+  "conditions": [
+    {"type": "flag", "key": "has_key", "value": true}
+  ]
+}
+\`\`\`
+
+### 条件タイプ
+
+#### 1. フラグ条件
+\`\`\`json
+{"type": "flag", "key": "visited_town", "value": true}
+\`\`\`
+
+#### 2. リソース条件
+\`\`\`json
+{"type": "resource", "key": "gold", "value": 100, "operator": ">="}
+\`\`\`
+
+#### 3. 複数条件（AND）
+\`\`\`json
+"conditions": [
+  {"type": "flag", "key": "has_sword", "value": true},
+  {"type": "resource", "key": "hp", "value": 50, "operator": ">"}
+]
+\`\`\`
+
+すべての条件が満たされた場合のみ選択肢が表示されます。
+`
+  },
+  {
+    id: 'effects',
+    category: 'effect',
+    title: '効果の設定',
+    tags: ['効果', 'effect', 'フラグ設定', 'リソース変更'],
+    content: `
+## 効果の設定
+
+選択肢に効果を設定して、選択時に状態を変更できます：
+
+\`\`\`json
+{
+  "id": "buy_item",
+  "text": "剣を購入する",
+  "target": "shop_success",
+  "effects": [
+    {"type": "setFlag", "key": "has_sword", "value": true},
+    {"type": "modifyResource", "key": "gold", "value": -100}
+  ]
+}
+\`\`\`
+
+### 効果タイプ
+
+#### 1. フラグ設定
+\`\`\`json
+{"type": "setFlag", "key": "quest_completed", "value": true}
+\`\`\`
+
+#### 2. リソース変更
+\`\`\`json
+{"type": "modifyResource", "key": "hp", "value": -20}
+{"type": "modifyResource", "key": "gold", "value": 50}
+\`\`\`
+
+#### 3. 複数効果
+選択時に複数の効果を同時に適用できます：
+
+\`\`\`json
+"effects": [
+  {"type": "setFlag", "key": "battle_won", "value": true},
+  {"type": "modifyResource", "key": "exp", "value": 100},
+  {"type": "modifyResource", "key": "hp", "value": -30}
+]
+\`\`\`
+`
+  },
+  {
+    id: 'resources',
+    category: 'resource',
+    title: 'リソース管理',
+    tags: ['リソース', 'resource', 'HP', 'ゴールド'],
+    content: `
+## リソース管理
+
+リソースはゲーム内の数値を管理します（HP、ゴールド、経験値など）。
+
+### 初期リソース設定
+
+モデルのトップレベルで初期値を設定：
+
+\`\`\`json
+{
+  "startNode": "start",
+  "initialState": {
+    "resources": {
+      "hp": 100,
+      "gold": 50,
+      "exp": 0
+    }
+  },
+  "nodes": { ... }
+}
+\`\`\`
+
+### リソースの変更
+
+選択肢の効果で変更：
+
+\`\`\`json
+"effects": [
+  {"type": "modifyResource", "key": "gold", "value": -30}
+]
+\`\`\`
+
+### リソース条件
+
+特定のリソース値で選択肢の表示を制御：
+
+\`\`\`json
+"conditions": [
+  {"type": "resource", "key": "gold", "value": 100, "operator": ">="}
+]
+\`\`\`
+
+#### 演算子
+
+- \`>=\`: 以上
+- \`>\`: より大きい
+- \`<=\`: 以下
+- \`<\`: より小さい
+- \`==\`: 等しい
+`
+  },
+  {
+    id: 'flags',
+    category: 'condition',
+    title: 'フラグシステム',
+    tags: ['フラグ', 'flag', 'bool', '状態管理'],
+    content: `
+## フラグシステム
+
+フラグはゲーム内の状態を真偽値で管理します。
+
+### フラグの設定
+
+選択肢の効果で設定：
+
+\`\`\`json
+"effects": [
+  {"type": "setFlag", "key": "met_npc_alice", "value": true}
+]
+\`\`\`
+
+### フラグ条件
+
+フラグで選択肢の表示を制御：
+
+\`\`\`json
+"conditions": [
+  {"type": "flag", "key": "has_key", "value": true}
+]
+\`\`\`
+
+### フラグの否定
+
+フラグがfalseの場合に選択肢を表示：
+
+\`\`\`json
+"conditions": [
+  {"type": "flag", "key": "door_opened", "value": false}
+]
+\`\`\`
+
+### ベストプラクティス
+
+- フラグ名は分かりやすく（例: \`quest_1_completed\`, \`met_boss\`）
+- 命名規則を統一（スネークケース推奨）
+- 重要なイベントにフラグを設定
+`
+  },
+  {
+    id: 'multiple-endings',
+    category: 'advanced',
+    title: 'マルチエンディング',
+    tags: ['エンディング', 'ending', '分岐', 'マルチ'],
+    content: `
+## マルチエンディング
+
+複数のエンディングを持つストーリーを作成できます。
+
+### エンディングノードの作成
+
+エンディングは選択肢がないノードとして定義：
+
+\`\`\`json
+{
+  "good_ending": {
+    "id": "good_ending",
+    "text": "【ハッピーエンド】\\n\\nあなたは平和を取り戻しました。",
+    "choices": []
+  },
+  "bad_ending": {
+    "id": "bad_ending",
+    "text": "【バッドエンド】\\n\\n残念ながら失敗してしまいました。",
+    "choices": []
+  },
+  "true_ending": {
+    "id": "true_ending",
+    "text": "【トゥルーエンド】\\n\\n真実を知り、新たな未来が開けました。",
+    "choices": []
+  }
+}
+\`\`\`
+
+### エンディング分岐の設計
+
+フラグやリソースで分岐：
+
+\`\`\`json
+{
+  "final_choice": {
+    "id": "final_choice",
+    "text": "最後の選択...",
+    "choices": [
+      {
+        "id": "heroic",
+        "text": "勇気を持って立ち向かう",
+        "target": "good_ending",
+        "conditions": [
+          {"type": "flag", "key": "hero_path", "value": true}
+        ]
+      },
+      {
+        "id": "peaceful",
+        "text": "平和的な解決を目指す",
+        "target": "true_ending",
+        "conditions": [
+          {"type": "flag", "key": "wisdom_path", "value": true},
+          {"type": "resource", "key": "charisma", "value": 80, "operator": ">="}
+        ]
+      }
+    ]
+  }
+}
+\`\`\`
+`
+  },
+  {
+    id: 'time-gate',
+    category: 'advanced',
+    title: 'タイムゲート',
+    tags: ['タイムゲート', '時間制限', 'タイマー'],
+    content: `
+## タイムゲート
+
+時間制限付きの選択肢や、プレイ時間による分岐を実装できます。
+
+### タイムゲート条件
+
+\`\`\`json
+{
+  "id": "timed_choice",
+  "text": "急いで決断しなければならない",
+  "choices": [
+    {
+      "id": "quick_decision",
+      "text": "即座に行動する",
+      "target": "quick_path",
+      "conditions": [
+        {"type": "time", "key": "elapsed_seconds", "value": 10, "operator": "<"}
+      ]
+    },
+    {
+      "id": "slow_decision",
+      "text": "慎重に考える",
+      "target": "slow_path",
+      "conditions": [
+        {"type": "time", "key": "elapsed_seconds", "value": 10, "operator": ">="}
+      ]
+    }
+  ]
+}
+\`\`\`
+
+### 実装例
+
+実際のゲーム実装では、セッション開始からの経過時間を追跡します。
+
+**注意**: 現在のWeb Testerでは時間条件は部分的なサポートのみです。
+`
+  },
+  {
+    id: 'paraphrase',
+    category: 'advanced',
+    title: 'テキスト言い換え',
+    tags: ['言い換え', 'paraphrase', 'バリエーション', 'AI'],
+    content: `
+## テキスト言い換え
+
+同じテキストに複数のバリエーションを持たせることができます。
+
+### 辞書ベースの言い換え
+
+アドバンスドタブの「言い換え辞書」でキーワードと同義語を定義：
+
+\`\`\`json
+{
+  "剣": ["刀", "ブレード", "剣閃"],
+  "勇者": ["英雄", "戦士", "冒険者"],
+  "魔王": ["魔神", "暗黒卿", "邪悪な王"]
+}
+\`\`\`
+
+### AI言い換え（オプション）
+
+AIプロバイダーを設定することで、自動言い換えが可能：
+
+1. アドバンスド設定でAIを有効化
+2. プロバイダー（OpenAI / Ollama）を選択
+3. API Keyを設定
+4. ノードを選択して「言い換え」ボタンをクリック
+
+### ユースケース
+
+- 同じストーリーでも読むたびに印象が変わる
+- プレイヤーの好みに合わせた語彙選択
+- ローカライゼーション対応
+`
+  },
+  {
+    id: 'csv-import-export',
+    category: 'basic',
+    title: 'CSV インポート/エクスポート',
+    tags: ['CSV', 'スプレッドシート', 'Excel', 'インポート', 'エクスポート'],
+    content: `
+## CSV インポート/エクスポート
+
+スプレッドシート（Excel, Google Sheetsなど）でストーリーを編集できます。
+
+### CSVエクスポート
+
+1. ストーリータブで「CSV出力」ボタンをクリック
+2. CSVファイルがダウンロードされる
+3. Excel / Google Sheetsで開く
+
+### CSV形式
+
+| NodeID | Text | ChoiceID | ChoiceText | Target | Conditions | Effects |
+|--------|------|----------|------------|--------|------------|---------|
+| start | 始まりのテキスト | c1 | 選択肢1 | node2 | | |
+| start | | c2 | 選択肢2 | node3 | flag:has_key=true | setFlag:visited=true |
+
+### CSVインポート
+
+1. CSVを編集して保存
+2. ストーリータブで「CSV読込」ボタンをクリック
+3. ファイルを選択
+
+### 注意事項
+
+- NodeIDは一意である必要がある
+- 条件と効果は簡易記法を使用（例: \`flag:key=true\`, \`resource:gold>=100\`）
+- 複数の選択肢は同じNodeIDで複数行に記述
+`
+  },
+  {
+    id: 'gui-editor',
+    category: 'basic',
+    title: 'GUIエディタの使い方',
+    tags: ['エディタ', 'GUI', '編集', 'ノード作成'],
+    content: `
+## GUIエディタの使い方
+
+ビジュアルエディタでストーリーを編集できます。
+
+### エディタを開く
+
+1. モデルを読み込む
+2. ストーリータブで「編集」ボタンをクリック
+
+### 基本操作
+
+#### ノードの追加
+
+- **従来方式**: 「ノードを追加」ボタン
+- **クイック作成**: 「クイックノード作成」ボタンまたは \`N\` キー
+
+#### ノードの編集
+
+- ノードをクリックして展開
+- テキストを編集
+- 選択肢を追加/削除
+
+#### 選択肢の一括編集
+
+1. 「選択肢一括編集」ボタンをクリック
+2. 対象ノードを選択
+3. 共通条件・効果を設定
+
+### ショートカット
+
+- \`N\`: クイックノード作成
+- \`Ctrl+S\`: 保存（GUIモード内）
+
+### 保存と適用
+
+「保存して適用」ボタンで編集内容を反映します。
+`
+  },
+  {
+    id: 'validation',
+    category: 'advanced',
+    title: 'モデル検証',
+    tags: ['検証', 'バリデーション', 'エラー', 'デバッグ'],
+    content: `
+## モデル検証
+
+ストーリーモデルの整合性を自動チェックします。
+
+### 自動検証項目
+
+#### 1. 必須フィールド
+
+- \`startNode\` が存在するか
+- \`nodes\` が定義されているか
+- 各ノードに \`id\` と \`text\` があるか
+
+#### 2. 参照整合性
+
+- \`startNode\` が \`nodes\` に存在するか
+- 選択肢の \`target\` が存在するノードを指しているか
+
+#### 3. 到達不可能ノード
+
+- すべてのノードがストーリーから到達可能か
+- 孤立したノードの検出
+
+#### 4. 無限ループ
+
+- 選択肢がなく次のノードにも進めないループ
+- 循環参照の検出
+
+### エラー確認方法
+
+1. モデルを読み込む
+2. エラーがある場合、画面上部にエラーパネルが表示される
+3. デバッグタブで詳細を確認
+
+### デバッグのコツ
+
+- エラーメッセージをよく読む
+- ノードグラフタブでビジュアル確認
+- 1つずつ修正してテスト
+`
+  }
+]
+
+// 目次を生成
+function renderReferenceToc(filter = { category: 'all', search: '' }) {
+  const tocContainer = document.getElementById('referenceToc')
+  if (!tocContainer) return
+
+  let filteredDocs = REFERENCE_DOCS
+
+  // カテゴリーフィルタ
+  if (filter.category !== 'all') {
+    filteredDocs = filteredDocs.filter(doc => doc.category === filter.category)
+  }
+
+  // 検索フィルタ
+  if (filter.search.trim()) {
+    const query = filter.search.toLowerCase()
+    filteredDocs = filteredDocs.filter(doc => 
+      doc.title.toLowerCase().includes(query) ||
+      doc.tags.some(tag => tag.toLowerCase().includes(query)) ||
+      doc.content.toLowerCase().includes(query)
+    )
+  }
+
+  // 目次レンダリング
+  if (filteredDocs.length === 0) {
+    tocContainer.innerHTML = `<p style="text-align: center; color: var(--color-text-muted); padding: 1rem; font-size: 0.9rem;">該当する項目がありません</p>`
+    return
+  }
+
+  tocContainer.innerHTML = filteredDocs.map(doc => `
+    <div class="ref-toc-item" data-doc-id="${doc.id}" style="padding: 0.5rem; margin-bottom: 0.25rem; cursor: pointer; border-radius: 4px; transition: all 0.2s ease; font-size: 0.9rem;">
+      ${doc.title}
+    </div>
+  `).join('')
+
+  // 目次アイテムのクリックイベント
+  document.querySelectorAll('.ref-toc-item').forEach(item => {
+    item.addEventListener('mouseenter', () => {
+      item.style.background = 'rgba(59, 130, 246, 0.1)'
+      item.style.color = 'var(--color-secondary)'
+    })
+    item.addEventListener('mouseleave', () => {
+      if (!item.classList.contains('active')) {
+        item.style.background = 'transparent'
+        item.style.color = 'inherit'
+      }
+    })
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.ref-toc-item').forEach(i => {
+        i.classList.remove('active')
+        i.style.background = 'transparent'
+        i.style.color = 'inherit'
+      })
+      item.classList.add('active')
+      item.style.background = 'rgba(59, 130, 246, 0.15)'
+      item.style.color = 'var(--color-secondary)'
+      item.style.fontWeight = '600'
+      
+      const docId = item.dataset.docId
+      renderSingleDoc(docId)
+    })
+  })
+}
+
+// 簡易Markdownパーサー
+function parseMarkdown(markdown) {
+  let html = markdown
+  
+  // 1. コードブロックを一時的に保護
+  const codeBlocks = []
+  html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+    const index = codeBlocks.length
+    codeBlocks.push(`<pre style="background: #1e1e2f; color: #e0e7ff; padding: 1rem; border-radius: 4px; overflow-x: auto; margin: 1rem 0;"><code>${code.trim()}</code></pre>`)
+    return `__CODE_BLOCK_${index}__`
+  })
+  
+  // 2. 見出しの変換
+  html = html.replace(/^#### (.+)$/gm, '<h4 style="color: var(--color-text); margin-top: 1.5rem; margin-bottom: 0.75rem;">$1</h4>')
+  html = html.replace(/^### (.+)$/gm, '<h3 style="color: var(--color-text); margin-top: 2rem; margin-bottom: 1rem; border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 0.5rem;">$1</h3>')
+  html = html.replace(/^## (.+)$/gm, '<h2 style="color: var(--color-secondary); margin-top: 2.5rem; margin-bottom: 1.25rem; border-bottom: 3px solid var(--color-secondary); padding-bottom: 0.75rem;">$1</h2>')
+  
+  // 3. 箇条書きリストの変換
+  html = html.replace(/^- (.+)$/gm, '<li style="margin-left: 1.5rem;">$1</li>')
+  html = html.replace(/(<li.*<\/li>\n?)+/g, '<ul style="margin: 1rem 0; padding-left: 0;">$&</ul>')
+  
+  // 4. インラインコードの変換
+  html = html.replace(/`([^`]+)`/g, '<code style="background: rgba(0,0,0,0.05); padding: 0.2rem 0.4rem; border-radius: 3px; font-family: monospace; font-size: 0.9em;">$1</code>')
+  
+  // 5. 太字の変換
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  
+  // 6. 段落の変換
+  html = html.split('\n\n').map(para => {
+    para = para.trim()
+    if (para && !para.startsWith('<')) {
+      return `<p style="margin: 1rem 0;">${para}</p>`
+    }
+    return para
+  }).join('\n')
+  
+  // 7. コードブロックを復元
+  codeBlocks.forEach((code, index) => {
+    html = html.replace(`__CODE_BLOCK_${index}__`, code)
+  })
+  
+  return html
+}
+
+// 単一ドキュメントを表示
+function renderSingleDoc(docId) {
+  const container = document.getElementById('referenceContent')
+  if (!container) return
+
+  const doc = REFERENCE_DOCS.find(d => d.id === docId)
+  if (!doc) return
+
+  container.innerHTML = `
+    <div>
+      <h2 style="margin-top: 0; color: var(--color-secondary);">${doc.title}</h2>
+      <div style="margin-bottom: 1.5rem;">
+        ${doc.tags.map(tag => `<span style="display: inline-block; background: rgba(59, 130, 246, 0.1); color: var(--color-secondary); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85em; margin-right: 0.5rem;">${tag}</span>`).join('')}
+      </div>
+      <div class="ref-content" style="line-height: 1.8; font-size: 1rem;">
+        ${parseMarkdown(doc.content)}
+      </div>
+    </div>
+  `
+  
+  // スクロールをトップに
+  container.scrollTop = 0
+}
+
+function renderReferenceContent(filter = { category: 'all', search: '' }) {
+  renderReferenceToc(filter)
+}
+
+// リファレンスタブのイベントリスナー
+const referenceTab = document.getElementById('referenceTab')
+const referencePanel = document.getElementById('referencePanel')
+const refSearch = document.getElementById('refSearch')
+const refCategorySelect = document.getElementById('refCategorySelect')
+
+if (referenceTab && referencePanel) {
+  referenceTab.addEventListener('click', () => switchTab('reference'))
+  
+  // 初期レンダリング
+  renderReferenceContent()
+
+  // 検索
+  if (refSearch) {
+    refSearch.addEventListener('input', (e) => {
+      const category = refCategorySelect?.value || 'all'
+      renderReferenceContent({ category, search: e.target.value })
+    })
+  }
+
+  // カテゴリー切り替え
+  if (refCategorySelect) {
+    refCategorySelect.addEventListener('change', (e) => {
+      const search = refSearch?.value || ''
+      renderReferenceContent({ category: e.target.value, search })
+    })
+  }
+}

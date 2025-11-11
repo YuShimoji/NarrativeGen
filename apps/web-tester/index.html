@@ -7,6 +7,23 @@
     <title>NarrativeGen Web Tester</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
+    /* CSS Variables - Theme System */
+    :root {
+      --color-primary: #667eea;
+      --color-primary-dark: #764ba2;
+      --color-secondary: #3b82f6;
+      --color-secondary-dark: #1d4ed8;
+      --color-success: #10b981;
+      --color-warning: #f59e0b;
+      --color-error: #ef4444;
+      --color-bg: #fafafa;
+      --color-surface: rgba(255, 255, 255, 0.95);
+      --color-text: #1f2937;
+      --color-text-muted: #6b7280;
+      --color-border: rgba(156, 163, 175, 0.3);
+      --icon-color: #6b7280;
+    }
+
     /* Save/Load UI Styles */
     .save-slot {
       border: 1px solid #ddd;
@@ -127,24 +144,23 @@
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Open Sans', 'Helvetica Neue', sans-serif;
         margin: 0;
         padding: 0;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--color-background);
         min-height: 100vh;
-        color: #1f2937;
-        display: flex;
-        flex-direction: column;
+        color: var(--color-text);
       }
 
       .app-container {
-        flex: 1;
         display: flex;
         flex-direction: column;
         min-height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
       }
 
       .header {
-        background: rgba(255, 255, 255, 0.95);
+        background: var(--color-surface);
         backdrop-filter: blur(10px);
-        border-bottom: 1px solid rgba(156, 163, 175, 0.2);
+        border-bottom: 1px solid var(--color-border);
         padding: 1rem 2rem;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
@@ -170,27 +186,39 @@
         flex-direction: column;
         padding: 2rem;
         gap: 2rem;
+        overflow: auto;
+        min-height: 0;
       }
 
       .tabs {
         display: flex;
-        border-bottom: 2px solid rgba(156, 163, 175, 0.3);
+        border-bottom: 2px solid var(--color-border);
         margin-bottom: 0;
-        background: rgba(255, 255, 255, 0.8);
+        background: var(--color-surface);
         border-radius: 12px 12px 0 0;
         padding: 0.5rem;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         flex-shrink: 0;
       }
 
+      h1 {
+        margin-top: 0;
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 2.5rem;
+        font-weight: 700;
+      }
+
       .tab-content {
         flex: 1;
-        background: rgba(255, 255, 255, 0.9);
+        background: var(--color-surface);
         backdrop-filter: blur(10px);
         border-radius: 0 0 12px 12px;
         padding: 2rem;
         box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid var(--color-border);
         border-top: none;
         min-height: 0; /* Allow shrinking */
         display: flex;
@@ -202,222 +230,14 @@
         display: none;
       }
 
-      .controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        align-items: center;
-        margin-bottom: 0;
-        background: rgba(255, 255, 255, 0.8);
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        flex-shrink: 0;
-      }
-
       .control-group {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
         align-items: center;
         padding: 0.5rem;
-        background: rgba(0, 0, 0, 0.05);
+        background: rgba(255, 255, 255, 0.1);
         border-radius: 8px;
-      }
-
-      .story-panel-layout {
-        display: flex;
-        flex-direction: column;
-        gap: 2rem;
-        flex: 1;
-        min-height: 0;
-      }
-
-      .story-content {
-        display: flex;
-        flex-direction: row;
-        gap: 2rem;
-        flex: 1;
-        min-height: 0;
-      }
-
-      .story-content.sidebar-hidden .story-sidebar {
-        opacity: 0;
-        transform: translateX(-100%);
-      }
-
-      .story-content.sidebar-hidden .story-view {
-        flex: 1;
-      }
-
-      .story-view {
-        background: linear-gradient(135deg, #fefefe 0%, #f8fafc 100%);
-        color: #1f2937;
-        padding: 1.5rem;
-        border-radius: 12px;
-        min-height: 300px;
-        max-height: none;
-        overflow: auto;
-        white-space: pre-wrap;
-        border: 2px solid rgba(156, 163, 175, 0.2);
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-        font-size: 1.1rem;
-        line-height: 1.6;
-        flex: 1;
-      }
-
-      .story-sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        flex-shrink: 0;
-        transition: opacity 0.3s ease, transform 0.3s ease;
-      }
-
-      .choices-container {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        flex: 1;
-        min-height: 200px;
-      }
-
-      .state-display {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        flex-shrink: 0;
-      }
-
-      #choices {
-        margin: 0;
-      }
-
-      @media (max-width: 1024px) {
-        .story-content {
-          grid-template-columns: 1fr;
-          gap: 1rem;
-          flex-direction: column;
-        }
-
-        .content-area {
-          padding: 1rem;
-        }
-      }
-
-      @media (max-width: 768px) {
-        .tabs {
-          flex-wrap: wrap;
-        }
-
-        .tab-btn {
-          flex: 1 1 50%;
-          min-width: 120px;
-        }
-
-        .controls {
-          flex-direction: column;
-          align-items: stretch;
-        }
-
-        .controls button {
-          width: 100%;
-        }
-      }
-
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .tab-content {
-        animation: fadeIn 0.4s ease-out;
-      }
-
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-
-      h1 {
-        margin-top: 0;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        font-size: 2.5rem;
-        font-weight: 700;
-      }
-
-      .tabs {
-        display: flex;
-        border-bottom: 2px solid rgba(156, 163, 175, 0.3);
-        margin-bottom: 2rem;
-        background: rgba(255, 255, 255, 0.8);
-        border-radius: 12px 12px 0 0;
-        padding: 0.5rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      }
-
-      .tab-btn {
-        padding: 1rem 2rem;
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        border-radius: 8px;
-        font-weight: 700;
-        font-size: 1.2rem;
-        color: #374151;
-        position: relative;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        flex: 1;
-        text-align: center;
-      }
-
-      .tab-btn:hover {
-        background: rgba(59, 130, 246, 0.1);
-        color: #3b82f6;
-        transform: translateY(-2px);
-      }
-
-      .tab-btn.active {
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        color: white;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-        transform: translateY(-2px);
-      }
-
-      .tab-btn.active::after {
-        content: '';
-        position: absolute;
-        bottom: -2px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 0;
-        height: 0;
-        border-left: 8px solid transparent;
-        border-right: 8px solid transparent;
-        border-top: 8px solid #1d4ed8;
-      }
-
-      .controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        align-items: center;
-        margin-bottom: 2rem;
-        background: rgba(255, 255, 255, 0.8);
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
 
       input[type='text'], input[type='password'], select {
@@ -441,7 +261,7 @@
         border: none;
         border-radius: 8px;
         cursor: pointer;
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
         color: white;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
@@ -562,6 +382,31 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
         overflow: auto;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+
+      .graph-container {
+        position: relative;
+      }
+
+      #graphSvg {
+        width: 100%;
+        height: 100%;
+        min-height: 400px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        background: #fafafa;
+      }
+
+      #graphControls {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        flex-shrink: 0;
       }
 
       .reachable-node, .unreachable-node {
@@ -641,13 +486,184 @@
         gap: 1rem;
         margin-top: 1.5rem;
       }
+
+      /* SVG Icon System */
+      .icon {
+        width: 1.25rem;
+        height: 1.25rem;
+        stroke: var(--icon-color, currentColor);
+        fill: none;
+        stroke-width: 2;
+        vertical-align: middle;
+        display: inline-block;
+        margin-right: 0.375rem;
+      }
+
+      .icon-sm { width: 1rem; height: 1rem; }
+      .icon-md { width: 1.5rem; height: 1.5rem; }
+      .icon-lg { width: 2rem; height: 2rem; }
+
+      button .icon {
+        stroke: currentColor;
+      }
     </style>
   </head>
   <body>
+    <!-- SVG Icon Sprite -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+      <symbol id="icon-book-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+      </symbol>
+      <symbol id="icon-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="5 3 19 12 5 21 5 3"/>
+      </symbol>
+      <symbol id="icon-folder-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        <path d="M2 11h20"/>
+      </symbol>
+      <symbol id="icon-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+      </symbol>
+      <symbol id="icon-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+        <polyline points="17 21 17 13 7 13 7 21"/>
+        <polyline points="7 3 7 8 15 8"/>
+      </symbol>
+      <symbol id="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </symbol>
+      <symbol id="icon-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </symbol>
+      <symbol id="icon-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </symbol>
+      <symbol id="icon-sidebar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <line x1="9" y1="3" x2="9" y2="21"/>
+      </symbol>
+      <symbol id="icon-maximize" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 3 21 3 21 9"/>
+        <polyline points="9 21 3 21 3 15"/>
+        <line x1="21" y1="3" x2="14" y2="10"/>
+        <line x1="3" y1="21" x2="10" y2="14"/>
+      </symbol>
+      <symbol id="icon-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"/>
+        <polyline points="1 20 1 14 7 14"/>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </symbol>
+      <symbol id="icon-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 1v6m0 6v6m7.07-12.07l-4.24 4.24m-5.66 5.66l-4.24 4.24M1 12h6m6 0h6M5.93 5.93l4.24 4.24m5.66 5.66l4.24 4.24"/>
+      </symbol>
+      <symbol id="icon-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="13.5" cy="6.5" r=".5"/>
+        <circle cx="17.5" cy="10.5" r=".5"/>
+        <circle cx="8.5" cy="7.5" r=".5"/>
+        <circle cx="6.5" cy="12.5" r=".5"/>
+        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+      </symbol>
+      <symbol id="icon-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+      </symbol>
+    </svg>
     <div class="app-container">
       <div class="header">
-        <h1>NarrativeGen Web Tester</h1>
-        <p>GameSession の挙動をブラウザで簡易確認できます。ブラウザで静的にホストしてください。</p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h1>NarrativeGen Web Tester</h1>
+            <p>GameSession の挙動をブラウザで簡易確認できます。ブラウザで静的にホストしてください。</p>
+          </div>
+          <button id="themeBtn" style="padding: 0.5rem 1rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); cursor: pointer; backdrop-filter: blur(10px); color: white;">
+            <svg class="icon"><use href="#icon-palette"></use></svg>
+            テーマ
+          </button>
+        </div>
+      </div>
+      
+      <!-- Color Palette Modal -->
+      <div id="paletteModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+          <h3>カラーテーマ選択</h3>
+          <div id="paletteOptions" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0;">
+            <!-- Palettes will be generated by JavaScript -->
+          </div>
+          <div style="margin-top: 1rem; text-align: right;">
+            <button id="closePaletteBtn">閉じる</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Node Creation Modal -->
+      <div id="quickNodeModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+          <h3>クイックノード作成</h3>
+          <div style="margin: 1.5rem 0;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">テンプレート:</label>
+            <select id="nodeTemplate" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2);">
+              <option value="conversation">会話 (キャラクターの台詞)</option>
+              <option value="choice">選択 (プレイヤー選択肢)</option>
+              <option value="info">情報 (状況説明)</option>
+              <option value="action">アクション (イベント)</option>
+              <option value="blank">空白</option>
+            </select>
+          </div>
+          <div style="margin: 1.5rem 0;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ノードID:</label>
+            <input type="text" id="quickNodeId" placeholder="自動生成" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2);">
+            <small style="color: #6b7280;">空欄の場合は自動生成されます</small>
+          </div>
+          <div style="margin: 1.5rem 0;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ノードテキスト:</label>
+            <textarea id="quickNodeText" rows="4" placeholder="ノードのテキストを入力..." style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2); resize: vertical;"></textarea>
+          </div>
+          <div style="margin-top: 1rem; text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
+            <button id="cancelQuickNodeBtn">キャンセル</button>
+            <button id="createQuickNodeBtn" style="background: var(--color-secondary); color: white; border: none;">作成</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Batch Choice Edit Modal -->
+      <div id="batchChoiceModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 700px;">
+          <h3>選択肢一括編集</h3>
+          <div style="margin: 1.5rem 0;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">対象ノード:</label>
+            <select id="batchNodeSelect" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2);">
+              <!-- Populated by JavaScript -->
+            </select>
+          </div>
+          <div id="batchChoiceList" style="margin: 1.5rem 0; max-height: 300px; overflow-y: auto;">
+            <!-- Choice list will be populated here -->
+          </div>
+          <div style="margin: 1.5rem 0; padding: 1rem; background: rgba(0,0,0,0.05); border-radius: 8px;">
+            <h4 style="margin-top: 0;">共通設定</h4>
+            <label style="display: block; margin-bottom: 0.5rem;">
+              <input type="checkbox" id="batchCondition">
+              共通条件を適用
+            </label>
+            <input type="text" id="batchConditionText" placeholder="例: flag:visited=true" style="width: 100%; padding: 0.5rem; margin-bottom: 1rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2);" disabled>
+            
+            <label style="display: block; margin-bottom: 0.5rem;">
+              <input type="checkbox" id="batchEffect">
+              共通効果を適用
+            </label>
+            <input type="text" id="batchEffectText" placeholder="例: setFlag:completed=true" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2);" disabled>
+          </div>
+          <div style="margin-top: 1rem; text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
+            <button id="cancelBatchChoiceBtn">キャンセル</button>
+            <button id="applyBatchChoiceBtn" style="background: var(--color-secondary); color: white; border: none;">一括適用</button>
+          </div>
+        </div>
       </div>
 
       <div class="panel">
@@ -687,14 +703,15 @@
             <button id="storyTab" class="tab-btn active">ストーリー</button>
             <button id="graphTab" class="tab-btn">ノードグラフ</button>
             <button id="debugTab" class="tab-btn">デバッグ</button>
+            <button id="referenceTab" class="tab-btn">リファレンス</button>
             <button id="advancedTab" class="tab-btn" style="display: none;">アドバンスド</button>
           </div>
 
           <div id="storyPanel" class="tab-content active">
             <div class="story-panel-layout">
               <div class="controls">
-                <div class="control-group">
-                  <label for="modelSelect">サンプルモデル</label>
+                <div class="control-group" title="モデルの読み込み">
+                  <label for="modelSelect"><svg class="icon icon-sm"><use href="#icon-book-open"></use></svg>モデル</label>
                   <select id="modelSelect">
                     <option value="linear">linear.json</option>
                     <option value="branching_flags">branching_flags.json</option>
@@ -703,20 +720,22 @@
                     <option value="multiple_endings">multiple_endings.json</option>
                     <option value="tutorial">tutorial.json</option>
                   </select>
-                  <button id="startBtn">実行</button>
-                </div>
-                <div class="control-group">
-                  <button id="uploadBtn">JSONアップロード</button>
+                  <button id="startBtn"><svg class="icon"><use href="#icon-play"></use></svg>実行</button>
+                  <button id="uploadBtn"><svg class="icon"><use href="#icon-folder-open"></use></svg>カスタム読込</button>
                   <input type="file" id="fileInput" accept=".json" style="display: none;">
-                  <button id="downloadTopBtn">JSONダウンロード</button>
-                  <button id="editBtn">モデル編集</button>
-                  <button id="toggleSidebarBtn">サイドバー切替</button>
                 </div>
-                <div class="control-group">
-                  <button id="importCsvBtn">CSVインポート</button>
+                <div class="control-group" title="モデルの編集と出力">
+                  <button id="editBtn"><svg class="icon"><use href="#icon-edit"></use></svg>編集</button>
+                  <button id="downloadTopBtn"><svg class="icon"><use href="#icon-save"></use></svg>JSON保存</button>
+                  <button id="previewTopBtn"><svg class="icon"><use href="#icon-eye"></use></svg>プレビュー</button>
+                </div>
+                <div class="control-group" title="スプレッドシート連携">
+                  <button id="importCsvBtn"><svg class="icon"><use href="#icon-upload"></use></svg>CSV読込</button>
                   <input type="file" id="csvFileInput" accept=".csv,.tsv" style="display: none;">
-                  <button id="exportCsvBtn">CSVエクスポート</button>
-                  <button id="previewTopBtn">小説プレビュー</button>
+                  <button id="exportCsvBtn"><svg class="icon"><use href="#icon-download"></use></svg>CSV出力</button>
+                </div>
+                <div class="control-group" title="表示設定">
+                  <button id="toggleSidebarBtn"><svg class="icon"><use href="#icon-sidebar"></use></svg>サイドバー</button>
                 </div>
               </div>
 
@@ -742,10 +761,10 @@
           <div id="graphPanel" class="tab-content">
             <div class="graph-container">
               <div id="graphControls">
-                <button id="fitGraphBtn">全体表示</button>
-                <button id="resetGraphBtn">リセット</button>
+                <button id="fitGraphBtn"><svg class="icon"><use href="#icon-maximize"></use></svg>全体表示</button>
+                <button id="resetGraphBtn"><svg class="icon"><use href="#icon-refresh"></use></svg>リセット</button>
                 <label><input type="checkbox" id="showConditions">条件表示</label>
-                <button id="graphSettingsBtn">設定</button>
+                <button id="graphSettingsBtn"><svg class="icon"><use href="#icon-settings"></use></svg>設定</button>
               </div>
               <div id="graphSettings" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.05); border-radius: 8px;">
                 <label>ノード形状: 
@@ -760,7 +779,7 @@
                 <button id="saveGraphPreset">プリセット保存</button>
                 <button id="loadGraphPreset">プリセット読み込み</button>
               </div>
-              <svg id="graphSvg" width="800" height="600"></svg>
+              <svg id="graphSvg"></svg>
             </div>
           </div>
 
@@ -856,17 +875,68 @@
               </div>
             </div>
           </div>
-        </div>
 
-        <div id="guiEditMode" style="display: none;">
-          <h2>GUI モデル編集</h2>
-          <div id="nodeList"></div>
-          <button id="addNodeBtn">ノードを追加</button>
-          <button id="batchEditBtn">バッチ編集</button>
-          <button id="previewBtn">小説プレビュー</button>
-          <button id="downloadBtn">編集モデルJSONダウンロード</button>
-          <button id="saveGuiBtn">GUI保存して適用</button>
-          <button id="cancelGuiBtn">キャンセル</button>
+          <div id="referencePanel" class="tab-content">
+            <div style="display: flex; gap: 1rem; height: calc(100vh - 250px);">
+              <!-- 左側: 目次 -->
+              <div style="flex: 0 0 280px; background: rgba(255,255,255,0.7); border-radius: 8px; padding: 1rem; overflow-y: auto;">
+                <h3 style="margin-top: 0; font-size: 1.1rem;">📚 目次</h3>
+                
+                <!-- 検索バー -->
+                <div style="margin-bottom: 1rem;">
+                  <input type="text" id="refSearch" placeholder="🔍 検索..." style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2); font-size: 0.9rem;">
+                </div>
+
+                <!-- カテゴリー選択 -->
+                <div style="margin-bottom: 1rem;">
+                  <select id="refCategorySelect" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2); font-size: 0.9rem;">
+                    <option value="all">すべて</option>
+                    <option value="basic">基本構造</option>
+                    <option value="choice">選択肢</option>
+                    <option value="condition">条件・分岐</option>
+                    <option value="effect">効果・演出</option>
+                    <option value="resource">リソース</option>
+                    <option value="advanced">高度な機能</option>
+                  </select>
+                </div>
+
+                <!-- 目次リスト -->
+                <div id="referenceToc"></div>
+              </div>
+
+              <!-- 右側: コンテンツ -->
+              <div style="flex: 1; background: rgba(255,255,255,0.7); border-radius: 8px; padding: 1.5rem; overflow-y: auto;">
+                <div id="referenceContent">
+                  <h2>🔖 NarrativeGen API リファレンス</h2>
+                  <p style="font-size: 1.1em; color: var(--color-text-muted); margin-bottom: 2rem;">
+                    左側の目次から項目を選択してください。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="guiEditMode" class="tab-content" style="display: none;">
+            <div style="height: calc(100vh - 300px); overflow: hidden; display: flex; flex-direction: column;">
+              <div style="flex-shrink: 0;">
+                <h2>GUI モデル編集</h2>
+                <p style="background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.9em;">
+                  <strong>ショートカット:</strong> <kbd style="background: rgba(0,0,0,0.1); padding: 0.2rem 0.5rem; border-radius: 3px;">N</kbd> クイックノード作成
+                </p>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+                  <button id="quickNodeBtn" style="background: var(--color-secondary); color: white; border: none;"><svg class="icon"><use href="#icon-plus"></use></svg>クイックノード作成</button>
+                  <button id="batchChoiceBtn" style="background: var(--color-secondary); color: white; border: none;">選択肢一括編集</button>
+                  <button id="addNodeBtn">ノードを追加</button>
+                  <button id="batchEditBtn">バッチ編集</button>
+                  <button id="previewBtn">小説プレビュー</button>
+                  <button id="downloadBtn">JSON保存</button>
+                  <button id="saveGuiBtn">保存して適用</button>
+                  <button id="cancelGuiBtn">キャンセル</button>
+                </div>
+              </div>
+              <div id="nodeList" style="flex: 1; overflow-y: auto; padding-right: 0.5rem;"></div>
+            </div>
+          </div>
         </div>
 
         <p id="statusText">初期化中...</p>
