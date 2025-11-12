@@ -297,6 +297,28 @@
         box-shadow: none;
       }
 
+      .theme-button {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: 2px solid var(--color-border);
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+        color: var(--color-text);
+        cursor: pointer;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .theme-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        border-color: var(--color-primary);
+      }
+
+      .theme-button:active {
+        transform: translateY(0);
+      }
+
       pre {
         background: linear-gradient(135deg, #1e1e2f 0%, #2a2a3e 100%);
         color: #e0e7ff;
@@ -619,7 +641,7 @@
             <h1>NarrativeGen Web Tester</h1>
             <p>GameSession の挙動をブラウザで簡易確認できます。ブラウザで静的にホストしてください。</p>
           </div>
-          <button id="themeBtn" style="padding: 0.5rem 1rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); cursor: pointer; backdrop-filter: blur(10px); color: white;">
+          <button id="themeBtn" class="theme-button">
             <svg class="icon"><use href="#icon-palette"></use></svg>
             テーマ
           </button>
