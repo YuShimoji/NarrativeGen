@@ -168,10 +168,11 @@
       }
 
       .panel {
-        background: rgba(255, 255, 255, 0.95);
+        background: var(--color-surface);
         backdrop-filter: blur(10px);
         border-radius: 0;
         padding: 0;
+        color: var(--color-text);
         box-shadow: none;
         border: none;
         max-width: none;
@@ -238,7 +239,7 @@
         gap: 0.5rem;
         align-items: center;
         padding: 0.5rem;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.2);
         border-radius: 8px;
       }
 
@@ -413,7 +414,7 @@
       }
 
       .modal-content {
-        background: rgba(255, 255, 255, 0.95);
+        background: var(--color-surface);
         backdrop-filter: blur(10px);
         border-radius: 16px;
         padding: 2rem;
@@ -421,8 +422,9 @@
         max-height: 90vh;
         overflow: auto;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid var(--color-border);
         animation: scaleIn 0.3s ease-out;
+        color: var(--color-text);
       }
 
       @keyframes scaleIn {
