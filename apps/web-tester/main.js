@@ -500,7 +500,6 @@ const downloadTopBtn = document.getElementById('downloadTopBtn')
 const importCsvBtn = document.getElementById('importCsvBtn')
 const csvFileInput = document.getElementById('csvFileInput')
 const exportCsvBtn = document.getElementById('exportCsvBtn')
-const guiEditBtn = document.getElementById('editBtn')
 const guiEditMode = document.getElementById('guiEditMode')
 const nodeList = document.getElementById('nodeList')
 const addNodeBtn = document.getElementById('addNodeBtn')
@@ -1890,8 +1889,6 @@ if (enableAdvancedFeatures) {
     localStorage.setItem('narrativeGenAdvancedEnabled', enabled.toString())
   })
 }
-
-const guiEditBtn = document.getElementById('editBtn')
 
 guiEditBtn.addEventListener('click', () => {
   if (session == null) {
