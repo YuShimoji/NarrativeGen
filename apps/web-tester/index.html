@@ -42,17 +42,17 @@
 
     .save-slot .slot-info {
       font-size: 0.9em;
-      color: #666;
+      color: var(--color-text-muted);
     }
 
     .save-slot .slot-empty {
-      color: #999;
+      color: var(--color-text-muted);
       font-style: italic;
     }
 
     .save-slot .slot-timestamp {
       font-size: 0.8em;
-      color: #888;
+      color: var(--color-text-muted);
       margin-bottom: 8px;
     }
 
@@ -302,15 +302,15 @@
       }
 
       .story-view {
-        background: linear-gradient(135deg, #fefefe 0%, #f8fafc 100%);
-        color: #1f2937;
+        background: var(--color-surface);
+        color: var(--color-text);
         padding: 1.5rem;
         border-radius: 12px;
         min-height: 150px;
         max-height: 400px;
         overflow: auto;
         white-space: pre-wrap;
-        border: 2px solid rgba(156, 163, 175, 0.2);
+        border: 2px solid var(--color-border);
         box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
         font-size: 1.1rem;
         line-height: 1.6;
@@ -382,12 +382,12 @@
       }
 
       .graph-container, .debug-container, .ai-container {
-        background: rgba(255, 255, 255, 0.9);
+        background: var(--color-surface);
         backdrop-filter: blur(10px);
         border-radius: 12px;
         padding: 2rem;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid var(--color-border);
         overflow: auto;
         flex: 1;
         display: flex;
@@ -626,7 +626,7 @@
           <div style="margin: 1.5rem 0;">
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ノードID:</label>
             <input type="text" id="quickNodeId" placeholder="自動生成" style="width: 100%;">
-            <small style="color: #6b7280;">空欄の場合は自動生成されます</small>
+            <small style="color: var(--color-text-muted);">空欄の場合は自動生成されます</small>
           </div>
           <div style="margin: 1.5rem 0;">
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ノードテキスト:</label>
@@ -652,7 +652,7 @@
           <div id="batchChoiceList" style="margin: 1.5rem 0; max-height: 300px; overflow-y: auto;">
             <!-- Choice list will be populated here -->
           </div>
-          <div style="margin: 1.5rem 0; padding: 1rem; background: rgba(0,0,0,0.05); border-radius: 8px;">
+          <div style="margin: 1.5rem 0; padding: 1rem; background: rgba(0,0,0,0.2); border: 1px solid var(--color-border); border-radius: 8px;">
             <h4 style="margin-top: 0;">共通設定</h4>
             <label style="display: block; margin-bottom: 0.5rem;">
               <input type="checkbox" id="batchCondition">
@@ -773,7 +773,7 @@
                 <label><input type="checkbox" id="showConditions">条件表示</label>
                 <button id="graphSettingsBtn"><svg class="icon"><use href="#icon-settings"></use></svg>設定</button>
               </div>
-              <div id="graphSettings" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.05); border-radius: 8px;">
+              <div id="graphSettings" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border: 1px solid var(--color-border); border-radius: 8px;">
                 <label>ノード形状: 
                   <select id="nodeShape">
                     <option value="circle">円</option>
@@ -847,7 +847,7 @@
               </div>
               <div id="keyBindingSettings">
                 <h3>キーバインド設定</h3>
-                <p style="font-size: 0.9em; color: #666; margin-bottom: 1rem;">
+                <p style="font-size: 0.9em; color: var(--color-text-muted); margin-bottom: 1rem;">
                   キーボードショートカットをカスタマイズできます。<br>
                   現在の設定: <span id="keyBindingDisplay"></span>
                 </p>
@@ -859,13 +859,13 @@
                   <label>AI: <input type="text" id="aiKey" maxlength="1" style="width: 3rem;"></label>
                 </div>
                 <button id="saveKeyBindings">キーバインドを保存</button>
-                <button id="resetKeyBindings" style="background-color: #6b7280;">リセット</button>
+                <button id="resetKeyBindings" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);">リセット</button>
               </div>
               <div id="aiActions">
                 <h3>AI支援機能</h3>
                 <button id="generateNextNodeBtn">次のノードを生成</button>
                 <button id="paraphraseCurrentBtn">現在のテキストを言い換え</button>
-                <div id="aiOutput" style="margin-top: 1rem; padding: 1rem; background: #f9fafb; border-radius: 4px; min-height: 100px;"></div>
+                <div id="aiOutput" style="margin-top: 1rem; padding: 1rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; min-height: 100px; color: var(--color-text);"></div>
               </div>
               <div id="lexiconEditor" style="margin-top: 1.5rem;">
                 <h3>言い換え辞書（デザイナー定義）</h3>
@@ -878,7 +878,7 @@
                   <input type="file" id="lexiconFileInput" accept=".json" style="display: none;">
                 </div>
                 <textarea id="lexiconTextarea" style="width: 100%; min-height: 220px; font-family: 'JetBrains Mono','Fira Code', monospace; font-size: 0.9rem;"></textarea>
-                <p style="font-size: 0.85em; color: #666; margin-top: 0.5rem;">キー完全一致で置換。ここに追加した語彙はローカル保存され、言い換え候補の生成に使用されます。</p>
+                <p style="font-size: 0.85em; color: var(--color-text-muted); margin-top: 0.5rem;">キー完全一致で置換。ここに追加した語彙はローカル保存され、言い換え候補の生成に使用されます。</p>
               </div>
             </div>
           </div>
@@ -912,7 +912,7 @@
               </div>
 
               <!-- 右側: コンテンツ -->
-              <div style="flex: 1; background: rgba(255,255,255,0.7); border-radius: 8px; padding: 1.5rem; overflow-y: auto;">
+              <div style="flex: 1; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 1.5rem; overflow-y: auto;">
                 <div id="referenceContent">
                   <h2>🔖 NarrativeGen API リファレンス</h2>
                   <p style="font-size: 1.1em; color: var(--color-text-muted); margin-bottom: 2rem;">
