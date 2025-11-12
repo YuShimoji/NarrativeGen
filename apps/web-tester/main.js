@@ -1891,6 +1891,8 @@ if (enableAdvancedFeatures) {
   })
 }
 
+const guiEditBtn = document.getElementById('editBtn')
+
 guiEditBtn.addEventListener('click', () => {
   if (session == null) {
     setStatus('GUI編集するにはまずモデルを読み込んでください', 'warn')
@@ -4234,31 +4236,61 @@ window.copyCodeToClipboard = function(codeId) {
   })
 }
 
-// JSONサンプルをストーリータブに読み込む
+// JSONサンプルをストーリータブに読み込む（GUI編集モードを有効化）
 window.loadJsonSample = function(codeId) {
   const codeBlock = document.getElementById(codeId)
-  if (!codeBlock) return
+  if (!codeBlock) {
+    console.error('Code block not found:', codeId)
+    return
+  }
   
   const codeElement = codeBlock.querySelector('code')
-  const jsonString = codeElement.textContent
+  if (!codeElement) {
+    console.error('Code element not found in block:', codeId)
+    return
+  }
+  
+  // textContentで取得し、余分な空白を除去
+  let jsonString = codeElement.textContent.trim()
+  
+  // HTMLエンティティをデコード
+  const textarea = document.createElement('textarea')
+  textarea.innerHTML = jsonString
+  jsonString = textarea.value
+  
+  console.log('Attempting to parse JSON:', jsonString.substring(0, 100))
   
   try {
     // JSONの妥当性チェック
-    JSON.parse(jsonString)
+    const parsed = JSON.parse(jsonString)
+    console.log('JSON parsed successfully:', parsed)
     
-    // エディタに読み込む
-    const jsonEditor = document.getElementById('jsonEditor')
-    if (jsonEditor) {
-      jsonEditor.value = jsonString
-      
-      // ストーリータブに切り替え
-      switchTab('story')
-      
-      // 成功のフィードバック
-      showToast('サンプルをストーリータブに読み込みました', 'success')
-      
-      // ボタンのフィードバック
-      const button = codeBlock.querySelector('button[onclick*="loadJsonSample"]')
+    // GUI編集モードを有効化してJSONを読み込む
+    if (session == null) {
+      setStatus('モデルを読み込んでからサンプルを読み込んでください', 'warn')
+      return
+    }
+    
+    // 現在のモデルを更新
+    Object.assign(_model, parsed)
+    
+    // GUI編集モードを表示
+    storyPanel.classList.remove('active')
+    graphPanel.classList.remove('active')
+    debugPanel.classList.remove('active')
+    if (referencePanel) referencePanel.classList.remove('active')
+    
+    renderNodeList()
+    guiEditMode.style.display = 'block'
+    setControlsEnabled(false)
+    
+    // 成功のフィードバック
+    console.log('Showing success toast')
+    showToast('サンプルをGUI編集モードに読み込みました', 'success')
+    
+    // ボタンのフィードバック
+    const button = codeBlock.querySelector('button[onclick*="loadJsonSample"]')
+    if (button) {
       const originalText = button.innerHTML
       button.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> 読み込み完了`
       
@@ -4268,7 +4300,8 @@ window.loadJsonSample = function(codeId) {
     }
   } catch (err) {
     console.error('JSONのパースに失敗しました:', err)
-    showToast('JSONの形式が正しくありません', 'error')
+    console.error('Failed JSON string:', jsonString)
+    showToast(`JSONの形式が正しくありません: ${err.message}`, 'error')
   }
 }
 
