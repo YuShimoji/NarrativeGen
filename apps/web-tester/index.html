@@ -9,28 +9,28 @@
     <style>
     /* CSS Variables - Theme System */
     :root {
-      --color-primary: #667eea;
-      --color-primary-dark: #764ba2;
-      --color-secondary: #3b82f6;
-      --color-secondary-dark: #1d4ed8;
+      --color-primary: #5a67d8;
+      --color-primary-dark: #6b46c1;
+      --color-secondary: #2563eb;
+      --color-secondary-dark: #1e40af;
       --color-success: #10b981;
       --color-warning: #f59e0b;
       --color-error: #ef4444;
-      --color-bg: #fafafa;
-      --color-surface: rgba(255, 255, 255, 0.95);
-      --color-text: #1f2937;
-      --color-text-muted: #6b7280;
-      --color-border: rgba(156, 163, 175, 0.3);
-      --icon-color: #6b7280;
+      --color-background: #1a1a2e;
+      --color-surface: #16213e;
+      --color-text: #ffffff;
+      --color-text-muted: #cbd5e1;
+      --color-border: #334155;
+      --icon-color: #cbd5e1;
     }
 
     /* Save/Load UI Styles */
     .save-slot {
-      border: 1px solid #ddd;
+      border: 1px solid var(--color-border);
       border-radius: 8px;
       padding: 12px;
       margin-bottom: 12px;
-      background: #f9f9f9;
+      background: var(--color-surface);
     }
 
     .save-slot .slot-header {
@@ -63,61 +63,63 @@
 
     .save-slot button {
       padding: 6px 12px;
-      border: 1px solid #ccc;
+      border: 1px solid var(--color-border);
       border-radius: 4px;
-      background: white;
+      background: var(--color-surface);
+      color: var(--color-text);
       cursor: pointer;
       font-size: 0.9em;
     }
 
     .save-slot button:hover:not(:disabled) {
-      background: #e6f3ff;
-      border-color: #007bff;
+      background: var(--color-primary);
+      border-color: var(--color-primary-dark);
+      color: var(--color-text);
     }
 
     .save-slot button:disabled {
-      background: #f5f5f5;
-      color: #999;
+      background: rgba(107, 114, 128, 0.3);
+      color: var(--color-text-muted);
       cursor: not-allowed;
     }
 
     .save-slot .save-btn {
-      background: #28a745;
+      background: var(--color-success);
       color: white;
-      border-color: #28a745;
+      border-color: var(--color-success);
     }
 
     .save-slot .save-btn:hover:not(:disabled) {
-      background: #218838;
+      background: #059669;
     }
 
     .save-slot .load-btn {
-      background: #007bff;
+      background: var(--color-primary);
       color: white;
-      border-color: #007bff;
+      border-color: var(--color-primary);
     }
 
     .save-slot .load-btn:hover:not(:disabled) {
-      background: #0056b3;
+      background: var(--color-primary-dark);
     }
 
     .save-slot .clear-btn {
-      background: #dc3545;
+      background: var(--color-error);
       color: white;
-      border-color: #dc3545;
+      border-color: var(--color-error);
     }
 
     .save-slot .clear-btn:hover:not(:disabled) {
-      background: #c82333;
+      background: #dc2626;
     }
 
     .auto-save-info {
-      border: 1px solid #ffc107;
-      background: #fff3cd;
+      border: 1px solid var(--color-warning);
+      background: rgba(245, 158, 11, 0.2);
     }
 
     .auto-save-info .slot-header {
-      color: #856404;
+      color: var(--color-text);
     }
 
     /* Debug container layout */
@@ -347,14 +349,15 @@
       }
 
       .error-panel {
-        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-        border: 2px solid #fecaca;
+        background: rgba(239, 68, 68, 0.2);
+        border: 2px solid var(--color-error);
         border-radius: 12px;
         padding: 1.5rem;
         margin-bottom: 2rem;
         display: none;
         box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
         animation: slideIn 0.4s ease-out;
+        color: var(--color-text);
       }
 
       @keyframes slideIn {
@@ -517,26 +520,26 @@
       .variant-item {
         padding: 0.75rem 1rem;
         margin: 0.5rem 0;
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        border: 2px solid rgba(59, 130, 246, 0.2);
+        background: var(--color-surface);
+        border: 2px solid var(--color-border);
         border-radius: 8px;
         cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 1rem;
-        line-height: 1.4;
-      }
-
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 0.95rem;
+        color: var(--color-text);
+      } 
       .variant-item:hover {
-        background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-        border-color: #3b82f6;
+        background: var(--color-primary);
+        border-color: var(--color-primary-dark);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        color: white;
       }
 
       .variant-item.selected {
-        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-        border-color: #1d4ed8;
-        color: #1e40af;
+        background: var(--color-primary-dark);
+        border-color: var(--color-primary);
+        color: white;
       }
 
       .modal-buttons {
@@ -748,7 +751,7 @@
         <div id="storyPreviewModal" class="modal">
           <div class="modal-content" style="max-width: 800px;">
             <h3>小説プレビュー</h3>
-            <div id="storyPreviewContent" style="max-height: 60vh; overflow: auto; white-space: pre-wrap; background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid #e5e7eb;"></div>
+            <div id="storyPreviewContent" style="max-height: 60vh; overflow: auto; white-space: pre-wrap; background: var(--color-surface); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--color-border); color: var(--color-text);"></div>
             <div style="margin-top: 1rem; text-align: right;">
               <button id="closePreviewBtn">閉じる</button>
             </div>
