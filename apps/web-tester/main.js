@@ -4128,7 +4128,28 @@ function parseMarkdown(markdown) {
   const codeBlocks = []
   html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
     const index = codeBlocks.length
-    codeBlocks.push(`<pre style="background: #1e1e2f; color: #e0e7ff; padding: 1rem; border-radius: 4px; overflow-x: auto; margin: 1rem 0;"><code>${code.trim()}</code></pre>`)
+    const trimmedCode = code.trim()
+    const isJson = lang === 'json' || (trimmedCode.startsWith('{') || trimmedCode.startsWith('['))
+    const codeId = `code-${Date.now()}-${index}`
+    
+    let buttons = `
+      <div style="position: absolute; top: 0.5rem; right: 0.5rem; display: flex; gap: 0.5rem; opacity: 0.8;">
+        <button onclick="copyCodeToClipboard('${codeId}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: rgba(59, 130, 246, 0.8); color: white; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 0.25rem;" title="コピー">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          コピー
+        </button>`
+    
+    if (isJson) {
+      buttons += `
+        <button onclick="loadJsonSample('${codeId}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: rgba(16, 185, 129, 0.8); color: white; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 0.25rem;" title="このサンプルを読み込む">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+          読み込む
+        </button>`
+    }
+    
+    buttons += `</div>`
+    
+    codeBlocks.push(`<pre id="${codeId}" style="position: relative; background: #1e1e2f; color: #e0e7ff; padding: 1rem; padding-top: 2.5rem; border-radius: 4px; overflow-x: auto; margin: 1rem 0;">${buttons}<code>${trimmedCode}</code></pre>`)
     return `__CODE_BLOCK_${index}__`
   })
   
@@ -4186,6 +4207,100 @@ function renderSingleDoc(docId) {
   
   // スクロールをトップに
   container.scrollTop = 0
+}
+
+// コードブロックをクリップボードにコピー
+window.copyCodeToClipboard = function(codeId) {
+  const codeBlock = document.getElementById(codeId)
+  if (!codeBlock) return
+  
+  const codeElement = codeBlock.querySelector('code')
+  const code = codeElement.textContent
+  
+  navigator.clipboard.writeText(code).then(() => {
+    // コピー成功のフィードバック
+    const button = codeBlock.querySelector('button[onclick*="copyCodeToClipboard"]')
+    const originalText = button.innerHTML
+    button.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> コピー完了！`
+    button.style.background = 'rgba(16, 185, 129, 0.8)'
+    
+    setTimeout(() => {
+      button.innerHTML = originalText
+      button.style.background = 'rgba(59, 130, 246, 0.8)'
+    }, 2000)
+  }).catch(err => {
+    console.error('コピーに失敗しました:', err)
+    alert('クリップボードへのコピーに失敗しました')
+  })
+}
+
+// JSONサンプルをストーリータブに読み込む
+window.loadJsonSample = function(codeId) {
+  const codeBlock = document.getElementById(codeId)
+  if (!codeBlock) return
+  
+  const codeElement = codeBlock.querySelector('code')
+  const jsonString = codeElement.textContent
+  
+  try {
+    // JSONの妥当性チェック
+    JSON.parse(jsonString)
+    
+    // エディタに読み込む
+    const jsonEditor = document.getElementById('jsonEditor')
+    if (jsonEditor) {
+      jsonEditor.value = jsonString
+      
+      // ストーリータブに切り替え
+      switchTab('story')
+      
+      // 成功のフィードバック
+      showToast('サンプルをストーリータブに読み込みました', 'success')
+      
+      // ボタンのフィードバック
+      const button = codeBlock.querySelector('button[onclick*="loadJsonSample"]')
+      const originalText = button.innerHTML
+      button.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> 読み込み完了`
+      
+      setTimeout(() => {
+        button.innerHTML = originalText
+      }, 2000)
+    }
+  } catch (err) {
+    console.error('JSONのパースに失敗しました:', err)
+    showToast('JSONの形式が正しくありません', 'error')
+  }
+}
+
+// トースト通知を表示
+function showToast(message, type = 'info') {
+  const existingToast = document.getElementById('toast-notification')
+  if (existingToast) {
+    existingToast.remove()
+  }
+  
+  const toast = document.createElement('div')
+  toast.id = 'toast-notification'
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    padding: 1rem 1.5rem;
+    background: ${type === 'success' ? 'rgba(16, 185, 129, 0.95)' : type === 'error' ? 'rgba(239, 68, 68, 0.95)' : 'rgba(59, 130, 246, 0.95)'};
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    font-size: 0.95rem;
+    z-index: 10000;
+    animation: slideInUp 0.3s ease-out;
+  `
+  toast.textContent = message
+  document.body.appendChild(toast)
+  
+  setTimeout(() => {
+    toast.style.animation = 'slideOutDown 0.3s ease-in'
+    setTimeout(() => toast.remove(), 300)
+  }, 3000)
 }
 
 function renderReferenceContent(filter = { category: 'all', search: '' }) {
