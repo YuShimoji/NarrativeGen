@@ -240,17 +240,24 @@
         border-radius: 8px;
       }
 
-      input[type='text'], input[type='password'], select {
+      input[type='text'], input[type='password'], select, textarea {
         padding: 0.75rem 1rem;
         font-size: 1rem;
-        border: 2px solid rgba(156, 163, 175, 0.3);
+        background: var(--color-surface);
+        color: var(--color-text);
+        border: 2px solid var(--color-border);
         border-radius: 8px;
         transition: all 0.3s ease;
       }
 
-      input[type='text']:focus, input[type='password']:focus, select:focus {
+      textarea {
+        resize: vertical;
+        font-family: inherit;
+      }
+
+      input[type='text']:focus, input[type='password']:focus, select:focus, textarea:focus {
         outline: none;
-        border-color: #3b82f6;
+        border-color: var(--color-secondary);
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
       }
 
@@ -608,7 +615,7 @@
           <h3>クイックノード作成</h3>
           <div style="margin: 1.5rem 0;">
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">テンプレート:</label>
-            <select id="nodeTemplate" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2);">
+            <select id="nodeTemplate" style="width: 100%;">
               <option value="conversation">会話 (キャラクターの台詞)</option>
               <option value="choice">選択 (プレイヤー選択肢)</option>
               <option value="info">情報 (状況説明)</option>
@@ -618,12 +625,12 @@
           </div>
           <div style="margin: 1.5rem 0;">
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ノードID:</label>
-            <input type="text" id="quickNodeId" placeholder="自動生成" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2);">
+            <input type="text" id="quickNodeId" placeholder="自動生成" style="width: 100%;">
             <small style="color: #6b7280;">空欄の場合は自動生成されます</small>
           </div>
           <div style="margin: 1.5rem 0;">
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">ノードテキスト:</label>
-            <textarea id="quickNodeText" rows="4" placeholder="ノードのテキストを入力..." style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2); resize: vertical;"></textarea>
+            <textarea id="quickNodeText" rows="4" placeholder="ノードのテキストを入力..." style="width: 100%;"></textarea>
           </div>
           <div style="margin-top: 1rem; text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
             <button id="cancelQuickNodeBtn">キャンセル</button>
@@ -638,7 +645,7 @@
           <h3>選択肢一括編集</h3>
           <div style="margin: 1.5rem 0;">
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">対象ノード:</label>
-            <select id="batchNodeSelect" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2);">
+            <select id="batchNodeSelect" style="width: 100%;">
               <!-- Populated by JavaScript -->
             </select>
           </div>
@@ -651,13 +658,13 @@
               <input type="checkbox" id="batchCondition">
               共通条件を適用
             </label>
-            <input type="text" id="batchConditionText" placeholder="例: flag:visited=true" style="width: 100%; padding: 0.5rem; margin-bottom: 1rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2);" disabled>
+            <input type="text" id="batchConditionText" placeholder="例: flag:visited=true" style="width: 100%; margin-bottom: 1rem;" disabled>
             
             <label style="display: block; margin-bottom: 0.5rem;">
               <input type="checkbox" id="batchEffect">
               共通効果を適用
             </label>
-            <input type="text" id="batchEffectText" placeholder="例: setFlag:completed=true" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2);" disabled>
+            <input type="text" id="batchEffectText" placeholder="例: setFlag:completed=true" style="width: 100%;" disabled>
           </div>
           <div style="margin-top: 1rem; text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
             <button id="cancelBatchChoiceBtn">キャンセル</button>
@@ -879,17 +886,17 @@
           <div id="referencePanel" class="tab-content">
             <div style="display: flex; gap: 1rem; height: calc(100vh - 250px);">
               <!-- 左側: 目次 -->
-              <div style="flex: 0 0 280px; background: rgba(255,255,255,0.7); border-radius: 8px; padding: 1rem; overflow-y: auto;">
-                <h3 style="margin-top: 0; font-size: 1.1rem;">📚 目次</h3>
+              <div style="flex: 0 0 280px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 1rem; overflow-y: auto;">
+                <h3 style="margin-top: 0; font-size: 1.1rem; color: var(--color-text);">📚 目次</h3>
                 
                 <!-- 検索バー -->
                 <div style="margin-bottom: 1rem;">
-                  <input type="text" id="refSearch" placeholder="🔍 検索..." style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2); font-size: 0.9rem;">
+                  <input type="text" id="refSearch" placeholder="🔍 検索..." style="width: 100%; font-size: 0.9rem;">
                 </div>
 
                 <!-- カテゴリー選択 -->
                 <div style="margin-bottom: 1rem;">
-                  <select id="refCategorySelect" style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2); font-size: 0.9rem;">
+                  <select id="refCategorySelect" style="width: 100%; font-size: 0.9rem;">
                     <option value="all">すべて</option>
                     <option value="basic">基本構造</option>
                     <option value="choice">選択肢</option>
