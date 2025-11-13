@@ -36,6 +36,7 @@ import { DebugManager } from './src/ui/debug.js'
 import { GuiEditorManager } from './src/ui/gui-editor.js'
 import { ReferenceManager } from './src/ui/reference.js'
 import { CsvManager } from './src/ui/csv.js'
+import { AiManager } from './src/ui/ai.js'
 import { validateNotEmpty, validateJson, validateFileExtension } from './src/utils/validation.js'
 import { downloadFile, readFileAsText, parseCsv } from './src/utils/file-utils.js'
 import { getStorageItem, setStorageItem, removeStorageItem } from './src/utils/storage.js'
@@ -1285,24 +1286,17 @@ dropZone.addEventListener('drop', async (e) => {
   }
 })
 
-// Load AI config from localStorage on startup
-const savedAiConfig = localStorage.getItem('narrativeGenAiConfig')
-if (savedAiConfig) {
-  try {
-    aiConfig = { ...aiConfig, ...JSON.parse(savedAiConfig) }
-    aiProvider.value = aiConfig.provider
-    if (aiConfig.provider === 'openai') {
-      openaiSettings.style.display = 'block'
-      openaiApiKey.value = aiConfig.openai.apiKey || ''
-      openaiModel.value = aiConfig.openai.model || 'gpt-3.5-turbo'
-    } else if (aiConfig.provider === 'ollama') {
-      ollamaSettings.style.display = 'block'
-      ollamaUrl.value = aiConfig.ollama.url || 'http://localhost:11434'
-      ollamaModel.value = aiConfig.ollama.model || 'llama2'
-    }
-  } catch (error) {
-    console.warn('Failed to load AI config from localStorage:', error)
-  }
+// Load AI config from aiManager
+const aiConfigFromManager = aiManager.getConfig()
+aiProvider.value = aiConfigFromManager.provider
+if (aiConfigFromManager.provider === 'openai') {
+  openaiSettings.style.display = 'block'
+  openaiApiKey.value = aiConfigFromManager.openai.apiKey || ''
+  openaiModel.value = aiConfigFromManager.openai.model || 'gpt-3.5-turbo'
+} else if (aiConfigFromManager.provider === 'ollama') {
+  ollamaSettings.style.display = 'block'
+  ollamaUrl.value = aiConfigFromManager.ollama.url || 'http://localhost:11434'
+  ollamaModel.value = aiConfigFromManager.ollama.model || 'llama2'
 }
 
 // Load advanced features setting
@@ -1496,26 +1490,32 @@ async function generateNextNodeUI() {
 
 
 saveAiSettings.addEventListener('click', () => {
-  aiConfig.provider = aiProvider.value
+  const newConfig = {
+    provider: aiProvider.value
+  }
+
   if (aiProvider.value === 'openai') {
-    aiConfig.openai.apiKey = openaiApiKey.value
-    aiConfig.openai.model = openaiModel.value
-    if (!aiConfig.openai.apiKey) {
-      aiOutput.textContent = 'OpenAI APIキーを入力してください'
+    newConfig.openai = {
+      apiKey: openaiApiKey.value,
+      model: openaiModel.value
+    }
+    if (!newConfig.openai.apiKey) {
+      aiManager.setOutput('OpenAI APIキーを入力してください')
       return
     }
   } else if (aiProvider.value === 'ollama') {
-    aiConfig.ollama.url = ollamaUrl.value
-    aiConfig.ollama.model = ollamaModel.value
+    newConfig.ollama = {
+      url: ollamaUrl.value,
+      model: ollamaModel.value
+    }
   }
-  // Save to localStorage
-  localStorage.setItem('narrativeGenAiConfig', JSON.stringify(aiConfig))
-  aiOutput.textContent = 'AI設定を保存しました'
-  aiProviderInstance = null // Reset to use new config
+
+  aiManager.updateConfig(newConfig)
+  aiManager.setOutput('AI設定を保存しました')
 })
 
-generateNextNodeBtn.addEventListener('click', generateNextNodeUI)
-paraphraseCurrentBtn.addEventListener('click', paraphraseCurrentTextUI)
+generateNextNodeBtn.addEventListener('click', () => aiManager.generateNodeUI())
+paraphraseCurrentBtn.addEventListener('click', () => aiManager.paraphraseCurrentTextUI())
 
 function renderNodeList() {
   const fragment = document.createDocumentFragment()
@@ -3729,6 +3729,7 @@ const debugManager = new DebugManager(appState)
 const guiEditorManager = new GuiEditorManager(appState)
 const referenceManager = new ReferenceManager()
 const csvManager = new CsvManager(appState)
+const aiManager = new AiManager(appState)
 
 // Initialize story manager
 storyManager.initialize(document.getElementById('storyPanel'))
@@ -3764,6 +3765,13 @@ referenceManager.initialize(
 csvManager.initialize(
   document.getElementById('csvImportModal'),
   document.getElementById('csvExportModal')
+)
+
+// Initialize AI manager
+aiManager.initialize(
+  document.getElementById('aiOutput'),
+  document.getElementById('generateNextNodeBtn'),
+  document.getElementById('paraphraseCurrentBtn')
 )
 
 // Set up graph control event listeners
