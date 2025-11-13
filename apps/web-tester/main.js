@@ -591,8 +591,6 @@ const resetKeyBindings = document.getElementById('resetKeyBindings')
 
 let session = null
 let currentModelName = null
-let _model = null
-let storyLog = []
 
 // AI configuration
 let aiConfig = {
@@ -817,7 +815,7 @@ function hideCsvPreview() {
 }
 
 function renderGraph() {
-  if (!_model) {
+  if (!appState.model) {
     d3.select(graphSvg).selectAll('*').remove()
     return
   }
@@ -827,17 +825,17 @@ function renderGraph() {
 
   // Performance optimization: Limit nodes for large graphs
   const maxNodes = 100
-  const allNodes = Object.keys(_model.nodes)
+  const allNodes = Object.keys(appState.model.nodes)
   const shouldVirtualize = allNodes.length > maxNodes
 
   let nodesToShow
   if (shouldVirtualize) {
     // Show current node and its direct connections, plus some random nodes
-    const currentNode = session?.nodeId || _model.startNode
+    const currentNode = session?.nodeId || appState.model.startNode
     const connectedNodes = new Set([currentNode])
 
     // Add directly connected nodes
-    const currentNodeObj = _model.nodes[currentNode]
+    const currentNodeObj = appState.model.nodes[currentNode]
     if (currentNodeObj?.choices) {
       currentNodeObj.choices.forEach(choice => {
         if (choice.target) connectedNodes.add(choice.target)
@@ -845,7 +843,7 @@ function renderGraph() {
     }
 
     // Add nodes that connect to current node
-    Object.entries(_model.nodes).forEach(([id, node]) => {
+    Object.entries(appState.model.nodes).forEach(([id, node]) => {
       if (node.choices?.some(c => c.target === currentNode)) {
         connectedNodes.add(id)
       }
@@ -904,7 +902,7 @@ function renderGraph() {
   const links = []
 
   nodesToShow.forEach(id => {
-    const node = _model.nodes[id]
+    const node = appState.model.nodes[id]
     if (!node) return
 
     nodes.push({
@@ -1128,7 +1126,7 @@ function getConditionText(conditions) {
 }
 
 function renderDebugInfo() {
-  if (!session || !_model) {
+  if (!session || !appState.model) {
     flagsDisplay.innerHTML = '<p>セッションを開始してください</p>'
     resourcesDisplay.innerHTML = ''
     reachableNodes.innerHTML = '<p>モデルを読み込んでください</p>'
@@ -1170,7 +1168,7 @@ function renderDebugInfo() {
   // BFS to find all reachable nodes
   while (queue.length > 0) {
     const currentNodeId = queue.shift()
-    const node = _model.nodes[currentNodeId]
+    const node = appState.model.nodes[currentNodeId]
     if (!node) continue
 
     node.choices?.forEach(choice => {
@@ -1178,7 +1176,7 @@ function renderDebugInfo() {
         visited.add(choice.target)
         // Check if choice is available in current state
         try {
-          const availableChoices = getAvailableChoices(session, _model)
+          const availableChoices = getAvailableChoices(session, appState.model)
           const isAvailable = availableChoices.some(c => c.id === choice.id)
           if (isAvailable) {
             queue.push(choice.target)
@@ -1193,7 +1191,7 @@ function renderDebugInfo() {
   }
 
   // Display all nodes with reachability status
-  Object.keys(_model.nodes).forEach(nodeId => {
+  Object.keys(appState.model.nodes).forEach(nodeId => {
     const div = document.createElement('div')
     div.className = reachable.has(nodeId) ? 'reachable-node' : 'unreachable-node'
     div.textContent = `${nodeId}: ${reachable.has(nodeId) ? '到達可能' : '未到達'}`
@@ -1380,7 +1378,7 @@ async function importCsvFile(file) {
     }
 
     const firstNode = Object.keys(nodes)[0]
-    _model = {
+    appState.model = {
       modelType: 'adventure-playthrough',
       startNode: firstNode,
       flags: initialFlags,
@@ -1388,7 +1386,7 @@ async function importCsvFile(file) {
       nodes,
       metadata: globalMetadata
     }
-    session = startSession(_model)
+    session = startSession(appState.model)
     currentModelName = file.name
     initStory()
     renderState()
@@ -1419,7 +1417,7 @@ function renderChoices() {
     return
   }
 
-  const choices = getAvailableChoices(session, _model)
+  const choices = getAvailableChoices(session, appState.model)
   if (!choices || choices.length === 0) {
     const empty = document.createElement('p')
     empty.textContent = '利用可能な選択肢はありません'
@@ -1437,7 +1435,7 @@ function renderChoices() {
     button.textContent = formatChoiceLabel(choice)
     button.addEventListener('click', () => {
       try {
-        session = applyChoice(session, _model, choice.id)
+        session = applyChoice(session, appState.model, choice.id)
         setStatus(`選択肢「${choice.text}」を適用しました`, 'success')
         appendStoryFromCurrentNode()
       } catch (err) {
@@ -1467,8 +1465,8 @@ const safeStartSession = ErrorBoundary.wrap(async (modelName) => {
 })
 
 const safeApplyChoice = ErrorBoundary.wrap(async (choiceId) => {
-  if (!session || !_model) throw new Error('セッションが開始されていません')
-  session = applyChoice(session, _model, choiceId)
+  if (!session || !appState.model) throw new Error('セッションが開始されていません')
+  session = applyChoice(session, appState.model, choiceId)
   appendStoryFromCurrentNode()
   renderState()
   renderChoices()
@@ -1520,7 +1518,7 @@ async function initAiProvider() {
 }
 
 async function generateNextNode() {
-  if (!aiProviderInstance || !session || !_model) {
+  if (!aiProviderInstance || !session || !appState.model) {
     aiOutput.textContent = '❌ モデルを読み込んでから実行してください'
     return
   }
@@ -1533,7 +1531,7 @@ async function generateNextNode() {
   try {
     const context = {
       previousNodes: [], // 現在の実装では履歴を保持していない
-      currentNodeText: _model.nodes[session.nodeId]?.text || '',
+      currentNodeText: appState.model.nodes[session.nodeId]?.text || '',
       choiceText: '続き'
     }
 
@@ -1558,12 +1556,12 @@ async function generateNextNode() {
 }
 
 async function paraphraseCurrentTextUI() {
-  if (!aiProviderInstance || !session || !_model) {
+  if (!aiProviderInstance || !session || !appState.model) {
     aiOutput.textContent = '❌ モデルを読み込んでから実行してください'
     return
   }
 
-  const currentNode = _model.nodes[session.nodeId]
+  const currentNode = appState.model.nodes[session.nodeId]
   if (!currentNode?.text) {
     aiOutput.textContent = '❌ 現在のノードにテキストがありません'
     return
@@ -1678,8 +1676,8 @@ startBtn.addEventListener('click', async () => {
       loadEntitiesCatalog(),
     ])
 
-    _model = model
-    session = startSession(_model)
+    appState.model = model
+    session = startSession(appState.model)
     currentModelName = sampleId
     setStatus(`サンプル ${sampleId} を実行中`, 'success')
     initStory()
@@ -1714,8 +1712,8 @@ fileInput.addEventListener('change', async (e) => {
       loadEntitiesCatalog(),
     ])
 
-    _model = model
-    session = startSession(_model)
+    appState.model = model
+    session = startSession(appState.model)
     currentModelName = file.name
     setStatus(`ファイル ${file.name} を実行中`, 'success')
     initStory()
@@ -1767,8 +1765,8 @@ dropZone.addEventListener('drop', async (e) => {
     }
 
     hideErrors()
-    _model = model
-    session = startSession(_model)
+    appState.model = model
+    session = startSession(appState.model)
     currentModelName = file.name
     setStatus(`ファイル ${file.name} を実行中`, 'success')
     initStory()
@@ -1921,12 +1919,12 @@ async function generateNextNodeUI() {
     initAIProviderInstance()
   }
 
-  if (!session || !_model) {
+  if (!session || !appState.model) {
     setStatus('まずモデルを読み込んでセッションを開始してください', 'warn')
     return
   }
 
-  const currentNode = _model.nodes[session.nodeId]
+  const currentNode = appState.model.nodes[session.nodeId]
   if (!currentNode) {
     setStatus('現在のノードが見つかりません', 'error')
     return
@@ -1941,7 +1939,7 @@ async function generateNextNodeUI() {
 
     // Prepare context for AI generation
     const context = {
-      previousNodes: storyLog.slice(-3).map(text => ({ id: 'previous', text })), // Last 3 story entries
+      previousNodes: appState.storyLog.slice(-3).map(text => ({ id: 'previous', text })), // Last 3 story entries
       currentNodeText: currentNode.text,
       choiceText: '次のシーンへ進む' // Default choice text
     }
@@ -1953,7 +1951,7 @@ async function generateNextNodeUI() {
     const newChoiceId = `c_ai_${Date.now()}`
 
     // Add AI-generated node to model
-    _model.nodes[newNodeId] = {
+    appState.model.nodes[newNodeId] = {
       id: newNodeId,
       text: generatedText,
       choices: [
@@ -2022,7 +2020,7 @@ paraphraseCurrentBtn.addEventListener('click', paraphraseCurrentTextUI)
 
 function renderNodeList() {
   const fragment = document.createDocumentFragment()
-  for (const [nodeId, node] of Object.entries(_model.nodes)) {
+  for (const [nodeId, node] of Object.entries(appState.model.nodes)) {
     const nodeDiv = document.createElement('div')
     nodeDiv.className = 'node-editor'
     nodeDiv.innerHTML = `
@@ -2039,13 +2037,13 @@ function renderNodeList() {
   nodeList.appendChild(fragment)
 
   // Render choices after DOM is updated
-  for (const [nodeId] of Object.entries(_model.nodes)) {
+  for (const [nodeId] of Object.entries(appState.model.nodes)) {
     renderChoicesForNode(nodeId)
   }
 }
 
 function renderChoicesForNode(nodeId) {
-  const node = _model.nodes[nodeId]
+  const node = appState.model.nodes[nodeId]
   const choicesDiv = nodeList.querySelector(`.choices-editor[data-node-id="${nodeId}"]`)
   if (!choicesDiv) {
     console.warn(`Choices editor not found for node ${nodeId}`)
@@ -2075,20 +2073,20 @@ function renderChoicesForNode(nodeId) {
 
 addNodeBtn.addEventListener('click', () => {
   const nodeId = prompt('新しいノードIDを入力してください:')
-  if (nodeId && !_model.nodes[nodeId]) {
-    _model.nodes[nodeId] = { id: nodeId, text: '新しいノード', choices: [] }
+  if (nodeId && !appState.model.nodes[nodeId]) {
+    appState.model.nodes[nodeId] = { id: nodeId, text: '新しいノード', choices: [] }
     renderNodeList()
   }
 })
 
 previewBtn.addEventListener('click', () => {
-  if (!_model) return
-  let current = _model.startNode
+  if (!appState.model) return
+  let current = appState.model.startNode
   let story = ''
   const visited = new Set()
   while (current && !visited.has(current)) {
     visited.add(current)
-    const node = _model.nodes[current]
+    const node = appState.model.nodes[current]
     if (node?.text) story += node.text + '\n\n'
     if (node?.choices?.length === 1) {
       current = node.choices[0].target
@@ -2100,8 +2098,8 @@ previewBtn.addEventListener('click', () => {
 })
 
 downloadBtn.addEventListener('click', () => {
-  if (!_model) return
-  const json = JSON.stringify(_model, null, 2)
+  if (!appState.model) return
+  const json = JSON.stringify(appState.model, null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -2115,15 +2113,15 @@ downloadBtn.addEventListener('click', () => {
 
 // Story log helpers
 function initStory() {
-  storyLog = []
+  appState.storyLog = []
   appendStoryFromCurrentNode()
 }
 
 function appendStoryFromCurrentNode() {
-  const node = _model?.nodes?.[session?.nodeId]
+  const node = appState.model?.nodes?.[session?.nodeId]
   if (node?.text) {
-    const resolvedText = resolveVariables(node.text, session, _model)
-    storyLog.push(resolvedText)
+    const resolvedText = resolveVariables(node.text, session, appState.model)
+    appState.storyLog.push(resolvedText)
   }
 }
 
@@ -2132,17 +2130,17 @@ function renderStory() {
 
   // Performance optimization: Virtual scrolling for long stories
   const maxVisibleEntries = 50
-  const shouldVirtualize = storyLog.length > maxVisibleEntries
+  const shouldVirtualize = appState.storyLog.length > maxVisibleEntries
 
   let visibleEntries
   let startIndex = 0
 
   if (shouldVirtualize) {
     // Show the most recent entries by default
-    startIndex = Math.max(0, storyLog.length - maxVisibleEntries)
-    visibleEntries = storyLog.slice(startIndex)
+    startIndex = Math.max(0, appState.storyLog.length - maxVisibleEntries)
+    visibleEntries = appState.storyLog.slice(startIndex)
   } else {
-    visibleEntries = storyLog
+    visibleEntries = appState.storyLog
   }
 
   storyView.textContent = visibleEntries.join('\n\n')
@@ -2173,7 +2171,7 @@ function renderStory() {
           // Load more content when scrolled to top
           const additionalEntries = Math.min(20, startIndex)
           const newStartIndex = startIndex - additionalEntries
-          const newVisibleEntries = storyLog.slice(newStartIndex, startIndex + maxVisibleEntries)
+          const newVisibleEntries = appState.storyLog.slice(newStartIndex, startIndex + maxVisibleEntries)
 
           storyView.textContent = newVisibleEntries.join('\n\n')
 
@@ -2355,7 +2353,7 @@ function validateModel(nodes) {
 }
 
 exportCsvBtn.addEventListener('click', () => {
-  if (!_model) {
+  if (!appState.model) {
     setStatus('まずモデルを読み込んでください', 'warn')
     return
   }
@@ -2369,10 +2367,10 @@ exportCsvBtn.addEventListener('click', () => {
   const rows = [header.join(',')]
   
   let firstRow = true
-  for (const [nid, node] of Object.entries(_model.nodes)) {
-    const initialFlags = firstRow && _model.flags ? serializeKeyValuePairs(_model.flags) : ''
-    const initialResources = firstRow && _model.resources ? serializeKeyValuePairs(_model.resources) : ''
-    const globalMetadata = firstRow && _model.metadata ? serializeKeyValuePairs(_model.metadata) : ''
+  for (const [nid, node] of Object.entries(appState.model.nodes)) {
+    const initialFlags = firstRow && appState.model.flags ? serializeKeyValuePairs(appState.model.flags) : ''
+    const initialResources = firstRow && appState.model.resources ? serializeKeyValuePairs(appState.model.resources) : ''
+    const globalMetadata = firstRow && appState.model.metadata ? serializeKeyValuePairs(appState.model.metadata) : ''
     firstRow = false
     
     // Node metadata
@@ -2474,7 +2472,7 @@ function escapeCsv(s) {
 saveGuiBtn.addEventListener('click', () => {
   try {
     // Validate model before saving
-    const validationErrors = validateModel(_model.nodes)
+    const validationErrors = validateModel(appState.model.nodes)
     if (validationErrors.length > 0) {
       showErrors(validationErrors)
       setStatus(`モデルにエラーがあります: ${validationErrors.length}件`, 'warn')
@@ -2483,7 +2481,7 @@ saveGuiBtn.addEventListener('click', () => {
 
     hideErrors()
     // Restart session with current model
-    session = startSession(_model)
+    session = startSession(appState.model)
     currentModelName = 'gui-edited'
     guiEditMode.style.display = 'none'
     
@@ -2538,7 +2536,7 @@ nodeList.addEventListener('click', (e) => {
   }
   if (e.target.classList.contains('add-choice-btn')) {
     const nodeId = e.target.dataset.nodeId
-    const node = _model.nodes[nodeId]
+    const node = appState.model.nodes[nodeId]
     if (!node.choices) node.choices = []
     node.choices.push({
       id: `c${node.choices.length + 1}`,
@@ -2550,13 +2548,13 @@ nodeList.addEventListener('click', (e) => {
 
   if (e.target.classList.contains('delete-node-btn')) {
     const nodeId = e.target.dataset.nodeId
-    if (Object.keys(_model.nodes).length <= 1) {
+    if (Object.keys(appState.model.nodes).length <= 1) {
       setStatus('少なくとも1つのノードが必要です', 'warn')
       return
     }
-    delete _model.nodes[nodeId]
+    delete appState.model.nodes[nodeId]
     // Remove references to deleted node
-    for (const [nid, node] of Object.entries(_model.nodes)) {
+    for (const [nid, node] of Object.entries(appState.model.nodes)) {
       node.choices = node.choices?.filter(c => c.target !== nodeId) ?? []
     }
     renderNodeList()
@@ -2565,7 +2563,7 @@ nodeList.addEventListener('click', (e) => {
   if (e.target.classList.contains('delete-choice-btn')) {
     const nodeId = e.target.dataset.nodeId
     const choiceIndex = parseInt(e.target.dataset.choiceIndex)
-    const node = _model.nodes[nodeId]
+    const node = appState.model.nodes[nodeId]
     node.choices.splice(choiceIndex, 1)
     renderChoicesForNode(nodeId)
   }
@@ -2593,14 +2591,14 @@ function updateModelFromInput(input) {
 
   if (choiceIndex !== undefined) {
     // 選択肢のフィールド更新
-    const node = _model.nodes[nodeId]
+    const node = appState.model.nodes[nodeId]
     const choice = node.choices[parseInt(choiceIndex)]
     if (choice) {
       choice[field] = value
     }
   } else {
     // ノードのフィールド更新
-    const node = _model.nodes[nodeId]
+    const node = appState.model.nodes[nodeId]
     if (node) {
       node[field] = value
     }
@@ -2651,16 +2649,16 @@ function showVariableEditor() {
 
 // トップレベルのプレビュー/ダウンロード
 previewTopBtn.addEventListener('click', () => {
-  if (!_model) {
+  if (!appState.model) {
     setStatus('まずモデルを読み込んでください', 'warn')
     return
   }
-  let current = _model.startNode
+  let current = appState.model.startNode
   let story = ''
   const visited = new Set()
   while (current && !visited.has(current)) {
     visited.add(current)
-    const node = _model.nodes[current]
+    const node = appState.model.nodes[current]
     if (node?.text) story += node.text + '\n\n'
     if (node?.choices?.length === 1) current = node.choices[0].target
     else break
@@ -2679,11 +2677,11 @@ toggleSidebarBtn.addEventListener('click', () => {
 })
 
 downloadTopBtn.addEventListener('click', () => {
-  if (!_model) {
+  if (!appState.model) {
     setStatus('まずモデルを読み込んでください', 'warn')
     return
   }
-  const json = JSON.stringify(_model, null, 2)
+  const json = JSON.stringify(appState.model, null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -2716,13 +2714,13 @@ function createSaveData(session, modelName) {
       variables: { ...session.variables },
       time: session.time
     },
-    storyLog: [...storyLog]
+    storyLog: [...appState.storyLog]
   }
 }
 
 // Save to specific slot
 function saveToSlot(slotId) {
-  if (!session || !_model) {
+  if (!session || !appState.model) {
     setStatus('保存するセッションがありません', 'warn')
     return false
   }
@@ -2770,7 +2768,7 @@ function loadFromSlot(slotId) {
     }
 
     // Restore story log
-    storyLog = saveData.storyLog || []
+    appState.storyLog = saveData.storyLog || []
 
     currentModelName = saveData.modelName
 
@@ -2792,7 +2790,7 @@ function loadFromSlot(slotId) {
 
 // Auto-save functionality
 function autoSave() {
-  if (!session || !_model) return
+  if (!session || !appState.model) return
 
   try {
     const saveData = createSaveData(session, currentModelName)
