@@ -33,6 +33,7 @@ import { EventManager } from './src/ui/events.js'
 import { StoryManager } from './src/ui/story.js'
 import { GraphManager } from './src/ui/graph.js'
 import { DebugManager } from './src/ui/debug.js'
+import { GuiEditorManager } from './src/ui/gui-editor.js'
 import { validateNotEmpty, validateJson, validateFileExtension } from './src/utils/validation.js'
 import { downloadFile, readFileAsText, parseCsv } from './src/utils/file-utils.js'
 import { getStorageItem, setStorageItem, removeStorageItem } from './src/utils/storage.js'
@@ -1390,16 +1391,16 @@ guiEditBtn.addEventListener('click', () => {
     setStatus('GUI編集するにはまずモデルを読み込んでください', 'warn')
     return
   }
-  
+
   // Hide all tab panels
   storyPanel.classList.remove('active')
   graphPanel.classList.remove('active')
   debugPanel.classList.remove('active')
   advancedPanel.classList.remove('active')
   if (referencePanel) referencePanel.classList.remove('active')
-  
+
   // Show GUI edit mode
-  renderNodeList()
+  guiEditorManager.renderNodeList()
   guiEditMode.style.display = 'block'
   setControlsEnabled(false)
 })
@@ -1980,10 +1981,10 @@ saveGuiBtn.addEventListener('click', () => {
     session = startSession(appState.model)
     currentModelName = 'gui-edited'
     guiEditMode.style.display = 'none'
-    
+
     // Show story panel
     storyPanel.classList.add('active')
-    
+
     setStatus('GUI編集を保存しました', 'success')
     setControlsEnabled(true)
     renderState()
@@ -2024,7 +2025,7 @@ nodeList.addEventListener('click', (e) => {
       }
 
       // バリアント選択モーダルを表示
-      showParaphraseVariants(input, variants)
+      guiEditorManager.showParaphraseVariants(input, variants)
     } catch (err) {
       console.error('言い換えエラー:', err)
       setStatus(`言い換えに失敗しました: ${err?.message ?? err}`, 'warn')
@@ -2032,79 +2033,32 @@ nodeList.addEventListener('click', (e) => {
   }
   if (e.target.classList.contains('add-choice-btn')) {
     const nodeId = e.target.dataset.nodeId
-    const node = appState.model.nodes[nodeId]
-    if (!node.choices) node.choices = []
-    node.choices.push({
-      id: `c${node.choices.length + 1}`,
-      text: '新しい選択肢',
-      target: nodeId
-    })
-    renderChoicesForNode(nodeId)
+    guiEditorManager.addChoice(nodeId)
   }
 
   if (e.target.classList.contains('delete-node-btn')) {
     const nodeId = e.target.dataset.nodeId
-    if (Object.keys(appState.model.nodes).length <= 1) {
-      setStatus('少なくとも1つのノードが必要です', 'warn')
-      return
-    }
-    delete appState.model.nodes[nodeId]
-    // Remove references to deleted node
-    for (const [nid, node] of Object.entries(appState.model.nodes)) {
-      node.choices = node.choices?.filter(c => c.target !== nodeId) ?? []
-    }
-    renderNodeList()
+    guiEditorManager.deleteNode(nodeId)
   }
 
   if (e.target.classList.contains('delete-choice-btn')) {
     const nodeId = e.target.dataset.nodeId
     const choiceIndex = parseInt(e.target.dataset.choiceIndex)
-    const node = appState.model.nodes[nodeId]
-    node.choices.splice(choiceIndex, 1)
-    renderChoicesForNode(nodeId)
+    guiEditorManager.deleteChoice(nodeId, choiceIndex)
   }
 })
 
 // 入力変更でモデル更新
 nodeList.addEventListener('input', (e) => {
-  updateModelFromInput(e.target)
+  guiEditorManager.updateModelFromInput(e.target)
 })
 
 // フォーカス外れ時にもモデル更新（フォールバック）
 nodeList.addEventListener('blur', (e) => {
   if (e.target.tagName === 'INPUT') {
-    updateModelFromInput(e.target)
+    guiEditorManager.updateModelFromInput(e.target)
   }
 }, true)
-
-function updateModelFromInput(input) {
-  if (!input.dataset.nodeId) return
-
-  const nodeId = input.dataset.nodeId
-  const choiceIndex = input.dataset.choiceIndex
-  const field = input.dataset.field
-  const value = input.value
-
-  if (choiceIndex !== undefined) {
-    // 選択肢のフィールド更新
-    const node = appState.model.nodes[nodeId]
-    const choice = node.choices[parseInt(choiceIndex)]
-    if (choice) {
-      choice[field] = value
-    }
-  } else {
-    // ノードのフィールド更新
-    const node = appState.model.nodes[nodeId]
-    if (node) {
-      node[field] = value
-    }
-  }
-
-  // Auto-save draft when editing in GUI mode
-  if (guiEditMode.style.display !== 'none') {
-    saveDraftModel()
-  }
-}
 
 function showVariableEditor() {
   const variables = session.variables || {}
@@ -2628,50 +2582,13 @@ function saveDraftModel() {
   }
 }
 
-function showParaphraseVariants(targetInput, variants) {
-  currentParaphraseTarget = targetInput
-  const variantList = document.getElementById('variantList')
-  variantList.innerHTML = ''
-
-  variants.forEach((variant, index) => {
-    const variantItem = document.createElement('div')
-    variantItem.className = 'variant-item'
-    variantItem.textContent = `${index + 1}. ${variant}`
-    variantItem.addEventListener('click', () => {
-      selectParaphraseVariant(variant)
-    })
-    variantList.appendChild(variantItem)
-  })
-
-  const modal = document.getElementById('paraphraseModal')
-  modal.style.display = 'flex'
-  modal.classList.add('show')
-}
-
-function selectParaphraseVariant(variant) {
-  if (currentParaphraseTarget) {
-    currentParaphraseTarget.value = variant
-    // モデルに変更を反映
-    updateModelFromInput(currentParaphraseTarget)
-    setStatus('言い換えバリアントを適用しました', 'success')
-  }
-  hideParaphraseModal()
-}
-
-function hideParaphraseModal() {
-  const modal = document.getElementById('paraphraseModal')
-  modal.style.display = 'none'
-  modal.classList.remove('show')
-  currentParaphraseTarget = null
-}
-
 // モーダルイベントリスナー
-document.getElementById('cancelParaphraseBtn').addEventListener('click', hideParaphraseModal)
+document.getElementById('cancelParaphraseBtn').removeEventListener('click', () => guiEditorManager.hideParaphraseModal())
 
 // モーダル外クリックで閉じる
-document.getElementById('paraphraseModal').addEventListener('click', (e) => {
+document.getElementById('paraphraseModal').removeEventListener('click', (e) => {
   if (e.target.id === 'paraphraseModal') {
-    hideParaphraseModal()
+    guiEditorManager.hideParaphraseModal()
   }
 })
 
@@ -2681,11 +2598,11 @@ checkForDraftModel()
 setStatus('初期化完了 - モデルを読み込んでください', 'info')
 
 // Batch edit event listeners
-if (batchEditBtn) batchEditBtn.addEventListener('click', () => batchEditManager.openModal())
-if (applyTextReplaceBtn) applyTextReplaceBtn.addEventListener('click', () => batchEditManager.applyTextReplace())
-if (applyChoiceReplaceBtn) applyChoiceReplaceBtn.addEventListener('click', () => batchEditManager.applyChoiceReplace())
-if (applyTargetReplaceBtn) applyTargetReplaceBtn.addEventListener('click', () => batchEditManager.applyTargetReplace())
-if (closeBatchEditBtn) closeBatchEditBtn.addEventListener('click', () => batchEditManager.closeModal())
+if (batchEditBtn) batchEditBtn.addEventListener('click', () => guiEditorManager.getBatchEditManager().openModal())
+if (applyTextReplaceBtn) applyTextReplaceBtn.addEventListener('click', () => guiEditorManager.getBatchEditManager().applyTextReplace())
+if (applyChoiceReplaceBtn) applyChoiceReplaceBtn.addEventListener('click', () => guiEditorManager.getBatchEditManager().applyChoiceReplace())
+if (applyTargetReplaceBtn) applyTargetReplaceBtn.addEventListener('click', () => guiEditorManager.getBatchEditManager().applyTargetReplace())
+if (closeBatchEditBtn) closeBatchEditBtn.addEventListener('click', () => guiEditorManager.getBatchEditManager().closeModal())
 
 // ===========================
 // Color Palette Event Listeners
@@ -2737,77 +2654,12 @@ const NODE_TEMPLATES = {
 
 function generateNodeId() {
   const timestamp = Date.now().toString(36)
-  const random = Math.random().toString(36).substring(2, 7)
-  return `node_${timestamp}_${random}`
-}
-
-function openQuickNodeModal() {
-  if (!_model) {
-    setStatus('まずモデルを読み込んでください', 'warn')
-    return
-  }
-  
-  const modal = document.getElementById('quickNodeModal')
-  document.getElementById('quickNodeId').value = ''
-  document.getElementById('quickNodeText').value = ''
-  document.getElementById('nodeTemplate').value = 'blank'
-  modal.style.display = 'flex'
-  modal.classList.add('show')
-}
-
-function createQuickNode() {
-  const templateKey = document.getElementById('nodeTemplate').value
-  let nodeId = document.getElementById('quickNodeId').value.trim()
-  const nodeText = document.getElementById('quickNodeText').value.trim()
-  
-  // Generate ID if not provided
-  if (!nodeId) {
-    nodeId = generateNodeId()
-  }
-  
-  // Check if ID already exists
-  if (_model.nodes[nodeId]) {
-    setStatus(`❌ ノードID「${nodeId}」は既に存在します`, 'error')
-    return
-  }
-  
-  // Get template
-  const template = NODE_TEMPLATES[templateKey]
-  const newNode = {
-    id: nodeId,
-    text: nodeText || template.text,
-    choices: JSON.parse(JSON.stringify(template.choices)) // Deep copy
-  }
-  
-  // Add to model
-  _model.nodes[nodeId] = newNode
-  
-  // Close modal
-  document.getElementById('quickNodeModal').style.display = 'none'
-  document.getElementById('quickNodeModal').classList.remove('show')
-  
-  // Refresh UI
-  if (typeof renderNodeList === 'function') {
-    renderNodeList()
-  }
-  
-  setStatus(`✅ ノード「${nodeId}」を作成しました`, 'success')
-  Logger.info('Quick node created', { nodeId, template: templateKey })
-}
-
-// Event listeners for quick node creation
-const cancelQuickNodeBtn = document.getElementById('cancelQuickNodeBtn')
-const createQuickNodeBtn = document.getElementById('createQuickNodeBtn')
-
-if (cancelQuickNodeBtn) {
-  cancelQuickNodeBtn.addEventListener('click', () => {
-    document.getElementById('quickNodeModal').style.display = 'none'
     document.getElementById('quickNodeModal').classList.remove('show')
   })
 }
 
 if (createQuickNodeBtn) {
-  createQuickNodeBtn.addEventListener('click', createQuickNode)
+  createQuickNodeBtn.addEventListener('click', () => guiEditorManager.createQuickNode())
 }
 
 // Add keyboard shortcut: N key for quick node creation (in GUI edit mode)
@@ -2816,7 +2668,7 @@ document.addEventListener('keydown', (e) => {
   
   if (e.key.toLowerCase() === 'n' && guiEditMode && guiEditMode.style.display !== 'none') {
     e.preventDefault()
-    openQuickNodeModal()
+    guiEditorManager.openQuickNodeModal()
   }
 })
 
@@ -2931,7 +2783,7 @@ const cancelBatchChoiceBtn = document.getElementById('cancelBatchChoiceBtn')
 const applyBatchChoiceBtn = document.getElementById('applyBatchChoiceBtn')
 
 if (batchNodeSelect) {
-  batchNodeSelect.addEventListener('change', updateBatchChoiceList)
+  batchNodeSelect.addEventListener('change', () => guiEditorManager.updateBatchChoiceList())
 }
 
 if (batchCondition) {
@@ -2954,7 +2806,7 @@ if (cancelBatchChoiceBtn) {
 }
 
 if (applyBatchChoiceBtn) {
-  applyBatchChoiceBtn.addEventListener('click', applyBatchChoice)
+  applyBatchChoiceBtn.addEventListener('click', () => guiEditorManager.applyBatchChoice())
 }
 
 // Add button listeners for quick node and batch choice
@@ -2962,11 +2814,11 @@ const quickNodeBtn = document.getElementById('quickNodeBtn')
 const batchChoiceBtn = document.getElementById('batchChoiceBtn')
 
 if (quickNodeBtn) {
-  quickNodeBtn.addEventListener('click', openQuickNodeModal)
+  quickNodeBtn.addEventListener('click', () => guiEditorManager.openQuickNodeModal())
 }
 
 if (batchChoiceBtn) {
-  batchChoiceBtn.addEventListener('click', openBatchChoiceModal)
+  batchChoiceBtn.addEventListener('click', () => guiEditorManager.openBatchChoiceModal())
 }
 
 // ===========================
@@ -3872,6 +3724,7 @@ const eventManager = new EventManager()
 const storyManager = new StoryManager(appState)
 const graphManager = new GraphManager(appState)
 const debugManager = new DebugManager(appState)
+const guiEditorManager = new GuiEditorManager(appState)
 
 // Initialize story manager
 storyManager.initialize(document.getElementById('storyPanel'))
@@ -3885,6 +3738,16 @@ debugManager.initialize(
   document.getElementById('resourcesDisplay'),
   document.getElementById('variablesDisplay'),
   document.getElementById('reachableNodes')
+)
+
+// Initialize GUI editor manager
+guiEditorManager.initialize(
+  document.getElementById('nodeList'),
+  document.getElementById('guiEditMode'),
+  document.getElementById('batchEditModal'),
+  document.getElementById('quickNodeModal'),
+  document.getElementById('batchChoiceModal'),
+  document.getElementById('paraphraseModal')
 )
 
 // Set up graph control event listeners
