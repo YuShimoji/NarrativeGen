@@ -30,6 +30,7 @@ import { Toast } from './src/ui/toast.js'
 import { AppState } from './src/core/state.js'
 import { DOMManager } from './src/ui/dom.js'
 import { EventManager } from './src/ui/events.js'
+import { StoryManager } from './src/ui/story.js'
 import { validateNotEmpty, validateJson, validateFileExtension } from './src/utils/validation.js'
 import { downloadFile, readFileAsText, parseCsv } from './src/utils/file-utils.js'
 import { getStorageItem, setStorageItem, removeStorageItem } from './src/utils/storage.js'
@@ -2359,8 +2360,8 @@ saveGuiBtn.addEventListener('click', () => {
     setControlsEnabled(true)
     renderState()
     renderChoices()
-    initStory()
-    renderStory()
+    storyManager.initStory()
+    storyManager.renderStory()
   } catch (err) {
     showErrors([err?.message ?? err])
     setStatus(`GUI保存に失敗しました: ${err?.message ?? err}`, 'warn')
@@ -2642,7 +2643,7 @@ function loadFromSlot(slotId) {
     // Update UI
     renderState()
     renderChoices()
-    renderStory()
+    storyManager.renderStory()
     renderDebugInfo()
 
     setStatus(`スロット ${slotId} から読み込みました`, 'success')
@@ -2821,7 +2822,7 @@ function handleAutoSaveClick(event) {
     if (loadAutoSave()) {
       renderState()
       renderChoices()
-      renderStory()
+      storyManager.renderStory()
       renderDebugInfo()
       setStatus('オートセーブから読み込みました', 'success')
       renderSaveSlots()
@@ -2969,7 +2970,7 @@ function checkForDraftModel() {
         setStatus('ドラフトモデルを読み込みました', 'success')
         renderState()
         renderChoices()
-        renderStory()
+        storyManager.renderStory()
         renderDebugInfo()
         localStorage.removeItem('draft_model') // Clear draft after loading
       } else {
@@ -4231,3 +4232,16 @@ if (referenceTab && referencePanel) {
     })
   }
 }
+
+// ============================================================================
+// Module Initialization
+// ============================================================================
+
+// Initialize modules
+const appState = new AppState()
+const dom = new DOMManager()
+const eventManager = new EventManager()
+const storyManager = new StoryManager(appState)
+
+// Initialize story manager
+storyManager.initialize(document.getElementById('storyPanel'))
