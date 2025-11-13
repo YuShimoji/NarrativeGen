@@ -24,171 +24,34 @@ import {
   setParaphraseLexicon,
 } from '../../packages/engine-ts/dist/browser.js'
 
+// Import local modules
+import { ThemeManager } from './src/ui/theme.js'
+import { Toast } from './src/ui/toast.js'
+import { AppState } from './src/core/state.js'
+import { DOMManager } from './src/ui/dom.js'
+import { EventManager } from './src/ui/events.js'
+import { validateNotEmpty, validateJson, validateFileExtension } from './src/utils/validation.js'
+import { downloadFile, readFileAsText, parseCsv } from './src/utils/file-utils.js'
+import { getStorageItem, setStorageItem, removeStorageItem } from './src/utils/storage.js'
+import Logger from './src/core/logger.js'
+import {
+  getCurrentSession,
+  getCurrentModelName,
+  setCurrentSession,
+  setCurrentModelName,
+  clearSession,
+  startNewSession,
+  isSessionActive,
+  validateSession,
+  saveSessionToStorage,
+  loadSessionFromStorage,
+  clearSessionFromStorage
+} from './src/core/session.js'
+
 // ===========================
-// Color Palette System
-// ===========================
-
-const COLOR_PALETTES = {
-  default: {
-    name: 'デフォルト',
-    colors: {
-      '--color-primary': '#5a67d8',
-      '--color-primary-dark': '#6b46c1',
-      '--color-secondary': '#2563eb',
-      '--color-secondary-dark': '#1e40af',
-      '--color-text': '#ffffff',
-      '--color-text-muted': '#cbd5e1',
-      '--color-background': '#1a1a2e',
-      '--color-surface': '#16213e',
-      '--color-border': '#334155',
-    }
-  },
-  gray: {
-    name: 'ミニマルグレー',
-    colors: {
-      '--color-primary': '#4B5563',
-      '--color-primary-dark': '#374151',
-      '--color-secondary': '#6B7280',
-      '--color-secondary-dark': '#4B5563',
-      '--color-text': '#ffffff',
-      '--color-text-muted': '#cbd5e1',
-      '--color-background': '#0f172a',
-      '--color-surface': '#1e293b',
-      '--color-border': '#334155',
-    }
-  },
-  green: {
-    name: 'フォレストグリーン',
-    colors: {
-      '--color-primary': '#059669',
-      '--color-primary-dark': '#047857',
-      '--color-secondary': '#10B981',
-      '--color-secondary-dark': '#059669',
-      '--color-text': '#ffffff',
-      '--color-text-muted': '#cbd5e1',
-      '--color-background': '#0f172a',
-      '--color-surface': '#1e293b',
-      '--color-border': '#334155',
-    }
-  },
-  blue: {
-    name: 'オーシャンブルー',
-    colors: {
-      '--color-primary': '#0284C7',
-      '--color-primary-dark': '#0369A1',
-      '--color-secondary': '#0EA5E9',
-      '--color-secondary-dark': '#0284C7',
-      '--color-text': '#ffffff',
-      '--color-text-muted': '#cbd5e1',
-      '--color-background': '#1e293b',
-      '--color-surface': '#334155',
-      '--color-border': '#475569',
-    }
-  },
-  orange: {
-    name: 'サンセットオレンジ',
-    colors: {
-      '--color-primary': '#EA580C',
-      '--color-primary-dark': '#C2410C',
-      '--color-secondary': '#F97316',
-      '--color-secondary-dark': '#EA580C',
-      '--color-text': '#ffffff',
-      '--color-text-muted': '#cbd5e1',
-      '--color-background': '#1a1a2e',
-      '--color-surface': '#16213e',
-      '--color-border': '#334155',
-    }
-  },
-  purple: {
-    name: 'ラベンダーパープル',
-    colors: {
-      '--color-primary': '#8B5CF6',
-      '--color-primary-dark': '#7C3AED',
-      '--color-secondary': '#A78BFA',
-      '--color-secondary-dark': '#8B5CF6',
-      '--color-text': '#ffffff',
-      '--color-text-muted': '#cbd5e1',
-      '--color-background': '#1e293b',
-      '--color-surface': '#334155',
-      '--color-border': '#475569',
-    }
-  }
-}
-
-function applyPalette(paletteKey) {
-  const palette = COLOR_PALETTES[paletteKey]
-  if (!palette) return
-
-  const root = document.documentElement
-  for (const [variable, value] of Object.entries(palette.colors)) {
-    root.style.setProperty(variable, value)
-  }
-
-  // Save to localStorage
-  try {
-    localStorage.setItem('narrativeGenTheme', paletteKey)
-    setStatus(`テーマ「${palette.name}」を適用しました`, 'success')
-  } catch (error) {
-    console.error('Failed to save theme', error)
-  }
-}
-
-function loadSavedPalette() {
-  try {
-    const saved = localStorage.getItem('narrativeGenTheme')
-    if (saved && COLOR_PALETTES[saved]) {
-      applyPalette(saved)
-    }
-  } catch (error) {
-    console.error('Failed to load saved theme', error)
-  }
-}
-
-function initPaletteUI() {
-  const paletteOptions = document.getElementById('paletteOptions')
-  if (!paletteOptions) return
-
-  paletteOptions.innerHTML = ''
-  
-  for (const [key, palette] of Object.entries(COLOR_PALETTES)) {
-    const option = document.createElement('div')
-    option.style.cssText = `
-      padding: 1rem;
-      border-radius: 8px;
-      border: 2px solid rgba(0,0,0,0.15);
-      background: linear-gradient(135deg, ${palette.colors['--color-primary']} 0%, ${palette.colors['--color-primary-dark']} 100%);
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.2s ease;
-      color: white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    `
-    option.innerHTML = `
-      <div style="font-weight: 700; margin-bottom: 0.5rem; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">${palette.name}</div>
-      <div style="display: flex; gap: 4px; justify-content: center;">
-        <div style="width: 30px; height: 30px; border-radius: 4px; background: ${palette.colors['--color-secondary']}; border: 2px solid rgba(255,255,255,0.3);"></div>
-        <div style="width: 30px; height: 30px; border-radius: 4px; background: ${palette.colors['--color-secondary-dark']}; border: 2px solid rgba(255,255,255,0.3);"></div>
-      </div>
-    `
-    
-    option.addEventListener('mouseenter', () => {
-      option.style.transform = 'translateY(-4px) scale(1.02)'
-      option.style.boxShadow = '0 8px 16px rgba(0,0,0,0.2)'
-    })
-    option.addEventListener('mouseleave', () => {
-      option.style.transform = 'translateY(0) scale(1)'
-      option.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)'
-    })
-    option.addEventListener('click', () => {
-      applyPalette(key)
-      document.getElementById('paletteModal').style.display = 'none'
-    })
-    
-    paletteOptions.appendChild(option)
-  }
-}
-
 // Key binding configuration - extensible and loosely coupled
+// ===========================
+
 const KEY_BINDINGS = {
   'inventory': 'z',  // Configurable: can be changed to any key
   'debug': 'd',
@@ -589,9 +452,6 @@ const aiKey = document.getElementById('aiKey')
 const saveKeyBindings = document.getElementById('saveKeyBindings')
 const resetKeyBindings = document.getElementById('resetKeyBindings')
 
-let session = null
-let currentModelName = null
-
 // AI configuration
 let aiConfig = {
   provider: 'mock',
@@ -624,14 +484,15 @@ const applyTargetReplaceBtn = document.getElementById('applyTargetReplaceBtn')
 const closeBatchEditBtn = document.getElementById('closeBatchEditBtn')
 
 function renderState() {
-  if (!session) {
+  const currentSession = getCurrentSession()
+  if (!currentSession) {
     stateView.textContent = JSON.stringify({ status: 'サンプル未実行' }, null, 2)
     return
   }
 
-  const snapshot = session
+  const snapshot = currentSession
   const view = {
-    model: currentModelName,
+    model: getCurrentModelName(),
     nodeId: snapshot.nodeId,
     time: snapshot.time,
     flags: snapshot.flags,
@@ -831,7 +692,8 @@ function renderGraph() {
   let nodesToShow
   if (shouldVirtualize) {
     // Show current node and its direct connections, plus some random nodes
-    const currentNode = session?.nodeId || appState.model.startNode
+    const currentSession = getCurrentSession()
+    const currentNode = currentSession?.nodeId || appState.model.startNode
     const connectedNodes = new Set([currentNode])
 
     // Add directly connected nodes
@@ -1126,7 +988,8 @@ function getConditionText(conditions) {
 }
 
 function renderDebugInfo() {
-  if (!session || !appState.model) {
+  const currentSession = getCurrentSession()
+  if (!currentSession || !appState.model) {
     flagsDisplay.innerHTML = '<p>セッションを開始してください</p>'
     resourcesDisplay.innerHTML = ''
     reachableNodes.innerHTML = '<p>モデルを読み込んでください</p>'
@@ -1135,8 +998,8 @@ function renderDebugInfo() {
 
   // Render flags
   flagsDisplay.innerHTML = '<h4>フラグ</h4>'
-  if (session.flags && Object.keys(session.flags).length > 0) {
-    Object.entries(session.flags).forEach(([key, value]) => {
+  if (currentSession.flags && Object.keys(currentSession.flags).length > 0) {
+    Object.entries(currentSession.flags).forEach(([key, value]) => {
       const div = document.createElement('div')
       div.className = 'flag-item'
       div.innerHTML = `<span>${key}</span><span>${value}</span>`
@@ -1148,8 +1011,8 @@ function renderDebugInfo() {
 
   // Render variables
   variablesDisplay.innerHTML = '<h4>変数</h4>'
-  if (session.variables && Object.keys(session.variables).length > 0) {
-    Object.entries(session.variables).forEach(([key, value]) => {
+  if (currentSession.variables && Object.keys(currentSession.variables).length > 0) {
+    Object.entries(currentSession.variables).forEach(([key, value]) => {
       const div = document.createElement('div')
       div.className = 'variable-item'
       div.innerHTML = `<span>${key}</span><span>${value}</span>`
@@ -1161,9 +1024,9 @@ function renderDebugInfo() {
 
   // Render reachability map
   reachableNodes.innerHTML = '<h4>到達可能性</h4>'
-  const visited = new Set([session.nodeId])
-  const queue = [session.nodeId]
-  const reachable = new Set([session.nodeId])
+  const visited = new Set([currentSession.nodeId])
+  const queue = [currentSession.nodeId]
+  const reachable = new Set([currentSession.nodeId])
 
   // BFS to find all reachable nodes
   while (queue.length > 0) {
@@ -1176,7 +1039,7 @@ function renderDebugInfo() {
         visited.add(choice.target)
         // Check if choice is available in current state
         try {
-          const availableChoices = getAvailableChoices(session, appState.model)
+          const availableChoices = getAvailableChoices(currentSession, appState.model)
           const isAvailable = availableChoices.some(c => c.id === choice.id)
           if (isAvailable) {
             queue.push(choice.target)
@@ -1410,14 +1273,15 @@ function setControlsEnabled(enabled) {
 function renderChoices() {
   choicesContainer.innerHTML = ''
 
-  if (!session) {
+  const currentSession = getCurrentSession()
+  if (!currentSession) {
     const info = document.createElement('p')
     info.textContent = 'セッションを開始すると選択肢が表示されます'
     choicesContainer.appendChild(info)
     return
   }
 
-  const choices = getAvailableChoices(session, appState.model)
+  const choices = getAvailableChoices(currentSession, appState.model)
   if (!choices || choices.length === 0) {
     const empty = document.createElement('p')
     empty.textContent = '利用可能な選択肢はありません'
@@ -1435,9 +1299,12 @@ function renderChoices() {
     button.textContent = formatChoiceLabel(choice)
     button.addEventListener('click', () => {
       try {
-        session = applyChoice(session, appState.model, choice.id)
-        setStatus(`選択肢「${choice.text}」を適用しました`, 'success')
-        appendStoryFromCurrentNode()
+        const currentSession = getCurrentSession()
+        if (currentSession) {
+          setCurrentSession(applyChoice(currentSession, appState.model, choice.id))
+          setStatus(`選択肢「${choice.text}」を適用しました`, 'success')
+          appendStoryFromCurrentNode()
+        }
       } catch (err) {
         console.error(err)
         setStatus(`選択肢の適用に失敗しました: ${err?.message ?? err}`, 'warn')
