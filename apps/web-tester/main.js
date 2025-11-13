@@ -34,6 +34,7 @@ import { StoryManager } from './src/ui/story.js'
 import { GraphManager } from './src/ui/graph.js'
 import { DebugManager } from './src/ui/debug.js'
 import { GuiEditorManager } from './src/ui/gui-editor.js'
+import { ReferenceManager } from './src/ui/reference.js'
 import { validateNotEmpty, validateJson, validateFileExtension } from './src/utils/validation.js'
 import { downloadFile, readFileAsText, parseCsv } from './src/utils/file-utils.js'
 import { getStorageItem, setStorageItem, removeStorageItem } from './src/utils/storage.js'
@@ -1345,7 +1346,7 @@ function switchTab(tabName) {
   } else if (tabName === 'reference') {
     if (referencePanel) referencePanel.classList.add('active')
     if (referenceTab) referenceTab.classList.add('active')
-    renderReferenceContent()
+    referenceManager.render()
   } else if (tabName === 'advanced') {
     advancedPanel.classList.add('active')
     advancedTab.classList.add('active')
@@ -3692,15 +3693,15 @@ const refCategorySelect = document.getElementById('refCategorySelect')
 
 if (referenceTab && referencePanel) {
   referenceTab.addEventListener('click', () => switchTab('reference'))
-  
+
   // 初期レンダリング
-  renderReferenceContent()
+  referenceManager.render()
 
   // 検索
   if (refSearch) {
     refSearch.addEventListener('input', (e) => {
       const category = refCategorySelect?.value || 'all'
-      renderReferenceContent({ category, search: e.target.value })
+      referenceManager.setFilter({ category, search: e.target.value })
     })
   }
 
@@ -3708,7 +3709,7 @@ if (referenceTab && referencePanel) {
   if (refCategorySelect) {
     refCategorySelect.addEventListener('change', (e) => {
       const search = refSearch?.value || ''
-      renderReferenceContent({ category: e.target.value, search })
+      referenceManager.setFilter({ category: e.target.value, search })
     })
   }
 }
@@ -3725,6 +3726,7 @@ const storyManager = new StoryManager(appState)
 const graphManager = new GraphManager(appState)
 const debugManager = new DebugManager(appState)
 const guiEditorManager = new GuiEditorManager(appState)
+const referenceManager = new ReferenceManager()
 
 // Initialize story manager
 storyManager.initialize(document.getElementById('storyPanel'))
@@ -3748,6 +3750,12 @@ guiEditorManager.initialize(
   document.getElementById('quickNodeModal'),
   document.getElementById('batchChoiceModal'),
   document.getElementById('paraphraseModal')
+)
+
+// Initialize reference manager
+referenceManager.initialize(
+  document.getElementById('referenceToc'),
+  document.getElementById('referenceContent')
 )
 
 // Set up graph control event listeners
