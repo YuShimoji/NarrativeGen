@@ -37,6 +37,7 @@ import { GuiEditorManager } from './src/ui/gui-editor.js'
 import { ReferenceManager } from './src/ui/reference.js'
 import { CsvManager } from './src/ui/csv.js'
 import { AiManager } from './src/ui/ai.js'
+import { LexiconManager } from './src/ui/lexicon.js'
 import { validateNotEmpty, validateJson, validateFileExtension } from './src/utils/validation.js'
 import { downloadFile, readFileAsText, parseCsv } from './src/utils/file-utils.js'
 import { getStorageItem, setStorageItem, removeStorageItem } from './src/utils/storage.js'
@@ -473,9 +474,6 @@ let aiConfig = {
 }
 let aiProviderInstance = null
 
-// Local storage key for designer lexicon
-const LEXICON_KEY = 'designerParaphraseLexicon'
-
 // Batch edit elements
 const batchEditBtn = document.getElementById('batchEditBtn')
 const batchEditModal = document.getElementById('batchEditModal')
@@ -542,55 +540,27 @@ function hideErrors() {
 // Designer Lexicon management
 // =============================================================================
 
-function stringifyLexicon(lex) {
-  try { return JSON.stringify(lex, null, 2) } catch { return '{}' }
-}
-
-function parseLexicon(text) {
-  const obj = JSON.parse(text)
-  if (obj && typeof obj === 'object' && !Array.isArray(obj)) return obj
-  throw new Error('JSON はオブジェクト形式である必要があります')
-}
-
-function saveLexiconToStorage(lex) {
-  try { localStorage.setItem(LEXICON_KEY, JSON.stringify(lex)) } catch {}
-}
-
-function loadLexiconFromStorage() {
-  try {
-    const raw = localStorage.getItem(LEXICON_KEY)
-    if (!raw) return null
-    return JSON.parse(raw)
-  } catch { return null }
-}
-
 function initLexiconUI() {
   // Tooltip for sidebar button
   if (toggleSidebarBtn) toggleSidebarBtn.title = '選択肢と状態パネルの表示/非表示を切り替えます'
 
-  // Load designer lexicon from storage (replace mode to ensure determinism)
-  const stored = loadLexiconFromStorage()
-  if (stored) {
-    try { setParaphraseLexicon(stored, { merge: false }) } catch {}
-  }
   // Prefill textarea with current runtime lexicon
   if (lexiconTextarea) {
-    try { lexiconTextarea.value = stringifyLexicon(getParaphraseLexicon()) } catch {}
+    try { lexiconTextarea.value = lexiconManager.exportAsJson() } catch {}
   }
 
   // Wire buttons
   if (lexiconLoadBtn) {
     lexiconLoadBtn.addEventListener('click', () => {
-      try { lexiconTextarea.value = stringifyLexicon(getParaphraseLexicon()); setStatus('現在の辞書を読み込みました', 'success') } catch (e) { setStatus('辞書の読み込みに失敗しました', 'error') }
+      try { lexiconTextarea.value = lexiconManager.exportAsJson(); setStatus('現在の辞書を読み込みました', 'success') } catch (e) { setStatus('辞書の読み込みに失敗しました', 'error') }
     })
   }
   if (lexiconMergeBtn) {
     lexiconMergeBtn.addEventListener('click', () => {
       try {
-        const input = parseLexicon(lexiconTextarea.value || '{}')
-        setParaphraseLexicon(input, { merge: true })
-        const merged = getParaphraseLexicon()
-        saveLexiconToStorage(merged)
+        const input = JSON.parse(lexiconTextarea.value || '{}')
+        lexiconManager.setLexicon(input, { merge: true })
+        lexiconTextarea.value = lexiconManager.exportAsJson()
         setStatus('辞書をマージ適用しました', 'success')
       } catch (e) { setStatus(`辞書の適用に失敗しました: ${e.message}`, 'error') }
     })
@@ -598,9 +568,8 @@ function initLexiconUI() {
   if (lexiconReplaceBtn) {
     lexiconReplaceBtn.addEventListener('click', () => {
       try {
-        const input = parseLexicon(lexiconTextarea.value || '{}')
-        setParaphraseLexicon(input, { merge: false })
-        saveLexiconToStorage(input)
+        const input = JSON.parse(lexiconTextarea.value || '{}')
+        lexiconManager.setLexicon(input, { merge: false })
         setStatus('辞書を置換適用しました', 'success')
       } catch (e) { setStatus(`辞書の適用に失敗しました: ${e.message}`, 'error') }
     })
@@ -608,7 +577,7 @@ function initLexiconUI() {
   if (lexiconExportBtn) {
     lexiconExportBtn.addEventListener('click', () => {
       try {
-        const blob = new Blob([lexiconTextarea.value || '{}'], { type: 'application/json' })
+        const blob = new Blob([lexiconManager.exportAsJson()], { type: 'application/json' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
@@ -629,9 +598,8 @@ function initLexiconUI() {
       const reader = new FileReader()
       reader.onload = () => {
         try {
-          const text = String(reader.result)
-          parseLexicon(text) // validate
-          lexiconTextarea.value = text
+          lexiconManager.importFromJson(String(reader.result))
+          lexiconTextarea.value = lexiconManager.exportAsJson()
           setStatus('辞書ファイルを読み込みました。適用ボタンで反映します', 'info')
         } catch { setStatus('JSON の解析に失敗しました', 'error') }
       }
@@ -2020,7 +1988,7 @@ nodeList.addEventListener('click', (e) => {
 
     try {
       // 複数のバリアントを生成（デザイナー辞書を使用）
-      const variants = paraphraseJa(input.value, { variantCount: 3 })
+      const variants = lexiconManager.paraphrase(input.value, { variantCount: 3 })
       if (variants.length === 0) {
         setStatus('言い換えバリアントを生成できませんでした', 'warn')
         return
@@ -3730,6 +3698,7 @@ const guiEditorManager = new GuiEditorManager(appState)
 const referenceManager = new ReferenceManager()
 const csvManager = new CsvManager(appState)
 const aiManager = new AiManager(appState)
+const lexiconManager = new LexiconManager()
 
 // Initialize story manager
 storyManager.initialize(document.getElementById('storyPanel'))
@@ -3773,6 +3742,9 @@ aiManager.initialize(
   document.getElementById('generateNextNodeBtn'),
   document.getElementById('paraphraseCurrentBtn')
 )
+
+// Initialize lexicon manager
+lexiconManager.initialize()
 
 // Set up graph control event listeners
 if (fitGraphBtn) {
