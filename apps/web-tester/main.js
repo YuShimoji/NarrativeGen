@@ -35,6 +35,7 @@ import { GraphManager } from './src/ui/graph.js'
 import { DebugManager } from './src/ui/debug.js'
 import { GuiEditorManager } from './src/ui/gui-editor.js'
 import { ReferenceManager } from './src/ui/reference.js'
+import { CsvManager } from './src/ui/csv.js'
 import { validateNotEmpty, validateJson, validateFileExtension } from './src/utils/validation.js'
 import { downloadFile, readFileAsText, parseCsv } from './src/utils/file-utils.js'
 import { getStorageItem, setStorageItem, removeStorageItem } from './src/utils/storage.js'
@@ -3727,6 +3728,7 @@ const graphManager = new GraphManager(appState)
 const debugManager = new DebugManager(appState)
 const guiEditorManager = new GuiEditorManager(appState)
 const referenceManager = new ReferenceManager()
+const csvManager = new CsvManager(appState)
 
 // Initialize story manager
 storyManager.initialize(document.getElementById('storyPanel'))
@@ -3756,6 +3758,12 @@ guiEditorManager.initialize(
 referenceManager.initialize(
   document.getElementById('referenceToc'),
   document.getElementById('referenceContent')
+)
+
+// Initialize CSV manager
+csvManager.initialize(
+  document.getElementById('csvImportModal'),
+  document.getElementById('csvExportModal')
 )
 
 // Set up graph control event listeners
@@ -3797,4 +3805,17 @@ if (loadGraphPreset) {
       setStatus('保存されたプリセットがありません', 'warn')
     }
   }
+}
+
+// CSV import/export event listeners
+if (importCsvBtn) {
+  importCsvBtn.addEventListener('click', () => {
+    csvManager.showCsvImportModal()
+  })
+}
+
+if (exportCsvBtn) {
+  exportCsvBtn.addEventListener('click', () => {
+    csvManager.showCsvExportModal()
+  })
 }
