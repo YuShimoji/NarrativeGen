@@ -31,6 +31,8 @@ import { AppState } from './src/core/state.js'
 import { DOMManager } from './src/ui/dom.js'
 import { EventManager } from './src/ui/events.js'
 import { StoryManager } from './src/ui/story.js'
+import { GraphManager } from './src/ui/graph.js'
+import { DebugManager } from './src/ui/debug.js'
 import { validateNotEmpty, validateJson, validateFileExtension } from './src/utils/validation.js'
 import { downloadFile, readFileAsText, parseCsv } from './src/utils/file-utils.js'
 import { getStorageItem, setStorageItem, removeStorageItem } from './src/utils/storage.js'
@@ -676,304 +678,6 @@ function hideCsvPreview() {
   csvPreviewModal.classList.remove('show')
 }
 
-function renderGraph() {
-  if (!appState.model) {
-    d3.select(graphSvg).selectAll('*').remove()
-    return
-  }
-
-  const width = graphSvg.clientWidth || graphSvg.parentElement.clientWidth || 800
-  const height = graphSvg.clientHeight || graphSvg.parentElement.clientHeight || 600
-
-  // Performance optimization: Limit nodes for large graphs
-  const maxNodes = 100
-  const allNodes = Object.keys(appState.model.nodes)
-  const shouldVirtualize = allNodes.length > maxNodes
-
-  let nodesToShow
-  if (shouldVirtualize) {
-    // Show current node and its direct connections, plus some random nodes
-    const currentSession = getCurrentSession()
-    const currentNode = currentSession?.nodeId || appState.model.startNode
-    const connectedNodes = new Set([currentNode])
-
-    // Add directly connected nodes
-    const currentNodeObj = appState.model.nodes[currentNode]
-    if (currentNodeObj?.choices) {
-      currentNodeObj.choices.forEach(choice => {
-        if (choice.target) connectedNodes.add(choice.target)
-      })
-    }
-
-    // Add nodes that connect to current node
-    Object.entries(appState.model.nodes).forEach(([id, node]) => {
-      if (node.choices?.some(c => c.target === currentNode)) {
-        connectedNodes.add(id)
-      }
-    })
-
-    // Fill remaining slots with random nodes
-    const remaining = Array.from(allNodes.filter(id => !connectedNodes.has(id)))
-    const randomNodes = remaining
-      .sort(() => Math.random() - 0.5)
-      .slice(0, maxNodes - connectedNodes.size)
-
-    nodesToShow = Array.from(connectedNodes).concat(randomNodes)
-  } else {
-    nodesToShow = allNodes
-  }
-
-  // Clear previous graph
-  d3.select(graphSvg).selectAll('*').remove()
-
-  const svg = d3.select(graphSvg)
-    .attr('width', width)
-    .attr('height', height)
-
-  // Add defs for gradients and filters
-  const defs = svg.append('defs')
-
-  // Gradient for nodes
-  const gradient = defs.append('linearGradient')
-    .attr('id', 'nodeGradient')
-    .attr('x1', '0%').attr('y1', '0%').attr('x2', '100%').attr('y2', '100%')
-  gradient.append('stop').attr('offset', '0%').attr('stop-color', '#60a5fa')
-  gradient.append('stop').attr('offset', '100%').attr('stop-color', '#3b82f6')
-
-  // Filter for shadow
-  const filter = defs.append('filter')
-    .attr('id', 'nodeShadow')
-    .attr('x', '-50%').attr('y', '-50%').attr('width', '200%').attr('height', '200%')
-  filter.append('feDropShadow')
-    .attr('dx', '2').attr('dy', '2').attr('stdDeviation', '3')
-    .attr('flood-color', 'rgba(0,0,0,0.3)')
-
-  // Add zoom behavior
-  const zoom = d3.zoom()
-    .scaleExtent([0.1, 4])
-    .on('zoom', (event) => {
-      svg.select('g').attr('transform', event.transform)
-    })
-
-  svg.call(zoom)
-
-  // Create container group for zoom
-  const container = svg.append('g')
-
-  // Create nodes and links data (only for visible nodes)
-  const nodes = []
-  const links = []
-
-  nodesToShow.forEach(id => {
-    const node = appState.model.nodes[id]
-    if (!node) return
-
-    nodes.push({
-      id: id,
-      text: node.text?.substring(0, 50) + (node.text?.length > 50 ? '...' : ''),
-      x: Math.random() * (width - 200) + 100,
-      y: Math.random() * (height - 200) + 100,
-      isVirtualized: shouldVirtualize && !isConnectedToCurrent(id)
-    })
-
-    node.choices?.forEach(choice => {
-      if (choice.target && nodesToShow.includes(choice.target)) {
-        links.push({
-          source: id,
-          target: choice.target,
-          condition: showConditions.checked ? getConditionText(choice.conditions) : null
-        })
-      }
-    })
-  })
-
-  // Performance optimization: Use efficient force simulation settings
-  const simulation = d3.forceSimulation(nodes)
-    .force('link', d3.forceLink(links).id(d => d.id).distance(shouldVirtualize ? 100 : 150).strength(0.5))
-    .force('charge', d3.forceManyBody().strength(shouldVirtualize ? -200 : -300))
-    .force('center', d3.forceCenter(width / 2, height / 2))
-    .force('collision', d3.forceCollide().radius(shouldVirtualize ? 40 : 60))
-    .alphaDecay(0.05) // Faster convergence for better performance
-    .velocityDecay(0.4) 
-
-  // Create links with optimized rendering
-  const link = container.append('g')
-    .selectAll('line')
-    .data(links)
-    .enter().append('line')
-    .attr('stroke', '#999')
-    .attr('stroke-opacity', 0.6)
-    .attr('stroke-width', shouldVirtualize ? 1 : 2)
-
-  // Add condition labels to links (only if enabled and not virtualized)
-  let linkLabels
-  if (showConditions.checked && !shouldVirtualize) {
-    linkLabels = container.append('g')
-      .selectAll('text')
-      .data(links.filter(l => l.condition))
-      .enter().append('text')
-      .attr('font-size', `${fontSize.value}px`)
-      .attr('fill', '#666')
-      .attr('text-anchor', 'middle')
-      .text(d => d.condition)
-  }
-
-  // Create nodes with performance optimizations
-  const node = container.append('g')
-    .selectAll(nodeShape.value === 'rect' ? 'rect' : 'circle')
-    .data(nodes)
-    .enter().append(nodeShape.value === 'rect' ? 'rect' : 'circle')
-
-  if (nodeShape.value === 'circle') {
-    node.attr('r', d => d.isVirtualized ? 20 : 30)
-  } else {
-    node.attr('width', d => d.isVirtualized ? 40 : 60)
-       .attr('height', d => d.isVirtualized ? 40 : 60)
-       .attr('x', d => d.isVirtualized ? -20 : -30)
-       .attr('y', d => d.isVirtualized ? -20 : -30)
-  }
-
-  node.attr('fill', 'url(#nodeGradient)')
-    .attr('filter', 'url(#nodeShadow)')
-    .call(d3.drag()
-      .on('start', (event, d) => {
-        if (!event.active) simulation.alphaTarget(0.1).restart()
-        d.fx = d.x
-        d.fy = d.y
-      })
-      .on('drag', (event, d) => {
-        d.fx = event.x
-        d.fy = event.y
-      })
-      .on('end', (event, d) => {
-        if (!event.active) simulation.alphaTarget(0)
-        d.fx = null
-        d.fy = null
-      }))
-
-  // Add node labels with conditional rendering
-  let labels
-  if (!shouldVirtualize) {
-    labels = container.append('g')
-      .selectAll('text')
-      .data(nodes)
-      .enter().append('text')
-      .attr('text-anchor', 'middle')
-      .attr('dy', '0.35em')
-      .attr('font-size', `${fontSize.value}px`)
-      .attr('fill', '#333')
-      .text(d => d.id)
-
-    // Position labels based on shape
-    if (nodeShape.value === 'circle') {
-      labels.attr('x', d => d.x).attr('y', d => d.y)
-    } else {
-      labels.attr('x', d => d.x + (d.isVirtualized ? 20 : 30)).attr('y', d => d.y + (d.isVirtualized ? 20 : 30))
-    }
-  }
-
-  // Update positions on simulation tick with throttled updates
-  let tickCount = 0
-  simulation.on('tick', () => {
-    tickCount++
-    if (tickCount % 3 !== 0) return // Update every 3 ticks for performance
-
-    link
-      .attr('x1', d => d.source.x)
-      .attr('y1', d => d.source.y)
-      .attr('x2', d => d.target.x)
-      .attr('y2', d => d.target.y)
-
-    if (!shouldVirtualize) {
-      if (nodeShape.value === 'circle') {
-        labels.attr('x', d => d.x).attr('y', d => d.y)
-      } else {
-        labels.attr('x', d => d.x + (d.isVirtualized ? 20 : 30)).attr('y', d => d.y + (d.isVirtualized ? 20 : 30))
-      }
-    }
-
-    node
-      .attr(nodeShape.value === 'circle' ? 'cx' : 'x', d => d.x)
-      .attr(nodeShape.value === 'circle' ? 'cy' : 'y', d => d.y)
-
-    if (showConditions.checked && !shouldVirtualize && linkLabels) {
-      linkLabels
-        .attr('x', d => (d.source.x + d.target.x) / 2)
-        .attr('y', d => (d.source.y + d.target.y) / 2)
-    }
-  })
-
-  // Add virtualization notice
-  if (shouldVirtualize) {
-    svg.append('text')
-      .attr('x', width - 10)
-      .attr('y', 20)
-      .attr('text-anchor', 'end')
-      .attr('font-size', '12px')
-      .attr('fill', '#666')
-      .text(`表示中: ${nodesToShow.length}/${allNodes.length} ノード`)
-  }
-
-  // Graph controls
-  fitGraphBtn.onclick = () => {
-    if (!container.node()) return
-    const bounds = container.node().getBBox()
-    const fullWidth = bounds.width
-    const fullHeight = bounds.height
-    const midX = bounds.x + fullWidth / 2
-    const midY = bounds.y + fullHeight / 2
-
-    const scale = Math.min(width / fullWidth, height / fullHeight) * 0.8
-    const translate = [width / 2 - scale * midX, height / 2 - scale * midY]
-
-    svg.transition().duration(750).call(
-      zoom.transform,
-      d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
-    )
-  }
-
-  resetGraphBtn.onclick = () => {
-    nodes.forEach(n => {
-      n.x = Math.random() * (width - 200) + 100
-      n.y = Math.random() * (height - 200) + 100
-      n.fx = null
-      n.fy = null
-    })
-    simulation.restart()
-  }
-
-  showConditions.onchange = () => renderGraph()
-}
-
-graphSettingsBtn.onclick = () => {
-  graphSettings.style.display = graphSettings.style.display === 'none' ? 'block' : 'none'
-}
-
-nodeShape.onchange = () => renderGraph()
-fontSize.oninput = () => renderGraph()
-
-saveGraphPreset.onclick = () => {
-  const preset = {
-    nodeShape: nodeShape.value,
-    fontSize: fontSize.value
-  }
-  localStorage.setItem('graphPreset', JSON.stringify(preset))
-  setStatus('グラフプリセットを保存しました', 'success')
-}
-
-loadGraphPreset.onclick = () => {
-  const stored = localStorage.getItem('graphPreset')
-  if (stored) {
-    const preset = JSON.parse(stored)
-    nodeShape.value = preset.nodeShape
-    fontSize.value = preset.fontSize
-    renderGraph()
-    setStatus('グラフプリセットを読み込みました', 'success')
-  } else {
-    setStatus('保存されたプリセットがありません', 'warn')
-  }
-}
-
 function getConditionText(conditions) {
   if (!conditions || conditions.length === 0) return ''
   return conditions.map(cond => {
@@ -981,90 +685,14 @@ function getConditionText(conditions) {
     if (cond.type === 'resource') return `res:${cond.key}${cond.op}${cond.value}`
     if (cond.type === 'variable') return `var:${cond.key}${cond.op}${cond.value}`
     if (cond.type === 'timeWindow') return `time:${cond.start}-${cond.end}`
-    if (cond.type === 'and') return `AND(${cond.conditions.map(c => getConditionText([c])).join(',')})`
-    if (cond.type === 'or') return `OR(${cond.conditions.map(c => getConditionText([c])).join(',')})`
-    if (cond.type === 'not') return `NOT(${getConditionText([cond.condition])})`
+    if (cond.type === 'and') return `AND(${serializeConditions(cond.conditions)})`
+    if (cond.type === 'or') return `OR(${serializeConditions(cond.conditions)})`
+    if (cond.type === 'not') return `NOT(${serializeConditions([cond.condition])})`
     return cond.type
   }).join(', ')
 }
 
-function renderDebugInfo() {
-  const currentSession = getCurrentSession()
-  if (!currentSession || !appState.model) {
-    flagsDisplay.innerHTML = '<p>セッションを開始してください</p>'
-    resourcesDisplay.innerHTML = ''
-    reachableNodes.innerHTML = '<p>モデルを読み込んでください</p>'
-    return
-  }
-
-  // Render flags
-  flagsDisplay.innerHTML = '<h4>フラグ</h4>'
-  if (currentSession.flags && Object.keys(currentSession.flags).length > 0) {
-    Object.entries(currentSession.flags).forEach(([key, value]) => {
-      const div = document.createElement('div')
-      div.className = 'flag-item'
-      div.innerHTML = `<span>${key}</span><span>${value}</span>`
-      flagsDisplay.appendChild(div)
-    })
-  } else {
-    flagsDisplay.innerHTML += '<p>フラグなし</p>'
-  }
-
-  // Render variables
-  variablesDisplay.innerHTML = '<h4>変数</h4>'
-  if (currentSession.variables && Object.keys(currentSession.variables).length > 0) {
-    Object.entries(currentSession.variables).forEach(([key, value]) => {
-      const div = document.createElement('div')
-      div.className = 'variable-item'
-      div.innerHTML = `<span>${key}</span><span>${value}</span>`
-      variablesDisplay.appendChild(div)
-    })
-  } else {
-    variablesDisplay.innerHTML += '<p>変数なし</p>'
-  }
-
-  // Render reachability map
-  reachableNodes.innerHTML = '<h4>到達可能性</h4>'
-  const visited = new Set([currentSession.nodeId])
-  const queue = [currentSession.nodeId]
-  const reachable = new Set([currentSession.nodeId])
-
-  // BFS to find all reachable nodes
-  while (queue.length > 0) {
-    const currentNodeId = queue.shift()
-    const node = appState.model.nodes[currentNodeId]
-    if (!node) continue
-
-    node.choices?.forEach(choice => {
-      if (!visited.has(choice.target)) {
-        visited.add(choice.target)
-        // Check if choice is available in current state
-        try {
-          const availableChoices = getAvailableChoices(currentSession, appState.model)
-          const isAvailable = availableChoices.some(c => c.id === choice.id)
-          if (isAvailable) {
-            queue.push(choice.target)
-            reachable.add(choice.target)
-          }
-        } catch (e) {
-          // If error, assume reachable for now
-          reachable.add(choice.target)
-        }
-      }
-    })
-  }
-
-  // Display all nodes with reachability status
-  Object.keys(appState.model.nodes).forEach(nodeId => {
-    const div = document.createElement('div')
-    div.className = reachable.has(nodeId) ? 'reachable-node' : 'unreachable-node'
-    div.textContent = `${nodeId}: ${reachable.has(nodeId) ? '到達可能' : '未到達'}`
-    reachableNodes.appendChild(div)
-  })
-}
-
-// CSVファイルのインポート処理
-async function importCsvFile(file) {
+function importCsvFile(file) {
   try {
     const text = await file.text()
     const delim = file.name.endsWith('.tsv') || text.includes('\t') ? '\t' : ','
@@ -1708,11 +1336,11 @@ function switchTab(tabName) {
   } else if (tabName === 'graph') {
     graphPanel.classList.add('active')
     graphTab.classList.add('active')
-    renderGraph()
+    graphManager.render()
   } else if (tabName === 'debug') {
     debugPanel.classList.add('active')
     debugTab.classList.add('active')
-    renderDebugInfo()
+    debugManager.render()
   } else if (tabName === 'reference') {
     if (referencePanel) referencePanel.classList.add('active')
     if (referenceTab) referenceTab.classList.add('active')
@@ -1850,7 +1478,7 @@ async function generateNextNodeUI() {
 
     // Optionally update graph if visible
     if (graphPanel.classList.contains('active')) {
-      renderGraph()
+      graphManager.render()
     }
 
   } catch (error) {
@@ -4242,6 +3870,60 @@ const appState = new AppState()
 const dom = new DOMManager()
 const eventManager = new EventManager()
 const storyManager = new StoryManager(appState)
+const graphManager = new GraphManager(appState)
+const debugManager = new DebugManager(appState)
 
 // Initialize story manager
 storyManager.initialize(document.getElementById('storyPanel'))
+
+// Initialize graph manager
+graphManager.initialize(document.getElementById('graphSvg'))
+
+// Initialize debug manager
+debugManager.initialize(
+  document.getElementById('flagsDisplay'),
+  document.getElementById('resourcesDisplay'),
+  document.getElementById('variablesDisplay'),
+  document.getElementById('reachableNodes')
+)
+
+// Set up graph control event listeners
+if (fitGraphBtn) {
+  fitGraphBtn.onclick = () => graphManager.fitToView()
+}
+if (resetGraphBtn) {
+  resetGraphBtn.onclick = () => graphManager.reset()
+}
+if (graphSettingsBtn) {
+  graphSettingsBtn.onclick = () => {
+    const graphSettings = document.getElementById('graphSettings')
+    graphSettings.style.display = graphSettings.style.display === 'none' ? 'block' : 'none'
+  }
+}
+if (nodeShape) {
+  nodeShape.onchange = () => graphManager.setNodeShape(nodeShape.value)
+}
+if (fontSize) {
+  fontSize.oninput = () => graphManager.setFontSize(parseInt(fontSize.value))
+}
+if (showConditions) {
+  showConditions.onchange = () => graphManager.setShowConditions(showConditions.checked)
+}
+if (saveGraphPreset) {
+  saveGraphPreset.onclick = () => {
+    if (graphManager.savePreset()) {
+      setStatus('グラフプリセットを保存しました', 'success')
+    } else {
+      setStatus('プリセットの保存に失敗しました', 'warn')
+    }
+  }
+}
+if (loadGraphPreset) {
+  loadGraphPreset.onclick = () => {
+    if (graphManager.loadPreset()) {
+      setStatus('グラフプリセットを読み込みました', 'success')
+    } else {
+      setStatus('保存されたプリセットがありません', 'warn')
+    }
+  }
+}
