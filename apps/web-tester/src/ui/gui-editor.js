@@ -34,6 +34,10 @@ export class GuiEditorManager {
       nodeDiv.className = 'node-editor'
       nodeDiv.innerHTML = `
         <h3>ノード: ${nodeId}</h3>
+        <div class="node-id-row">
+          <label>ID: <input type="text" value="${nodeId}" data-node-id="${nodeId}" data-field="id"></label>
+          <button class="rename-node-btn" data-node-id="${nodeId}">ID変更</button>
+        </div>
         <label>テキスト: <input type="text" value="${(node.text || '').replace(/"/g, '&quot;')}" data-node-id="${nodeId}" data-field="text"></label>
         <h4>選択肢</h4>
         <div class="choices-editor" data-node-id="${nodeId}"></div>
@@ -412,6 +416,11 @@ export class GuiEditorManager {
     const field = input.dataset.field
     const value = input.value
 
+    // ノードIDの変更は renameNodeId でのみ行い、ここでは処理しない
+    if (field === 'id') {
+      return
+    }
+
     if (choiceIndex !== undefined) {
       // Update choice field
       const node = this.appState.model.nodes[nodeId]
@@ -452,6 +461,86 @@ export class GuiEditorManager {
   }
 
   // Node management
+  renameNodeId(oldId, newIdRaw) {
+    if (!this.appState.model || !this.appState.model.nodes) {
+      setStatus('モデルが読み込まれていません', 'warn')
+      return
+    }
+
+    const model = this.appState.model
+    const newId = (newIdRaw || '').trim()
+
+    if (!model.nodes[oldId]) {
+      setStatus(`ノードID「${oldId}」が見つかりません`, 'error')
+      return
+    }
+
+    if (!newId) {
+      setStatus('新しいノードIDを入力してください', 'warn')
+      return
+    }
+
+    if (newId === oldId) {
+      setStatus('同じノードIDが指定されています', 'info')
+      return
+    }
+
+    if (model.nodes[newId]) {
+      setStatus(`❌ ノードID「${newId}」は既に存在します`, 'error')
+      return
+    }
+
+    if (/\s/.test(newId)) {
+      setStatus('ノードIDに空白を含めることはできません', 'warn')
+      return
+    }
+
+    const node = model.nodes[oldId]
+
+    // 再インデックス
+    delete model.nodes[oldId]
+    model.nodes[newId] = node
+    if (node) {
+      node.id = newId
+    }
+
+    // startNode の更新
+    if (model.startNode === oldId) {
+      model.startNode = newId
+    }
+
+    // choices.target の更新
+    let updatedTargets = 0
+    for (const [, n] of Object.entries(model.nodes)) {
+      if (!n.choices) continue
+      for (const choice of n.choices) {
+        if (choice.target === oldId) {
+          choice.target = newId
+          updatedTargets++
+        }
+      }
+    }
+
+    // metadata.nodeOrder の更新（存在する場合）
+    if (model.metadata && Array.isArray(model.metadata.nodeOrder)) {
+      model.metadata.nodeOrder = model.metadata.nodeOrder.map(id => id === oldId ? newId : id)
+    }
+
+    // UI 更新
+    if (this.nodeList) {
+      this.renderNodeList()
+    }
+
+    // ドラフト保存
+    this.saveDraftModel()
+
+    let message = `ノードID「${oldId}」を「${newId}」に変更しました`
+    if (updatedTargets > 0) {
+      message += ` (${updatedTargets}個のターゲットを更新)`
+    }
+    setStatus(`✅ ${message}`, 'success')
+  }
+
   addChoice(nodeId) {
     const node = this.appState.model.nodes[nodeId]
     if (!node.choices) node.choices = []

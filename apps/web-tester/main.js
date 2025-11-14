@@ -304,36 +304,6 @@ async function loadModel(modelName) {
   }
   return response.json()
 }
-class Logger {
-  static log(level, message, data = {}) {
-    const timestamp = new Date().toISOString()
-    const logEntry = {
-      timestamp,
-      level,
-      message,
-      ...data,
-      userAgent: navigator.userAgent,
-      url: window.location.href
-    }
-
-    console[level === 'error' ? 'error' : 'log'](`[${timestamp}] ${level.toUpperCase()}: ${message}`, data)
-
-    // Store in sessionStorage for debugging
-    try {
-      const logs = JSON.parse(sessionStorage.getItem('narrativeGenLogs') || '[]')
-      logs.push(logEntry)
-      // Keep only last 100 entries
-      if (logs.length > 100) logs.shift()
-      sessionStorage.setItem('narrativeGenLogs', JSON.stringify(logs))
-    } catch (error) {
-      console.warn('Failed to store log:', error)
-    }
-  }
-
-  static info(message, data) { this.log('info', message, data) }
-  static warn(message, data) { this.log('warn', message, data) }
-  static error(message, data) { this.log('error', message, data) }
-}
 
 // Error boundary for UI operations
 class ErrorBoundary {
@@ -513,8 +483,31 @@ function renderState() {
 }
 
 function setStatus(message, type = 'info') {
-  statusText.textContent = message
+  if (!statusText) return
+
   statusText.dataset.type = type
+
+  let iconId
+  switch (type) {
+    case 'success':
+      iconId = 'icon-status-success'
+      break
+    case 'error':
+      iconId = 'icon-status-error'
+      break
+    case 'warn':
+      iconId = 'icon-status-warn'
+      break
+    default:
+      iconId = 'icon-status-info'
+      break
+  }
+
+  statusText.innerHTML = `<svg class="icon icon-sm"><use href="#${iconId}"></use></svg>${message}`
+}
+
+if (typeof window !== 'undefined') {
+  window.setStatus = setStatus
 }
 
 function showErrors(errors) {
@@ -662,204 +655,6 @@ function getConditionText(conditions) {
     if (cond.type === 'not') return `NOT(${serializeConditions([cond.condition])})`
     return cond.type
   }).join(', ')
-}
-
-function importCsvFile(file) {
-  try {
-    const text = await file.text()
-    const delim = file.name.endsWith('.tsv') || text.includes('\t') ? '\t' : ','
-    const rows = text.split(/\r?\n/).filter((l) => l.trim().length > 0)
-    if (rows.length === 0) throw new Error('空のファイルです')
-
-    const headers = rows[0].split(delim).map((h) => h.trim())
-    const idx = {
-      node_id: headers.indexOf('node_id'),
-      node_text: headers.indexOf('node_text'),
-      node_type: headers.indexOf('node_type'),
-      node_tags: headers.indexOf('node_tags'),
-      node_assets: headers.indexOf('node_assets'),
-      choice_id: headers.indexOf('choice_id'),
-      choice_text: headers.indexOf('choice_text'),
-      choice_target: headers.indexOf('choice_target'),
-      choice_conditions: headers.indexOf('choice_conditions'),
-      choice_effects: headers.indexOf('choice_effects'),
-      choice_outcome_type: headers.indexOf('choice_outcome_type'),
-      choice_outcome_value: headers.indexOf('choice_outcome_value'),
-      choice_metadata: headers.indexOf('choice_metadata'),
-      choice_variables: headers.indexOf('choice_variables'),
-      initial_flags: headers.indexOf('initial_flags'),
-      initial_resources: headers.indexOf('initial_resources'),
-      global_metadata: headers.indexOf('global_metadata'),
-    }
-
-    // Performance optimization: Process in chunks for large files
-    const totalRows = rows.length - 1 // Exclude header
-    const chunkSize = 100
-    const chunks = []
-
-    for (let i = 1; i < rows.length; i += chunkSize) {
-      chunks.push(rows.slice(i, i + chunkSize))
-    }
-
-    // 初期値の抽出（最初の行）
-    let initialFlags = {}
-    let initialResources = {}
-    if (rows.length > 1) {
-      const firstRow = parseCsvLine(rows[1], delim)
-      if (idx.initial_flags >= 0 && firstRow[idx.initial_flags]) {
-        initialFlags = parseKeyValuePairs(firstRow[idx.initial_flags], 'boolean')
-      }
-      if (idx.initial_resources >= 0 && firstRow[idx.initial_resources]) {
-        initialResources = parseKeyValuePairs(firstRow[idx.initial_resources], 'number')
-      }
-    }
-
-    const nodes = {}
-    const errors = []
-    let processedRows = 0
-
-    // Progress indicator
-    setStatus(`CSV読み込み中... (0/${totalRows})`)
-
-    // Process chunks with progress updates
-    for (const chunk of chunks) {
-      for (const row of chunk) {
-        const cells = parseCsvLine(row, delim)
-        const nid = (cells[idx.node_id] || '').trim()
-        if (!nid) continue
-
-        if (!nodes[nid]) {
-          nodes[nid] = {
-            id: nid,
-            text: '',
-            choices: [],
-            type: 'normal',
-            tags: [],
-            assets: {}
-          }
-        }
-
-        const node = nodes[nid]
-
-        const ntext = (cells[idx.node_text] || '').trim()
-        if (ntext) node.text = ntext
-
-        // Parse node metadata
-        if (idx.node_type >= 0 && cells[idx.node_type]) {
-          node.type = cells[idx.node_type].trim()
-        }
-
-        if (idx.node_tags >= 0 && cells[idx.node_tags]) {
-          node.tags = cells[idx.node_tags].split(';').map(t => t.trim()).filter(Boolean)
-        }
-
-        if (idx.node_assets >= 0 && cells[idx.node_assets]) {
-          node.assets = parseKeyValuePairs(cells[idx.node_assets])
-        }
-
-        const cid = (cells[idx.choice_id] || '').trim()
-        const ctext = (cells[idx.choice_text] || '').trim()
-        const ctgt = (cells[idx.choice_target] || '').trim()
-
-        if (ctgt || ctext || cid) {
-          const choice = {
-            id: cid || `c${nodes[nid].choices.length + 1}`,
-            text: ctext || '',
-            target: ctgt || nid,
-            metadata: {},
-            variables: {}
-          }
-
-          // Parse choice metadata
-          if (idx.choice_metadata >= 0 && cells[idx.choice_metadata]) {
-            choice.metadata = parseKeyValuePairs(cells[idx.choice_metadata])
-          }
-
-          // Parse choice variables
-          if (idx.choice_variables >= 0 && cells[idx.choice_variables]) {
-            choice.variables = parseKeyValuePairs(cells[idx.choice_variables])
-          }
-
-          // 条件のパース
-          if (idx.choice_conditions >= 0 && cells[idx.choice_conditions]) {
-            try {
-              choice.conditions = parseConditions(cells[idx.choice_conditions])
-            } catch (err) {
-              errors.push(`行${processedRows + 2}: 条件パースエラー: ${err.message}`)
-            }
-          }
-
-          // 効果のパース
-          if (idx.choice_effects >= 0 && cells[idx.choice_effects]) {
-            try {
-              choice.effects = parseEffects(cells[idx.choice_effects])
-            } catch (err) {
-              errors.push(`行${processedRows + 2}: 効果パースエラー: ${err.message}`)
-            }
-          }
-
-          // アウトカムのパース
-          if (idx.choice_outcome_type >= 0 && cells[idx.choice_outcome_type]) {
-            choice.outcome = {
-              type: cells[idx.choice_outcome_type].trim(),
-              value: idx.choice_outcome_value >= 0 ? cells[idx.choice_outcome_value]?.trim() : undefined
-            }
-          }
-
-          nodes[nid].choices.push(choice)
-        }
-
-        processedRows++
-
-        // Update progress every 100 rows
-        if (processedRows % 100 === 0) {
-          setStatus(`CSV読み込み中... (${processedRows}/${totalRows})`)
-          // Allow UI to update
-          await new Promise(resolve => setTimeout(resolve, 0))
-        }
-      }
-    }
-
-    // バリデーション
-    const validationErrors = validateModel(nodes)
-    errors.push(...validationErrors)
-
-    if (errors.length > 0) {
-      showErrors(errors)
-      setStatus(`CSV読み込みに失敗しました（${errors.length}件のエラー）`, 'warn')
-    } else {
-      hideErrors()
-      setStatus('CSV を読み込みました', 'success')
-    }
-
-    // グローバルメタデータのパース（最初の行）
-    let globalMetadata = {}
-    if (rows.length > 1 && idx.global_metadata >= 0) {
-      const firstRow = parseCsvLine(rows[1], delim)
-      if (firstRow[idx.global_metadata]) {
-        globalMetadata = parseKeyValuePairs(firstRow[idx.global_metadata])
-      }
-    }
-
-    const firstNode = Object.keys(nodes)[0]
-    appState.model = {
-      modelType: 'adventure-playthrough',
-      startNode: firstNode,
-      flags: initialFlags,
-      resources: initialResources,
-      nodes,
-      metadata: globalMetadata
-    }
-    session = startSession(appState.model)
-    currentModelName = file.name
-    initStory()
-    renderState()
-    renderChoices()
-    renderStory()
-  } catch (err) {
-    console.error(err)
-    setStatus(`CSV 読み込みに失敗: ${err?.message ?? err}`, 'warn')
-  }
 }
 
 function setControlsEnabled(enabled) {
@@ -1456,35 +1251,6 @@ async function generateNextNodeUI() {
   }
 }
 
-
-saveAiSettings.addEventListener('click', () => {
-  const newConfig = {
-    provider: aiProvider.value
-  }
-
-  if (aiProvider.value === 'openai') {
-    newConfig.openai = {
-      apiKey: openaiApiKey.value,
-      model: openaiModel.value
-    }
-    if (!newConfig.openai.apiKey) {
-      aiManager.setOutput('OpenAI APIキーを入力してください')
-      return
-    }
-  } else if (aiProvider.value === 'ollama') {
-    newConfig.ollama = {
-      url: ollamaUrl.value,
-      model: ollamaModel.value
-    }
-  }
-
-  aiManager.updateConfig(newConfig)
-  aiManager.setOutput('AI設定を保存しました')
-})
-
-generateNextNodeBtn.addEventListener('click', () => aiManager.generateNodeUI())
-paraphraseCurrentBtn.addEventListener('click', () => aiManager.paraphraseCurrentTextUI())
-
 function renderNodeList() {
   const fragment = document.createDocumentFragment()
   for (const [nodeId, node] of Object.entries(appState.model.nodes)) {
@@ -1664,277 +1430,12 @@ confirmImportBtn.addEventListener('click', async () => {
   const file = csvFileInput.files[0]
   if (!file) return
   hideCsvPreview()
-  await importCsvFile(file)
+  await safeImportCsv(file)
 })
 
 cancelPreviewBtn.addEventListener('click', () => {
   hideCsvPreview()
 })
-
-csvFileInput.addEventListener('change', async (e) => {
-  const file = e.target.files[0]
-  if (!file) return
-  showCsvPreview(file)
-})
-function parseCsvLine(line, delim) {
-  const cells = []
-  let current = ''
-  let inQuotes = false
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i]
-    if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
-        current += '"'
-        i++
-      } else {
-        inQuotes = !inQuotes
-      }
-    } else if (char === delim && !inQuotes) {
-      cells.push(current)
-      current = ''
-    } else {
-      current += char
-    }
-  }
-  cells.push(current)
-  return cells
-}
-
-// キー=値ペアのパース（セミコロン区切り）
-function parseKeyValuePairs(text, type = 'string') {
-  const result = {}
-  text.split(';').forEach((pair) => {
-    const [key, val] = pair.split('=').map((s) => s.trim())
-    if (!key || val === undefined) return
-    if (type === 'boolean') {
-      result[key] = val.toLowerCase() === 'true'
-    } else if (type === 'number') {
-      result[key] = parseFloat(val)
-    } else {
-      result[key] = val
-    }
-  })
-  return result
-}
-
-// 条件のパース
-function parseConditions(text) {
-  const conditions = []
-  text.split(';').forEach((cond) => {
-    cond = cond.trim()
-    if (!cond) return
-    
-    if (cond.startsWith('flag:')) {
-      const [key, val] = cond.slice(5).split('=')
-      conditions.push({ type: 'flag', key: key.trim(), value: val.trim().toLowerCase() === 'true' })
-    } else if (cond.startsWith('resource:')) {
-      const match = cond.slice(9).match(/^(\w+)(>=|<=|>|<|==)(.+)$/)
-      if (!match) throw new Error(`不正なリソース条件: ${cond}`)
-      conditions.push({ type: 'resource', key: match[1].trim(), op: match[2], value: parseFloat(match[3]) })
-    } else if (cond.startsWith('variable:')) {
-      const match = cond.slice(9).match(/^(\w+)(==|!=|contains|!contains)(.+)$/)
-      if (!match) throw new Error(`不正な変数条件: ${cond}`)
-      conditions.push({ type: 'variable', key: match[1].trim(), op: match[2], value: match[3].trim() })
-    } else if (cond.startsWith('timeWindow:')) {
-      const [start, end] = cond.slice(11).split('-').map((s) => parseInt(s.trim()))
-      conditions.push({ type: 'timeWindow', start, end })
-    } else if (cond.startsWith('and(') && cond.endsWith(')')) {
-      const innerText = cond.slice(4, -1)
-      const subConditions = parseConditions(innerText)
-      conditions.push({ type: 'and', conditions: subConditions })
-    } else if (cond.startsWith('or(') && cond.endsWith(')')) {
-      const innerText = cond.slice(3, -1)
-      const subConditions = parseConditions(innerText)
-      conditions.push({ type: 'or', conditions: subConditions })
-    } else if (cond.startsWith('not(') && cond.endsWith(')')) {
-      const innerText = cond.slice(4, -1)
-      const subCondition = parseConditions(innerText)[0]
-      if (!subCondition) throw new Error(`不正な否定条件: ${cond}`)
-      conditions.push({ type: 'not', condition: subCondition })
-    } else {
-      throw new Error(`不明な条件タイプ: ${cond}`)
-    }
-  })
-  return conditions
-}
-
-// 効果のパース
-function parseEffects(text) {
-  const effects = []
-  text.split(';').forEach((eff) => {
-    eff = eff.trim()
-    if (!eff) return
-    
-    if (eff.startsWith('setFlag:')) {
-      const [key, val] = eff.slice(8).split('=')
-      effects.push({ type: 'setFlag', key: key.trim(), value: val.trim().toLowerCase() === 'true' })
-    } else if (eff.startsWith('addResource:')) {
-      const [key, val] = eff.slice(12).split('=')
-      effects.push({ type: 'addResource', key: key.trim(), delta: parseFloat(val) })
-    } else if (eff.startsWith('setVariable:')) {
-      const [key, val] = eff.slice(12).split('=')
-      effects.push({ type: 'setVariable', key: key.trim(), value: val.trim() })
-    } else if (eff.startsWith('multiplyResource:')) {
-      const [key, val] = eff.slice(16).split('=')
-      effects.push({ type: 'multiplyResource', key: key.trim(), factor: parseFloat(val) })
-    } else if (eff.startsWith('setResource:')) {
-      const [key, val] = eff.slice(12).split('=')
-      effects.push({ type: 'setResource', key: key.trim(), value: parseFloat(val) })
-    } else if (eff.startsWith('randomEffect:')) {
-      const effectList = eff.slice(12).split('|').map(e => e.trim())
-      const parsedEffects = effectList.map(e => parseEffects(e)[0]).filter(Boolean)
-      effects.push({ type: 'randomEffect', effects: parsedEffects })
-    } else if (eff.startsWith('conditionalEffect:')) {
-      const parts = eff.slice(17).split('?')
-      if (parts.length === 2) {
-        const condition = parseConditions(parts[0])[0]
-        const effectText = parts[1]
-        const effect = parseEffects(effectText)[0]
-        if (condition && effect) {
-          effects.push({ type: 'conditionalEffect', condition, effect })
-        }
-      }
-    } else if (eff.startsWith('goto:')) {
-      effects.push({ type: 'goto', target: eff.slice(5).trim() })
-    } else {
-      throw new Error(`不明な効果タイプ: ${eff}`)
-    }
-  })
-  return effects
-}
-
-// モデル検証
-function validateModel(nodes) {
-  const errors = []
-  const nodeIds = Object.keys(nodes)
-  
-  for (const [nid, node] of Object.entries(nodes)) {
-    for (const choice of node.choices || []) {
-      if (choice.target && !nodeIds.includes(choice.target)) {
-        errors.push(`ノード'${nid}'の選択肢'${choice.id}': 存在しないターゲット'${choice.target}'`)
-      }
-    }
-  }
-  
-  return errors
-}
-
-exportCsvBtn.addEventListener('click', () => {
-  if (!appState.model) {
-    setStatus('まずモデルを読み込んでください', 'warn')
-    return
-  }
-  const header = [
-    'node_id', 'node_text', 'node_type', 'node_tags', 'node_assets',
-    'choice_id', 'choice_text', 'choice_target',
-    'choice_conditions', 'choice_effects', 'choice_outcome_type', 'choice_outcome_value',
-    'choice_metadata', 'choice_variables',
-    'initial_flags', 'initial_resources', 'global_metadata'
-  ]
-  const rows = [header.join(',')]
-  
-  let firstRow = true
-  for (const [nid, node] of Object.entries(appState.model.nodes)) {
-    const initialFlags = firstRow && appState.model.flags ? serializeKeyValuePairs(appState.model.flags) : ''
-    const initialResources = firstRow && appState.model.resources ? serializeKeyValuePairs(appState.model.resources) : ''
-    const globalMetadata = firstRow && appState.model.metadata ? serializeKeyValuePairs(appState.model.metadata) : ''
-    firstRow = false
-    
-    // Node metadata
-    const nodeType = node.type || 'normal'
-    const nodeTags = node.tags ? node.tags.join(';') : ''
-    const nodeAssets = node.assets ? serializeKeyValuePairs(node.assets) : ''
-    
-    if (!node.choices || node.choices.length === 0) {
-      rows.push([
-        nid, escapeCsv(node.text ?? ''), nodeType, escapeCsv(nodeTags), escapeCsv(nodeAssets),
-        '', '', '',
-        '', '', '', '',
-        '', '',
-        initialFlags, initialResources, globalMetadata
-      ].join(','))
-      continue
-    }
-    
-    for (const ch of node.choices) {
-      const conditions = ch.conditions ? serializeConditions(ch.conditions) : ''
-      const effects = ch.effects ? serializeEffects(ch.effects) : ''
-      const outcomeType = ch.outcome?.type || ''
-      const outcomeValue = ch.outcome?.value || ''
-      
-      // Choice metadata and variables
-      const choiceMetadata = ch.metadata ? serializeKeyValuePairs(ch.metadata) : ''
-      const choiceVariables = ch.variables ? serializeKeyValuePairs(ch.variables) : ''
-      
-      rows.push([
-        nid, escapeCsv(node.text ?? ''), nodeType, escapeCsv(nodeTags), escapeCsv(nodeAssets),
-        ch.id ?? '', escapeCsv(ch.text ?? ''), ch.target ?? '',
-        escapeCsv(conditions), escapeCsv(effects), outcomeType, outcomeValue,
-        escapeCsv(choiceMetadata), escapeCsv(choiceVariables),
-        initialFlags, initialResources, globalMetadata
-      ].join(','))
-    }
-  }
-  
-  const csv = rows.join('\n')
-  const blob = new Blob([csv], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = (currentModelName ? currentModelName.replace(/\.[^.]+$/, '') : 'model') + '.csv'
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-})
-
-// 条件のシリアライズ
-function serializeConditions(conditions) {
-  return conditions.map((cond) => {
-    if (cond.type === 'flag') return `flag:${cond.key}=${cond.value}`
-    if (cond.type === 'resource') return `resource:${cond.key}${cond.op}${cond.value}`
-    if (cond.type === 'variable') return `variable:${cond.key}${cond.op}${cond.value}`
-    if (cond.type === 'timeWindow') return `timeWindow:${cond.start}-${cond.end}`
-    if (cond.type === 'and') return `and(${serializeConditions(cond.conditions)})`
-    if (cond.type === 'or') return `or(${serializeConditions(cond.conditions)})`
-    if (cond.type === 'not') return `not(${serializeConditions([cond.condition])})`
-    return ''
-  }).filter(Boolean).join(';')
-}
-
-// 効果のシリアライズ
-function serializeEffects(effects) {
-  return effects.map((eff) => {
-    if (eff.type === 'setFlag') return `setFlag:${eff.key}=${eff.value}`
-    if (eff.type === 'addResource') return `addResource:${eff.key}=${eff.delta}`
-    if (eff.type === 'setVariable') return `setVariable:${eff.key}=${eff.value}`
-    if (eff.type === 'multiplyResource') return `multiplyResource:${eff.key}=${eff.factor}`
-    if (eff.type === 'setResource') return `setResource:${eff.key}=${eff.value}`
-    if (eff.type === 'randomEffect') {
-      const effectStrings = eff.effects.map(e => serializeEffects([e])[0])
-      return `randomEffect:${effectStrings.join('|')}`
-    }
-    if (eff.type === 'conditionalEffect') {
-      const conditionStr = serializeConditions([eff.condition])[0]
-      const effectStr = serializeEffects([eff.effect])[0]
-      return `conditionalEffect:${conditionStr}?${effectStr}`
-    }
-    if (eff.type === 'goto') return `goto:${eff.target}`
-    return ''
-  }).filter(Boolean).join(';')
-}
-
-// キー=値ペアのシリアライズ
-function serializeKeyValuePairs(obj) {
-  return Object.entries(obj).map(([k, v]) => `${k}=${v}`).join(';')
-}
-
-function escapeCsv(s) {
-  if (s == null) return ''
-  const needsQuote = /[",\n]/.test(s)
-  const t = String(s).replace(/"/g, '""')
-  return needsQuote ? '"' + t + '"' : t
-}
 
 saveGuiBtn.addEventListener('click', () => {
   try {
@@ -1978,6 +1479,18 @@ cancelGuiBtn.addEventListener('click', () => {
 
 // 言い換えイベント（非AI）
 nodeList.addEventListener('click', (e) => {
+  if (e.target.classList.contains('rename-node-btn')) {
+    const nodeId = e.target.dataset.nodeId
+    const input = nodeList.querySelector(
+      `input[data-node-id="${nodeId}"][data-field="id"]`,
+    )
+    if (!input) {
+      setStatus('ノードID入力欄が見つかりません', 'error')
+      return
+    }
+    guiEditorManager.renameNodeId(nodeId, input.value)
+  }
+
   if (e.target.classList.contains('paraphrase-btn')) {
     const nodeId = e.target.dataset.nodeId
     const choiceIndex = e.target.dataset.choiceIndex
@@ -2622,12 +2135,6 @@ const NODE_TEMPLATES = {
   blank: { text: '', choices: [] }
 }
 
-function generateNodeId() {
-  const timestamp = Date.now().toString(36)
-    document.getElementById('quickNodeModal').classList.remove('show')
-  })
-}
-
 if (createQuickNodeBtn) {
   createQuickNodeBtn.addEventListener('click', () => guiEditorManager.createQuickNode())
 }
@@ -2659,82 +2166,6 @@ function openBatchChoiceModal() {
   
   modal.style.display = 'flex'
   modal.classList.add('show')
-}
-
-function updateBatchChoiceList() {
-  const nodeId = document.getElementById('batchNodeSelect').value
-  const choiceList = document.getElementById('batchChoiceList')
-  
-  if (!nodeId || !_model.nodes[nodeId]) {
-    choiceList.innerHTML = '<p style="color: #6b7280;">ノードを選択してください</p>'
-    return
-  }
-  
-  const node = _model.nodes[nodeId]
-  const choices = node.choices || []
-  
-  if (choices.length === 0) {
-    choiceList.innerHTML = '<p style="color: #6b7280;">このノードには選択肢がありません</p>'
-    return
-  }
-  
-  choiceList.innerHTML = '<div style="display: flex; flex-direction: column; gap: 0.5rem;"></div>'
-  const container = choiceList.firstElementChild
-  
-  choices.forEach((choice, index) => {
-    const div = document.createElement('div')
-    div.style.cssText = 'padding: 0.75rem; background: rgba(255,255,255,0.5); border-radius: 4px; border: 1px solid rgba(0,0,0,0.1);'
-    div.innerHTML = `
-      <div style="font-weight: 600; margin-bottom: 0.25rem;">選択肢 ${index + 1}</div>
-      <div style="font-size: 0.9em; color: #6b7280;">${choice.text || '(テキストなし)'}</div>
-      <div style="font-size: 0.85em; color: #9ca3af; margin-top: 0.25rem;">→ ${choice.target || '(ターゲットなし)'}</div>
-    `
-    container.appendChild(div)
-  })
-}
-
-function applyBatchChoice() {
-  const nodeId = document.getElementById('batchNodeSelect').value
-  if (!nodeId || !_model.nodes[nodeId]) {
-    setStatus('❌ ノードを選択してください', 'error')
-    return
-  }
-  
-  const node = _model.nodes[nodeId]
-  const applyCondition = document.getElementById('batchCondition').checked
-  const applyEffect = document.getElementById('batchEffect').checked
-  const conditionText = document.getElementById('batchConditionText').value.trim()
-  const effectText = document.getElementById('batchEffectText').value.trim()
-  
-  let modified = 0
-  
-  if (node.choices) {
-    node.choices.forEach(choice => {
-      if (applyCondition && conditionText) {
-        choice.conditions = choice.conditions || []
-        // Simple parsing - in production, use proper parser
-        choice.conditions.push(conditionText)
-        modified++
-      }
-      if (applyEffect && effectText) {
-        choice.effects = choice.effects || []
-        choice.effects.push(effectText)
-        modified++
-      }
-    })
-  }
-  
-  // Close modal
-  document.getElementById('batchChoiceModal').style.display = 'none'
-  document.getElementById('batchChoiceModal').classList.remove('show')
-  
-  // Refresh UI
-  if (typeof renderNodeList === 'function') {
-    renderNodeList()
-  }
-  
-  setStatus(`✅ ${node.choices.length}個の選択肢に変更を適用しました`, 'success')
-  Logger.info('Batch choice edit applied', { nodeId, modified })
 }
 
 // Event listeners for batch choice edit
