@@ -231,24 +231,24 @@ export class EventManager {
 
 #### Step 1.1: 設定ファイルの分離
 - [ ] `src/config/constants.js` 作成
-- [ ] `src/config/palettes.js` 作成（カラーパレット定義を移動）
+- [x] `src/config/palettes.js` 作成（カラーパレット定義を移動）
 - [ ] `src/config/keybindings.js` 作成
 
 #### Step 1.2: コアモジュールの実装
-- [ ] `src/core/state.js` 作成（状態管理クラス）
-- [ ] `src/core/session.js` 作成（セッション管理）
-- [ ] `src/core/logger.js` 作成（統一ロギング）
+- [x] `src/core/state.js` 作成（状態管理クラス）
+- [x] `src/core/session.js` 作成（セッション管理）
+- [x] `src/core/logger.js` 作成（統一ロギング）
 
 #### Step 1.3: UI基盤モジュールの実装
-- [ ] `src/ui/dom.js` 作成（DOM操作ヘルパー）
-- [ ] `src/ui/events.js` 作成（イベント管理）
-- [ ] `src/ui/theme.js` 作成（テーマ管理を移動）
-- [ ] `src/ui/toast.js` 作成（トースト通知）
+- [x] `src/ui/dom.js` 作成（DOM操作ヘルパー）
+- [x] `src/ui/events.js` 作成（イベント管理）
+- [x] `src/ui/theme.js` 作成（テーマ管理を移動）
+- [x] `src/ui/toast.js` 作成（トースト通知）
 
 #### Step 1.4: ユーティリティモジュールの実装
-- [ ] `src/utils/validation.js` 作成
-- [ ] `src/utils/file-utils.js` 作成
-- [ ] `src/utils/storage.js` 作成
+- [x] `src/utils/validation.js` 作成
+- [x] `src/utils/file-utils.js` 作成
+- [x] `src/utils/storage.js` 作成
 
 ### Phase 2: 機能モジュールの分離（優先度: 🟡 Medium）
 
