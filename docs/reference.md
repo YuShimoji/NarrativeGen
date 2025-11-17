@@ -1,6 +1,10 @@
 # NarrativeGen リファレンス（Draft v1.1）
 
-このページは、今後の仕様／GUIマッピングを一元管理する「SSOT（Single Source of Truth）」です。実装と同時に更新します。
+このページは、今後の仕様／GUIマッピングを一元管理する「SSOT（Single Source of Truth）」です。
+
+> **現状メモ（2025-11 時点）**: 以下の v1.1 仕様（`nodeType`, `next`, `onEnter` など）は**提案段階**であり、
+> TypeScript エンジン (`packages/engine-ts/src/types.ts` の `NodeDef`) にはまだ導入されていません。
+> 現行実装では `NodeDef { id, text?, choices? }` のみが有効です。
 
 ## 1. モデル仕様 v1.1（提案）
 - 目的: 「選択肢ノード」と「テキスト送りノード（パッセージ）」を明確に分離し、JSONを直感的に。
