@@ -3,6 +3,9 @@
  * Handles debug information display and state inspection
  */
 
+import { getCurrentSession } from '../core/session.js'
+import { getAvailableChoices } from '../../../../packages/engine-ts/dist/browser.js'
+
 export class DebugManager {
   constructor(appState) {
     this.appState = appState

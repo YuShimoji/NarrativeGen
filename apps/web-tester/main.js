@@ -25,8 +25,7 @@ import {
 } from '../../packages/engine-ts/dist/browser.js'
 
 // Import local modules
-import { ThemeManager } from './src/ui/theme.js'
-import { Toast } from './src/ui/toast.js'
+import { ThemeManager, setupThemeEventListeners } from './src/ui/theme.js'
 import { AppState } from './src/core/state.js'
 import { DOMManager } from './src/ui/dom.js'
 import { EventManager } from './src/ui/events.js'
@@ -369,9 +368,11 @@ const toggleSidebarBtn = document.getElementById('toggleSidebarBtn')
 const storyTab = document.getElementById('storyTab')
 const graphTab = document.getElementById('graphTab')
 const debugTab = document.getElementById('debugTab')
+const referenceTab = document.getElementById('referenceTab')
 const storyPanel = document.getElementById('storyPanel')
 const graphPanel = document.getElementById('graphPanel')
 const debugPanel = document.getElementById('debugPanel')
+const referencePanel = document.getElementById('referencePanel')
 
 // Graph elements
 const graphSvg = document.getElementById('graphSvg')
@@ -940,15 +941,14 @@ startBtn.addEventListener('click', async () => {
     ])
 
     appState.model = model
-    session = startSession(appState.model)
-    currentModelName = sampleId
+    startNewSession(appState.model)
+    setCurrentModelName(sampleId)
     setStatus(`サンプル ${sampleId} を実行中`, 'success')
     initStory()
     startAutoSave() // Start auto-save when session begins
   } catch (err) {
     console.error(err)
-    session = null
-    currentModelName = null
+    clearSession()
     stopAutoSave() // Stop auto-save when session ends
     setStatus(`サンプルの初期化に失敗しました: ${err?.message ?? err}`, 'warn')
   } finally {
@@ -1049,19 +1049,6 @@ dropZone.addEventListener('drop', async (e) => {
   }
 })
 
-// Load AI config from aiManager
-const aiConfigFromManager = aiManager.getConfig()
-aiProvider.value = aiConfigFromManager.provider
-if (aiConfigFromManager.provider === 'openai') {
-  openaiSettings.style.display = 'block'
-  openaiApiKey.value = aiConfigFromManager.openai.apiKey || ''
-  openaiModel.value = aiConfigFromManager.openai.model || 'gpt-3.5-turbo'
-} else if (aiConfigFromManager.provider === 'ollama') {
-  ollamaSettings.style.display = 'block'
-  ollamaUrl.value = aiConfigFromManager.ollama.url || 'http://localhost:11434'
-  ollamaModel.value = aiConfigFromManager.ollama.model || 'llama2'
-}
-
 // Load advanced features setting
 const advancedEnabled = localStorage.getItem('narrativeGenAdvancedEnabled') === 'true'
 if (enableAdvancedFeatures) {
@@ -1117,6 +1104,7 @@ function switchTab(tabName) {
 storyTab.addEventListener('click', () => switchTab('story'))
 graphTab.addEventListener('click', () => switchTab('graph'))
 debugTab.addEventListener('click', () => switchTab('debug'))
+if (referenceTab) referenceTab.addEventListener('click', () => switchTab('reference'))
 advancedTab.addEventListener('click', () => switchTab('advanced'))
 
 // Advanced features toggle
@@ -2091,36 +2079,6 @@ if (closeBatchEditBtn) closeBatchEditBtn.addEventListener('click', () => guiEdit
 // Color Palette Event Listeners
 // ===========================
 const themeBtn = document.getElementById('themeBtn')
-const paletteModal = document.getElementById('paletteModal')
-const closePaletteBtn = document.getElementById('closePaletteBtn')
-
-if (themeBtn) {
-  themeBtn.addEventListener('click', () => {
-    initPaletteUI()
-    paletteModal.style.display = 'flex'
-    paletteModal.classList.add('show')
-  })
-}
-
-if (closePaletteBtn) {
-  closePaletteBtn.addEventListener('click', () => {
-    paletteModal.style.display = 'none'
-    paletteModal.classList.remove('show')
-  })
-}
-
-if (paletteModal) {
-  paletteModal.addEventListener('click', (e) => {
-    if (e.target.id === 'paletteModal') {
-      paletteModal.style.display = 'none'
-      paletteModal.classList.remove('show')
-    }
-  })
-}
-
-// Load saved theme on startup
-loadSavedPalette()
-
 // ===========================
 // Quick Node Creation
 // ===========================
@@ -2232,6 +2190,7 @@ const referenceManager = new ReferenceManager()
 const csvManager = new CsvManager(appState)
 const aiManager = new AiManager(appState)
 const lexiconManager = new LexiconManager()
+const themeManager = new ThemeManager()
 
 // Initialize story manager
 storyManager.initialize(document.getElementById('storyPanel'))
@@ -2278,6 +2237,10 @@ aiManager.initialize(
 
 // Initialize lexicon manager
 lexiconManager.initialize()
+
+// Initialize theme manager (palette UI and saved theme)
+setupThemeEventListeners(themeManager)
+themeManager.loadSavedPalette()
 
 // Set up graph control event listeners
 if (fitGraphBtn) {
