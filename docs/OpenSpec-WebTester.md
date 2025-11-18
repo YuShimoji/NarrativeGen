@@ -83,7 +83,7 @@ NarrativeGen Web Tester は、`engine-ts` が提供する物語エンジンを�
 | GUI 編集結果の保存/キャンセル | 実装済 | `保存` でモデル反映＋再バリデーション、`キャンセル` はモード終了のみ (元モデルへのロールバックは未実装) |
 | クイックノード作成 (テンプレート) | 実装済(要テスト) | テンプレート + 自動ID生成 |
 | 選択肢一括編集 (条件/効果テキストの一括付与) | 実装済(簡易版) | 条件/効果を文字列として追加。構造化されたパースは未対応 |
-| ノードIDリネーム + 参照更新 | 実装済(要テスト) | `GuiEditorManager.renameNodeId` で `startNode` / `choices.target` / `metadata.nodeOrder` を一括更新 |
+| ノードIDリネーム + 参照更新 | 実装済 | `GuiEditorManager.renameNodeId` で `startNode` / `choices.target` / `metadata.nodeOrder` を一括更新 |
 | ノード/選択肢 DnD 並べ替え | **未実装 (旧仕様のみ)** | `metadata.nodeOrder` 等の扱いは今後実装対象 |
 | 条件/効果/アウトカムの専用GUI編集 | 部分実装 | テキスト入力ベース。構造化 UI は今後の改善対象 |
 | GUI 編集中ドラフトの自動保存 | 実装済 | `draft_model` に保存。復元導線は簡易ダイアログのみで、専用UIは未整備 |

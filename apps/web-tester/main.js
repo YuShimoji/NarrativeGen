@@ -1339,9 +1339,12 @@ function initStory() {
 }
 
 function appendStoryFromCurrentNode() {
-  const node = appState.model?.nodes?.[session?.nodeId]
+  const currentSession = getCurrentSession()
+  if (!currentSession) return
+
+  const node = appState.model?.nodes?.[currentSession.nodeId]
   if (node?.text) {
-    const resolvedText = resolveVariables(node.text, session, appState.model)
+    const resolvedText = resolveVariables(node.text, currentSession, appState.model)
     appState.storyLog.push(resolvedText)
   }
 }
@@ -1437,8 +1440,9 @@ saveGuiBtn.addEventListener('click', () => {
 
     hideErrors()
     // Restart session with current model
-    session = startSession(appState.model)
-    currentModelName = 'gui-edited'
+    const newSession = startNewSession(appState.model)
+    setCurrentSession(newSession)
+    setCurrentModelName('gui-edited')
     guiEditMode.style.display = 'none'
 
     // Show story panel
@@ -1532,7 +1536,13 @@ nodeList.addEventListener('blur', (e) => {
 }, true)
 
 function showVariableEditor() {
-  const variables = session.variables || {}
+  const currentSession = getCurrentSession()
+  if (!currentSession) {
+    setStatus('まずモデルを読み込んでセッションを開始してください', 'warn')
+    return
+  }
+
+  const variables = currentSession.variables || {}
   const varKeys = Object.keys(variables)
   
   let message = '変数を編集してください (key=value の形式で入力)\n\n現在の変数:\n'
@@ -1563,7 +1573,8 @@ function showVariableEditor() {
   }
   
   // Update session
-  session = { ...session, variables: newVariables }
+  const newSession = { ...currentSession, variables: newVariables }
+  setCurrentSession(newSession)
   renderState()
   renderDebugInfo()
 }
@@ -1606,8 +1617,9 @@ downloadTopBtn.addEventListener('click', () => {
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
+  const modelName = getCurrentModelName()
   a.href = url
-  a.download = currentModelName ? `${currentModelName}.json` : 'model.json'
+  a.download = modelName ? `${modelName}.json` : 'model.json'
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
@@ -1641,18 +1653,21 @@ function createSaveData(session, modelName) {
 
 // Save to specific slot
 function saveToSlot(slotId) {
-  if (!session || !appState.model) {
+  const currentSession = getCurrentSession()
+  const modelName = getCurrentModelName()
+
+  if (!currentSession || !appState.model) {
     setStatus('保存するセッションがありません', 'warn')
     return false
   }
 
   try {
-    const saveData = createSaveData(session, currentModelName)
+    const saveData = createSaveData(currentSession, modelName)
     const key = `${SAVE_KEY_PREFIX}${slotId}`
     localStorage.setItem(key, JSON.stringify(saveData))
 
     setStatus(`スロット ${slotId} に保存しました`, 'success')
-    Logger.info('Game saved', { slotId, nodeId: session.nodeId })
+    Logger.info('Game saved', { slotId, nodeId: currentSession.nodeId })
     return true
   } catch (error) {
     setStatus(`保存に失敗しました: ${error.message}`, 'error')
@@ -1680,7 +1695,7 @@ function loadFromSlot(slotId) {
     }
 
     // Restore session
-    session = {
+    const restoredSession = {
       nodeId: saveData.session.nodeId,
       flags: { ...saveData.session.flags },
       resources: { ...saveData.session.resources },
@@ -1688,10 +1703,9 @@ function loadFromSlot(slotId) {
       time: saveData.session.time
     }
 
-    // Restore story log
+    setCurrentSession(restoredSession)
     appState.storyLog = saveData.storyLog || []
-
-    currentModelName = saveData.modelName
+    setCurrentModelName(saveData.modelName)
 
     // Update UI
     renderState()
@@ -1700,7 +1714,7 @@ function loadFromSlot(slotId) {
     renderDebugInfo()
 
     setStatus(`スロット ${slotId} から読み込みました`, 'success')
-    Logger.info('Game loaded', { slotId, nodeId: session.nodeId })
+    Logger.info('Game loaded', { slotId, nodeId: restoredSession.nodeId })
     return true
   } catch (error) {
     setStatus(`読み込みに失敗しました: ${error.message}`, 'error')
@@ -1711,12 +1725,15 @@ function loadFromSlot(slotId) {
 
 // Auto-save functionality
 function autoSave() {
-  if (!session || !appState.model) return
+  const currentSession = getCurrentSession()
+  const modelName = getCurrentModelName()
+
+  if (!currentSession || !appState.model) return
 
   try {
-    const saveData = createSaveData(session, currentModelName)
+    const saveData = createSaveData(currentSession, modelName)
     localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(saveData))
-    Logger.info('Auto-saved', { nodeId: session.nodeId })
+    Logger.info('Auto-saved', { nodeId: currentSession.nodeId })
   } catch (error) {
     Logger.error('Auto-save failed', { error: error.message })
   }
@@ -1732,7 +1749,7 @@ function loadAutoSave() {
     if (!saveData.session) return false
 
     // Restore session
-    session = {
+    const restoredSession = {
       nodeId: saveData.session.nodeId,
       flags: { ...saveData.session.flags },
       resources: { ...saveData.session.resources },
@@ -1740,10 +1757,11 @@ function loadAutoSave() {
       time: saveData.session.time
     }
 
-    storyLog = saveData.storyLog || []
-    currentModelName = saveData.modelName
+    setCurrentSession(restoredSession)
+    appState.storyLog = saveData.storyLog || []
+    setCurrentModelName(saveData.modelName)
 
-    Logger.info('Auto-save loaded', { nodeId: session.nodeId })
+    Logger.info('Auto-save loaded', { nodeId: restoredSession.nodeId })
     return true
   } catch (error) {
     Logger.error('Auto-save load failed', { error: error.message })
@@ -1821,7 +1839,7 @@ function renderSaveSlots() {
         ${slotInfo ? `保存日時: ${new Date(slotInfo.timestamp).toLocaleString()}` : ''}
       </div>
       <div class="slot-buttons">
-        <button class="save-btn" data-slot="${i}" ${!session ? 'disabled' : ''}>保存</button>
+        <button class="save-btn" data-slot="${i}" ${!getCurrentSession() ? 'disabled' : ''}>保存</button>
         <button class="load-btn" data-slot="${i}" ${!slotInfo ? 'disabled' : ''}>読み込み</button>
         <button class="clear-btn" data-slot="${i}" ${!slotInfo ? 'disabled' : ''}>クリア</button>
       </div>
@@ -1835,7 +1853,7 @@ function renderSaveSlots() {
   autoSaveDiv.innerHTML = `
     <div class="slot-header">
       <strong>オートセーブ</strong>
-      <span class="slot-info">${session ? '有効' : '無効'}</span>
+      <span class="slot-info">${getCurrentSession() ? '有効' : '無効'}</span>
     </div>
     <div class="slot-buttons">
       <button id="loadAutoSaveBtn" ${!localStorage.getItem(AUTOSAVE_KEY) ? 'disabled' : ''}>オートセーブから読み込み</button>
@@ -2016,10 +2034,11 @@ function checkForDraftModel() {
     try {
       const draft = JSON.parse(draftData)
       if (confirm('未保存のドラフトモデルが見つかりました。読み込みますか？')) {
-        _model = draft.model
-        session = startSession(_model)
-        currentModelName = draft.modelName || 'draft'
-        storyLog = draft.storyLog || []
+        appState.model = draft.model
+        const newSession = startNewSession(draft.model)
+        setCurrentSession(newSession)
+        setCurrentModelName(draft.modelName || 'draft')
+        appState.storyLog = draft.storyLog || []
         setStatus('ドラフトモデルを読み込みました', 'success')
         renderState()
         renderChoices()
@@ -2037,13 +2056,13 @@ function checkForDraftModel() {
 }
 
 function saveDraftModel() {
-  if (!_model) return
+  if (!appState.model) return
 
   try {
     const draftData = {
-      model: _model,
-      modelName: currentModelName,
-      storyLog: storyLog,
+      model: appState.model,
+      modelName: getCurrentModelName(),
+      storyLog: appState.storyLog,
       timestamp: new Date().toISOString()
     }
     localStorage.setItem('draft_model', JSON.stringify(draftData))
