@@ -232,7 +232,7 @@ export class EventManager {
 #### Step 1.1: 設定ファイルの分離
 - [ ] `src/config/constants.js` 作成
 - [x] `src/config/palettes.js` 作成（カラーパレット定義を移動）
-- [ ] `src/config/keybindings.js` 作成
+- [x] `src/config/keybindings.js` 作成
 
 #### Step 1.2: コアモジュールの実装
 - [x] `src/core/state.js` 作成（状態管理クラス）
