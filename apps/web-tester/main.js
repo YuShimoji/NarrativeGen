@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // Handle potential IDE extension conflicts (e.g., migrationWizard.js errors)
 try {
   // Check if we're in an IDE environment that might have conflicting scripts
@@ -56,6 +55,15 @@ import {
   clearSessionFromStorage
 } from './src/core/session.js'
 import { DEFAULT_KEY_BINDINGS } from './src/config/keybindings.js'
+import {
+  SAVE_SLOTS,
+  SAVE_KEY_PREFIX,
+  AUTOSAVE_KEY,
+  NODE_TEMPLATES,
+  KEY_BINDINGS_STORAGE_KEY,
+  ADVANCED_ENABLED_STORAGE_KEY,
+  DRAFT_MODEL_STORAGE_KEY
+} from './src/config/constants.js'
 
 // ===========================
 // Key binding configuration - extensible and loosely coupled
