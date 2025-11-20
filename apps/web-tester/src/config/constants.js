@@ -66,6 +66,14 @@ export const NODE_TEMPLATES = {
       { id: 'choice2', text: '選択肢2', target: '' }
     ] 
   },
+  info: { 
+    text: '状況説明をここに入力', 
+    choices: [] 
+  },
+  action: { 
+    text: 'イベントの説明をここに入力', 
+    choices: [] 
+  },
   branch: { 
     text: '分岐ポイント', 
     choices: [
@@ -75,6 +83,10 @@ export const NODE_TEMPLATES = {
   },
   ending: { 
     text: 'エンディングのテキスト', 
+    choices: [] 
+  },
+  blank: { 
+    text: '', 
     choices: [] 
   }
 }

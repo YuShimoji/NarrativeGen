@@ -3,6 +3,9 @@
  * Handles all GUI-based story editing functionality
  */
 
+import { getCurrentModelName } from '../core/session.js'
+import { NODE_TEMPLATES, DRAFT_MODEL_STORAGE_KEY } from '../config/constants.js'
+
 export class GuiEditorManager {
   constructor(appState) {
     this.appState = appState
@@ -87,114 +90,122 @@ export class GuiEditorManager {
   // Batch editing functionality
   getBatchEditManager() {
     return {
-      openModal: () => {
-        if (this.guiEditMode.style.display === 'none') {
-          setStatus('GUI編集モードでのみ使用可能です', 'warn')
-          return
-        }
-        this.batchEditModal.style.display = 'flex'
-        this.batchEditModal.classList.add('show')
-      },
+      openModal: () => this.openBatchEditModal(),
+      closeModal: () => this.closeBatchEditModal(),
+      applyTextReplace: () => this.applyBatchTextReplace(),
+      applyChoiceReplace: () => this.applyBatchChoiceTextReplace(),
+      applyTargetReplace: () => this.applyBatchTargetReplace(),
+      refreshUI: () => this.renderNodeList()
+    }
+  }
 
-      closeModal: () => {
-        this.batchEditModal.style.display = 'none'
-        this.batchEditModal.classList.remove('show')
-      },
+  openBatchEditModal() {
+    if (this.guiEditMode && this.guiEditMode.style.display === 'none') {
+      setStatus('GUI編集モードでのみ使用可能です', 'warn')
+      return
+    }
 
-      applyTextReplace: () => {
-        const searchText = document.getElementById('searchText')
-        const replaceText = document.getElementById('replaceText')
+    if (!this.batchEditModal) return
 
-        if (!searchText || !searchText.value.trim()) {
-          setStatus('検索テキストを入力してください', 'warn')
-          return
-        }
+    this.batchEditModal.style.display = 'flex'
+    this.batchEditModal.classList.add('show')
+  }
 
-        let replacedCount = 0
-        for (const nodeId in this.appState.model.nodes) {
-          const node = this.appState.model.nodes[nodeId]
-          if (node.text && node.text.includes(searchText.value)) {
-            node.text = node.text.replaceAll(searchText.value, replaceText.value)
-            replacedCount++
-          }
-        }
+  closeBatchEditModal() {
+    if (!this.batchEditModal) return
 
-        if (replacedCount > 0) {
-          this.refreshUI()
-          setStatus(`${replacedCount}個のノードテキストを置換しました`, 'success')
-        } else {
-          setStatus('該当するテキストが見つかりませんでした', 'info')
-        }
-      },
+    this.batchEditModal.style.display = 'none'
+    this.batchEditModal.classList.remove('show')
+  }
 
-      applyChoiceReplace: () => {
-        const choiceSearchText = document.getElementById('choiceSearchText')
-        const choiceReplaceText = document.getElementById('choiceReplaceText')
+  applyBatchTextReplace() {
+    const searchText = document.getElementById('searchText')
+    const replaceText = document.getElementById('replaceText')
 
-        if (!choiceSearchText || !choiceSearchText.value.trim()) {
-          setStatus('検索テキストを入力してください', 'warn')
-          return
-        }
+    if (!searchText || !searchText.value.trim()) {
+      setStatus('検索テキストを入力してください', 'warn')
+      return
+    }
 
-        let replacedCount = 0
-        for (const nodeId in this.appState.model.nodes) {
-          const node = this.appState.model.nodes[nodeId]
-          if (node.choices) {
-            for (const choice of node.choices) {
-              if (choice.text && choice.text.includes(choiceSearchText.value)) {
-                choice.text = choice.text.replaceAll(choiceSearchText.value, choiceReplaceText.value)
-                replacedCount++
-              }
-            }
-          }
-        }
-
-        if (replacedCount > 0) {
-          this.refreshUI()
-          setStatus(`${replacedCount}個の選択肢テキストを置換しました`, 'success')
-        } else {
-          setStatus('該当するテキストが見つかりませんでした', 'info')
-        }
-      },
-
-      applyTargetReplace: () => {
-        const oldTargetText = document.getElementById('oldTargetText')
-        const newTargetText = document.getElementById('newTargetText')
-
-        if (!oldTargetText || !oldTargetText.value.trim() || !newTargetText || !newTargetText.value.trim()) {
-          setStatus('変更元と変更先のノードIDを入力してください', 'warn')
-          return
-        }
-
-        if (!this.appState.model.nodes[newTargetText.value]) {
-          setStatus('変更先のノードが存在しません', 'warn')
-          return
-        }
-
-        let replacedCount = 0
-        for (const nodeId in this.appState.model.nodes) {
-          const node = this.appState.model.nodes[nodeId]
-          if (node.choices) {
-            for (const choice of node.choices) {
-              if (choice.target === oldTargetText.value) {
-                choice.target = newTargetText.value
-                replacedCount++
-              }
-            }
-          }
-        }
-
-        if (replacedCount > 0) {
-          this.refreshUI()
-          setStatus(`${replacedCount}個のターゲットを変更しました`, 'success')
-        } else {
-          setStatus('該当するターゲットが見つかりませんでした', 'info')
-        }
-      },
-
-      refreshUI: () => {
-        this.renderNodeList()
+    let replacedCount = 0
+    for (const nodeId in this.appState.model.nodes) {
+      const node = this.appState.model.nodes[nodeId]
+      if (node.text && node.text.includes(searchText.value)) {
+        node.text = node.text.replaceAll(searchText.value, replaceText?.value ?? '')
+        replacedCount++
       }
+    }
+
+    if (replacedCount > 0) {
+      this.renderNodeList()
+      setStatus(`${replacedCount}個のノードテキストを置換しました`, 'success')
+    } else {
+      setStatus('該当するテキストが見つかりませんでした', 'info')
+    }
+  }
+
+  applyBatchChoiceTextReplace() {
+    const choiceSearchText = document.getElementById('choiceSearchText')
+    const choiceReplaceText = document.getElementById('choiceReplaceText')
+
+    if (!choiceSearchText || !choiceSearchText.value.trim()) {
+      setStatus('検索テキストを入力してください', 'warn')
+      return
+    }
+
+    let replacedCount = 0
+    for (const nodeId in this.appState.model.nodes) {
+      const node = this.appState.model.nodes[nodeId]
+      if (!node.choices) continue
+
+      for (const choice of node.choices) {
+        if (choice.text && choice.text.includes(choiceSearchText.value)) {
+          choice.text = choice.text.replaceAll(choiceSearchText.value, choiceReplaceText?.value ?? '')
+          replacedCount++
+        }
+      }
+    }
+
+    if (replacedCount > 0) {
+      this.renderNodeList()
+      setStatus(`${replacedCount}個の選択肢テキストを置換しました`, 'success')
+    } else {
+      setStatus('該当するテキストが見つかりませんでした', 'info')
+    }
+  }
+
+  applyBatchTargetReplace() {
+    const oldTargetText = document.getElementById('oldTargetText')
+    const newTargetText = document.getElementById('newTargetText')
+
+    if (!oldTargetText || !oldTargetText.value.trim() || !newTargetText || !newTargetText.value.trim()) {
+      setStatus('変更元と変更先のノードIDを入力してください', 'warn')
+      return
+    }
+
+    if (!this.appState.model?.nodes?.[newTargetText.value]) {
+      setStatus('変更先のノードが存在しません', 'warn')
+      return
+    }
+
+    let replacedCount = 0
+    for (const nodeId in this.appState.model.nodes) {
+      const node = this.appState.model.nodes[nodeId]
+      if (!node.choices) continue
+
+      for (const choice of node.choices) {
+        if (choice.target === oldTargetText.value) {
+          choice.target = newTargetText.value
+          replacedCount++
+        }
+      }
+    }
+
+    if (replacedCount > 0) {
+      this.renderNodeList()
+      setStatus(`${replacedCount}個のターゲットを変更しました`, 'success')
+    } else {
+      setStatus('該当するターゲットが見つかりませんでした', 'info')
     }
   }
 
@@ -453,7 +464,7 @@ export class GuiEditorManager {
         storyLog: this.appState.storyLog,
         timestamp: new Date().toISOString()
       }
-      localStorage.setItem('draft_model', JSON.stringify(draftData))
+      localStorage.setItem(DRAFT_MODEL_STORAGE_KEY, JSON.stringify(draftData))
       setStatus('ドラフトを自動保存しました', 'info')
     } catch (error) {
       console.warn('Failed to save draft model:', error)
@@ -579,19 +590,6 @@ export class GuiEditorManager {
   }
 
   getNodeTemplate(templateKey) {
-    const templates = {
-      conversation: { text: '「会話テキストをここに入力」', choices: [] },
-      choice: {
-        text: '選択肢の説明をここに入力',
-        choices: [
-          { id: 'choice1', text: '選択肢1', target: '' },
-          { id: 'choice2', text: '選択肢2', target: '' }
-        ]
-      },
-      info: { text: '状況説明をここに入力', choices: [] },
-      action: { text: 'イベントの説明をここに入力', choices: [] },
-      blank: { text: '', choices: [] }
-    }
-    return templates[templateKey] || templates.blank
+    return NODE_TEMPLATES[templateKey] || NODE_TEMPLATES.blank
   }
 }
