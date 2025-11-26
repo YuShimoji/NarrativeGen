@@ -39,6 +39,8 @@ export class KeyBindingManager {
    * @param {Function} options.setStatus - ステータス表示関数
    * @param {Object} options.handlers - アクションハンドラー
    * @param {Object} options.uiElements - UI要素への参照
+   * @param {HTMLElement} options.guiEditMode - GUI編集モードの要素
+   * @param {HTMLElement} options.saveGuiBtn - GUI保存ボタン
    */
   initialize(options = {}) {
     if (options.setStatus) {
@@ -51,6 +53,14 @@ export class KeyBindingManager {
     
     if (options.uiElements) {
       Object.assign(this.uiElements, options.uiElements)
+    }
+
+    if (options.guiEditMode) {
+      this.guiEditMode = options.guiEditMode
+    }
+
+    if (options.saveGuiBtn) {
+      this.saveGuiBtn = options.saveGuiBtn
     }
     
     // ストレージからキーバインドを読み込み
@@ -98,6 +108,15 @@ export class KeyBindingManager {
     }
 
     const key = e.key.toLowerCase()
+    
+    // Special handling for Ctrl+S (save) in GUI edit mode
+    if (e.ctrlKey && key === 's' && this.guiEditMode && this.guiEditMode.style.display !== 'none') {
+      e.preventDefault()
+      if (this.saveGuiBtn) {
+        this.saveGuiBtn.click()
+      }
+      return
+    }
     
     // キーバインドに一致するアクションを検索
     for (const [action, boundKey] of Object.entries(this.bindings)) {

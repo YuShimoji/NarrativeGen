@@ -54,7 +54,7 @@ import {
   loadSessionFromStorage,
   clearSessionFromStorage
 } from './src/core/session.js'
-import { DEFAULT_KEY_BINDINGS } from './src/config/keybindings.js'
+import { KeyBindingManager } from './src/ui/keybinding-manager.js'
 import {
   SAVE_SLOTS,
   SAVE_KEY_PREFIX,
@@ -66,18 +66,13 @@ import {
 } from './src/config/constants.js'
 
 // ===========================
-// Key binding configuration - extensible and loosely coupled
+// Key binding management
 // ===========================
 
-const KEY_BINDINGS = {
-  'inventory': 'z',  // Configurable: can be changed to any key
-  'debug': 'd',
-  'graph': 'g',
-  'story': 's',
-  'ai': 'a'
-}
+// Initialize KeyBindingManager
+const keyBindingManager = new KeyBindingManager()
 
-// Key binding handler - extensible design
+// Key binding handlers
 const keyBindingHandlers = {
   'inventory': () => {
     // Placeholder for inventory functionality
@@ -133,138 +128,6 @@ const keyBindingHandlers = {
       aiTab.classList.add('active')
     }
     Logger.info('AI panel toggled')
-  }
-}
-
-// Global keyboard event handler
-document.addEventListener('keydown', (e) => {
-  // Skip if user is typing in an input field
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-    return
-  }
-
-  const key = e.key.toLowerCase()
-  
-  // Special handling for Ctrl+S (save) in GUI edit mode
-  if (e.ctrlKey && key === 's' && guiEditMode.style.display !== 'none') {
-    e.preventDefault()
-    saveGuiBtn.click()
-    return
-  }
-  
-  // Find matching key binding
-  for (const [action, boundKey] of Object.entries(KEY_BINDINGS)) {
-    if (key === boundKey.toLowerCase()) {
-      e.preventDefault() // Prevent default browser behavior
-      const handler = keyBindingHandlers[action]
-      if (handler) {
-        handler()
-      }
-      break
-    }
-  }
-})
-
-// Key binding configuration UI (can be added to settings later)
-function getKeyBindingInfo() {
-  return Object.entries(KEY_BINDINGS)
-    .map(([action, key]) => `${action}: ${key.toUpperCase()}`)
-    .join(', ')
-}
-
-// Display key binding help (can be called from UI)
-function showKeyBindingHelp() {
-  const helpText = `キーバインド:\n${getKeyBindingInfo()}\n\n入力フィールド内では無効化されます。`
-  alert(helpText)
-}
-
-// Initialize key binding UI
-function initKeyBindingUI() {
-  // Load current bindings to UI
-  inventoryKey.value = KEY_BINDINGS.inventory
-  debugKey.value = KEY_BINDINGS.debug
-  graphKey.value = KEY_BINDINGS.graph
-  storyKey.value = KEY_BINDINGS.story
-  aiKey.value = KEY_BINDINGS.ai
-  
-  // Update display
-  updateKeyBindingDisplay()
-}
-
-// Update key binding display
-function updateKeyBindingDisplay() {
-  keyBindingDisplay.textContent = getKeyBindingInfo()
-}
-
-// Save key bindings
-function saveKeyBindingsToStorage() {
-  const newBindings = {
-    inventory: inventoryKey.value.toLowerCase() || 'z',
-    debug: debugKey.value.toLowerCase() || 'd',
-    graph: graphKey.value.toLowerCase() || 'g',
-    story: storyKey.value.toLowerCase() || 's',
-    ai: aiKey.value.toLowerCase() || 'a'
-  }
-  
-  // Validate no duplicates
-  const values = Object.values(newBindings)
-  const uniqueValues = new Set(values)
-  if (values.length !== uniqueValues.size) {
-    setStatus('❌ 同じキーを複数回使用することはできません', 'error')
-    return false
-  }
-  
-  // Update global bindings
-  Object.assign(KEY_BINDINGS, newBindings)
-  
-  // Save to localStorage
-  try {
-    localStorage.setItem(KEY_BINDINGS_STORAGE_KEY, JSON.stringify(KEY_BINDINGS))
-    setStatus('✅ キーバインドを保存しました', 'success')
-    updateKeyBindingDisplay()
-    Logger.info('Key bindings saved', { bindings: KEY_BINDINGS })
-    return true
-  } catch (error) {
-    setStatus('❌ キーバインドの保存に失敗しました', 'error')
-    Logger.error('Failed to save key bindings', { error: error.message })
-    return false
-  }
-}
-
-// Reset key bindings to defaults
-function resetKeyBindingsToDefault() {
-  const defaultBindings = DEFAULT_KEY_BINDINGS
-  
-  Object.assign(KEY_BINDINGS, defaultBindings)
-  initKeyBindingUI()
-  
-  try {
-    localStorage.removeItem(KEY_BINDINGS_STORAGE_KEY)
-    setStatus('✅ キーバインドをデフォルトにリセットしました', 'success')
-    Logger.info('Key bindings reset to default')
-  } catch (error) {
-    setStatus('❌ リセットに失敗しました', 'error')
-    Logger.error('Failed to reset key bindings', { error: error.message })
-  }
-}
-
-// Load key bindings from localStorage
-function loadKeyBindingsFromStorage() {
-  try {
-    const stored = localStorage.getItem(KEY_BINDINGS_STORAGE_KEY)
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      // Validate structure
-      const requiredKeys = Object.keys(DEFAULT_KEY_BINDINGS)
-      if (requiredKeys.every(key => typeof parsed[key] === 'string' && parsed[key].length === 1)) {
-        Object.assign(KEY_BINDINGS, parsed)
-        Logger.info('Key bindings loaded from storage', { bindings: KEY_BINDINGS })
-      } else {
-        Logger.warn('Invalid key binding data in storage, using defaults')
-      }
-    }
-  } catch (error) {
-    Logger.warn('Failed to load key bindings from storage', { error: error.message })
   }
 }
 
@@ -2209,6 +2072,30 @@ debugManager.initialize(
   document.getElementById('variablesDisplay'),
   document.getElementById('reachableNodes')
 )
+
+// Initialize KeyBindingManager
+keyBindingManager.initialize({
+  setStatus,
+  handlers: keyBindingHandlers,
+  uiElements: {
+    inventoryKey,
+    debugKey,
+    graphKey,
+    storyKey,
+    aiKey,
+    keyBindingDisplay
+  },
+  guiEditMode,
+  saveGuiBtn
+})
+
+// Key binding UI event listeners
+if (saveKeyBindings) {
+  saveKeyBindings.addEventListener('click', () => keyBindingManager.save())
+}
+if (resetKeyBindings) {
+  resetKeyBindings.addEventListener('click', () => keyBindingManager.reset())
+}
 
 // Initialize GUI editor manager
 guiEditorManager.initialize(
