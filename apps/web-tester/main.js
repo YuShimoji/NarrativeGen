@@ -55,6 +55,7 @@ import {
   clearSessionFromStorage
 } from './src/core/session.js'
 import { KeyBindingManager } from './src/ui/keybinding-manager.js'
+import { SaveManager } from './src/features/save-manager.js'
 import {
   SAVE_SLOTS,
   SAVE_KEY_PREFIX,
@@ -376,6 +377,13 @@ function setStatus(message, type = 'info') {
 
 if (typeof window !== 'undefined') {
   window.setStatus = setStatus
+}
+
+// Debug info rendering (delegates to debugManager when available)
+function renderDebugInfo() {
+  if (typeof debugManager !== 'undefined' && debugManager) {
+    debugManager.render()
+  }
 }
 
 function showErrors(errors) {
@@ -1495,281 +1503,23 @@ downloadTopBtn.addEventListener('click', () => {
 })
 
 // ============================================================================
-// Save/Load System
+// Save/Load System (via SaveManager)
 // ============================================================================
 
-const SAVE_SLOTS = 5
-const SAVE_KEY_PREFIX = 'narrativeGen_save_slot_'
-const AUTOSAVE_KEY = 'narrativeGen_autosave'
+// SaveManager instance will be initialized later with proper dependencies
+const saveManager = new SaveManager()
 
-// Save data structure
-function createSaveData(session, modelName) {
-  return {
-    version: '1.0',
-    timestamp: new Date().toISOString(),
-    modelName: modelName || getCurrentModelName(),
-    session: {
-      nodeId: session.nodeId,
-      flags: { ...session.flags },
-      resources: { ...session.resources },
-      variables: { ...session.variables },
-      time: session.time
-    },
-    storyLog: [...appState.storyLog]
-  }
+// Legacy function wrappers for backward compatibility
+function renderSaveSlots() {
+  saveManager.renderSlots()
 }
-
-// Save to specific slot
-function saveToSlot(slotId) {
-  const currentSession = getCurrentSession()
-  if (!currentSession || !appState.model) {
-    setStatus('保存するセッションがありません', 'warn')
-    return false
-  }
-
-  try {
-    const saveData = createSaveData(currentSession)
-    const key = `${SAVE_KEY_PREFIX}${slotId}`
-    localStorage.setItem(key, JSON.stringify(saveData))
-
-    setStatus(`スロット ${slotId} に保存しました`, 'success')
-    Logger.info('Game saved', { slotId, nodeId: currentSession.nodeId })
-    return true
-  } catch (error) {
-    setStatus(`保存に失敗しました: ${error.message}`, 'error')
-    Logger.error('Save failed', { slotId, error: error.message })
-    return false
-  }
-}
-
-// Load from specific slot
-function loadFromSlot(slotId) {
-  try {
-    const key = `${SAVE_KEY_PREFIX}${slotId}`
-    const savedData = localStorage.getItem(key)
-
-    if (!savedData) {
-      setStatus(`スロット ${slotId} にセーブデータがありません`, 'warn')
-      return false
-    }
-
-    const saveData = JSON.parse(savedData)
-
-    // Validate save data
-    if (!saveData.session || !saveData.modelName) {
-      throw new Error('不正なセーブデータです')
-    }
-
-    // Restore session and model name
-    const restoredSession = {
-      nodeId: saveData.session.nodeId,
-      flags: { ...saveData.session.flags },
-      resources: { ...saveData.session.resources },
-      variables: { ...saveData.session.variables },
-      time: saveData.session.time
-    }
-    setCurrentSession(restoredSession)
-    setCurrentModelName(saveData.modelName)
-
-    // Restore story log
-    appState.storyLog = saveData.storyLog || []
-
-    // Update UI
-    renderState()
-    renderChoices()
-    storyManager.renderStory()
-    renderDebugInfo()
-
-    setStatus(`スロット ${slotId} から読み込みました`, 'success')
-    Logger.info('Game loaded', { slotId, nodeId: restoredSession.nodeId })
-    return true
-  } catch (error) {
-    setStatus(`読み込みに失敗しました: ${error.message}`, 'error')
-    Logger.error('Load failed', { slotId, error: error.message })
-    return false
-  }
-}
-
-// Auto-save functionality
-function autoSave() {
-  const currentSession = getCurrentSession()
-  if (!currentSession || !appState.model) return
-
-  try {
-    const saveData = createSaveData(currentSession)
-    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(saveData))
-    Logger.info('Auto-saved', { nodeId: currentSession.nodeId })
-  } catch (error) {
-    Logger.error('Auto-save failed', { error: error.message })
-  }
-}
-
-// Load auto-save
-function loadAutoSave() {
-  try {
-    const savedData = localStorage.getItem(AUTOSAVE_KEY)
-    if (!savedData) return false
-
-    const saveData = JSON.parse(savedData)
-    if (!saveData.session) return false
-
-    // Restore session and model name
-    const restoredSession = {
-      nodeId: saveData.session.nodeId,
-      flags: { ...saveData.session.flags },
-      resources: { ...saveData.session.resources },
-      variables: { ...saveData.session.variables },
-      time: saveData.session.time
-    }
-    setCurrentSession(restoredSession)
-    setCurrentModelName(saveData.modelName)
-
-    appState.storyLog = saveData.storyLog || []
-
-    Logger.info('Auto-save loaded', { nodeId: restoredSession.nodeId })
-    return true
-  } catch (error) {
-    Logger.error('Auto-save load failed', { error: error.message })
-    return false
-  }
-}
-
-// Get save slot info
-function getSaveSlotInfo(slotId) {
-  try {
-    const key = `${SAVE_KEY_PREFIX}${slotId}`
-    const savedData = localStorage.getItem(key)
-
-    if (!savedData) return null
-
-    const saveData = JSON.parse(savedData)
-    return {
-      slotId,
-      timestamp: saveData.timestamp,
-      modelName: saveData.modelName,
-      nodeId: saveData.session?.nodeId,
-      time: saveData.session?.time
-    }
-  } catch (error) {
-    Logger.error('Failed to read save slot info', { slotId, error: error.message })
-    return null
-  }
-}
-
-// Clear save slot
-function clearSaveSlot(slotId) {
-  try {
-    const key = `${SAVE_KEY_PREFIX}${slotId}`
-    localStorage.removeItem(key)
-    setStatus(`スロット ${slotId} をクリアしました`, 'info')
-    Logger.info('Save slot cleared', { slotId })
-    return true
-  } catch (error) {
-    setStatus(`スロットのクリアに失敗しました: ${error.message}`, 'error')
-    return false
-  }
-}
-
-// Initialize auto-save (save every 30 seconds when session is active)
-let autoSaveInterval = null
 
 function startAutoSave() {
-  stopAutoSave() // Clear existing interval
-  autoSaveInterval = setInterval(autoSave, 30000) // 30 seconds
-  Logger.info('Auto-save started')
+  saveManager.startAutoSave()
 }
 
 function stopAutoSave() {
-  if (autoSaveInterval) {
-    clearInterval(autoSaveInterval)
-    autoSaveInterval = null
-    Logger.info('Auto-save stopped')
-  }
-}
-
-// Render save slots UI
-function renderSaveSlots() {
-  saveSlots.innerHTML = ''
-
-  for (let i = 1; i <= SAVE_SLOTS; i++) {
-    const slotInfo = getSaveSlotInfo(i)
-    const slotDiv = document.createElement('div')
-    slotDiv.className = 'save-slot'
-    slotDiv.innerHTML = `
-      <div class="slot-header">
-        <strong>スロット ${i}</strong>
-        ${slotInfo ? `<span class="slot-info">${slotInfo.modelName} - ${slotInfo.nodeId} (時間: ${slotInfo.time})</span>` : '<span class="slot-empty">空</span>'}
-      </div>
-      <div class="slot-timestamp">
-        ${slotInfo ? `保存日時: ${new Date(slotInfo.timestamp).toLocaleString()}` : ''}
-      </div>
-      <div class="slot-buttons">
-        <button class="save-btn" data-slot="${i}" ${!getCurrentSession() ? 'disabled' : ''}>保存</button>
-        <button class="load-btn" data-slot="${i}" ${!slotInfo ? 'disabled' : ''}>読み込み</button>
-        <button class="clear-btn" data-slot="${i}" ${!slotInfo ? 'disabled' : ''}>クリア</button>
-      </div>
-    `
-    saveSlots.appendChild(slotDiv)
-  }
-
-  // Add auto-save info
-  const autoSaveDiv = document.createElement('div')
-  autoSaveDiv.className = 'save-slot autosave'
-  autoSaveDiv.innerHTML = `
-    <div class="slot-header">
-      <strong>オートセーブ</strong>
-      <span class="slot-info">${getCurrentSession() ? '有効' : '無効'}</span>
-    </div>
-    <div class="slot-buttons">
-      <button id="loadAutoSaveBtn" ${!localStorage.getItem(AUTOSAVE_KEY) ? 'disabled' : ''}>オートセーブから読み込み</button>
-      <button id="clearAutoSaveBtn" ${!localStorage.getItem(AUTOSAVE_KEY) ? 'disabled' : ''}>オートセーブをクリア</button>
-    </div>
-  `
-  saveSlots.appendChild(autoSaveDiv)
-}
-
-// Handle save slot button clicks
-function handleSaveSlotClick(event) {
-  const button = event.target
-  if (!button.classList.contains('save-btn') && !button.classList.contains('load-btn') && !button.classList.contains('clear-btn')) return
-
-  const slotId = parseInt(button.dataset.slot)
-
-  if (button.classList.contains('save-btn')) {
-    saveToSlot(slotId)
-    renderSaveSlots()
-  } else if (button.classList.contains('load-btn')) {
-    if (loadFromSlot(slotId)) {
-      renderSaveSlots()
-    }
-  } else if (button.classList.contains('clear-btn')) {
-    if (confirm(`スロット ${slotId} のセーブデータを削除しますか？`)) {
-      clearSaveSlot(slotId)
-      renderSaveSlots()
-    }
-  }
-}
-
-// Handle auto-save buttons
-function handleAutoSaveClick(event) {
-  const button = event.target
-
-  if (button.id === 'loadAutoSaveBtn') {
-    if (loadAutoSave()) {
-      renderState()
-      renderChoices()
-      storyManager.renderStory()
-      renderDebugInfo()
-      setStatus('オートセーブから読み込みました', 'success')
-      renderSaveSlots()
-    }
-  } else if (button.id === 'clearAutoSaveBtn') {
-    if (confirm('オートセーブデータを削除しますか？')) {
-      localStorage.removeItem(AUTOSAVE_KEY)
-      setStatus('オートセーブをクリアしました', 'info')
-      renderSaveSlots()
-    }
-  }
+  saveManager.stopAutoSave()
 }
 
 // ============================================================================
@@ -1949,16 +1699,7 @@ const themeBtn = document.getElementById('themeBtn')
 // ===========================
 // Quick Node Creation
 // ===========================
-const NODE_TEMPLATES = {
-  conversation: { text: '「会話テキストをここに入力」', choices: [] },
-  choice: { text: '選択肢の説明をここに入力', choices: [
-    { id: 'choice1', text: '選択肢1', target: '' },
-    { id: 'choice2', text: '選択肢2', target: '' }
-  ]},
-  info: { text: '状況説明をここに入力', choices: [] },
-  action: { text: 'イベントの説明をここに入力', choices: [] },
-  blank: { text: '', choices: [] }
-}
+// NOTE: NODE_TEMPLATES is imported from constants.js
 
 if (createQuickNodeBtn) {
   createQuickNodeBtn.addEventListener('click', () => guiEditorManager.createQuickNode())
@@ -2073,6 +1814,18 @@ debugManager.initialize(
   document.getElementById('reachableNodes')
 )
 
+saveManager.initialize({
+  appState,
+  setStatus,
+  uiCallbacks: {
+    renderState,
+    renderChoices,
+    renderStory,
+    renderDebugInfo
+  },
+  saveSlotsContainer: saveSlots
+})
+
 // Initialize KeyBindingManager
 keyBindingManager.initialize({
   setStatus,
@@ -2184,5 +1937,11 @@ if (importCsvBtn) {
 if (exportCsvBtn) {
   exportCsvBtn.addEventListener('click', () => {
     csvManager.showCsvExportModal()
+  })
+}
+
+if (refreshSavesBtn) {
+  refreshSavesBtn.addEventListener('click', () => {
+    renderSaveSlots()
   })
 }

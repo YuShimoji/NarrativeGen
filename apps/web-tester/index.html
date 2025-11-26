@@ -7,21 +7,27 @@
     <title>NarrativeGen Web Tester</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-    /* CSS Variables - Theme System */
+    /* CSS Variables - Modern Seamless Theme */
     :root {
-      --color-primary: #5a67d8;
-      --color-primary-dark: #6b46c1;
-      --color-secondary: #2563eb;
-      --color-secondary-dark: #1e40af;
-      --color-success: #10b981;
-      --color-warning: #f59e0b;
-      --color-error: #ef4444;
-      --color-background: #1a1a2e;
-      --color-surface: #16213e;
-      --color-text: #ffffff;
-      --color-text-muted: #cbd5e1;
-      --color-border: #334155;
-      --icon-color: #cbd5e1;
+      --color-primary: #5b8def;
+      --color-primary-dark: #4a7bd4;
+      --color-secondary: #5b8def;
+      --color-secondary-dark: #4a7bd4;
+      --color-success: #4ade80;
+      --color-warning: #fbbf24;
+      --color-error: #f87171;
+      --color-background: #1e1e1e;
+      --color-surface: #252526;
+      --color-surface-light: #2d2d30;
+      --color-text: #e0e0e0;
+      --color-text-muted: #808080;
+      --color-border: #3c3c3c;
+      --color-hover: #37373d;
+      --icon-color: #c5c5c5;
+      --sidebar-width: 48px;
+      --header-height: 40px;
+      --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
     }
 
     /* Save/Load UI Styles */
@@ -139,13 +145,15 @@
     }
   
       * {
-        transition: all 0.3s ease;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
 
       body {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Open Sans', 'Helvetica Neue', sans-serif;
-        margin: 0;
-        padding: 0;
+        font-family: var(--font-family);
+        font-size: 13px;
+        line-height: 1.5;
         background: var(--color-background);
         min-height: 100vh;
         color: var(--color-text);
@@ -161,10 +169,13 @@
 
       .header {
         background: var(--color-surface);
-        backdrop-filter: blur(10px);
         border-bottom: 1px solid var(--color-border);
-        padding: 1rem 2rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 8px 16px;
+        height: var(--header-height);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        -webkit-app-region: drag;
       }
 
       .panel {
@@ -187,46 +198,69 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        padding: 2rem;
-        gap: 2rem;
-        overflow: auto;
+        padding: 0;
+        gap: 0;
+        overflow: hidden;
         min-height: 0;
       }
 
       .tabs {
         display: flex;
-        border-bottom: 2px solid var(--color-border);
-        margin-bottom: 0;
         background: var(--color-surface);
-        border-radius: 12px 12px 0 0;
-        padding: 0.5rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid var(--color-border);
+        padding: 0 8px;
+        gap: 2px;
         flex-shrink: 0;
       }
 
+      .tab-btn {
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--color-text-muted);
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        box-shadow: none;
+      }
+
+      .tab-btn:hover {
+        color: var(--color-text);
+        background: var(--color-hover);
+        transform: none;
+        box-shadow: none;
+      }
+
+      .tab-btn.active {
+        color: var(--color-primary);
+        border-bottom-color: var(--color-primary);
+        background: transparent;
+      }
+
       h1 {
-        margin-top: 0;
-        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        font-size: 2.5rem;
-        font-weight: 700;
+        margin: 0;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--color-text);
+        letter-spacing: -0.3px;
+      }
+
+      h1 .brand {
+        color: var(--color-primary);
+        font-weight: 600;
       }
 
       .tab-content {
         flex: 1;
-        background: var(--color-surface);
-        backdrop-filter: blur(10px);
-        border-radius: 0 0 12px 12px;
-        padding: 2rem;
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-        border: 1px solid var(--color-border);
-        border-top: none;
-        min-height: 0; /* Allow shrinking */
+        background: var(--color-background);
+        padding: 0;
+        border: none;
+        min-height: 0;
         display: flex;
         flex-direction: column;
-        transition: opacity 0.3s ease;
+        overflow: hidden;
       }
 
       .tab-content:not(.active) {
@@ -236,11 +270,27 @@
       .control-group {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.5rem;
+        gap: 6px;
         align-items: center;
-        padding: 0.5rem;
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 8px;
+        padding: 0;
+        background: transparent;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        padding: 8px 16px;
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .toolbar-divider {
+        width: 1px;
+        height: 20px;
+        background: var(--color-border);
+        margin: 0 4px;
       }
 
       h2, h3, h4 {
@@ -252,101 +302,113 @@
       }
 
       input[type='text'], input[type='password'], select, textarea {
-        padding: 0.75rem 1rem;
-        font-size: 1rem;
-        background: var(--color-surface);
+        padding: 6px 10px;
+        font-size: 12px;
+        background: var(--color-surface-light);
         color: var(--color-text);
-        border: 2px solid var(--color-border);
-        border-radius: 8px;
-        transition: all 0.3s ease;
+        border: 1px solid var(--color-border);
+        border-radius: 4px;
+        transition: border-color 0.15s ease;
       }
 
       textarea {
         resize: vertical;
-        font-family: inherit;
+        font-family: var(--font-mono);
+        font-size: 12px;
       }
 
       input[type='text']:focus, input[type='password']:focus, select:focus, textarea:focus {
         outline: none;
-        border-color: var(--color-secondary);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-      }
-
-      button {
-        padding: 0.75rem 1.5rem;
-        font-size: 1rem;
-        font-weight: 600;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
-        color: white;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
-      }
-
-      button:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-      }
-
-      button:active:not(:disabled) {
-        transform: translateY(0);
-      }
-
-      button:disabled {
-        background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
-        cursor: not-allowed;
-        box-shadow: none;
-      }
-
-      .theme-button {
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        border: 2px solid var(--color-border);
-        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-        color: var(--color-text);
-        cursor: pointer;
-        backdrop-filter: blur(10px);
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      }
-
-      .theme-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         border-color: var(--color-primary);
       }
 
-      .theme-button:active {
-        transform: translateY(0);
+      select {
+        cursor: pointer;
+      }
+
+      button {
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 500;
+        border: 1px solid var(--color-border);
+        border-radius: 4px;
+        cursor: pointer;
+        background: var(--color-surface-light);
+        color: var(--color-text);
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      button:hover:not(:disabled) {
+        background: var(--color-hover);
+        border-color: var(--color-text-muted);
+      }
+
+      button:active:not(:disabled) {
+        background: var(--color-surface);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      button.primary {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: white;
+      }
+
+      button.primary:hover:not(:disabled) {
+        background: var(--color-primary-dark);
+        border-color: var(--color-primary-dark);
+      }
+
+      .theme-button {
+        padding: 4px 10px;
+        border-radius: 4px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface-light);
+        color: var(--color-text);
+        cursor: pointer;
+        font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .theme-button:hover {
+        background: var(--color-hover);
+        border-color: var(--color-text-muted);
       }
 
       pre {
-        background: linear-gradient(135deg, #1e1e2f 0%, #2a2a3e 100%);
-        color: #e0e7ff;
-        padding: 1.5rem;
-        border-radius: 12px;
-        max-height: 400px;
+        background: var(--color-surface-light);
+        color: var(--color-text);
+        padding: 12px;
+        border-radius: 4px;
+        max-height: 200px;
         overflow: auto;
-        font-family: 'JetBrains Mono', 'Fira Code', monospace;
-        font-size: 0.9rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        border: 1px solid var(--color-border);
       }
 
       .story-view {
-        background: var(--color-surface);
+        background: var(--color-background);
         color: var(--color-text);
-        padding: 1.5rem;
-        border-radius: 12px;
+        padding: 16px;
+        border-radius: 4px;
         min-height: 150px;
-        max-height: 400px;
+        max-height: none;
+        flex: 1;
         overflow: auto;
         white-space: pre-wrap;
-        border: 2px solid var(--color-border);
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-        font-size: 1.1rem;
-        line-height: 1.6;
+        border: 1px solid var(--color-border);
+        font-size: 14px;
+        line-height: 1.7;
       }
 
       .error-panel {
@@ -415,16 +477,23 @@
 
       .modal-content {
         background: var(--color-surface);
-        backdrop-filter: blur(10px);
-        border-radius: 16px;
-        padding: 2rem;
+        border-radius: 8px;
+        padding: 20px;
         max-width: 90vw;
         max-height: 90vh;
         overflow: auto;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         border: 1px solid var(--color-border);
-        animation: scaleIn 0.3s ease-out;
+        animation: scaleIn 0.2s ease-out;
         color: var(--color-text);
+      }
+
+      .modal-content h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--color-border);
       }
 
       @keyframes scaleIn {
@@ -439,11 +508,9 @@
       }
 
       .graph-container, .debug-container, .ai-container {
-        background: var(--color-surface);
-        backdrop-filter: blur(10px);
-        border-radius: 12px;
-        padding: 2rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        background: var(--color-background);
+        border-radius: 4px;
+        padding: 16px;
         border: 1px solid var(--color-border);
         overflow: auto;
         flex: 1;
@@ -484,32 +551,42 @@
       }
 
       #statusText {
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 600;
-        text-align: center;
-        margin: 1rem 0;
-        transition: all 0.3s ease;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        text-align: left;
+        margin: 0;
+        background: var(--color-surface-light);
+        border-top: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
       }
 
       #statusText[data-type="success"] {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
+        background: rgba(74, 222, 128, 0.15);
+        color: var(--color-success);
+        border-left: 3px solid var(--color-success);
       }
 
       #statusText[data-type="error"] {
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        color: white;
+        background: rgba(248, 113, 113, 0.15);
+        color: var(--color-error);
+        border-left: 3px solid var(--color-error);
       }
 
       #statusText[data-type="warn"] {
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        color: white;
+        background: rgba(251, 191, 36, 0.15);
+        color: var(--color-warning);
+        border-left: 3px solid var(--color-warning);
       }
 
       #statusText[data-type="info"] {
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        color: white;
+        background: rgba(91, 141, 239, 0.15);
+        color: var(--color-primary);
+        border-left: 3px solid var(--color-primary);
       }
 
       /* 言い換えバリアント選択モーダル */
@@ -553,22 +630,102 @@
 
       /* SVG Icon System */
       .icon {
-        width: 1.25rem;
-        height: 1.25rem;
-        stroke: var(--icon-color, currentColor);
+        width: 14px;
+        height: 14px;
+        stroke: currentColor;
         fill: none;
         stroke-width: 2;
         vertical-align: middle;
         display: inline-block;
-        margin-right: 0.375rem;
+        flex-shrink: 0;
       }
 
-      .icon-sm { width: 1rem; height: 1rem; }
-      .icon-md { width: 1.5rem; height: 1.5rem; }
-      .icon-lg { width: 2rem; height: 2rem; }
+      .icon-sm { width: 12px; height: 12px; }
+      .icon-md { width: 16px; height: 16px; }
+      .icon-lg { width: 20px; height: 20px; }
 
       button .icon {
         stroke: currentColor;
+        margin-right: 2px;
+      }
+
+      /* Choice buttons */
+      .choice-btn {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 10px 12px;
+        margin-bottom: 6px;
+        background: var(--color-surface-light);
+        border: 1px solid var(--color-border);
+        border-radius: 4px;
+        color: var(--color-text);
+        cursor: pointer;
+        font-size: 12px;
+        line-height: 1.4;
+        transition: all 0.15s ease;
+      }
+
+      .choice-btn:hover {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: white;
+      }
+
+      .choice-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      /* Panel specific styles */
+      .panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        background: var(--color-background);
+      }
+
+      /* Graph Controls */
+      #graphControls {
+        display: flex;
+        gap: 8px;
+        padding: 8px 12px;
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      #graphControls label {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+      }
+
+      #graphSvg {
+        flex: 1;
+        min-height: 300px;
+        background: var(--color-background);
+      }
+
+      /* Debug panel sections */
+      .debug-container h3 {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: var(--color-text);
+      }
+
+      .debug-container > div {
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .debug-container > div:last-child {
+        border-bottom: none;
       }
     </style>
   </head>
@@ -660,16 +817,11 @@
     </svg>
     <div class="app-container">
       <div class="header">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <h1>NarrativeGen Web Tester</h1>
-            <p>GameSession の挙動をブラウザで簡易確認できます。ブラウザで静的にホストしてください。</p>
-          </div>
-          <button id="themeBtn" class="theme-button">
-            <svg class="icon"><use href="#icon-palette"></use></svg>
-            テーマ
-          </button>
-        </div>
+        <h1><span class="brand">NarrativeGen</span> Web Tester</h1>
+        <button id="themeBtn" class="theme-button">
+          <svg class="icon icon-sm"><use href="#icon-palette"></use></svg>
+          テーマ
+        </button>
       </div>
       
       <!-- Color Palette Modal -->
@@ -791,97 +943,91 @@
           </div>
 
           <div id="storyPanel" class="tab-content active">
-            <div class="story-panel-layout">
-              <div class="controls">
-                <div class="control-group" title="モデルの読み込み">
-                  <label for="modelSelect"><svg class="icon icon-sm"><use href="#icon-book-open"></use></svg>モデル</label>
-                  <select id="modelSelect">
-                    <option value="linear">linear.json</option>
-                    <option value="branching_flags">branching_flags.json</option>
-                    <option value="resource_management">resource_management.json</option>
-                    <option value="time_gated">time_gated.json</option>
-                    <option value="multiple_endings">multiple_endings.json</option>
-                    <option value="tutorial">tutorial.json</option>
-                  </select>
-                  <button id="startBtn"><svg class="icon"><use href="#icon-play"></use></svg>実行</button>
-                  <button id="uploadBtn"><svg class="icon"><use href="#icon-folder-open"></use></svg>カスタム読込</button>
-                  <input type="file" id="fileInput" accept=".json" style="display: none;">
-                </div>
-                <div class="control-group" title="モデルの編集と出力">
-                  <button id="editBtn"><svg class="icon"><use href="#icon-edit"></use></svg>編集</button>
-                  <button id="downloadTopBtn"><svg class="icon"><use href="#icon-save"></use></svg>JSON保存</button>
-                  <button id="previewTopBtn"><svg class="icon"><use href="#icon-eye"></use></svg>プレビュー</button>
-                </div>
-                <div class="control-group" title="スプレッドシート連携">
-                  <button id="importCsvBtn"><svg class="icon"><use href="#icon-upload"></use></svg>CSV読込</button>
-                  <input type="file" id="csvFileInput" accept=".csv,.tsv" style="display: none;">
-                  <button id="exportCsvBtn"><svg class="icon"><use href="#icon-download"></use></svg>CSV出力</button>
-                </div>
-                <div class="control-group" title="表示設定">
-                  <button id="toggleSidebarBtn"><svg class="icon"><use href="#icon-sidebar"></use></svg>サイドバー</button>
-                </div>
-              </div>
-
-              <div id="dropZone" class="drop-zone">
-                <p>またはここに JSON ファイルをドラッグ＆ドロップしてください</p>
-              </div>
-
-              <div class="story-content" id="storyContent">
-                <div class="story-sidebar">
-                  <div class="choices-container">
-                    <div id="choices"></div>
-                  </div>
-                  <div class="state-display">
-                    <pre id="stateView">{ "status": "初期化待ち" }</pre>
-                  </div>
-                </div>
-                <div class="story-view" id="storyView"></div>
-              </div>
+            <!-- Toolbar -->
+            <div class="toolbar">
+              <select id="modelSelect" style="min-width: 140px;">
+                <option value="linear">linear.json</option>
+                <option value="branching_flags">branching_flags.json</option>
+                <option value="resource_management">resource_management.json</option>
+                <option value="time_gated">time_gated.json</option>
+                <option value="multiple_endings">multiple_endings.json</option>
+                <option value="tutorial">tutorial.json</option>
+              </select>
+              <button id="startBtn" class="primary"><svg class="icon icon-sm"><use href="#icon-play"></use></svg>実行</button>
+              <button id="uploadBtn"><svg class="icon icon-sm"><use href="#icon-folder-open"></use></svg>読込</button>
+              <input type="file" id="fileInput" accept=".json" style="display: none;">
+              <span class="toolbar-divider"></span>
+              <button id="editBtn"><svg class="icon icon-sm"><use href="#icon-edit"></use></svg>編集</button>
+              <button id="downloadTopBtn"><svg class="icon icon-sm"><use href="#icon-save"></use></svg>保存</button>
+              <button id="previewTopBtn"><svg class="icon icon-sm"><use href="#icon-eye"></use></svg>プレビュー</button>
+              <span class="toolbar-divider"></span>
+              <button id="importCsvBtn"><svg class="icon icon-sm"><use href="#icon-upload"></use></svg>CSV</button>
+              <input type="file" id="csvFileInput" accept=".csv,.tsv" style="display: none;">
+              <button id="exportCsvBtn"><svg class="icon icon-sm"><use href="#icon-download"></use></svg>出力</button>
             </div>
-            <p id="statusText">初期化中...</p>
+
+            <!-- Drop Zone -->
+            <div id="dropZone" class="drop-zone" style="padding: 12px; margin: 0; border-radius: 0; border-left: none; border-right: none; background: var(--color-surface-light); font-size: 12px; color: var(--color-text-muted);">
+              <p style="margin: 0;">📁 JSON ファイルをここにドラッグ＆ドロップ</p>
+            </div>
+
+            <!-- Main Content -->
+            <div class="story-content" id="storyContent" style="display: flex; flex: 1; min-height: 0; overflow: hidden;">
+              <div class="story-sidebar" style="width: 280px; flex-shrink: 0; display: flex; flex-direction: column; border-right: 1px solid var(--color-border); background: var(--color-surface);">
+                <div class="choices-container" style="flex: 1; overflow-y: auto; padding: 12px;">
+                  <div id="choices"></div>
+                </div>
+                <div class="state-display" style="border-top: 1px solid var(--color-border); padding: 8px;">
+                  <pre id="stateView" style="margin: 0; font-size: 10px;">{ "status": "初期化待ち" }</pre>
+                </div>
+                <button id="toggleSidebarBtn" style="border-radius: 0; border: none; border-top: 1px solid var(--color-border);"><svg class="icon icon-sm"><use href="#icon-sidebar"></use></svg>サイドバー</button>
+              </div>
+              <div class="story-view" id="storyView" style="flex: 1; margin: 0; border-radius: 0; border: none;"></div>
+            </div>
           </div>
 
           <div id="graphPanel" class="tab-content">
-            <div class="graph-container">
-              <div id="graphControls">
-                <button id="fitGraphBtn"><svg class="icon"><use href="#icon-maximize"></use></svg>全体表示</button>
-                <button id="resetGraphBtn"><svg class="icon"><use href="#icon-refresh"></use></svg>リセット</button>
-                <label><input type="checkbox" id="showConditions">条件表示</label>
-                <button id="graphSettingsBtn"><svg class="icon"><use href="#icon-settings"></use></svg>設定</button>
-              </div>
-              <div id="graphSettings" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.2); border: 1px solid var(--color-border); border-radius: 8px;">
-                <label>ノード形状: 
-                  <select id="nodeShape">
-                    <option value="circle">円</option>
-                    <option value="rect">四角</option>
-                  </select>
-                </label>
-                <label>フォントサイズ: 
-                  <input type="range" id="fontSize" min="10" max="20" value="14">
-                </label>
-                <button id="saveGraphPreset">プリセット保存</button>
-                <button id="loadGraphPreset">プリセット読み込み</button>
-              </div>
-              <svg id="graphSvg"></svg>
+            <div id="graphControls">
+              <button id="fitGraphBtn"><svg class="icon icon-sm"><use href="#icon-maximize"></use></svg>全体表示</button>
+              <button id="resetGraphBtn"><svg class="icon icon-sm"><use href="#icon-refresh"></use></svg>リセット</button>
+              <label><input type="checkbox" id="showConditions"> 条件表示</label>
+              <span class="toolbar-divider"></span>
+              <button id="graphSettingsBtn"><svg class="icon icon-sm"><use href="#icon-settings"></use></svg>設定</button>
+            </div>
+            <div id="graphSettings" style="display: none; padding: 8px 12px; background: var(--color-surface-light); border-bottom: 1px solid var(--color-border); gap: 12px;">
+              <label style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px;">ノード形状:
+                <select id="nodeShape">
+                  <option value="circle">円</option>
+                  <option value="rect">四角</option>
+                </select>
+              </label>
+              <label style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px;">フォントサイズ:
+                <input type="range" id="fontSize" min="10" max="20" value="14" style="width: 80px;">
+              </label>
+              <button id="saveGraphPreset">プリセット保存</button>
+              <button id="loadGraphPreset">プリセット読み込み</button>
+            </div>
+            <div class="graph-container" style="flex: 1; padding: 0; border: none;">
+              <svg id="graphSvg" style="width: 100%; height: 100%;"></svg>
             </div>
           </div>
 
-          <div id="debugPanel" class="tab-content">
-            <div class="debug-container">
-              <div id="stateDisplay">
-                <h3>現在の状態</h3>
-                <div id="flagsDisplay"></div>
-                <div id="resourcesDisplay"></div>
-                <div id="variablesDisplay"></div>
+          <div id="debugPanel" class="tab-content" style="overflow-y: auto; padding: 16px;">
+            <div class="debug-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; padding: 0; border: none; background: transparent;">
+              <div id="stateDisplay" style="background: var(--color-surface); border-radius: 4px; padding: 12px; border: 1px solid var(--color-border);">
+                <h3 style="margin: 0 0 12px 0;">現在の状態</h3>
+                <div id="flagsDisplay" style="margin-bottom: 8px;"></div>
+                <div id="resourcesDisplay" style="margin-bottom: 8px;"></div>
+                <div id="variablesDisplay" style="margin-bottom: 12px;"></div>
                 <button id="editVariablesBtn">変数を編集</button>
               </div>
-              <div id="reachabilityMap">
-                <h3>到達可能性マップ</h3>
+              <div id="reachabilityMap" style="background: var(--color-surface); border-radius: 4px; padding: 12px; border: 1px solid var(--color-border);">
+                <h3 style="margin: 0 0 12px 0;">到達可能性マップ</h3>
                 <div id="reachableNodes"></div>
               </div>
-              <div id="saveLoadSection">
-                <h3>セーブ・ロード</h3>
-                <div id="saveSlots"></div>
+              <div id="saveLoadSection" style="background: var(--color-surface); border-radius: 4px; padding: 12px; border: 1px solid var(--color-border);">
+                <h3 style="margin: 0 0 12px 0;">セーブ・ロード</h3>
+                <div id="saveSlots" style="margin-bottom: 12px;"></div>
                 <button id="refreshSavesBtn">セーブデータを更新</button>
               </div>
             </div>
@@ -1022,7 +1168,7 @@
           </div>
         </div>
 
-        <p id="statusText">初期化中...</p>
+        <div id="statusText">✓ 初期化完了 - モデルを読み込んでください</div>
       </div>
     </div>
 
