@@ -727,6 +727,120 @@
       .debug-container > div:last-child {
         border-bottom: none;
       }
+      .node-editor {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 4px;
+        padding: 0.75rem 0.75rem 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .node-editor h3 {
+        margin: 0 0 0.5rem;
+        font-size: 13px;
+      }
+
+      .node-id-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .choices-editor {
+        margin: 0.25rem 0 0.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+
+      .choice-editor {
+        padding: 0.4rem 0.5rem;
+        border-radius: 4px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface-light);
+      }
+
+      .gui-batch-choice-empty {
+        font-size: 0.9em;
+        color: var(--color-text-muted);
+      }
+
+      .gui-batch-choice-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .gui-batch-choice-item {
+        padding: 0.75rem;
+        background: var(--color-surface-light);
+        border-radius: 4px;
+        border: 1px solid var(--color-border);
+      }
+
+      .gui-batch-choice-item-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+
+      .gui-batch-choice-item-text {
+        font-size: 0.9em;
+        color: var(--color-text-muted);
+      }
+
+      .gui-batch-choice-item-target {
+        font-size: 0.85em;
+        color: var(--color-text-muted);
+        margin-top: 0.25rem;
+      }
+
+      /* GUI editor layout */
+      .gui-edit-layout {
+        height: calc(100vh - 300px);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .gui-edit-header {
+        flex-shrink: 0;
+      }
+
+      .gui-edit-info {
+        background: rgba(59, 130, 246, 0.12);
+        padding: 0.75rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        font-size: 0.9em;
+      }
+
+      .gui-edit-info-kbd {
+        background: rgba(0, 0, 0, 0.18);
+        padding: 0.2rem 0.5rem;
+        border-radius: 3px;
+        font-family: var(--font-mono);
+        font-size: 0.85em;
+      }
+
+      .gui-edit-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .gui-edit-toolbar button {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .gui-node-list {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+      }
     </style>
   </head>
   <body>
@@ -1146,15 +1260,15 @@
           </div>
 
           <div id="guiEditMode" class="tab-content" style="display: none;">
-            <div style="height: calc(100vh - 300px); overflow: hidden; display: flex; flex-direction: column;">
-              <div style="flex-shrink: 0;">
+            <div class="gui-edit-layout">
+              <div class="gui-edit-header">
                 <h2>GUI モデル編集</h2>
-                <p style="background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.9em;">
-                  <strong>ショートカット:</strong> <kbd style="background: rgba(0,0,0,0.1); padding: 0.2rem 0.5rem; border-radius: 3px;">N</kbd> クイックノード作成
+                <p class="gui-edit-info">
+                  <strong>ショートカット:</strong> <kbd class="gui-edit-info-kbd">N</kbd> クイックノード作成
                 </p>
-                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
-                  <button id="quickNodeBtn" style="background: var(--color-secondary); color: white; border: none;"><svg class="icon"><use href="#icon-plus"></use></svg>クイックノード作成</button>
-                  <button id="batchChoiceBtn" style="background: var(--color-secondary); color: white; border: none;">選択肢一括編集</button>
+                <div class="gui-edit-toolbar">
+                  <button id="quickNodeBtn" class="primary"><svg class="icon"><use href="#icon-plus"></use></svg>クイックノード作成</button>
+                  <button id="batchChoiceBtn" class="primary">選択肢一括編集</button>
                   <button id="addNodeBtn">ノードを追加</button>
                   <button id="batchEditBtn">バッチ編集</button>
                   <button id="previewBtn">小説プレビュー</button>
@@ -1163,7 +1277,7 @@
                   <button id="cancelGuiBtn">キャンセル</button>
                 </div>
               </div>
-              <div id="nodeList" style="flex: 1; overflow-y: auto; padding-right: 0.5rem;"></div>
+              <div id="nodeList" class="gui-node-list"></div>
             </div>
           </div>
         </div>

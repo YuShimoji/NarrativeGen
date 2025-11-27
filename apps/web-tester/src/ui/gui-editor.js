@@ -305,7 +305,7 @@ export class GuiEditorManager {
 
     const nodeId = nodeSelect.value
     if (!nodeId || !this.appState.model.nodes[nodeId]) {
-      choiceList.innerHTML = '<p style="color: #6b7280;">ノードを選択してください</p>'
+      choiceList.innerHTML = '<p class="gui-batch-choice-empty">ノードを選択してください</p>'
       return
     }
 
@@ -313,20 +313,20 @@ export class GuiEditorManager {
     const choices = node.choices || []
 
     if (choices.length === 0) {
-      choiceList.innerHTML = '<p style="color: #6b7280;">このノードには選択肢がありません</p>'
+      choiceList.innerHTML = '<p class="gui-batch-choice-empty">このノードには選択肢がありません</p>'
       return
     }
 
-    choiceList.innerHTML = '<div style="display: flex; flex-direction: column; gap: 0.5rem;"></div>'
+    choiceList.innerHTML = '<div class="gui-batch-choice-list"></div>'
     const container = choiceList.firstElementChild
 
     choices.forEach((choice, index) => {
       const div = document.createElement('div')
-      div.style.cssText = 'padding: 0.75rem; background: rgba(255,255,255,0.5); border-radius: 4px; border: 1px solid rgba(0,0,0,0.1);'
+      div.className = 'gui-batch-choice-item'
       div.innerHTML = `
-        <div style="font-weight: 600; margin-bottom: 0.25rem;">選択肢 ${index + 1}</div>
-        <div style="font-size: 0.9em; color: #6b7280;">${choice.text || '(テキストなし)'}</div>
-        <div style="font-size: 0.85em; color: #9ca3af; margin-top: 0.25rem;">→ ${choice.target || '(ターゲットなし)'}</div>
+        <div class="gui-batch-choice-item-title">選択肢 ${index + 1}</div>
+        <div class="gui-batch-choice-item-text">${choice.text || '(テキストなし)'}</div>
+        <div class="gui-batch-choice-item-target">→ ${choice.target || '(ターゲットなし)'}</div>
       `
       container.appendChild(div)
     })
