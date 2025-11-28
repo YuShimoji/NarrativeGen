@@ -108,6 +108,12 @@ export const STATUS_MESSAGE_DURATION = 3000
 export const AUTOSAVE_INTERVAL = 30000  // 30秒
 
 /**
+ * ノードID生成時のプレフィックス
+ * @constant {string}
+ */
+export const NODE_ID_PREFIX = 'node_'
+
+/**
  * グラフの最大ノード数（仮想化しきい値）
  * @constant {number}
  */
