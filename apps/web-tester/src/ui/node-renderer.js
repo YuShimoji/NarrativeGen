@@ -3,10 +3,13 @@
  * Handles rendering of nodes and choices in GUI editor
  */
 
+import { ConditionEffectEditor } from './condition-effect-editor.js'
+
 export class NodeRenderer {
   constructor(appState) {
     this.appState = appState
     this.nodeList = null
+    this.conditionEffectEditor = new ConditionEffectEditor()
   }
 
   initialize(nodeListElement) {
@@ -21,6 +24,7 @@ export class NodeRenderer {
     for (const [nodeId, node] of Object.entries(this.appState.model.nodes)) {
       const nodeDiv = document.createElement('div')
       nodeDiv.className = 'node-editor'
+      nodeDiv.dataset.nodeId = nodeId
       nodeDiv.innerHTML = `
         <h3>ノード: ${nodeId}</h3>
         <div class="node-id-row">
@@ -61,15 +65,43 @@ export class NodeRenderer {
     node.choices.forEach((choice, index) => {
       const choiceDiv = document.createElement('div')
       choiceDiv.className = 'choice-editor'
+      choiceDiv.dataset.choiceIndex = index
+      
+      // 条件と効果のエディタHTML
+      const conditionsHtml = this.conditionEffectEditor.renderConditionsEditor(
+        choice.conditions, nodeId, index
+      )
+      const effectsHtml = this.conditionEffectEditor.renderEffectsEditor(
+        choice.effects, nodeId, index
+      )
+      
       choiceDiv.innerHTML = `
-        <label>テキスト: <input type="text" value="${(choice.text || '').replace(/"/g, '&quot;')}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="text"></label>
-        <label>ターゲット: <input type="text" value="${choice.target || ''}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="target"></label>
-        <button class="paraphrase-btn" data-node-id="${nodeId}" data-choice-index="${index}">言い換え</button>
-        <button class="delete-choice-btn" data-node-id="${nodeId}" data-choice-index="${index}">削除</button>
+        <div class="choice-basic">
+          <label>テキスト: <input type="text" value="${(choice.text || '').replace(/"/g, '&quot;')}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="text"></label>
+          <label>ターゲット: <input type="text" value="${choice.target || ''}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="target"></label>
+        </div>
+        <details class="choice-advanced">
+          <summary>条件・効果を編集</summary>
+          <div class="choice-conditions-effects">
+            ${conditionsHtml}
+            ${effectsHtml}
+          </div>
+        </details>
+        <div class="choice-actions">
+          <button class="paraphrase-btn" data-node-id="${nodeId}" data-choice-index="${index}">言い換え</button>
+          <button class="delete-choice-btn" data-node-id="${nodeId}" data-choice-index="${index}">削除</button>
+        </div>
       `
       fragment.appendChild(choiceDiv)
     })
     choicesDiv.innerHTML = ''
     choicesDiv.appendChild(fragment)
+  }
+
+  /**
+   * 条件/効果エディタのインスタンスを取得
+   */
+  getConditionEffectEditor() {
+    return this.conditionEffectEditor
   }
 }

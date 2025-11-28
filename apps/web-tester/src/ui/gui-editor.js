@@ -40,6 +40,165 @@ export class GuiEditorManager {
     this.nodeRenderer.initialize(nodeListElement)
     this.modelUpdater.initialize(guiEditModeElement)
     this.batchEditor.initialize(batchEditModalElement)
+
+    // Setup condition/effect editor event handlers
+    this._setupConditionEffectHandlers()
+  }
+
+  /**
+   * 条件/効果エディタのイベントハンドラを設定
+   */
+  _setupConditionEffectHandlers() {
+    if (!this.nodeList) return
+
+    const conditionEffectEditor = this.nodeRenderer.getConditionEffectEditor()
+    
+    conditionEffectEditor.setupEventListeners(this.nodeList, {
+      onAddCondition: (nodeId, choiceIndex, newCondition) => {
+        this._addConditionToChoice(nodeId, choiceIndex, newCondition)
+      },
+      onAddEffect: (nodeId, choiceIndex, newEffect) => {
+        this._addEffectToChoice(nodeId, choiceIndex, newEffect)
+      },
+      onDeleteCondition: (nodeId, choiceIndex, conditionIndex) => {
+        this._deleteConditionFromChoice(nodeId, choiceIndex, conditionIndex)
+      },
+      onDeleteEffect: (nodeId, choiceIndex, effectIndex) => {
+        this._deleteEffectFromChoice(nodeId, choiceIndex, effectIndex)
+      },
+      onValueChange: (e) => {
+        this._handleConditionEffectChange(e)
+      }
+    })
+  }
+
+  /**
+   * 選択肢に条件を追加
+   */
+  _addConditionToChoice(nodeId, choiceIndex, newCondition) {
+    const node = this.appState.model.nodes[nodeId]
+    if (!node || !node.choices || !node.choices[choiceIndex]) return
+
+    if (!node.choices[choiceIndex].conditions) {
+      node.choices[choiceIndex].conditions = []
+    }
+    node.choices[choiceIndex].conditions.push(newCondition)
+    
+    this.renderChoicesForNode(nodeId)
+    this.modelUpdater.saveDraftModel()
+  }
+
+  /**
+   * 選択肢に効果を追加
+   */
+  _addEffectToChoice(nodeId, choiceIndex, newEffect) {
+    const node = this.appState.model.nodes[nodeId]
+    if (!node || !node.choices || !node.choices[choiceIndex]) return
+
+    if (!node.choices[choiceIndex].effects) {
+      node.choices[choiceIndex].effects = []
+    }
+    node.choices[choiceIndex].effects.push(newEffect)
+    
+    this.renderChoicesForNode(nodeId)
+    this.modelUpdater.saveDraftModel()
+  }
+
+  /**
+   * 選択肢から条件を削除
+   */
+  _deleteConditionFromChoice(nodeId, choiceIndex, conditionIndex) {
+    const node = this.appState.model.nodes[nodeId]
+    if (!node || !node.choices || !node.choices[choiceIndex]) return
+    if (!node.choices[choiceIndex].conditions) return
+
+    node.choices[choiceIndex].conditions.splice(conditionIndex, 1)
+    
+    this.renderChoicesForNode(nodeId)
+    this.modelUpdater.saveDraftModel()
+  }
+
+  /**
+   * 選択肢から効果を削除
+   */
+  _deleteEffectFromChoice(nodeId, choiceIndex, effectIndex) {
+    const node = this.appState.model.nodes[nodeId]
+    if (!node || !node.choices || !node.choices[choiceIndex]) return
+    if (!node.choices[choiceIndex].effects) return
+
+    node.choices[choiceIndex].effects.splice(effectIndex, 1)
+    
+    this.renderChoicesForNode(nodeId)
+    this.modelUpdater.saveDraftModel()
+  }
+
+  /**
+   * 条件/効果の値変更を処理（デバウンス付き）
+   */
+  _handleConditionEffectChange(e) {
+    // Debounce to avoid too many updates
+    if (this._conditionEffectDebounceTimer) {
+      clearTimeout(this._conditionEffectDebounceTimer)
+    }
+    
+    this._conditionEffectDebounceTimer = setTimeout(() => {
+      const conditionItem = e.target.closest('.condition-item')
+      const effectItem = e.target.closest('.effect-item')
+      
+      if (conditionItem) {
+        this._updateConditionFromElement(conditionItem)
+      } else if (effectItem) {
+        this._updateEffectFromElement(effectItem)
+      }
+    }, 300)
+  }
+
+  /**
+   * DOM要素から条件を更新
+   */
+  _updateConditionFromElement(itemElement) {
+    const editorContainer = itemElement.closest('.conditions-editor')
+    if (!editorContainer) return
+
+    const nodeId = editorContainer.dataset.nodeId
+    const choiceIndex = parseInt(editorContainer.dataset.choiceIndex)
+    const conditionIndex = parseInt(itemElement.dataset.conditionIndex)
+    
+    const node = this.appState.model.nodes[nodeId]
+    if (!node || !node.choices || !node.choices[choiceIndex]) return
+    if (!node.choices[choiceIndex].conditions) return
+
+    const conditionEffectEditor = this.nodeRenderer.getConditionEffectEditor()
+    const newCondition = conditionEffectEditor.readConditionFromElement(itemElement)
+    
+    if (newCondition) {
+      node.choices[choiceIndex].conditions[conditionIndex] = newCondition
+      this.modelUpdater.saveDraftModel()
+    }
+  }
+
+  /**
+   * DOM要素から効果を更新
+   */
+  _updateEffectFromElement(itemElement) {
+    const editorContainer = itemElement.closest('.effects-editor')
+    if (!editorContainer) return
+
+    const nodeId = editorContainer.dataset.nodeId
+    const choiceIndex = parseInt(editorContainer.dataset.choiceIndex)
+    const effectIndex = parseInt(itemElement.dataset.effectIndex)
+    
+    const node = this.appState.model.nodes[nodeId]
+    if (!node || !node.choices || !node.choices[choiceIndex]) return
+    if (!node.choices[choiceIndex].effects) return
+
+    const conditionEffectEditor = this.nodeRenderer.getConditionEffectEditor()
+    const newEffect = conditionEffectEditor.readEffectFromElement(itemElement)
+    
+    if (newEffect) {
+      node.choices[choiceIndex].effects[effectIndex] = newEffect
+      this.modelUpdater.saveDraftModel()
+    }
   }
 
   // Main rendering function
