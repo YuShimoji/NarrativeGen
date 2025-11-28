@@ -108,6 +108,12 @@ export const STATUS_MESSAGE_DURATION = 3000
 export const AUTOSAVE_INTERVAL = 30000  // 30秒
 
 /**
+ * セーブデータのバージョン
+ * @constant {string}
+ */
+export const SAVE_DATA_VERSION = '1.0'
+
+/**
  * ノードID生成時のプレフィックス
  * @constant {string}
  */
@@ -237,6 +243,8 @@ export default {
   NODE_TEMPLATES,
   STATUS_MESSAGE_DURATION,
   AUTOSAVE_INTERVAL,
+  SAVE_DATA_VERSION,
+  NODE_ID_PREFIX,
   GRAPH_VIRTUALIZATION_THRESHOLD,
   STORY_LOG_VIRTUAL_SCROLL_THRESHOLD,
   MAX_NODE_ID_LENGTH,

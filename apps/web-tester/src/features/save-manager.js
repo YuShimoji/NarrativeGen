@@ -8,7 +8,9 @@
 import {
   SAVE_SLOTS,
   SAVE_KEY_PREFIX,
-  AUTOSAVE_KEY
+  AUTOSAVE_KEY,
+  AUTOSAVE_INTERVAL,
+  SAVE_DATA_VERSION
 } from '../config/constants.js'
 import Logger from '../core/logger.js'
 import {
@@ -91,7 +93,7 @@ export class SaveManager {
    */
   createSaveData(session, modelName) {
     return {
-      version: '1.0',
+      version: SAVE_DATA_VERSION,
       timestamp: new Date().toISOString(),
       modelName: modelName || getCurrentModelName(),
       session: {
@@ -103,6 +105,30 @@ export class SaveManager {
       },
       storyLog: this.appState ? [...this.appState.storyLog] : []
     }
+  }
+
+  /**
+   * セーブデータからセッションを復元
+   * @param {Object} saveData - セーブデータ
+   * @returns {Object} 復元されたセッション
+   * @private
+   */
+  _restoreSessionFromSaveData(saveData) {
+    const restoredSession = {
+      nodeId: saveData.session.nodeId,
+      flags: { ...saveData.session.flags },
+      resources: { ...saveData.session.resources },
+      variables: { ...saveData.session.variables },
+      time: saveData.session.time
+    }
+    setCurrentSession(restoredSession)
+    setCurrentModelName(saveData.modelName)
+
+    if (this.appState) {
+      this.appState.storyLog = saveData.storyLog || []
+    }
+
+    return restoredSession
   }
 
   /**
@@ -162,21 +188,8 @@ export class SaveManager {
         throw new Error('不正なセーブデータです')
       }
 
-      // Restore session and model name
-      const restoredSession = {
-        nodeId: saveData.session.nodeId,
-        flags: { ...saveData.session.flags },
-        resources: { ...saveData.session.resources },
-        variables: { ...saveData.session.variables },
-        time: saveData.session.time
-      }
-      setCurrentSession(restoredSession)
-      setCurrentModelName(saveData.modelName)
-
-      // Restore story log
-      if (this.appState) {
-        this.appState.storyLog = saveData.storyLog || []
-      }
+      // Restore session using helper method
+      const restoredSession = this._restoreSessionFromSaveData(saveData)
 
       // Update UI
       this.updateUI()
@@ -223,20 +236,8 @@ export class SaveManager {
       const saveData = JSON.parse(savedData)
       if (!saveData.session) return false
 
-      // Restore session and model name
-      const restoredSession = {
-        nodeId: saveData.session.nodeId,
-        flags: { ...saveData.session.flags },
-        resources: { ...saveData.session.resources },
-        variables: { ...saveData.session.variables },
-        time: saveData.session.time
-      }
-      setCurrentSession(restoredSession)
-      setCurrentModelName(saveData.modelName)
-
-      if (this.appState) {
-        this.appState.storyLog = saveData.storyLog || []
-      }
+      // Restore session using helper method
+      const restoredSession = this._restoreSessionFromSaveData(saveData)
 
       Logger.info('Auto-save loaded', { nodeId: restoredSession.nodeId })
       return true
@@ -311,9 +312,9 @@ export class SaveManager {
 
   /**
    * オートセーブを開始
-   * @param {number} [intervalMs=30000] - インターバル（ミリ秒）
+   * @param {number} [intervalMs=AUTOSAVE_INTERVAL] - インターバル（ミリ秒）
    */
-  startAutoSave(intervalMs = 30000) {
+  startAutoSave(intervalMs = AUTOSAVE_INTERVAL) {
     this.stopAutoSave()
     this.autoSaveInterval = setInterval(() => this.autoSave(), intervalMs)
     Logger.info('Auto-save started', { intervalMs })
