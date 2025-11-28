@@ -56,6 +56,7 @@ import {
 } from './src/core/session.js'
 import { KeyBindingManager } from './src/ui/keybinding-manager.js'
 import { SaveManager } from './src/features/save-manager.js'
+import { ValidationPanel } from './src/ui/validation-panel.js'
 import {
   SAVE_SLOTS,
   SAVE_KEY_PREFIX,
@@ -1799,6 +1800,7 @@ const csvManager = new CsvManager(appState)
 const aiManager = new AiManager(appState)
 const lexiconManager = new LexiconManager()
 const themeManager = new ThemeManager()
+const validationPanel = new ValidationPanel(appState)
 
 // Initialize story manager
 storyManager.initialize(document.getElementById('storyPanel'))
@@ -1813,6 +1815,39 @@ debugManager.initialize(
   document.getElementById('variablesDisplay'),
   document.getElementById('reachableNodes')
 )
+
+// Initialize validation panel
+validationPanel.initialize(
+  document.getElementById('validationContainer'),
+  (nodeId) => {
+    // Navigate to node in GUI editor when clicked
+    if (guiEditMode && guiEditMode.classList.contains('active')) {
+      const nodeCard = document.querySelector(`[data-node-id="${nodeId}"]`)
+      if (nodeCard) {
+        nodeCard.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        nodeCard.classList.add('highlight')
+        setTimeout(() => nodeCard.classList.remove('highlight'), 2000)
+      }
+    }
+  }
+)
+
+// Validation button event listener
+const runValidationBtn = document.getElementById('runValidationBtn')
+if (runValidationBtn) {
+  runValidationBtn.addEventListener('click', () => {
+    const summary = validationPanel.validateAndRender()
+    if (summary) {
+      if (summary.errors > 0) {
+        setStatus(`検証完了: ${summary.errors}件のエラー、${summary.warnings}件の警告`, 'error')
+      } else if (summary.warnings > 0) {
+        setStatus(`検証完了: ${summary.warnings}件の警告`, 'warn')
+      } else {
+        setStatus('検証完了: 問題は検出されませんでした', 'success')
+      }
+    }
+  })
+}
 
 saveManager.initialize({
   appState,
