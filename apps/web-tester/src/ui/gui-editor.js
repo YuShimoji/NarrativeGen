@@ -43,6 +43,12 @@ export class GuiEditorManager {
 
     // Setup condition/effect editor event handlers
     this._setupConditionEffectHandlers()
+
+    // Setup drag and drop functionality
+    this.nodeRenderer.setupDragAndDrop()
+    this.nodeRenderer.setOnModelUpdate(() => {
+      // モデル更新時の追加処理があればここに
+    })
   }
 
   /**

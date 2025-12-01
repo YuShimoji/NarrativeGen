@@ -25,6 +25,7 @@ export class NodeRenderer {
       const nodeDiv = document.createElement('div')
       nodeDiv.className = 'node-editor'
       nodeDiv.dataset.nodeId = nodeId
+      nodeDiv.draggable = true
       nodeDiv.innerHTML = `
         <h3>ノード: ${nodeId}</h3>
         <div class="node-id-row">
@@ -66,6 +67,7 @@ export class NodeRenderer {
       const choiceDiv = document.createElement('div')
       choiceDiv.className = 'choice-editor'
       choiceDiv.dataset.choiceIndex = index
+      choiceDiv.draggable = true
       
       // 条件と効果のエディタHTML
       const conditionsHtml = this.conditionEffectEditor.renderConditionsEditor(
@@ -99,9 +101,188 @@ export class NodeRenderer {
   }
 
   /**
-   * 条件/効果エディタのインスタンスを取得
+   * ドラッグ＆ドロップ並べ替え機能をセットアップ
    */
-  getConditionEffectEditor() {
-    return this.conditionEffectEditor
+  setupDragAndDrop() {
+    if (!this.nodeList) return
+
+    // ノードのドラッグ＆ドロップ
+    this.nodeList.addEventListener('dragstart', (e) => {
+      if (e.target.classList.contains('node-editor')) {
+        e.target.classList.add('dragging')
+        e.dataTransfer.effectAllowed = 'move'
+        e.dataTransfer.setData('text/plain', e.target.dataset.nodeId)
+      }
+    })
+
+    this.nodeList.addEventListener('dragend', (e) => {
+      if (e.target.classList.contains('node-editor')) {
+        e.target.classList.remove('dragging')
+        // ドラッグ中のスタイルをクリア
+        document.querySelectorAll('.node-editor.drag-over').forEach(el => {
+          el.classList.remove('drag-over')
+        })
+      }
+    })
+
+    this.nodeList.addEventListener('dragover', (e) => {
+      e.preventDefault()
+      const nodeEditor = e.target.closest('.node-editor')
+      if (nodeEditor && !nodeEditor.classList.contains('dragging')) {
+        e.dataTransfer.dropEffect = 'move'
+        // ドロップ可能な場所を示すスタイル
+        document.querySelectorAll('.node-editor.drag-over').forEach(el => {
+          el.classList.remove('drag-over')
+        })
+        nodeEditor.classList.add('drag-over')
+      }
+    })
+
+    this.nodeList.addEventListener('dragleave', (e) => {
+      const nodeEditor = e.target.closest('.node-editor')
+      if (nodeEditor && !nodeEditor.contains(e.relatedTarget)) {
+        nodeEditor.classList.remove('drag-over')
+      }
+    })
+
+    this.nodeList.addEventListener('drop', (e) => {
+      e.preventDefault()
+      const draggedNodeId = e.dataTransfer.getData('text/plain')
+      const targetNodeEditor = e.target.closest('.node-editor')
+      
+      if (targetNodeEditor && draggedNodeId && targetNodeEditor.dataset.nodeId !== draggedNodeId) {
+        this._reorderNodes(draggedNodeId, targetNodeEditor.dataset.nodeId)
+      }
+      
+      // スタイルをクリア
+      document.querySelectorAll('.node-editor.drag-over').forEach(el => {
+        el.classList.remove('drag-over')
+      })
+    })
+
+    // 選択肢のドラッグ＆ドロップ
+    this.nodeList.addEventListener('dragstart', (e) => {
+      if (e.target.classList.contains('choice-editor')) {
+        e.target.classList.add('dragging')
+        e.dataTransfer.effectAllowed = 'move'
+        const nodeId = e.target.closest('.node-editor').dataset.nodeId
+        const choiceIndex = e.target.dataset.choiceIndex
+        e.dataTransfer.setData('text/plain', `${nodeId}:${choiceIndex}`)
+      }
+    })
+
+    this.nodeList.addEventListener('dragend', (e) => {
+      if (e.target.classList.contains('choice-editor')) {
+        e.target.classList.remove('dragging')
+        document.querySelectorAll('.choice-editor.drag-over').forEach(el => {
+          el.classList.remove('drag-over')
+        })
+      }
+    })
+
+    this.nodeList.addEventListener('dragover', (e) => {
+      e.preventDefault()
+      const choiceEditor = e.target.closest('.choice-editor')
+      if (choiceEditor && !choiceEditor.classList.contains('dragging')) {
+        e.dataTransfer.dropEffect = 'move'
+        document.querySelectorAll('.choice-editor.drag-over').forEach(el => {
+          el.classList.remove('drag-over')
+        })
+        choiceEditor.classList.add('drag-over')
+      }
+    })
+
+    this.nodeList.addEventListener('dragleave', (e) => {
+      const choiceEditor = e.target.closest('.choice-editor')
+      if (choiceEditor && !choiceEditor.contains(e.relatedTarget)) {
+        choiceEditor.classList.remove('drag-over')
+      }
+    })
+
+    this.nodeList.addEventListener('drop', (e) => {
+      e.preventDefault()
+      const dragData = e.dataTransfer.getData('text/plain')
+      const targetChoiceEditor = e.target.closest('.choice-editor')
+      
+      if (targetChoiceEditor && dragData) {
+        const [draggedNodeId, draggedChoiceIndex] = dragData.split(':')
+        const targetNodeId = targetChoiceEditor.closest('.node-editor').dataset.nodeId
+        const targetChoiceIndex = targetChoiceEditor.dataset.choiceIndex
+        
+        if (draggedNodeId === targetNodeId && draggedChoiceIndex !== targetChoiceIndex) {
+          this._reorderChoices(draggedNodeId, parseInt(draggedChoiceIndex), parseInt(targetChoiceIndex))
+        }
+      }
+      
+      document.querySelectorAll('.choice-editor.drag-over').forEach(el => {
+        el.classList.remove('drag-over')
+      })
+    })
   }
-}
+
+  /**
+   * ノードの順序を変更
+   */
+  _reorderNodes(draggedNodeId, targetNodeId) {
+    const nodes = this.appState.model.nodes
+    const nodeIds = Object.keys(nodes)
+    
+    const draggedIndex = nodeIds.indexOf(draggedNodeId)
+    const targetIndex = nodeIds.indexOf(targetNodeId)
+    
+    if (draggedIndex === -1 || targetIndex === -1) return
+    
+    // 配列から要素を削除して挿入
+    nodeIds.splice(draggedIndex, 1)
+    nodeIds.splice(targetIndex, 0, draggedNodeId)
+    
+    // 新しい順序でオブジェクトを再構築
+    const reorderedNodes = {}
+    nodeIds.forEach(id => {
+      reorderedNodes[id] = nodes[id]
+    })
+    
+    this.appState.model.nodes = reorderedNodes
+    this.renderNodeList()
+    this._notifyModelUpdate()
+  }
+
+  /**
+   * 選択肢の順序を変更
+   */
+  _reorderChoices(nodeId, draggedIndex, targetIndex) {
+    const node = this.appState.model.nodes[nodeId]
+    if (!node || !node.choices) return
+    
+    const choices = node.choices
+    const draggedChoice = choices[draggedIndex]
+    
+    // 配列から要素を削除して挿入
+    choices.splice(draggedIndex, 1)
+    choices.splice(targetIndex, 0, draggedChoice)
+    
+    this.renderChoicesForNode(nodeId)
+    this._notifyModelUpdate()
+  }
+
+  /**
+   * モデル更新を通知
+   */
+  _notifyModelUpdate() {
+    // ModelUpdaterがあれば保存
+    if (this.appState.modelUpdater) {
+      this.appState.modelUpdater.saveDraftModel()
+    }
+    
+    // 外部リスナーへの通知
+    if (this.onModelUpdate) {
+      this.onModelUpdate()
+    }
+  }
+
+  /**
+   * モデル更新リスナーを設定
+   */
+  setOnModelUpdate(callback) {
+    this.onModelUpdate = callback
+  }

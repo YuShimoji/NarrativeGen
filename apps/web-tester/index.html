@@ -1195,6 +1195,73 @@
         0% { box-shadow: 0 0 0 3px var(--color-primary); }
         100% { box-shadow: none; }
       }
+
+      /* Drag and Drop Styles */
+      .node-editor,
+      .choice-editor {
+        cursor: grab;
+        transition: all 0.2s ease;
+      }
+
+      .node-editor.dragging,
+      .choice-editor.dragging {
+        opacity: 0.5;
+        transform: rotate(2deg);
+        cursor: grabbing;
+        z-index: 1000;
+      }
+
+      .node-editor.drag-over,
+      .choice-editor.drag-over {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 2px var(--color-primary);
+        background: rgba(33, 150, 243, 0.1);
+      }
+
+      .node-editor.drag-over::before,
+      .choice-editor.drag-over::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--color-primary);
+        border-radius: 4px 4px 0 0;
+      }
+
+      .node-editor.drag-over {
+        border-top: 3px solid var(--color-primary);
+      }
+
+      .choice-editor.drag-over {
+        border-left: 3px solid var(--color-primary);
+      }
+
+      /* Drag handle for better UX */
+      .node-editor::before,
+      .choice-editor::before {
+        content: '⋮⋮';
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        color: var(--color-text-muted);
+        font-size: 12px;
+        line-height: 1;
+        opacity: 0.5;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+
+      .node-editor:hover::before,
+      .choice-editor:hover::before {
+        opacity: 1;
+      }
+
+      .node-editor.dragging::before,
+      .choice-editor.dragging::before {
+        opacity: 0;
+      }
     </style>
   </head>
   <body>
