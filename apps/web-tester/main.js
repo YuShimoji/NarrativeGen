@@ -57,81 +57,16 @@ import {
 import { KeyBindingManager } from './src/ui/keybinding-manager.js'
 import { SaveManager } from './src/features/save-manager.js'
 import { ValidationPanel } from './src/ui/validation-panel.js'
+import { LexiconUIManager } from './src/ui/lexicon-ui-manager.js'
+import { KeyBindingUIManager } from './src/ui/key-binding-ui-manager.js'
 import {
   SAVE_SLOTS,
   SAVE_KEY_PREFIX,
   AUTOSAVE_KEY,
   NODE_TEMPLATES,
-  KEY_BINDINGS_STORAGE_KEY,
   ADVANCED_ENABLED_STORAGE_KEY,
   DRAFT_MODEL_STORAGE_KEY
 } from './src/config/constants.js'
-
-// ===========================
-// Key binding management
-// ===========================
-
-// Initialize KeyBindingManager
-const keyBindingManager = new KeyBindingManager()
-
-// Key binding handlers
-const keyBindingHandlers = {
-  'inventory': () => {
-    // Placeholder for inventory functionality
-    setStatus('インベントリ機能は開発中です', 'info')
-    Logger.info('Inventory key pressed')
-  },
-  
-  'debug': () => {
-    // Toggle debug panel
-    if (debugPanel.classList.contains('active')) {
-      debugPanel.classList.remove('active')
-      debugTab.classList.remove('active')
-    } else {
-      debugPanel.classList.add('active')
-      debugTab.classList.add('active')
-      renderDebugInfo()
-    }
-    Logger.info('Debug panel toggled')
-  },
-
-  'graph': () => {
-    // Toggle graph panel
-    if (graphPanel.classList.contains('active')) {
-      graphPanel.classList.remove('active')
-      graphTab.classList.remove('active')
-    } else {
-      graphPanel.classList.add('active')
-      graphTab.classList.add('active')
-      renderGraph()
-    }
-    Logger.info('Graph panel toggled')
-  },
-
-  'story': () => {
-    // Toggle story panel
-    if (storyPanel.classList.contains('active')) {
-      storyPanel.classList.remove('active')
-      storyTab.classList.remove('active')
-    } else {
-      storyPanel.classList.add('active')
-      storyTab.classList.add('active')
-    }
-    Logger.info('Story panel toggled')
-  },
-
-  'ai': () => {
-    // Toggle AI panel
-    if (aiPanel.classList.contains('active')) {
-      aiPanel.classList.remove('active')
-      aiTab.classList.remove('active')
-    } else {
-      aiPanel.classList.add('active')
-      aiTab.classList.add('active')
-    }
-    Logger.info('AI panel toggled')
-  }
-}
 
 // Utility function for resolving variables in text (browser-compatible)
 function resolveVariables(text, session, model) {
@@ -407,118 +342,8 @@ function hideErrors() {
 }
 
 // =============================================================================
-// Designer Lexicon management
-// =============================================================================
-
-function initLexiconUI() {
-  // Tooltip for sidebar button
-  if (toggleSidebarBtn) toggleSidebarBtn.title = '選択肢と状態パネルの表示/非表示を切り替えます'
-
-  // Prefill textarea with current runtime lexicon
-  if (lexiconTextarea) {
-    try { lexiconTextarea.value = lexiconManager.exportAsJson() } catch {}
-  }
-
-  // Wire buttons
-  if (lexiconLoadBtn) {
-    lexiconLoadBtn.addEventListener('click', () => {
-      try { lexiconTextarea.value = lexiconManager.exportAsJson(); setStatus('現在の辞書を読み込みました', 'success') } catch (e) { setStatus('辞書の読み込みに失敗しました', 'error') }
-    })
-  }
-  if (lexiconMergeBtn) {
-    lexiconMergeBtn.addEventListener('click', () => {
-      try {
-        const input = JSON.parse(lexiconTextarea.value || '{}')
-        lexiconManager.setLexicon(input, { merge: true })
-        lexiconTextarea.value = lexiconManager.exportAsJson()
-        setStatus('辞書をマージ適用しました', 'success')
-      } catch (e) { setStatus(`辞書の適用に失敗しました: ${e.message}`, 'error') }
-    })
-  }
-  if (lexiconReplaceBtn) {
-    lexiconReplaceBtn.addEventListener('click', () => {
-      try {
-        const input = JSON.parse(lexiconTextarea.value || '{}')
-        lexiconManager.setLexicon(input, { merge: false })
-        setStatus('辞書を置換適用しました', 'success')
-      } catch (e) { setStatus(`辞書の適用に失敗しました: ${e.message}`, 'error') }
-    })
-  }
-  if (lexiconExportBtn) {
-    lexiconExportBtn.addEventListener('click', () => {
-      try {
-        const blob = new Blob([lexiconManager.exportAsJson()], { type: 'application/json' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = 'synonyms.json'
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-        URL.revokeObjectURL(url)
-        setStatus('辞書をエクスポートしました', 'success')
-      } catch (e) { setStatus('エクスポートに失敗しました', 'error') }
-    })
-  }
-  if (lexiconImportBtn && lexiconFileInput) {
-    lexiconImportBtn.addEventListener('click', () => lexiconFileInput.click())
-    lexiconFileInput.addEventListener('change', (ev) => {
-      const file = ev.target.files?.[0]
-      if (!file) return
-      const reader = new FileReader()
-      reader.onload = () => {
-        try {
-          lexiconManager.importFromJson(String(reader.result))
-          lexiconTextarea.value = lexiconManager.exportAsJson()
-          setStatus('辞書ファイルを読み込みました。適用ボタンで反映します', 'info')
-        } catch { setStatus('JSON の解析に失敗しました', 'error') }
-      }
-      reader.readAsText(file)
-    })
-  }
-}
-
-function showCsvPreview(file) {
-  csvFileName.textContent = file.name
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    const text = e.target.result
-    const lines = text.trim().split(/\r?\n/).slice(0, 11) // First 10 lines + header
-    const table = document.createElement('table')
-    table.className = 'csv-table'
-    
-    lines.forEach((line, index) => {
-      const row = document.createElement('tr')
-      const cells = parseCsvLine(line, line.includes('\t') ? '\t' : ',')
-      cells.forEach(cell => {
-        const cellEl = document.createElement(index === 0 ? 'th' : 'td')
-        cellEl.textContent = cell
-        row.appendChild(cellEl)
-      })
-      table.appendChild(row)
-    })
-    
-    if (lines.length >= 11) {
-      const row = document.createElement('tr')
-      const cell = document.createElement('td')
-      cell.colSpan = lines[0].split(line.includes('\t') ? '\t' : ',').length
-      cell.textContent = '... (以降省略)'
-      cell.style.textAlign = 'center'
-      cell.style.fontStyle = 'italic'
-      row.appendChild(cell)
-      table.appendChild(row)
-    }
-    
-    csvPreviewContent.innerHTML = ''
-    csvPreviewContent.appendChild(table)
-    csvPreviewModal.classList.add('show')
-  }
-  reader.readAsText(file)
-}
-
-function hideCsvPreview() {
-  csvPreviewModal.classList.remove('show')
-}
+// Save/Load System (via SaveManager)
+// ============================================================================
 
 function getConditionText(conditions) {
   if (!conditions || conditions.length === 0) return ''
@@ -1801,6 +1626,8 @@ const aiManager = new AiManager(appState)
 const lexiconManager = new LexiconManager()
 const themeManager = new ThemeManager()
 const validationPanel = new ValidationPanel(appState)
+const lexiconUIManager = new LexiconUIManager()
+const keyBindingUIManager = new KeyBindingUIManager()
 
 // Initialize story manager
 storyManager.initialize(document.getElementById('storyPanel'))
@@ -1916,6 +1743,10 @@ aiManager.initialize(
 
 // Initialize lexicon manager
 lexiconManager.initialize()
+
+// Initialize lexicon UI manager
+lexiconUIManager.initialize(lexiconManager, setStatus)
+lexiconUIManager.initUI()
 
 // Initialize theme manager (palette UI and saved theme)
 setupThemeEventListeners(themeManager)
