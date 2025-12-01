@@ -5,6 +5,10 @@
 
 import { getCurrentModelName } from '../core/session.js'
 import { NODE_TEMPLATES, DRAFT_MODEL_STORAGE_KEY } from '../config/constants.js'
+import { NodeRenderer } from './node-renderer.js'
+import { ModelUpdater } from './model-updater.js'
+import { NodeManager } from './node-manager.js'
+import { BatchEditor } from './batch-editor.js'
 
 export class GuiEditorManager {
   constructor(appState) {
@@ -16,6 +20,12 @@ export class GuiEditorManager {
     this.batchChoiceModal = null
     this.paraphraseModal = null
     this.currentParaphraseTarget = null
+
+    // Initialize sub-managers
+    this.nodeRenderer = new NodeRenderer(appState)
+    this.modelUpdater = new ModelUpdater(appState)
+    this.nodeManager = new NodeManager(appState)
+    this.batchEditor = new BatchEditor(appState)
   }
 
   initialize(nodeListElement, guiEditModeElement, batchEditModalElement, quickNodeModalElement, batchChoiceModalElement, paraphraseModalElement) {
@@ -25,187 +35,190 @@ export class GuiEditorManager {
     this.quickNodeModal = quickNodeModalElement
     this.batchChoiceModal = batchChoiceModalElement
     this.paraphraseModal = paraphraseModalElement
+
+    // Initialize sub-managers
+    this.nodeRenderer.initialize(nodeListElement)
+    this.modelUpdater.initialize(guiEditModeElement)
+    this.batchEditor.initialize(batchEditModalElement)
+
+    // Setup condition/effect editor event handlers
+    this._setupConditionEffectHandlers()
+  }
+
+  /**
+   * 条件/効果エディタのイベントハンドラを設定
+   */
+  _setupConditionEffectHandlers() {
+    if (!this.nodeList) return
+
+    const conditionEffectEditor = this.nodeRenderer.getConditionEffectEditor()
+    
+    conditionEffectEditor.setupEventListeners(this.nodeList, {
+      onAddCondition: (nodeId, choiceIndex, newCondition) => {
+        this._addConditionToChoice(nodeId, choiceIndex, newCondition)
+      },
+      onAddEffect: (nodeId, choiceIndex, newEffect) => {
+        this._addEffectToChoice(nodeId, choiceIndex, newEffect)
+      },
+      onDeleteCondition: (nodeId, choiceIndex, conditionIndex) => {
+        this._deleteConditionFromChoice(nodeId, choiceIndex, conditionIndex)
+      },
+      onDeleteEffect: (nodeId, choiceIndex, effectIndex) => {
+        this._deleteEffectFromChoice(nodeId, choiceIndex, effectIndex)
+      },
+      onValueChange: (e) => {
+        this._handleConditionEffectChange(e)
+      }
+    })
+  }
+
+  /**
+   * 選択肢に条件を追加
+   */
+  _addConditionToChoice(nodeId, choiceIndex, newCondition) {
+    const node = this.appState.model.nodes[nodeId]
+    if (!node || !node.choices || !node.choices[choiceIndex]) return
+
+    if (!node.choices[choiceIndex].conditions) {
+      node.choices[choiceIndex].conditions = []
+    }
+    node.choices[choiceIndex].conditions.push(newCondition)
+    
+    this.renderChoicesForNode(nodeId)
+    this.modelUpdater.saveDraftModel()
+  }
+
+  /**
+   * 選択肢に効果を追加
+   */
+  _addEffectToChoice(nodeId, choiceIndex, newEffect) {
+    const node = this.appState.model.nodes[nodeId]
+    if (!node || !node.choices || !node.choices[choiceIndex]) return
+
+    if (!node.choices[choiceIndex].effects) {
+      node.choices[choiceIndex].effects = []
+    }
+    node.choices[choiceIndex].effects.push(newEffect)
+    
+    this.renderChoicesForNode(nodeId)
+    this.modelUpdater.saveDraftModel()
+  }
+
+  /**
+   * 選択肢から条件を削除
+   */
+  _deleteConditionFromChoice(nodeId, choiceIndex, conditionIndex) {
+    const node = this.appState.model.nodes[nodeId]
+    if (!node || !node.choices || !node.choices[choiceIndex]) return
+    if (!node.choices[choiceIndex].conditions) return
+
+    node.choices[choiceIndex].conditions.splice(conditionIndex, 1)
+    
+    this.renderChoicesForNode(nodeId)
+    this.modelUpdater.saveDraftModel()
+  }
+
+  /**
+   * 選択肢から効果を削除
+   */
+  _deleteEffectFromChoice(nodeId, choiceIndex, effectIndex) {
+    const node = this.appState.model.nodes[nodeId]
+    if (!node || !node.choices || !node.choices[choiceIndex]) return
+    if (!node.choices[choiceIndex].effects) return
+
+    node.choices[choiceIndex].effects.splice(effectIndex, 1)
+    
+    this.renderChoicesForNode(nodeId)
+    this.modelUpdater.saveDraftModel()
+  }
+
+  /**
+   * 条件/効果の値変更を処理（デバウンス付き）
+   */
+  _handleConditionEffectChange(e) {
+    // Debounce to avoid too many updates
+    if (this._conditionEffectDebounceTimer) {
+      clearTimeout(this._conditionEffectDebounceTimer)
+    }
+    
+    this._conditionEffectDebounceTimer = setTimeout(() => {
+      const conditionItem = e.target.closest('.condition-item')
+      const effectItem = e.target.closest('.effect-item')
+      
+      if (conditionItem) {
+        this._updateConditionFromElement(conditionItem)
+      } else if (effectItem) {
+        this._updateEffectFromElement(effectItem)
+      }
+    }, 300)
+  }
+
+  /**
+   * DOM要素から条件を更新
+   */
+  _updateConditionFromElement(itemElement) {
+    const editorContainer = itemElement.closest('.conditions-editor')
+    if (!editorContainer) return
+
+    const nodeId = editorContainer.dataset.nodeId
+    const choiceIndex = parseInt(editorContainer.dataset.choiceIndex)
+    const conditionIndex = parseInt(itemElement.dataset.conditionIndex)
+    
+    const node = this.appState.model.nodes[nodeId]
+    if (!node || !node.choices || !node.choices[choiceIndex]) return
+    if (!node.choices[choiceIndex].conditions) return
+
+    const conditionEffectEditor = this.nodeRenderer.getConditionEffectEditor()
+    const newCondition = conditionEffectEditor.readConditionFromElement(itemElement)
+    
+    if (newCondition) {
+      node.choices[choiceIndex].conditions[conditionIndex] = newCondition
+      this.modelUpdater.saveDraftModel()
+    }
+  }
+
+  /**
+   * DOM要素から効果を更新
+   */
+  _updateEffectFromElement(itemElement) {
+    const editorContainer = itemElement.closest('.effects-editor')
+    if (!editorContainer) return
+
+    const nodeId = editorContainer.dataset.nodeId
+    const choiceIndex = parseInt(editorContainer.dataset.choiceIndex)
+    const effectIndex = parseInt(itemElement.dataset.effectIndex)
+    
+    const node = this.appState.model.nodes[nodeId]
+    if (!node || !node.choices || !node.choices[choiceIndex]) return
+    if (!node.choices[choiceIndex].effects) return
+
+    const conditionEffectEditor = this.nodeRenderer.getConditionEffectEditor()
+    const newEffect = conditionEffectEditor.readEffectFromElement(itemElement)
+    
+    if (newEffect) {
+      node.choices[choiceIndex].effects[effectIndex] = newEffect
+      this.modelUpdater.saveDraftModel()
+    }
   }
 
   // Main rendering function
   renderNodeList() {
-    if (!this.nodeList) return
-
-    const fragment = document.createDocumentFragment()
-    for (const [nodeId, node] of Object.entries(this.appState.model.nodes)) {
-      const nodeDiv = document.createElement('div')
-      nodeDiv.className = 'node-editor'
-      nodeDiv.innerHTML = `
-        <h3>ノード: ${nodeId}</h3>
-        <div class="node-id-row">
-          <label>ID: <input type="text" value="${nodeId}" data-node-id="${nodeId}" data-field="id"></label>
-          <button class="rename-node-btn" data-node-id="${nodeId}">ID変更</button>
-        </div>
-        <label>テキスト: <input type="text" value="${(node.text || '').replace(/"/g, '&quot;')}" data-node-id="${nodeId}" data-field="text"></label>
-        <h4>選択肢</h4>
-        <div class="choices-editor" data-node-id="${nodeId}"></div>
-        <button class="add-choice-btn" data-node-id="${nodeId}">選択肢を追加</button>
-        <button class="delete-node-btn" data-node-id="${nodeId}">ノードを削除</button>
-      `
-      fragment.appendChild(nodeDiv)
-    }
-    this.nodeList.innerHTML = ''
-    this.nodeList.appendChild(fragment)
-
-    // Render choices after DOM is updated
-    for (const [nodeId] of Object.entries(this.appState.model.nodes)) {
-      this.renderChoicesForNode(nodeId)
-    }
+    return this.nodeRenderer.renderNodeList()
   }
 
   renderChoicesForNode(nodeId) {
-    const node = this.appState.model.nodes[nodeId]
-    const choicesDiv = this.nodeList.querySelector(`.choices-editor[data-node-id="${nodeId}"]`)
-    if (!choicesDiv) {
-      console.warn(`Choices editor not found for node ${nodeId}`)
-      return
-    }
-
-    if (!node.choices || node.choices.length === 0) {
-      choicesDiv.innerHTML = '<p>選択肢なし</p>'
-      return
-    }
-
-    const fragment = document.createDocumentFragment()
-    node.choices.forEach((choice, index) => {
-      const choiceDiv = document.createElement('div')
-      choiceDiv.className = 'choice-editor'
-      choiceDiv.innerHTML = `
-        <label>テキスト: <input type="text" value="${(choice.text || '').replace(/"/g, '&quot;')}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="text"></label>
-        <label>ターゲット: <input type="text" value="${choice.target || ''}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="target"></label>
-        <button class="paraphrase-btn" data-node-id="${nodeId}" data-choice-index="${index}">言い換え</button>
-        <button class="delete-choice-btn" data-node-id="${nodeId}" data-choice-index="${index}">削除</button>
-      `
-      fragment.appendChild(choiceDiv)
-    })
-    choicesDiv.innerHTML = ''
-    choicesDiv.appendChild(fragment)
+    return this.nodeRenderer.renderChoicesForNode(nodeId)
   }
 
   // Batch editing functionality
   getBatchEditManager() {
     return {
-      openModal: () => this.openBatchEditModal(),
-      closeModal: () => this.closeBatchEditModal(),
-      applyTextReplace: () => this.applyBatchTextReplace(),
-      applyChoiceReplace: () => this.applyBatchChoiceTextReplace(),
-      applyTargetReplace: () => this.applyBatchTargetReplace(),
+      openModal: () => this.batchEditor.openModal(),
+      closeModal: () => this.batchEditor.closeModal(),
+      applyTextReplace: () => this.batchEditor.applyTextReplace(),
+      applyChoiceReplace: () => this.batchEditor.applyChoiceTextReplace(),
+      applyTargetReplace: () => this.batchEditor.applyTargetReplace(),
       refreshUI: () => this.renderNodeList()
-    }
-  }
-
-  openBatchEditModal() {
-    if (this.guiEditMode && this.guiEditMode.style.display === 'none') {
-      setStatus('GUI編集モードでのみ使用可能です', 'warn')
-      return
-    }
-
-    if (!this.batchEditModal) return
-
-    this.batchEditModal.style.display = 'flex'
-    this.batchEditModal.classList.add('show')
-  }
-
-  closeBatchEditModal() {
-    if (!this.batchEditModal) return
-
-    this.batchEditModal.style.display = 'none'
-    this.batchEditModal.classList.remove('show')
-  }
-
-  applyBatchTextReplace() {
-    const searchText = document.getElementById('searchText')
-    const replaceText = document.getElementById('replaceText')
-
-    if (!searchText || !searchText.value.trim()) {
-      setStatus('検索テキストを入力してください', 'warn')
-      return
-    }
-
-    let replacedCount = 0
-    for (const nodeId in this.appState.model.nodes) {
-      const node = this.appState.model.nodes[nodeId]
-      if (node.text && node.text.includes(searchText.value)) {
-        node.text = node.text.replaceAll(searchText.value, replaceText?.value ?? '')
-        replacedCount++
-      }
-    }
-
-    if (replacedCount > 0) {
-      this.renderNodeList()
-      setStatus(`${replacedCount}個のノードテキストを置換しました`, 'success')
-    } else {
-      setStatus('該当するテキストが見つかりませんでした', 'info')
-    }
-  }
-
-  applyBatchChoiceTextReplace() {
-    const choiceSearchText = document.getElementById('choiceSearchText')
-    const choiceReplaceText = document.getElementById('choiceReplaceText')
-
-    if (!choiceSearchText || !choiceSearchText.value.trim()) {
-      setStatus('検索テキストを入力してください', 'warn')
-      return
-    }
-
-    let replacedCount = 0
-    for (const nodeId in this.appState.model.nodes) {
-      const node = this.appState.model.nodes[nodeId]
-      if (!node.choices) continue
-
-      for (const choice of node.choices) {
-        if (choice.text && choice.text.includes(choiceSearchText.value)) {
-          choice.text = choice.text.replaceAll(choiceSearchText.value, choiceReplaceText?.value ?? '')
-          replacedCount++
-        }
-      }
-    }
-
-    if (replacedCount > 0) {
-      this.renderNodeList()
-      setStatus(`${replacedCount}個の選択肢テキストを置換しました`, 'success')
-    } else {
-      setStatus('該当するテキストが見つかりませんでした', 'info')
-    }
-  }
-
-  applyBatchTargetReplace() {
-    const oldTargetText = document.getElementById('oldTargetText')
-    const newTargetText = document.getElementById('newTargetText')
-
-    if (!oldTargetText || !oldTargetText.value.trim() || !newTargetText || !newTargetText.value.trim()) {
-      setStatus('変更元と変更先のノードIDを入力してください', 'warn')
-      return
-    }
-
-    if (!this.appState.model?.nodes?.[newTargetText.value]) {
-      setStatus('変更先のノードが存在しません', 'warn')
-      return
-    }
-
-    let replacedCount = 0
-    for (const nodeId in this.appState.model.nodes) {
-      const node = this.appState.model.nodes[nodeId]
-      if (!node.choices) continue
-
-      for (const choice of node.choices) {
-        if (choice.target === oldTargetText.value) {
-          choice.target = newTargetText.value
-          replacedCount++
-        }
-      }
-    }
-
-    if (replacedCount > 0) {
-      this.renderNodeList()
-      setStatus(`${replacedCount}個のターゲットを変更しました`, 'success')
-    } else {
-      setStatus('該当するターゲットが見つかりませんでした', 'info')
     }
   }
 
@@ -305,7 +318,7 @@ export class GuiEditorManager {
 
     const nodeId = nodeSelect.value
     if (!nodeId || !this.appState.model.nodes[nodeId]) {
-      choiceList.innerHTML = '<p style="color: #6b7280;">ノードを選択してください</p>'
+      choiceList.innerHTML = '<p class="gui-batch-choice-empty">ノードを選択してください</p>'
       return
     }
 
@@ -313,20 +326,20 @@ export class GuiEditorManager {
     const choices = node.choices || []
 
     if (choices.length === 0) {
-      choiceList.innerHTML = '<p style="color: #6b7280;">このノードには選択肢がありません</p>'
+      choiceList.innerHTML = '<p class="gui-batch-choice-empty">このノードには選択肢がありません</p>'
       return
     }
 
-    choiceList.innerHTML = '<div style="display: flex; flex-direction: column; gap: 0.5rem;"></div>'
+    choiceList.innerHTML = '<div class="gui-batch-choice-list"></div>'
     const container = choiceList.firstElementChild
 
     choices.forEach((choice, index) => {
       const div = document.createElement('div')
-      div.style.cssText = 'padding: 0.75rem; background: rgba(255,255,255,0.5); border-radius: 4px; border: 1px solid rgba(0,0,0,0.1);'
+      div.className = 'gui-batch-choice-item'
       div.innerHTML = `
-        <div style="font-weight: 600; margin-bottom: 0.25rem;">選択肢 ${index + 1}</div>
-        <div style="font-size: 0.9em; color: #6b7280;">${choice.text || '(テキストなし)'}</div>
-        <div style="font-size: 0.85em; color: #9ca3af; margin-top: 0.25rem;">→ ${choice.target || '(ターゲットなし)'}</div>
+        <div class="gui-batch-choice-item-title">選択肢 ${index + 1}</div>
+        <div class="gui-batch-choice-item-text">${choice.text || '(テキストなし)'}</div>
+        <div class="gui-batch-choice-item-target">→ ${choice.target || '(ターゲットなし)'}</div>
       `
       container.appendChild(div)
     })
@@ -420,173 +433,43 @@ export class GuiEditorManager {
 
   // Model update from input
   updateModelFromInput(input) {
-    if (!input.dataset.nodeId) return
-
-    const nodeId = input.dataset.nodeId
-    const choiceIndex = input.dataset.choiceIndex
-    const field = input.dataset.field
-    const value = input.value
-
-    // ノードIDの変更は renameNodeId でのみ行い、ここでは処理しない
-    if (field === 'id') {
-      return
-    }
-
-    if (choiceIndex !== undefined) {
-      // Update choice field
-      const node = this.appState.model.nodes[nodeId]
-      const choice = node.choices[parseInt(choiceIndex)]
-      if (choice) {
-        choice[field] = value
-      }
-    } else {
-      // Update node field
-      const node = this.appState.model.nodes[nodeId]
-      if (node) {
-        node[field] = value
-      }
-    }
-
-    // Auto-save draft when editing in GUI mode
-    if (this.guiEditMode && this.guiEditMode.style.display !== 'none') {
-      this.saveDraftModel()
-    }
+    return this.modelUpdater.updateModelFromInput(input)
   }
 
   // Draft model functionality
   saveDraftModel() {
-    if (!this.appState.model) return
-
-    try {
-      const draftData = {
-        model: this.appState.model,
-        modelName: getCurrentModelName(),
-        storyLog: this.appState.storyLog,
-        timestamp: new Date().toISOString()
-      }
-      localStorage.setItem(DRAFT_MODEL_STORAGE_KEY, JSON.stringify(draftData))
-      setStatus('ドラフトを自動保存しました', 'info')
-    } catch (error) {
-      console.warn('Failed to save draft model:', error)
-    }
+    return this.modelUpdater.saveDraftModel()
   }
 
   // Node management
   renameNodeId(oldId, newIdRaw) {
-    if (!this.appState.model || !this.appState.model.nodes) {
-      setStatus('モデルが読み込まれていません', 'warn')
-      return
-    }
-
-    const model = this.appState.model
-    const newId = (newIdRaw || '').trim()
-
-    if (!model.nodes[oldId]) {
-      setStatus(`ノードID「${oldId}」が見つかりません`, 'error')
-      return
-    }
-
-    if (!newId) {
-      setStatus('新しいノードIDを入力してください', 'warn')
-      return
-    }
-
-    if (newId === oldId) {
-      setStatus('同じノードIDが指定されています', 'info')
-      return
-    }
-
-    if (model.nodes[newId]) {
-      setStatus(`❌ ノードID「${newId}」は既に存在します`, 'error')
-      return
-    }
-
-    if (/\s/.test(newId)) {
-      setStatus('ノードIDに空白を含めることはできません', 'warn')
-      return
-    }
-
-    const node = model.nodes[oldId]
-
-    // 再インデックス
-    delete model.nodes[oldId]
-    model.nodes[newId] = node
-    if (node) {
-      node.id = newId
-    }
-
-    // startNode の更新
-    if (model.startNode === oldId) {
-      model.startNode = newId
-    }
-
-    // choices.target の更新
-    let updatedTargets = 0
-    for (const [, n] of Object.entries(model.nodes)) {
-      if (!n.choices) continue
-      for (const choice of n.choices) {
-        if (choice.target === oldId) {
-          choice.target = newId
-          updatedTargets++
-        }
-      }
-    }
-
-    // metadata.nodeOrder の更新（存在する場合）
-    if (model.metadata && Array.isArray(model.metadata.nodeOrder)) {
-      model.metadata.nodeOrder = model.metadata.nodeOrder.map(id => id === oldId ? newId : id)
-    }
-
+    this.nodeManager.renameNodeId(oldId, newIdRaw)
     // UI 更新
     if (this.nodeList) {
       this.renderNodeList()
     }
-
     // ドラフト保存
     this.saveDraftModel()
-
-    let message = `ノードID「${oldId}」を「${newId}」に変更しました`
-    if (updatedTargets > 0) {
-      message += ` (${updatedTargets}個のターゲットを更新)`
-    }
-    setStatus(`✅ ${message}`, 'success')
   }
 
   addChoice(nodeId) {
-    const node = this.appState.model.nodes[nodeId]
-    if (!node.choices) node.choices = []
-    node.choices.push({
-      id: `c${node.choices.length + 1}`,
-      text: '新しい選択肢',
-      target: nodeId
-    })
+    this.nodeManager.addChoice(nodeId)
     this.renderChoicesForNode(nodeId)
   }
 
   deleteNode(nodeId) {
-    if (Object.keys(this.appState.model.nodes).length <= 1) {
-      setStatus('少なくとも1つのノードが必要です', 'warn')
-      return
-    }
-    delete this.appState.model.nodes[nodeId]
-    // Remove references to deleted node
-    for (const [nid, node] of Object.entries(this.appState.model.nodes)) {
-      node.choices = node.choices?.filter(c => c.target !== nodeId) ?? []
-    }
+    this.nodeManager.deleteNode(nodeId)
     this.renderNodeList()
   }
 
   deleteChoice(nodeId, choiceIndex) {
-    const node = this.appState.model.nodes[nodeId]
-    node.choices.splice(choiceIndex, 1)
+    this.nodeManager.deleteChoice(nodeId, choiceIndex)
     this.renderChoicesForNode(nodeId)
   }
 
   // Utility functions
   generateNodeId() {
-    const timestamp = Date.now().toString(36)
-    const random = Math.random().toString(36).substring(2, 7)
-    return `node_${timestamp}_${random}`
+    return this.nodeManager.generateNodeId()
   }
 
   getNodeTemplate(templateKey) {

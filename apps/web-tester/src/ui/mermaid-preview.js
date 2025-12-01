@@ -1,0 +1,230 @@
+import mermaid from 'mermaid'
+
+// Mermaidプレビューモジュール
+export class MermaidPreviewManager {
+  constructor() {
+    this.container = null
+    this.mermaidContainer = null
+    this.isVisible = false
+    this.currentDiagramId = null
+  }
+
+  // 初期化
+  initialize(container) {
+    this.container = container
+    this.setupUI()
+    this.initializeMermaid()
+  }
+
+  // UIセットアップ
+  setupUI() {
+    // 右側ペインの作成
+    const rightPane = document.createElement('div')
+    rightPane.id = 'rightPane'
+    rightPane.className = 'right-pane'
+    rightPane.style.cssText = `
+      display: none;
+      width: 400px;
+      background: var(--color-surface);
+      border-left: 1px solid var(--color-border);
+      padding: 16px;
+      overflow-y: auto;
+      flex-direction: column;
+    `
+
+    // ヘッダー
+    const header = document.createElement('div')
+    header.className = 'right-pane-header'
+    header.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--color-border);
+    `
+
+    const title = document.createElement('h3')
+    title.textContent = 'Mermaid Preview'
+    title.style.cssText = `
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text);
+    `
+
+    const closeBtn = document.createElement('button')
+    closeBtn.innerHTML = '✕'
+    closeBtn.style.cssText = `
+      background: none;
+      border: none;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+      border-radius: 4px;
+    `
+    closeBtn.onclick = () => this.hide()
+
+    header.appendChild(title)
+    header.appendChild(closeBtn)
+
+    // Mermaidコンテナ
+    this.mermaidContainer = document.createElement('div')
+    this.mermaidContainer.id = 'mermaidContainer'
+    this.mermaidContainer.style.cssText = `
+      flex: 1;
+      min-height: 300px;
+      background: var(--color-background);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 16px;
+      overflow: auto;
+    `
+
+    rightPane.appendChild(header)
+    rightPane.appendChild(this.mermaidContainer)
+
+    // メインコンテナに追加
+    const mainContainer = document.querySelector('.app-container')
+    if (mainContainer) {
+      mainContainer.style.flexDirection = 'row'
+      mainContainer.appendChild(rightPane)
+    }
+  }
+
+  // Mermaid初期化
+  initializeMermaid() {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'dark',
+      themeVariables: {
+        background: 'var(--color-background)',
+        primaryColor: 'var(--color-primary)',
+        primaryTextColor: 'var(--color-text)',
+        primaryBorderColor: 'var(--color-border)',
+        lineColor: 'var(--color-text-muted)',
+        secondaryColor: 'var(--color-surface)',
+        tertiaryColor: 'var(--color-surface-light)'
+      },
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      }
+    })
+  }
+
+  // 表示
+  show() {
+    const rightPane = document.getElementById('rightPane')
+    if (rightPane) {
+      rightPane.style.display = 'flex'
+      this.isVisible = true
+    }
+  }
+
+  // 非表示
+  hide() {
+    const rightPane = document.getElementById('rightPane')
+    if (rightPane) {
+      rightPane.style.display = 'none'
+      this.isVisible = false
+    }
+  }
+
+  // モデルからMermaidダイアグラム生成
+  generateDiagram(model) {
+    if (!model || !model.nodes) {
+      return 'graph TD\n    A[モデルがありません]'
+    }
+
+    let diagram = 'graph TD\n'
+
+    // ノード定義
+    Object.entries(model.nodes).forEach(([nodeId, node]) => {
+      const label = this.escapeMermaidLabel(node.text?.substring(0, 30) || '空')
+      const nodeType = this.getNodeType(node)
+
+      if (nodeType === 'choice') {
+        diagram += `    ${nodeId}{${label}}\n`
+      } else {
+        diagram += `    ${nodeId}[${label}]\n`
+      }
+    })
+
+    diagram += '\n'
+
+    // エッジ定義
+    Object.entries(model.nodes).forEach(([nodeId, node]) => {
+      if (node.choices) {
+        node.choices.forEach((choice, index) => {
+          if (choice.target && model.nodes[choice.target]) {
+            const choiceLabel = choice.text?.substring(0, 20) || `選択${index + 1}`
+            const escapedLabel = this.escapeMermaidLabel(choiceLabel)
+            diagram += `    ${nodeId} -->|${escapedLabel}| ${choice.target}\n`
+          }
+        })
+      }
+    })
+
+    return diagram
+  }
+
+  // Mermaidラベルエスケープ
+  escapeMermaidLabel(label) {
+    return label
+      .replace(/"/g, '\\"')
+      .replace(/\n/g, ' ')
+      .replace(/\r/g, '')
+      .trim()
+  }
+
+  // ノードタイプ判定
+  getNodeType(node) {
+    if (node.choices && node.choices.length > 0) {
+      return 'choice'
+    }
+    return 'passage'
+  }
+
+  // ダイアグラム更新
+  async updateDiagram(model) {
+    if (!this.mermaidContainer || !this.isVisible) return
+
+    try {
+      const diagramCode = this.generateDiagram(model)
+      this.mermaidContainer.innerHTML = ''
+
+      // Mermaidでレンダリング
+      const { svg } = await mermaid.render(`mermaid-${Date.now()}`, diagramCode)
+      this.mermaidContainer.innerHTML = svg
+
+      // SVGにスタイル適用
+      const svgElement = this.mermaidContainer.querySelector('svg')
+      if (svgElement) {
+        svgElement.style.width = '100%'
+        svgElement.style.height = 'auto'
+        svgElement.style.maxWidth = '100%'
+      }
+
+    } catch (error) {
+      console.error('Mermaid rendering error:', error)
+      this.mermaidContainer.innerHTML = `
+        <div style="color: var(--color-error); padding: 16px; text-align: center;">
+          ダイアグラムの生成に失敗しました<br>
+          <small>${error.message}</small>
+        </div>
+      `
+    }
+  }
+
+  // トグル表示
+  toggle() {
+    if (this.isVisible) {
+      this.hide()
+    } else {
+      this.show()
+    }
+  }
+}
