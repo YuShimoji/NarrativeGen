@@ -1,0 +1,108 @@
+{
+  "nodes": {
+    "start": {
+      "text": "あなたは王国の騎士です。王様から重要な任務を言い渡されました。「魔王を倒せ」",
+      "choices": [
+        {
+          "text": "了解しました！",
+          "target": "quest_accept",
+          "effects": [
+            {"type": "setFlag", "key": "quest_accepted", "value": true}
+          ]
+        },
+        {
+          "text": "なぜ私が？",
+          "target": "quest_question"
+        }
+      ]
+    },
+    "quest_accept": {
+      "text": "王様は満足げに頷きました。「準備を整えて出発しろ」",
+      "choices": [
+        {
+          "text": "準備を整える",
+          "target": "preparation"
+        }
+      ]
+    },
+    "quest_question": {
+      "text": "王様は不機嫌そうに答えます。「お前が王国最強の騎士だからだ」",
+      "choices": [
+        {
+          "text": "わかりました。任務を受けます",
+          "target": "quest_accept"
+        },
+        {
+          "text": "まだ準備ができていません",
+          "target": "preparation_later"
+        }
+      ]
+    },
+    "preparation": {
+      "text": "剣と鎧を装備し、旅の準備が整いました。",
+      "choices": [
+        {
+          "text": "魔王の城に向かう",
+          "target": "castle_approach"
+        }
+      ]
+    },
+    "preparation_later": {
+      "text": "王様は「1週間後に出発だ」と言いました。",
+      "choices": []
+    },
+    "castle_approach": {
+      "text": "魔王の城に到着しました。門兵が立ちはだかります。",
+      "choices": [
+        {
+          "text": "戦う",
+          "target": "fight_gate_guard"
+        },
+        {
+          "text": "交渉する",
+          "target": "negotiate_gate"
+        }
+      ]
+    },
+    "fight_gate_guard": {
+      "text": "激しい戦いの末、門兵を倒しました。城内に入ります。",
+      "choices": [
+        {
+          "text": "奥へ進む",
+          "target": "throne_room"
+        }
+      ]
+    },
+    "negotiate_gate": {
+      "text": "門兵は「魔王様は今忙しい」と追い返されました。",
+      "choices": [
+        {
+          "text": "強引に入る",
+          "target": "fight_gate_guard"
+        },
+        {
+          "text": "引き返す",
+          "target": "retreat"
+        }
+      ]
+    },
+    "throne_room": {
+      "text": "玉座の間に魔王が座っています。「よく来た勇者よ」",
+      "choices": [
+        {
+          "text": "戦いを挑む",
+          "target": "final_battle"
+        }
+      ]
+    },
+    "final_battle": {
+      "text": "激しい戦いの末、あなたは魔王を倒しました。王国は平和を取り戻しました。",
+      "choices": []
+    },
+    "retreat": {
+      "text": "任務を放棄して王国に戻りました。王様は失望しました。",
+      "choices": []
+    }
+  },
+  "startNode": "start"
+}

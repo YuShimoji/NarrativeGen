@@ -1,0 +1,89 @@
+{
+  "nodes": {
+    "start": {
+      "text": "あなたは資源管理の達人です。制限時間内に目標を達成しなければなりません。",
+      "choices": [
+        {
+          "text": "資源を集める旅に出る",
+          "target": "resource_gathering",
+          "effects": [
+            {"type": "setResource", "key": "time", "value": 100},
+            {"type": "setResource", "key": "gold", "value": 50},
+            {"type": "setResource", "key": "food", "value": 30}
+          ]
+        }
+      ]
+    },
+    "resource_gathering": {
+      "text": "森で資源を集めることができます。現在の資源: 金貨 {{gold}}, 食料 {{food}}, 時間 {{time}}",
+      "choices": [
+        {
+          "text": "狩りをして食料を集める (時間-10, 食料+20)",
+          "target": "hunting_result",
+          "conditions": [
+            {"type": "resource", "key": "time", "op": ">=", "value": 10}
+          ],
+          "effects": [
+            {"type": "addResource", "key": "time", "value": -10},
+            {"type": "addResource", "key": "food", "value": 20}
+          ]
+        },
+        {
+          "text": "採掘をして金貨を集める (時間-15, 金貨+30)",
+          "target": "mining_result",
+          "conditions": [
+            {"type": "resource", "key": "time", "op": ">=", "value": 15}
+          ],
+          "effects": [
+            {"type": "addResource", "key": "time", "value": -15},
+            {"type": "addResource", "key": "gold", "value": 30}
+          ]
+        },
+        {
+          "text": "村に戻って資源を確認する",
+          "target": "village_return"
+        }
+      ]
+    },
+    "hunting_result": {
+      "text": "狩りに成功しました！食料が20増えました。残り時間: {{time}}",
+      "choices": [
+        {
+          "text": "さらに資源を集める",
+          "target": "resource_gathering"
+        },
+        {
+          "text": "村に戻る",
+          "target": "village_return"
+        }
+      ]
+    },
+    "mining_result": {
+      "text": "採掘に成功しました！金貨が30増えました。残り時間: {{time}}",
+      "choices": [
+        {
+          "text": "さらに資源を集める",
+          "target": "resource_gathering"
+        },
+        {
+          "text": "村に戻る",
+          "target": "village_return"
+        }
+      ]
+    },
+    "village_return": {
+      "text": "村に戻りました。最終資源: 金貨 {{gold}}, 食料 {{food}}, 時間 {{time}}",
+      "choices": [
+        {
+          "text": "ゲーム終了",
+          "target": "game_end"
+        }
+      ]
+    },
+    "game_end": {
+      "text": "ゲーム終了！ 最終スコア: 金貨 {{gold}} + 食料 {{food}} + 時間 {{time}} = {{gold + food + time}}",
+      "choices": []
+    }
+  },
+  "startNode": "start"
+}

@@ -351,13 +351,6 @@ function startAutoSave() {
 function stopAutoSave() {
   saveManager.stopAutoSave()
 }
-        reject(new Error('JSON の解析に失敗しました'))
-      }
-    }
-    reader.onerror = () => reject(new Error('ファイルの読み込みに失敗しました'))
-    reader.readAsText(file)
-  })
-}
 
 async function loadSampleModel(sampleId) {
   const url = `/models/examples/${sampleId}.json`
@@ -1577,5 +1570,32 @@ if (exportCsvBtn) {
 if (refreshSavesBtn) {
   refreshSavesBtn.addEventListener('click', () => {
     renderSaveSlots()
+  })
+}
+
+// GUI Edit Mode Toggle
+if (guiEditBtn) {
+  guiEditBtn.addEventListener('click', () => {
+    if (!appState.model) {
+      setStatus('まずモデルを読み込んでください', 'warn')
+      return
+    }
+    
+    const isCurrentlyEditing = guiEditMode.style.display !== 'none'
+    
+    if (isCurrentlyEditing) {
+      // Exit GUI edit mode
+      guiEditMode.style.display = 'none'
+      guiEditBtn.textContent = '編集'
+      guiEditBtn.innerHTML = '<svg class="icon icon-sm"><use href="#icon-edit"></use></svg>編集'
+      setStatus('GUI編集モードを終了しました')
+    } else {
+      // Enter GUI edit mode
+      guiEditMode.style.display = 'block'
+      guiEditBtn.textContent = '閲覧'
+      guiEditBtn.innerHTML = '<svg class="icon icon-sm"><use href="#icon-eye"></use></svg>閲覧'
+      guiEditorManager.nodeRenderer.renderNodeList()
+      setStatus('GUI編集モードを開始しました', 'success')
+    }
   })
 }

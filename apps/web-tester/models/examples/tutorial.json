@@ -1,0 +1,57 @@
+{
+  "nodes": {
+    "start": {
+      "text": "物語の始まりです。あなたは森の入り口にいます。",
+      "choices": [
+        {
+          "text": "森の中に入る",
+          "target": "forest_path"
+        },
+        {
+          "text": "引き返す",
+          "target": "town_return"
+        }
+      ]
+    },
+    "forest_path": {
+      "text": "森の小道を進むと、古い小屋が見つかりました。",
+      "choices": [
+        {
+          "text": "小屋に入る",
+          "target": "cabin_inside"
+        },
+        {
+          "text": "通り過ぎる",
+          "target": "forest_deeper"
+        }
+      ]
+    },
+    "cabin_inside": {
+      "text": "小屋の中には宝箱がありました！",
+      "choices": [
+        {
+          "text": "宝箱を開ける",
+          "target": "treasure_found"
+        }
+      ]
+    },
+    "treasure_found": {
+      "text": "宝箱の中には金貨が詰まっていました。おめでとうございます！",
+      "choices": []
+    },
+    "forest_deeper": {
+      "text": "森の奥深くまで進むと、突然の嵐に遭遇しました。",
+      "choices": [
+        {
+          "text": "小屋に戻る",
+          "target": "cabin_inside"
+        }
+      ]
+    },
+    "town_return": {
+      "text": "町に戻ってきました。冒険は終わりました。",
+      "choices": []
+    }
+  },
+  "startNode": "start"
+}

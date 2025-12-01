@@ -1,0 +1,81 @@
+{
+  "nodes": {
+    "start": {
+      "text": "あなたは時間旅行者です。過去を変えることができますが、注意が必要です。",
+      "choices": [
+        {
+          "text": "過去へ行く",
+          "target": "past_travel",
+          "effects": [
+            {"type": "setResource", "key": "time_energy", "value": 50}
+          ]
+        }
+      ]
+    },
+    "past_travel": {
+      "text": "過去の世界に到着しました。時間エネルギー: {{time_energy}}",
+      "choices": [
+        {
+          "text": "重要な歴史的事件を変更する (エネルギー-30)",
+          "target": "change_history",
+          "conditions": [
+            {"type": "resource", "key": "time_energy", "op": ">=", "value": 30}
+          ],
+          "effects": [
+            {"type": "addResource", "key": "time_energy", "value": -30}
+          ]
+        },
+        {
+          "text": "小さな出来事を変える (エネルギー-10)",
+          "target": "small_change",
+          "conditions": [
+            {"type": "resource", "key": "time_energy", "op": ">=", "value": 10}
+          ],
+          "effects": [
+            {"type": "addResource", "key": "time_energy", "value": -10}
+          ]
+        },
+        {
+          "text": "何もせずに戻る",
+          "target": "return_present"
+        }
+      ]
+    },
+    "change_history": {
+      "text": "歴史的大事件を変更しました。世界が大きく変わりました！",
+      "choices": [
+        {
+          "text": "現在の世界に戻る",
+          "target": "return_present"
+        }
+      ]
+    },
+    "small_change": {
+      "text": "小さな変化を起こしました。未来が少し変わるかもしれません。",
+      "choices": [
+        {
+          "text": "現在の世界に戻る",
+          "target": "return_present"
+        }
+      ]
+    },
+    "return_present": {
+      "text": "現在の世界に戻りました。あなたの行動が未来に影響を与えたかもしれません。",
+      "choices": [
+        {
+          "text": "もう一度過去に行く",
+          "target": "past_travel"
+        },
+        {
+          "text": "タイムトラベルを終了する",
+          "target": "end_travel"
+        }
+      ]
+    },
+    "end_travel": {
+      "text": "タイムトラベルを終了しました。あなたの選択が世界を変えたのです。",
+      "choices": []
+    }
+  },
+  "startNode": "start"
+}

@@ -1,0 +1,117 @@
+{
+  "nodes": {
+    "start": {
+      "text": "あなたは探偵です。連続殺人事件を解決しなければなりません。3つの容疑者がいます。",
+      "choices": [
+        {
+          "text": "調査を開始する",
+          "target": "investigation_start",
+          "effects": [
+            {"type": "setFlag", "key": "investigation_started", "value": true}
+          ]
+        }
+      ]
+    },
+    "investigation_start": {
+      "text": "3人の容疑者: Aさん (ビジネスマン), Bさん (医者), Cさん (教師)",
+      "choices": [
+        {
+          "text": "Aさんを調べる",
+          "target": "investigate_a",
+          "effects": [
+            {"type": "setFlag", "key": "investigated_a", "value": true}
+          ]
+        },
+        {
+          "text": "Bさんを調べる",
+          "target": "investigate_b",
+          "effects": [
+            {"type": "setFlag", "key": "investigated_b", "value": true}
+          ]
+        },
+        {
+          "text": "Cさんを調べる",
+          "target": "investigate_c",
+          "effects": [
+            {"type": "setFlag", "key": "investigated_c", "value": true}
+          ]
+        }
+      ]
+    },
+    "investigate_a": {
+      "text": "Aさんのアリバイを確認しました。彼には完璧なアリバイがありました。",
+      "choices": [
+        {
+          "text": "他の容疑者を調べる",
+          "target": "investigation_start"
+        },
+        {
+          "text": "Aさんを犯人だと断定する",
+          "target": "accuse_a"
+        }
+      ]
+    },
+    "investigate_b": {
+      "text": "Bさんのアリバイに矛盾が見つかりました。彼の動機も判明しました。",
+      "choices": [
+        {
+          "text": "他の容疑者を調べる",
+          "target": "investigation_start"
+        },
+        {
+          "text": "Bさんを犯人だと断定する",
+          "target": "accuse_b"
+        }
+      ]
+    },
+    "investigate_c": {
+      "text": "Cさんの証言にいくつかの矛盾がありました。彼の過去に秘密がありそうです。",
+      "choices": [
+        {
+          "text": "他の容疑者を調べる",
+          "target": "investigation_start"
+        },
+        {
+          "text": "Cさんを犯人だと断定する",
+          "target": "accuse_c"
+        }
+      ]
+    },
+    "accuse_a": {
+      "text": "Aさんを犯人だと告発しました。しかし彼は本当に無実でした。あなたは解雇されました。",
+      "choices": [
+        {
+          "text": "ゲームオーバー",
+          "target": "game_over_wrong"
+        }
+      ]
+    },
+    "accuse_b": {
+      "text": "Bさんを犯人だと告発しました。彼は自白しました！事件は解決しました。",
+      "choices": [
+        {
+          "text": "エンディング: 事件解決",
+          "target": "ending_solved"
+        }
+      ]
+    },
+    "accuse_c": {
+      "text": "Cさんを犯人だと告発しました。しかし彼は無実でした。あなたは訴えられました。",
+      "choices": [
+        {
+          "text": "ゲームオーバー",
+          "target": "game_over_wrong"
+        }
+      ]
+    },
+    "game_over_wrong": {
+      "text": "間違った容疑者を告発したため、あなたの探偵人生は終わりました。",
+      "choices": []
+    },
+    "ending_solved": {
+      "text": "おめでとうございます！事件を解決しました。あなたは英雄となりました。",
+      "choices": []
+    }
+  },
+  "startNode": "start"
+}
