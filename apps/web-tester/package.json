@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@narrativegen/engine-ts": "file:../../packages/engine-ts",
-    "d3": "^7.9.0"
+    "d3": "^7.9.0",
+    "mermaid": "^11.12.1"
   },
   "devDependencies": {
     "vite": "^5.4.9"

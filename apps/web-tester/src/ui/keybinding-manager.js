@@ -26,6 +26,7 @@ export class KeyBindingManager {
       graphKey: null,
       storyKey: null,
       aiKey: null,
+      mermaidKey: null,
       keyBindingDisplay: null
     }
     
@@ -153,13 +154,14 @@ export class KeyBindingManager {
    * UI要素を現在のバインドで更新
    */
   updateUI() {
-    const { inventoryKey, debugKey, graphKey, storyKey, aiKey, keyBindingDisplay } = this.uiElements
+    const { inventoryKey, debugKey, graphKey, storyKey, aiKey, mermaidKey, keyBindingDisplay } = this.uiElements
     
     if (inventoryKey) inventoryKey.value = this.bindings.inventory
     if (debugKey) debugKey.value = this.bindings.debug
     if (graphKey) graphKey.value = this.bindings.graph
     if (storyKey) storyKey.value = this.bindings.story
     if (aiKey) aiKey.value = this.bindings.ai
+    if (mermaidKey && this.bindings.mermaid) mermaidKey.value = this.bindings.mermaid
     
     if (keyBindingDisplay) {
       keyBindingDisplay.textContent = this.getBindingInfo()
@@ -171,14 +173,15 @@ export class KeyBindingManager {
    * @returns {Object|null} 新しいバインド設定、またはnull（バリデーション失敗時）
    */
   getBindingsFromUI() {
-    const { inventoryKey, debugKey, graphKey, storyKey, aiKey } = this.uiElements
+    const { inventoryKey, debugKey, graphKey, storyKey, aiKey, mermaidKey } = this.uiElements
     
     const newBindings = {
       inventory: inventoryKey?.value?.toLowerCase() || 'z',
       debug: debugKey?.value?.toLowerCase() || 'd',
       graph: graphKey?.value?.toLowerCase() || 'g',
       story: storyKey?.value?.toLowerCase() || 's',
-      ai: aiKey?.value?.toLowerCase() || 'a'
+      ai: aiKey?.value?.toLowerCase() || 'a',
+      mermaid: mermaidKey?.value?.toLowerCase() || 'm'
     }
     
     // 重複チェック

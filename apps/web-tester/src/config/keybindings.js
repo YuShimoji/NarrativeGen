@@ -3,5 +3,6 @@ export const DEFAULT_KEY_BINDINGS = {
   debug: 'd',
   graph: 'g',
   story: 's',
-  ai: 'a'
+  ai: 'a',
+  mermaid: 'm'
 }

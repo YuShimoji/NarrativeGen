@@ -37,6 +37,7 @@ import { ReferenceManager } from './src/ui/reference.js'
 import { CsvManager } from './src/ui/csv.js'
 import { AiManager } from './src/ui/ai.js'
 import { LexiconManager } from './src/ui/lexicon.js'
+import { MermaidPreviewManager } from './src/ui/mermaid-preview.js'
 import { validateNotEmpty, validateJson, validateFileExtension } from './src/utils/validation.js'
 import { downloadFile, readFileAsText, parseCsv } from './src/utils/file-utils.js'
 import { getStorageItem, setStorageItem, removeStorageItem } from './src/utils/storage.js'
@@ -232,6 +233,7 @@ const debugKey = document.getElementById('debugKey')
 const graphKey = document.getElementById('graphKey')
 const storyKey = document.getElementById('storyKey')
 const aiKey = document.getElementById('aiKey')
+const mermaidKey = document.getElementById('mermaidKey')
 const saveKeyBindings = document.getElementById('saveKeyBindings')
 const resetKeyBindings = document.getElementById('resetKeyBindings')
 
@@ -352,6 +354,303 @@ function stopAutoSave() {
   saveManager.stopAutoSave()
 }
 
+function showCsvPreview(file) {
+  csvFileName.textContent = file.name
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const text = e.target.result
+    const lines = text.trim().split(/\r?\n/).slice(0, 11) // First 10 lines + header
+    const table = document.createElement('table')
+    table.className = 'csv-table'
+    
+    lines.forEach((line, index) => {
+      const row = document.createElement('tr')
+      const cells = parseCsvLine(line, line.includes('\t') ? '\t' : ',')
+      cells.forEach(cell => {
+        const cellEl = document.createElement(index === 0 ? 'th' : 'td')
+        cellEl.textContent = cell
+        row.appendChild(cellEl)
+      })
+      table.appendChild(row)
+    })
+    
+    if (lines.length >= 11) {
+      const row = document.createElement('tr')
+      const cell = document.createElement('td')
+      cell.colSpan = lines[0].split(line.includes('\t') ? '\t' : ',').length
+      cell.textContent = '... (以降省略)'
+      cell.style.textAlign = 'center'
+      cell.style.fontStyle = 'italic'
+      row.appendChild(cell)
+      table.appendChild(row)
+    }
+    
+    csvPreviewContent.innerHTML = ''
+    csvPreviewContent.appendChild(table)
+    csvPreviewModal.classList.add('show')
+  }
+  reader.readAsText(file)
+}
+
+function hideCsvPreview() {
+  csvPreviewModal.classList.remove('show')
+}
+
+function getConditionText(conditions) {
+  if (!conditions || conditions.length === 0) return ''
+  return conditions.map(cond => {
+    if (cond.type === 'flag') return `flag:${cond.key}=${cond.value}`
+    if (cond.type === 'resource') return `res:${cond.key}${cond.op}${cond.value}`
+    if (cond.type === 'variable') return `var:${cond.key}${cond.op}${cond.value}`
+    if (cond.type === 'timeWindow') return `time:${cond.start}-${cond.end}`
+    if (cond.type === 'and') return `AND(${serializeConditions(cond.conditions)})`
+    if (cond.type === 'or') return `OR(${serializeConditions(cond.conditions)})`
+    if (cond.type === 'not') return `NOT(${serializeConditions([cond.condition])})`
+    return cond.type
+  }).join(', ')
+}
+
+// Update Mermaid diagram when visible and model is available
+function updateMermaidDiagramIfVisible() {
+  if (!mermaidPreviewManager || !mermaidPreviewManager.isVisible) return
+  if (!appState?.model) return
+  mermaidPreviewManager.updateDiagram(appState.model)
+}
+
+function setControlsEnabled(enabled) {
+  startBtn.disabled = !enabled
+  modelSelect.disabled = !enabled
+  uploadBtn.disabled = !enabled
+  dropZone.style.pointerEvents = enabled ? 'auto' : 'none'
+  dropZone.style.opacity = enabled ? '1' : '0.5'
+  guiEditBtn.disabled = !enabled
+}
+
+function renderChoices() {
+  choicesContainer.innerHTML = ''
+
+  const currentSession = getCurrentSession()
+  if (!currentSession) {
+    const info = document.createElement('p')
+    info.textContent = 'セッションを開始すると選択肢が表示されます'
+    choicesContainer.appendChild(info)
+    return
+  }
+
+  const choices = getAvailableChoices(currentSession, appState.model)
+  if (!choices || choices.length === 0) {
+    const empty = document.createElement('p')
+    empty.textContent = '利用可能な選択肢はありません'
+    choicesContainer.appendChild(empty)
+    return
+  }
+
+  const list = document.createElement('div')
+  list.style.display = 'flex'
+  list.style.flexDirection = 'column'
+  list.style.gap = '0.5rem'
+
+  choices.forEach((choice) => {
+    const button = document.createElement('button')
+    button.textContent = formatChoiceLabel(choice)
+    button.addEventListener('click', () => {
+      try {
+        const currentSession = getCurrentSession()
+        if (currentSession) {
+          setCurrentSession(applyChoice(currentSession, appState.model, choice.id))
+          setStatus(`選択肢「${choice.text}」を適用しました`, 'success')
+          appendStoryFromCurrentNode()
+        }
+      } catch (err) {
+        console.error(err)
+        setStatus(`選択肢の適用に失敗しました: ${err?.message ?? err}`, 'warn')
+      }
+      renderState()
+      renderChoices()
+      renderStory()
+    })
+    list.appendChild(button)
+  })
+
+  choicesContainer.appendChild(list)
+}
+
+// Apply error boundaries to critical operations
+const safeStartSession = ErrorBoundary.wrap(async (modelName) => {
+  const model = await loadModel(modelName)
+  appState.model = model
+  startNewSession(appState.model)
+  setCurrentModelName(modelName)
+  initStory()
+  renderState()
+  renderChoices()
+  renderStory()
+  updateMermaidDiagramIfVisible()
+  Logger.info('Session started', { modelName, nodeCount: Object.keys(model.nodes).length })
+})
+
+const safeApplyChoice = ErrorBoundary.wrap(async (choiceId) => {
+  const currentSession = getCurrentSession()
+  if (!currentSession || !appState.model) throw new Error('セッションが開始されていません')
+  const nextSession = applyChoice(currentSession, appState.model, choiceId)
+  setCurrentSession(nextSession)
+  appendStoryFromCurrentNode()
+  renderState()
+  renderChoices()
+  renderStory()
+  updateMermaidDiagramIfVisible()
+  Logger.info('Choice applied', { choiceId, newNodeId: nextSession.nodeId })
+})
+
+const safeImportCsv = ErrorBoundary.wrap(async (file) => {
+  await importCsvFile(file)
+  Logger.info('CSV imported', { fileName: file.name, fileSize: file.size })
+})
+
+const safeGenerateNode = ErrorBoundary.wrap(async () => {
+  await generateNextNode()
+  Logger.info('Node generated via AI')
+})
+
+const safeParaphrase = ErrorBoundary.wrap(async () => {
+  await paraphraseCurrentText()
+  Logger.info('Text paraphrased via AI')
+})
+
+async function initAiProvider() {
+  if (!aiProviderInstance || aiConfig.provider !== aiProvider.value) {
+    try {
+      if (aiProvider.value === 'openai') {
+        if (!aiConfig.openai.apiKey) {
+          aiOutput.textContent = 'OpenAI APIキーを設定してください'
+          return
+        }
+        aiProviderInstance = createAIProvider({
+          provider: 'openai',
+          openai: aiConfig.openai
+        })
+      } else if (aiProvider.value === 'ollama') {
+        aiProviderInstance = createAIProvider({
+          provider: 'ollama',
+          ollama: aiConfig.ollama
+        })
+      } else {
+        aiProviderInstance = createAIProvider({ provider: 'mock' })
+      }
+      aiOutput.textContent = `${aiProvider.value}プロバイダーが初期化されました`
+    } catch (error) {
+      console.error('AIプロバイダー初期化エラー:', error)
+      aiOutput.textContent = `AIプロバイダーの初期化に失敗しました: ${error.message}`
+    }
+  }
+}
+
+async function generateNextNode() {
+  const currentSession = getCurrentSession()
+  if (!aiProviderInstance || !currentSession || !appState.model) {
+    aiOutput.textContent = '❌ モデルを読み込んでから実行してください'
+    return
+  }
+
+  // Disable buttons during generation
+  generateNextNodeBtn.disabled = true
+  paraphraseCurrentBtn.disabled = true
+  aiOutput.textContent = '⏳ 生成中...'
+
+  try {
+    const context = {
+      previousNodes: [], // 現在の実装では履歴を保持していない
+      currentNodeText: appState.model.nodes[currentSession.nodeId]?.text || '',
+      choiceText: '続き'
+    }
+
+    const startTime = Date.now()
+    const generatedText = await aiProviderInstance.generateNextNode(context)
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2)
+    
+    aiOutput.textContent = `✅ 生成されたテキスト (${duration}秒):\n${generatedText}`
+    Logger.info('AI node generated', { duration, provider: aiConfig.provider })
+  } catch (error) {
+    console.error('ノード生成エラー:', error)
+    const errorMsg = error.message.includes('API error') 
+      ? `APIエラー: ${error.message}\nAPIキーを確認してください。`
+      : `生成に失敗しました: ${error.message}`
+    aiOutput.textContent = `❌ ${errorMsg}`
+    Logger.error('AI generation failed', { error: error.message, provider: aiConfig.provider })
+  } finally {
+    // Re-enable buttons
+    generateNextNodeBtn.disabled = false
+    paraphraseCurrentBtn.disabled = false
+  }
+}
+
+async function paraphraseCurrentTextUI() {
+  const currentSession = getCurrentSession()
+  if (!aiProviderInstance || !currentSession || !appState.model) {
+    aiOutput.textContent = '❌ モデルを読み込んでから実行してください'
+    return
+  }
+
+  const currentNode = appState.model.nodes[currentSession.nodeId]
+  if (!currentNode?.text) {
+    aiOutput.textContent = '❌ 現在のノードにテキストがありません'
+    return
+  }
+
+  // Disable buttons during generation
+  generateNextNodeBtn.disabled = true
+  paraphraseCurrentBtn.disabled = true
+  aiOutput.textContent = '⏳ 言い換え中...'
+
+  try {
+    const startTime = Date.now()
+    const paraphrases = await aiProviderInstance.paraphrase(currentNode.text, {
+      variantCount: 3,
+      // Prefer plain style here; designer lexicon defines phrasing
+      style: 'plain',
+      tone: 'neutral'
+    })
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2)
+
+    aiOutput.textContent = `✅ 言い換え結果 (${duration}秒):\n${paraphrases.map((p, i) => `${i + 1}. ${p}`).join('\n')}`
+    Logger.info('AI paraphrase completed', { duration, provider: aiConfig.provider, variantCount: paraphrases.length })
+  } catch (error) {
+    console.error('言い換えエラー:', error)
+    const errorMsg = error.message.includes('API error') 
+      ? `APIエラー: ${error.message}\nAPIキーを確認してください。`
+      : `言い換えに失敗しました: ${error.message}`
+    aiOutput.textContent = `❌ ${errorMsg}`
+    Logger.error('AI paraphrase failed', { error: error.message, provider: aiConfig.provider })
+  } finally {
+    // Re-enable buttons
+    generateNextNodeBtn.disabled = false
+    paraphraseCurrentBtn.disabled = false
+  }
+}
+
+function formatChoiceLabel(choice) {
+  if (choice?.outcome) {
+    return `${choice.text} (${choice.outcome.type}: ${choice.outcome.value})`
+  }
+  return choice?.text ?? '(不明な選択肢)'
+}
+
+async function loadCustomModel(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const json = JSON.parse(e.target.result)
+        resolve(json)
+      } catch (err) {
+        reject(new Error('JSON の解析に失敗しました'))
+      }
+    }
+    reader.onerror = () => reject(new Error('ファイルの読み込みに失敗しました'))
+    reader.readAsText(file)
+  })
+}
+
 async function loadSampleModel(sampleId) {
   const url = `/models/examples/${sampleId}.json`
   const response = await fetch(url)
@@ -423,6 +722,7 @@ startBtn.addEventListener('click', async () => {
     renderState()
     renderChoices()
     renderStory()
+    updateMermaidDiagramIfVisible()
   }
 })
 
@@ -456,16 +756,13 @@ fileInput.addEventListener('change', async (e) => {
     setControlsEnabled(true)
     renderState()
     renderChoices()
+    updateMermaidDiagramIfVisible()
   }
 })
 
 dropZone.addEventListener('dragover', (e) => {
   e.preventDefault()
   dropZone.style.backgroundColor = '#e0e0e0'
-})
-
-dropZone.addEventListener('dragleave', () => {
-  dropZone.style.backgroundColor = ''
 })
 
 dropZone.addEventListener('drop', async (e) => {
@@ -511,6 +808,7 @@ dropZone.addEventListener('drop', async (e) => {
     renderState()
     renderChoices()
     renderStory()
+    updateMermaidDiagramIfVisible()
   }
 })
 
@@ -561,8 +859,7 @@ function switchTab(tabName) {
     advancedPanel.classList.add('active')
     advancedTab.classList.add('active')
     // Initialize key binding system
-    loadKeyBindingsFromStorage()
-    initKeyBindingUI()
+    keyBindingManager.updateUI()
   }
 }
 
@@ -1389,6 +1686,7 @@ const themeManager = new ThemeManager()
 const validationPanel = new ValidationPanel(appState)
 const lexiconUIManager = new LexiconUIManager()
 const keyBindingUIManager = new KeyBindingUIManager()
+const mermaidPreviewManager = new MermaidPreviewManager()
 
 // Initialize story manager
 storyManager.initialize(document.getElementById('storyPanel'))
@@ -1420,6 +1718,9 @@ validationPanel.initialize(
   }
 )
 
+// Initialize Mermaid preview manager
+mermaidPreviewManager.initialize(document.querySelector('.app-container'))
+
 // Validation button event listener
 const runValidationBtn = document.getElementById('runValidationBtn')
 if (runValidationBtn) {
@@ -1449,6 +1750,13 @@ saveManager.initialize({
   saveSlotsContainer: saveSlots
 })
 
+// Extend SaveManager UI updates to refresh Mermaid preview after load
+const originalSaveManagerUpdateUI = saveManager.updateUI.bind(saveManager)
+saveManager.updateUI = function () {
+  originalSaveManagerUpdateUI()
+  updateMermaidDiagramIfVisible()
+}
+
 // Initialize KeyBindingManager
 keyBindingManager.initialize({
   setStatus,
@@ -1459,6 +1767,7 @@ keyBindingManager.initialize({
     graphKey,
     storyKey,
     aiKey,
+    mermaidKey,
     keyBindingDisplay
   },
   guiEditMode,
