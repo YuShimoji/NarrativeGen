@@ -1312,6 +1312,81 @@
         color: white;
         border-color: var(--color-primary);
       }
+
+      /* Search and Filter Styles */
+      .gui-search-filter {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 0.75rem;
+        padding: 0.75rem;
+        background: var(--color-surface);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--color-border);
+      }
+
+      .search-box {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+        max-width: 300px;
+        background: var(--color-bg);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        padding: 0.25rem 0.5rem;
+      }
+
+      .search-box input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        outline: none;
+        font-size: 0.875rem;
+        color: var(--color-text);
+      }
+
+      .search-box .btn-icon {
+        padding: 0.125rem 0.375rem;
+        font-size: 0.875rem;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: var(--color-text-muted);
+        border-radius: var(--radius-sm);
+      }
+
+      .search-box .btn-icon:hover {
+        background: var(--color-border);
+        color: var(--color-text);
+      }
+
+      .filter-box {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .filter-box label {
+        font-size: 0.875rem;
+        color: var(--color-text-muted);
+      }
+
+      .filter-box select {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        background: var(--color-bg);
+        color: var(--color-text);
+        cursor: pointer;
+      }
+
+      .search-result-count {
+        font-size: 0.75rem;
+        color: var(--color-text-muted);
+        white-space: nowrap;
+      }
     </style>
   </head>
   <body>
@@ -1752,6 +1827,26 @@
                   <button id="downloadBtn">JSON保存</button>
                   <button id="saveGuiBtn">保存して適用</button>
                   <button id="cancelGuiBtn">キャンセル</button>
+                </div>
+                <!-- Search and Filter UI -->
+                <div class="gui-search-filter">
+                  <div class="search-box">
+                    <svg class="icon icon-sm"><use href="#icon-search"></use></svg>
+                    <input type="text" id="nodeSearchInput" placeholder="ノードを検索...">
+                    <button id="clearSearchBtn" class="btn-icon" title="クリア">×</button>
+                  </div>
+                  <div class="filter-box">
+                    <label for="nodeFilterSelect">フィルタ:</label>
+                    <select id="nodeFilterSelect">
+                      <option value="all">すべて表示</option>
+                      <option value="unreachable">到達不能ノード</option>
+                      <option value="orphan">孤立ノード</option>
+                      <option value="hasFlags">フラグ使用</option>
+                      <option value="hasResources">リソース使用</option>
+                      <option value="noChoices">選択肢なし</option>
+                    </select>
+                  </div>
+                  <span id="searchResultCount" class="search-result-count"></span>
                 </div>
               </div>
               <div id="nodeList" class="gui-node-list"></div>

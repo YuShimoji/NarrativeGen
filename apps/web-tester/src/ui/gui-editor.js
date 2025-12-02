@@ -645,4 +645,241 @@ export class GuiEditorManager {
   getSelectedNodeId() {
     return this.selectedNodeId
   }
+
+  // ============================================================================
+  // Search & Filter functionality
+  // ============================================================================
+
+  /**
+   * ノードを検索
+   * @param {string} query - 検索クエリ
+   * @param {Object} options - 検索オプション
+   * @returns {string[]} マッチしたノードIDの配列
+   */
+  searchNodes(query, options = {}) {
+    if (!this.appState.model || !query.trim()) {
+      return Object.keys(this.appState.model?.nodes || {})
+    }
+
+    const lowerQuery = query.toLowerCase().trim()
+    const results = []
+
+    for (const [nodeId, node] of Object.entries(this.appState.model.nodes)) {
+      let matched = false
+
+      // ID検索
+      if (nodeId.toLowerCase().includes(lowerQuery)) {
+        matched = true
+      }
+
+      // テキスト検索
+      if (!matched && node.text && node.text.toLowerCase().includes(lowerQuery)) {
+        matched = true
+      }
+
+      // 選択肢テキスト検索
+      if (!matched && node.choices) {
+        for (const choice of node.choices) {
+          if (choice.text && choice.text.toLowerCase().includes(lowerQuery)) {
+            matched = true
+            break
+          }
+          if (choice.target && choice.target.toLowerCase().includes(lowerQuery)) {
+            matched = true
+            break
+          }
+        }
+      }
+
+      if (matched) {
+        results.push(nodeId)
+      }
+    }
+
+    return results
+  }
+
+  /**
+   * フィルタ条件に基づいてノードをフィルタリング
+   * @param {string} filterType - フィルタタイプ
+   * @returns {string[]} フィルタされたノードIDの配列
+   */
+  filterNodes(filterType) {
+    if (!this.appState.model) return []
+
+    const nodes = this.appState.model.nodes
+    const allNodeIds = Object.keys(nodes)
+
+    switch (filterType) {
+      case 'all':
+        return allNodeIds
+
+      case 'unreachable':
+        return this._findUnreachableNodes()
+
+      case 'orphan':
+        return this._findOrphanNodes()
+
+      case 'hasFlags':
+        return this._findNodesWithFlags()
+
+      case 'hasResources':
+        return this._findNodesWithResources()
+
+      case 'noChoices':
+        return allNodeIds.filter(id => !nodes[id].choices || nodes[id].choices.length === 0)
+
+      default:
+        return allNodeIds
+    }
+  }
+
+  /**
+   * 到達不能ノードを検出
+   * @returns {string[]}
+   */
+  _findUnreachableNodes() {
+    const nodes = this.appState.model.nodes
+    const startNodeId = this.appState.model.meta?.startNodeId || 'start'
+    const reachable = new Set()
+    const queue = [startNodeId]
+
+    while (queue.length > 0) {
+      const nodeId = queue.shift()
+      if (reachable.has(nodeId) || !nodes[nodeId]) continue
+
+      reachable.add(nodeId)
+      const node = nodes[nodeId]
+
+      if (node.choices) {
+        for (const choice of node.choices) {
+          if (choice.target && !reachable.has(choice.target)) {
+            queue.push(choice.target)
+          }
+        }
+      }
+    }
+
+    return Object.keys(nodes).filter(id => !reachable.has(id))
+  }
+
+  /**
+   * 孤立ノード（どこからも参照されていないノード）を検出
+   * @returns {string[]}
+   */
+  _findOrphanNodes() {
+    const nodes = this.appState.model.nodes
+    const startNodeId = this.appState.model.meta?.startNodeId || 'start'
+    const referenced = new Set([startNodeId])
+
+    for (const node of Object.values(nodes)) {
+      if (node.choices) {
+        for (const choice of node.choices) {
+          if (choice.target) {
+            referenced.add(choice.target)
+          }
+        }
+      }
+    }
+
+    return Object.keys(nodes).filter(id => !referenced.has(id))
+  }
+
+  /**
+   * フラグを使用しているノードを検出
+   * @returns {string[]}
+   */
+  _findNodesWithFlags() {
+    const nodes = this.appState.model.nodes
+    return Object.keys(nodes).filter(id => {
+      const node = nodes[id]
+      if (!node.choices) return false
+      return node.choices.some(choice => {
+        const hasConditionFlag = choice.conditions?.some(c => c.type === 'flag')
+        const hasEffectFlag = choice.effects?.some(e => e.type === 'setFlag')
+        return hasConditionFlag || hasEffectFlag
+      })
+    })
+  }
+
+  /**
+   * リソースを使用しているノードを検出
+   * @returns {string[]}
+   */
+  _findNodesWithResources() {
+    const nodes = this.appState.model.nodes
+    return Object.keys(nodes).filter(id => {
+      const node = nodes[id]
+      if (!node.choices) return false
+      return node.choices.some(choice => {
+        const hasConditionResource = choice.conditions?.some(c => c.type === 'resource')
+        const hasEffectResource = choice.effects?.some(e => 
+          e.type === 'addResource' || e.type === 'setResource'
+        )
+        return hasConditionResource || hasEffectResource
+      })
+    })
+  }
+
+  /**
+   * 検索・フィルタ結果に基づいてノードリストを更新
+   * @param {string} query - 検索クエリ
+   * @param {string} filterType - フィルタタイプ
+   */
+  applySearchAndFilter(query = '', filterType = 'all') {
+    if (!this.appState.model) return
+
+    // フィルタを適用
+    let visibleNodeIds = this.filterNodes(filterType)
+
+    // 検索を適用
+    if (query.trim()) {
+      const searchResults = this.searchNodes(query)
+      visibleNodeIds = visibleNodeIds.filter(id => searchResults.includes(id))
+    }
+
+    // UIを更新
+    this._updateNodeVisibility(visibleNodeIds)
+
+    // 結果数を返す
+    return {
+      total: Object.keys(this.appState.model.nodes).length,
+      visible: visibleNodeIds.length
+    }
+  }
+
+  /**
+   * ノードの表示/非表示を更新
+   * @param {string[]} visibleNodeIds - 表示するノードID
+   */
+  _updateNodeVisibility(visibleNodeIds) {
+    if (!this.nodeList) return
+
+    const visibleSet = new Set(visibleNodeIds)
+    const allNodeCards = this.nodeList.querySelectorAll('.node-editor')
+
+    allNodeCards.forEach(card => {
+      const nodeId = card.dataset.nodeId
+      if (visibleSet.has(nodeId)) {
+        card.style.display = ''
+        card.classList.remove('filtered-out')
+      } else {
+        card.style.display = 'none'
+        card.classList.add('filtered-out')
+      }
+    })
+  }
+
+  /**
+   * 検索・フィルタをリセット
+   */
+  resetSearchAndFilter() {
+    if (!this.nodeList) return
+
+    const allNodeCards = this.nodeList.querySelectorAll('.node-editor')
+    allNodeCards.forEach(card => {
+      card.style.display = ''
+      card.classList.remove('filtered-out')
+    })
+  }
 }

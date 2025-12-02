@@ -153,6 +153,12 @@ const previewBtn = document.getElementById('previewBtn')
 const downloadBtn = document.getElementById('downloadBtn')
 const saveGuiBtn = document.getElementById('saveGuiBtn')
 const cancelGuiBtn = document.getElementById('cancelGuiBtn')
+
+// Search and Filter elements
+const nodeSearchInput = document.getElementById('nodeSearchInput')
+const clearSearchBtn = document.getElementById('clearSearchBtn')
+const nodeFilterSelect = document.getElementById('nodeFilterSelect')
+const searchResultCount = document.getElementById('searchResultCount')
 const storyView = document.getElementById('storyView')
 const errorPanel = document.getElementById('errorPanel')
 const errorList = document.getElementById('errorList')
@@ -1656,6 +1662,52 @@ if (quickNodeBtn) {
 
 if (batchChoiceBtn) {
   batchChoiceBtn.addEventListener('click', () => guiEditorManager.openBatchChoiceModal())
+}
+
+// ============================================================================
+// Search and Filter Event Listeners
+// ============================================================================
+
+// Helper function to update search results
+function updateSearchFilter() {
+  if (!guiEditorManager || !appState.model) return
+
+  const query = nodeSearchInput?.value || ''
+  const filterType = nodeFilterSelect?.value || 'all'
+  
+  const result = guiEditorManager.applySearchAndFilter(query, filterType)
+  
+  if (result && searchResultCount) {
+    if (query || filterType !== 'all') {
+      searchResultCount.textContent = `${result.visible}/${result.total} ノード`
+    } else {
+      searchResultCount.textContent = ''
+    }
+  }
+}
+
+// Search input event listener with debounce
+let searchDebounceTimer = null
+if (nodeSearchInput) {
+  nodeSearchInput.addEventListener('input', () => {
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer)
+    searchDebounceTimer = setTimeout(updateSearchFilter, 300)
+  })
+}
+
+// Clear search button
+if (clearSearchBtn) {
+  clearSearchBtn.addEventListener('click', () => {
+    if (nodeSearchInput) nodeSearchInput.value = ''
+    if (nodeFilterSelect) nodeFilterSelect.value = 'all'
+    if (guiEditorManager) guiEditorManager.resetSearchAndFilter()
+    if (searchResultCount) searchResultCount.textContent = ''
+  })
+}
+
+// Filter select event listener
+if (nodeFilterSelect) {
+  nodeFilterSelect.addEventListener('change', updateSearchFilter)
 }
 
 // ============================================================================
