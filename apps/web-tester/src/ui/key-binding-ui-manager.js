@@ -16,10 +16,13 @@ export class KeyBindingUIManager {
   /**
    * 初期化
    */
-  initialize(keyBindingManager, appState, setStatusCallback) {
+  initialize(keyBindingManager, appState, setStatusCallback, options = {}) {
     this.keyBindingManager = keyBindingManager
     this.appState = appState
     this.setStatus = setStatusCallback
+    this.mermaidPreviewManager = options.mermaidPreviewManager || null
+    this.guiEditorManager = options.guiEditorManager || null
+    this.updateMermaidCallback = options.updateMermaidCallback || null
   }
 
   /**
@@ -89,6 +92,28 @@ export class KeyBindingUIManager {
           aiTab.classList.add('active')
         }
         Logger.info('AI panel toggled')
+      },
+
+      'mermaid': () => {
+        // Toggle Mermaid preview panel
+        if (this.mermaidPreviewManager) {
+          this.mermaidPreviewManager.toggle()
+          if (this.updateMermaidCallback) {
+            this.updateMermaidCallback()
+          }
+          Logger.info('Mermaid preview toggled')
+        }
+      },
+
+      'quickNode': () => {
+        // Quick node creation (only in GUI edit mode)
+        const guiEditMode = document.getElementById('guiEditMode')
+        if (guiEditMode && guiEditMode.style.display !== 'none') {
+          if (this.guiEditorManager) {
+            this.guiEditorManager.openQuickNodeModal()
+          }
+          Logger.info('Quick node modal opened')
+        }
       }
     }
   }

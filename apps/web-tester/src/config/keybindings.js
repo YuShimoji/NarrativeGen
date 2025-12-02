@@ -4,5 +4,6 @@ export const DEFAULT_KEY_BINDINGS = {
   graph: 'g',
   story: 's',
   ai: 'a',
-  mermaid: 'm'
+  mermaid: 'm',
+  quickNode: 'n'
 }

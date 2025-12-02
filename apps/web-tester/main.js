@@ -1589,15 +1589,7 @@ if (createQuickNodeBtn) {
   createQuickNodeBtn.addEventListener('click', () => guiEditorManager.createQuickNode())
 }
 
-// Add keyboard shortcut: N key for quick node creation (in GUI edit mode)
-document.addEventListener('keydown', (e) => {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
-  
-  if (e.key.toLowerCase() === 'n' && guiEditMode && guiEditMode.style.display !== 'none') {
-    e.preventDefault()
-    guiEditorManager.openQuickNodeModal()
-  }
-})
+// N key for quick node creation is now handled by KeyBindingManager (quickNode action)
 
 // Batch Choice Edit
 // ===========================
@@ -1757,30 +1749,7 @@ saveManager.updateUI = function () {
   updateMermaidDiagramIfVisible()
 }
 
-// Initialize KeyBindingManager
-keyBindingManager.initialize({
-  setStatus,
-  handlers: keyBindingHandlers,
-  uiElements: {
-    inventoryKey,
-    debugKey,
-    graphKey,
-    storyKey,
-    aiKey,
-    mermaidKey,
-    keyBindingDisplay
-  },
-  guiEditMode,
-  saveGuiBtn
-})
-
-// Key binding UI event listeners
-if (saveKeyBindings) {
-  saveKeyBindings.addEventListener('click', () => keyBindingManager.save())
-}
-if (resetKeyBindings) {
-  resetKeyBindings.addEventListener('click', () => keyBindingManager.reset())
-}
+// Key binding initialization is done after keyBindingUIManager setup (see below)
 
 // Initialize GUI editor manager
 guiEditorManager.initialize(
@@ -1817,6 +1786,38 @@ lexiconManager.initialize()
 // Initialize lexicon UI manager
 lexiconUIManager.initialize(lexiconManager, setStatus)
 lexiconUIManager.initUI()
+
+// Initialize key binding UI manager with dependencies
+keyBindingUIManager.initialize(keyBindingManager, appState, setStatus, {
+  mermaidPreviewManager,
+  guiEditorManager,
+  updateMermaidCallback: updateMermaidDiagramIfVisible
+})
+
+// Initialize KeyBindingManager with handlers from keyBindingUIManager
+keyBindingManager.initialize({
+  setStatus,
+  handlers: keyBindingUIManager.getHandlers(),
+  uiElements: {
+    inventoryKey,
+    debugKey,
+    graphKey,
+    storyKey,
+    aiKey,
+    mermaidKey,
+    keyBindingDisplay
+  },
+  guiEditMode,
+  saveGuiBtn
+})
+
+// Key binding UI event listeners
+if (saveKeyBindings) {
+  saveKeyBindings.addEventListener('click', () => keyBindingManager.save())
+}
+if (resetKeyBindings) {
+  resetKeyBindings.addEventListener('click', () => keyBindingManager.reset())
+}
 
 // Initialize theme manager (palette UI and saved theme)
 setupThemeEventListeners(themeManager)
