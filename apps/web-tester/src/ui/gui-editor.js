@@ -21,6 +21,10 @@ export class GuiEditorManager {
     this.paraphraseModal = null
     this.currentParaphraseTarget = null
 
+    // Clipboard for copy/paste
+    this.clipboard = null
+    this.selectedNodeId = null
+
     // Initialize sub-managers
     this.nodeRenderer = new NodeRenderer(appState)
     this.modelUpdater = new ModelUpdater(appState)
@@ -48,6 +52,11 @@ export class GuiEditorManager {
     this.nodeRenderer.setupDragAndDrop()
     this.nodeRenderer.setOnModelUpdate(() => {
       // モデル更新時の追加処理があればここに
+    })
+
+    // Setup node selection callback
+    this.nodeRenderer.setOnNodeSelect((nodeId) => {
+      this.selectNode(nodeId)
     })
   }
 
@@ -480,5 +489,160 @@ export class GuiEditorManager {
 
   getNodeTemplate(templateKey) {
     return NODE_TEMPLATES[templateKey] || NODE_TEMPLATES.blank
+  }
+
+  // ============================================================================
+  // Copy & Paste functionality
+  // ============================================================================
+
+  /**
+   * 選択中のノードを設定
+   * @param {string} nodeId - ノードID
+   */
+  selectNode(nodeId) {
+    this.selectedNodeId = nodeId
+    // 選択状態をUIに反映
+    this._updateNodeSelection()
+  }
+
+  /**
+   * ノード選択を解除
+   */
+  clearSelection() {
+    this.selectedNodeId = null
+    this._updateNodeSelection()
+  }
+
+  /**
+   * ノード選択のUIを更新
+   */
+  _updateNodeSelection() {
+    if (!this.nodeList) return
+
+    // 全ての選択状態をクリア
+    const allCards = this.nodeList.querySelectorAll('.gui-node-card')
+    allCards.forEach(card => card.classList.remove('selected'))
+
+    // 選択中のノードをハイライト
+    if (this.selectedNodeId) {
+      const selectedCard = this.nodeList.querySelector(`[data-node-id="${this.selectedNodeId}"]`)
+      if (selectedCard) {
+        selectedCard.classList.add('selected')
+      }
+    }
+  }
+
+  /**
+   * ノードをクリップボードにコピー
+   * @param {string} [nodeId] - コピーするノードID（省略時は選択中のノード）
+   * @returns {boolean} 成功時true
+   */
+  copyNode(nodeId = null) {
+    const targetId = nodeId || this.selectedNodeId
+    if (!targetId) {
+      if (typeof setStatus !== 'undefined') {
+        setStatus('コピーするノードを選択してください', 'warn')
+      }
+      return false
+    }
+
+    if (!this.appState.model || !this.appState.model.nodes[targetId]) {
+      if (typeof setStatus !== 'undefined') {
+        setStatus('ノードが見つかりません', 'error')
+      }
+      return false
+    }
+
+    // Deep copy the node
+    const node = this.appState.model.nodes[targetId]
+    this.clipboard = {
+      originalId: targetId,
+      node: JSON.parse(JSON.stringify(node))
+    }
+
+    if (typeof setStatus !== 'undefined') {
+      setStatus(`ノード「${targetId}」をコピーしました`, 'success')
+    }
+    return true
+  }
+
+  /**
+   * クリップボードからノードをペースト
+   * @returns {string|null} 作成されたノードID、またはnull
+   */
+  pasteNode() {
+    if (!this.clipboard) {
+      if (typeof setStatus !== 'undefined') {
+        setStatus('クリップボードが空です', 'warn')
+      }
+      return null
+    }
+
+    if (!this.appState.model) {
+      if (typeof setStatus !== 'undefined') {
+        setStatus('モデルを読み込んでください', 'warn')
+      }
+      return null
+    }
+
+    // Generate unique ID
+    const newId = this._generateUniqueNodeId(this.clipboard.originalId)
+
+    // Deep copy the node data
+    const newNode = JSON.parse(JSON.stringify(this.clipboard.node))
+    newNode.id = newId
+
+    // Add to model
+    this.appState.model.nodes[newId] = newNode
+
+    // Refresh UI
+    if (this.nodeList) {
+      this.renderNodeList()
+    }
+
+    // Save draft
+    this.saveDraftModel()
+
+    // Select the new node
+    this.selectNode(newId)
+
+    if (typeof setStatus !== 'undefined') {
+      setStatus(`ノード「${newId}」をペーストしました`, 'success')
+    }
+
+    return newId
+  }
+
+  /**
+   * ユニークなノードIDを生成
+   * @param {string} baseId - 元のID
+   * @returns {string} ユニークなID
+   */
+  _generateUniqueNodeId(baseId) {
+    let counter = 1
+    let newId = `${baseId}_copy`
+    
+    while (this.appState.model.nodes[newId]) {
+      counter++
+      newId = `${baseId}_copy${counter}`
+    }
+    
+    return newId
+  }
+
+  /**
+   * クリップボードにデータがあるか確認
+   * @returns {boolean}
+   */
+  hasClipboardData() {
+    return this.clipboard !== null
+  }
+
+  /**
+   * 選択中のノードIDを取得
+   * @returns {string|null}
+   */
+  getSelectedNodeId() {
+    return this.selectedNodeId
   }
 }

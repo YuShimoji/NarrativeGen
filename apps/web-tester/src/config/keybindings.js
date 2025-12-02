@@ -5,5 +5,6 @@ export const DEFAULT_KEY_BINDINGS = {
   story: 's',
   ai: 'a',
   mermaid: 'm',
-  quickNode: 'n'
+  quickNode: 'n',
+  // Copy/paste uses Ctrl modifier, handled separately in KeyBindingManager
 }

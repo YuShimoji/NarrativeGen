@@ -114,6 +114,22 @@ export class KeyBindingUIManager {
           }
           Logger.info('Quick node modal opened')
         }
+      },
+
+      'copyNode': () => {
+        // Copy selected node (Ctrl+C)
+        if (this.guiEditorManager) {
+          this.guiEditorManager.copyNode()
+          Logger.info('Node copied')
+        }
+      },
+
+      'pasteNode': () => {
+        // Paste node from clipboard (Ctrl+V)
+        if (this.guiEditorManager) {
+          this.guiEditorManager.pasteNode()
+          Logger.info('Node pasted')
+        }
       }
     }
   }

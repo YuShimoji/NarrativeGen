@@ -10,10 +10,19 @@ export class NodeRenderer {
     this.appState = appState
     this.nodeList = null
     this.conditionEffectEditor = new ConditionEffectEditor()
+    this.onNodeSelect = null // Callback for node selection
   }
 
   initialize(nodeListElement) {
     this.nodeList = nodeListElement
+  }
+
+  /**
+   * ノード選択時のコールバックを設定
+   * @param {Function} callback - (nodeId) => void
+   */
+  setOnNodeSelect(callback) {
+    this.onNodeSelect = callback
   }
 
   // Main rendering function
@@ -27,7 +36,10 @@ export class NodeRenderer {
       nodeDiv.dataset.nodeId = nodeId
       nodeDiv.draggable = true
       nodeDiv.innerHTML = `
-        <h3>ノード: ${nodeId}</h3>
+        <div class="node-header" data-node-id="${nodeId}">
+          <h3>ノード: ${nodeId}</h3>
+          <button class="select-node-btn" data-node-id="${nodeId}" title="選択 (Ctrl+Cでコピー)">選択</button>
+        </div>
         <div class="node-id-row">
           <label>ID: <input type="text" value="${nodeId}" data-node-id="${nodeId}" data-field="id"></label>
           <button class="rename-node-btn" data-node-id="${nodeId}">ID変更</button>
@@ -43,10 +55,31 @@ export class NodeRenderer {
     this.nodeList.innerHTML = ''
     this.nodeList.appendChild(fragment)
 
+    // Add click handlers for node selection
+    this._setupNodeSelectionHandlers()
+
     // Render choices after DOM is updated
     for (const [nodeId] of Object.entries(this.appState.model.nodes)) {
       this.renderChoicesForNode(nodeId)
     }
+  }
+
+  /**
+   * ノード選択のイベントハンドラを設定
+   */
+  _setupNodeSelectionHandlers() {
+    if (!this.nodeList) return
+
+    // Select button click handlers
+    this.nodeList.querySelectorAll('.select-node-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const nodeId = btn.dataset.nodeId
+        if (this.onNodeSelect) {
+          this.onNodeSelect(nodeId)
+        }
+      })
+    })
   }
 
   renderChoicesForNode(nodeId) {
@@ -286,3 +319,4 @@ export class NodeRenderer {
   setOnModelUpdate(callback) {
     this.onModelUpdate = callback
   }
+}

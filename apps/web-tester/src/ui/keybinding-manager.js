@@ -118,6 +118,26 @@ export class KeyBindingManager {
       }
       return
     }
+
+    // Ctrl+C (copy) in GUI edit mode
+    if (e.ctrlKey && key === 'c' && this.guiEditMode && this.guiEditMode.style.display !== 'none') {
+      e.preventDefault()
+      const handler = this.handlers['copyNode']
+      if (handler) {
+        handler()
+      }
+      return
+    }
+
+    // Ctrl+V (paste) in GUI edit mode
+    if (e.ctrlKey && key === 'v' && this.guiEditMode && this.guiEditMode.style.display !== 'none') {
+      e.preventDefault()
+      const handler = this.handlers['pasteNode']
+      if (handler) {
+        handler()
+      }
+      return
+    }
     
     // キーバインドに一致するアクションを検索
     for (const [action, boundKey] of Object.entries(this.bindings)) {
