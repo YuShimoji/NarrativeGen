@@ -25,6 +25,12 @@ export class GuiEditorManager {
     this.clipboard = null
     this.selectedNodeId = null
 
+    // Live preview elements
+    this.livePreviewPanel = null
+    this.previewNodeDisplay = null
+    this.previewChoices = null
+    this.pathDisplay = null
+
     // Initialize sub-managers
     this.nodeRenderer = new NodeRenderer(appState)
     this.modelUpdater = new ModelUpdater(appState)
@@ -58,6 +64,142 @@ export class GuiEditorManager {
     this.nodeRenderer.setOnNodeSelect((nodeId) => {
       this.selectNode(nodeId)
     })
+
+    // Initialize live preview
+    this._initializeLivePreview()
+  }
+
+  /**
+   * リアルタイムプレビューを初期化
+   */
+  _initializeLivePreview() {
+    this.livePreviewPanel = document.getElementById('livePreviewPanel')
+    this.previewNodeDisplay = document.getElementById('previewNodeDisplay')
+    this.previewChoices = document.getElementById('previewChoices')
+    this.pathDisplay = document.getElementById('pathDisplay')
+
+    const toggleBtn = document.getElementById('togglePreviewBtn')
+    if (toggleBtn && this.livePreviewPanel) {
+      toggleBtn.addEventListener('click', () => {
+        this.livePreviewPanel.classList.toggle('collapsed')
+      })
+    }
+  }
+
+  /**
+   * リアルタイムプレビューを更新
+   */
+  updateLivePreview(nodeId) {
+    if (!this.previewNodeDisplay || !this.appState.model) return
+
+    const node = nodeId ? this.appState.model.nodes[nodeId] : null
+
+    if (!node) {
+      this.previewNodeDisplay.innerHTML = `
+        <p class="preview-placeholder">ノードを選択するとプレビューが表示されます</p>
+      `
+      if (this.previewChoices) this.previewChoices.innerHTML = ''
+      if (this.pathDisplay) this.pathDisplay.innerHTML = ''
+      return
+    }
+
+    // Display node content
+    this.previewNodeDisplay.innerHTML = `
+      <div class="preview-node-id">${nodeId}</div>
+      <div class="preview-node-text">${this._escapeHtml(node.text || '(テキストなし)')}</div>
+    `
+
+    // Display choices
+    if (this.previewChoices) {
+      if (node.choices && node.choices.length > 0) {
+        this.previewChoices.innerHTML = node.choices.map((choice, i) => `
+          <div class="preview-choice-item" data-target="${choice.target || ''}">
+            <span class="preview-choice-arrow">→</span>
+            <span class="preview-choice-text">${this._escapeHtml(choice.text || '(選択肢' + (i + 1) + ')')}</span>
+            <span class="preview-choice-target">${choice.target || '未設定'}</span>
+          </div>
+        `).join('')
+
+        // Add click handlers for choices
+        this.previewChoices.querySelectorAll('.preview-choice-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const target = item.dataset.target
+            if (target && this.appState.model.nodes[target]) {
+              this.selectNode(target)
+            }
+          })
+        })
+      } else {
+        this.previewChoices.innerHTML = `
+          <p style="color: var(--color-text-muted); font-size: 0.85rem;">選択肢なし（エンディング候補）</p>
+        `
+      }
+    }
+
+    // Display path from start
+    if (this.pathDisplay) {
+      const path = this._findPathToNode(nodeId)
+      if (path.length > 0) {
+        this.pathDisplay.innerHTML = path.map((id, i) => 
+          `<span class="path-node" data-node="${id}">${id}</span>` +
+          (i < path.length - 1 ? '<span class="path-arrow">→</span>' : '')
+        ).join('')
+
+        // Add click handlers for path nodes
+        this.pathDisplay.querySelectorAll('.path-node').forEach(node => {
+          node.addEventListener('click', () => {
+            const targetId = node.dataset.node
+            if (targetId) this.selectNode(targetId)
+          })
+        })
+      } else {
+        this.pathDisplay.innerHTML = '<span style="color: var(--color-text-muted);">スタートノードから到達不能</span>'
+      }
+    }
+  }
+
+  /**
+   * スタートノードから指定ノードへのパスを探索（BFS）
+   */
+  _findPathToNode(targetNodeId) {
+    if (!this.appState.model) return []
+
+    const startNode = this.appState.model.startNode || 'start'
+    if (targetNodeId === startNode) return [startNode]
+
+    const queue = [[startNode]]
+    const visited = new Set([startNode])
+
+    while (queue.length > 0) {
+      const path = queue.shift()
+      const currentId = path[path.length - 1]
+      const current = this.appState.model.nodes[currentId]
+
+      if (!current || !current.choices) continue
+
+      for (const choice of current.choices) {
+        if (!choice.target || visited.has(choice.target)) continue
+
+        const newPath = [...path, choice.target]
+        if (choice.target === targetNodeId) {
+          return newPath
+        }
+
+        visited.add(choice.target)
+        queue.push(newPath)
+      }
+    }
+
+    return []
+  }
+
+  /**
+   * HTMLエスケープ
+   */
+  _escapeHtml(text) {
+    const div = document.createElement('div')
+    div.textContent = text
+    return div.innerHTML
   }
 
   /**
@@ -525,6 +667,8 @@ export class GuiEditorManager {
     this.selectedNodeId = nodeId
     // 選択状態をUIに反映
     this._updateNodeSelection()
+    // リアルタイムプレビューを更新
+    this.updateLivePreview(nodeId)
   }
 
   /**
@@ -533,6 +677,7 @@ export class GuiEditorManager {
   clearSelection() {
     this.selectedNodeId = null
     this._updateNodeSelection()
+    this.updateLivePreview(null)
   }
 
   /**
