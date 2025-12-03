@@ -1386,6 +1386,72 @@
         font-size: 0.75rem;
         color: var(--color-text-muted);
         white-space: nowrap;
+        transition: color 0.2s ease;
+      }
+
+      .search-result-count.no-results {
+        color: var(--color-warning, #f59e0b);
+        font-weight: 600;
+      }
+
+      /* Snippet Styles */
+      .snippet-list {
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        background: var(--color-surface);
+      }
+
+      .snippet-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--color-border);
+        transition: background 0.2s ease;
+      }
+
+      .snippet-item:last-child {
+        border-bottom: none;
+      }
+
+      .snippet-item:hover {
+        background: rgba(91, 141, 239, 0.1);
+      }
+
+      .snippet-info {
+        flex: 1;
+      }
+
+      .snippet-name {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+
+      .snippet-meta {
+        font-size: 0.75rem;
+        color: var(--color-text-muted);
+      }
+
+      .snippet-actions-group {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .snippet-actions-group button {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+      }
+
+      button.secondary {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        color: var(--color-text);
+      }
+
+      button.secondary:hover {
+        background: var(--color-primary);
+        color: white;
+        border-color: var(--color-primary);
       }
     </style>
   </head>
@@ -1557,6 +1623,26 @@
           <div style="margin-top: 1rem; text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
             <button id="cancelBatchChoiceBtn">キャンセル</button>
             <button id="applyBatchChoiceBtn" style="background: var(--color-secondary); color: white; border: none;">一括適用</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Snippet Manager Modal -->
+      <div id="snippetModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+          <h3>スニペット管理</h3>
+          <div class="snippet-actions" style="margin: 1rem 0; display: flex; gap: 0.5rem;">
+            <input type="text" id="snippetNameInput" placeholder="スニペット名を入力..." style="flex: 1;">
+            <button id="saveSnippetBtn" class="primary">選択ノードを保存</button>
+          </div>
+          <div id="snippetList" class="snippet-list" style="max-height: 300px; overflow-y: auto; margin: 1rem 0;">
+            <!-- Snippet items will be populated here -->
+            <p class="snippet-empty" style="color: var(--color-text-muted); text-align: center; padding: 2rem;">
+              スニペットがありません
+            </p>
+          </div>
+          <div style="margin-top: 1rem; text-align: right;">
+            <button id="closeSnippetModalBtn">閉じる</button>
           </div>
         </div>
       </div>
@@ -1821,6 +1907,7 @@
                 <div class="gui-edit-toolbar">
                   <button id="quickNodeBtn" class="primary"><svg class="icon"><use href="#icon-plus"></use></svg>クイックノード作成</button>
                   <button id="batchChoiceBtn" class="primary">選択肢一括編集</button>
+                  <button id="snippetBtn" class="secondary">スニペット</button>
                   <button id="addNodeBtn">ノードを追加</button>
                   <button id="batchEditBtn">バッチ編集</button>
                   <button id="previewBtn">小説プレビュー</button>

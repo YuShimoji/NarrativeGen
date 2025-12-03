@@ -1679,9 +1679,16 @@ function updateSearchFilter() {
   
   if (result && searchResultCount) {
     if (query || filterType !== 'all') {
-      searchResultCount.textContent = `${result.visible}/${result.total} ノード`
+      if (result.visible === 0) {
+        searchResultCount.textContent = '該当なし'
+        searchResultCount.classList.add('no-results')
+      } else {
+        searchResultCount.textContent = `${result.visible}/${result.total} ノード`
+        searchResultCount.classList.remove('no-results')
+      }
     } else {
       searchResultCount.textContent = ''
+      searchResultCount.classList.remove('no-results')
     }
   }
 }
@@ -1708,6 +1715,107 @@ if (clearSearchBtn) {
 // Filter select event listener
 if (nodeFilterSelect) {
   nodeFilterSelect.addEventListener('change', updateSearchFilter)
+}
+
+// ============================================================================
+// Snippet Event Listeners
+// ============================================================================
+
+const snippetBtn = document.getElementById('snippetBtn')
+const snippetModal = document.getElementById('snippetModal')
+const snippetNameInput = document.getElementById('snippetNameInput')
+const saveSnippetBtn = document.getElementById('saveSnippetBtn')
+const snippetList = document.getElementById('snippetList')
+const closeSnippetModalBtn = document.getElementById('closeSnippetModalBtn')
+
+// Render snippet list
+function renderSnippetList() {
+  if (!snippetList || !guiEditorManager) return
+
+  const snippets = guiEditorManager.getSnippets()
+
+  if (snippets.length === 0) {
+    snippetList.innerHTML = `
+      <p class="snippet-empty" style="color: var(--color-text-muted); text-align: center; padding: 2rem;">
+        スニペットがありません
+      </p>
+    `
+    return
+  }
+
+  snippetList.innerHTML = snippets.map(snippet => `
+    <div class="snippet-item" data-snippet-id="${snippet.id}">
+      <div class="snippet-info">
+        <div class="snippet-name">${snippet.name}</div>
+        <div class="snippet-meta">作成: ${new Date(snippet.createdAt).toLocaleDateString('ja-JP')}</div>
+      </div>
+      <div class="snippet-actions-group">
+        <button class="insert-snippet-btn primary" data-snippet-id="${snippet.id}">挿入</button>
+        <button class="delete-snippet-btn" data-snippet-id="${snippet.id}">削除</button>
+      </div>
+    </div>
+  `).join('')
+
+  // Add event listeners for insert and delete buttons
+  snippetList.querySelectorAll('.insert-snippet-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const snippetId = btn.dataset.snippetId
+      guiEditorManager.insertFromSnippet(snippetId)
+      snippetModal.style.display = 'none'
+    })
+  })
+
+  snippetList.querySelectorAll('.delete-snippet-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const snippetId = btn.dataset.snippetId
+      if (confirm('このスニペットを削除しますか？')) {
+        guiEditorManager.deleteSnippet(snippetId)
+        renderSnippetList()
+      }
+    })
+  })
+}
+
+// Open snippet modal
+if (snippetBtn) {
+  snippetBtn.addEventListener('click', () => {
+    if (snippetModal) {
+      snippetModal.style.display = 'flex'
+      snippetModal.classList.add('show')
+      renderSnippetList()
+    }
+  })
+}
+
+// Save snippet
+if (saveSnippetBtn) {
+  saveSnippetBtn.addEventListener('click', () => {
+    const name = snippetNameInput?.value.trim() || ''
+    if (guiEditorManager.saveAsSnippet(name)) {
+      if (snippetNameInput) snippetNameInput.value = ''
+      renderSnippetList()
+    }
+  })
+}
+
+// Close snippet modal
+if (closeSnippetModalBtn) {
+  closeSnippetModalBtn.addEventListener('click', () => {
+    if (snippetModal) {
+      snippetModal.style.display = 'none'
+      snippetModal.classList.remove('show')
+    }
+  })
+}
+
+// Close modal on backdrop click
+if (snippetModal) {
+  snippetModal.addEventListener('click', (e) => {
+    if (e.target === snippetModal) {
+      snippetModal.style.display = 'none'
+      snippetModal.classList.remove('show')
+    }
+  })
 }
 
 // ============================================================================

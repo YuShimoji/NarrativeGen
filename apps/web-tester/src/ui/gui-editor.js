@@ -882,4 +882,170 @@ export class GuiEditorManager {
       card.classList.remove('filtered-out')
     })
   }
+
+  // ============================================================================
+  // Snippet functionality
+  // ============================================================================
+
+  static SNIPPET_STORAGE_KEY = 'narrativegen_snippets'
+
+  /**
+   * 選択中のノードをスニペットとして保存
+   * @param {string} snippetName - スニペット名
+   * @returns {boolean} 成功したかどうか
+   */
+  saveAsSnippet(snippetName) {
+    if (!this.selectedNodeId) {
+      if (typeof setStatus !== 'undefined') {
+        setStatus('スニペット保存するノードを選択してください', 'warn')
+      }
+      return false
+    }
+
+    if (!this.appState.model || !this.appState.model.nodes[this.selectedNodeId]) {
+      if (typeof setStatus !== 'undefined') {
+        setStatus('ノードが見つかりません', 'error')
+      }
+      return false
+    }
+
+    const node = this.appState.model.nodes[this.selectedNodeId]
+    const snippet = {
+      id: `snippet_${Date.now()}`,
+      name: snippetName || `スニペット (${this.selectedNodeId})`,
+      createdAt: new Date().toISOString(),
+      nodeData: JSON.parse(JSON.stringify(node))
+    }
+
+    const snippets = this.getSnippets()
+    snippets.push(snippet)
+    this._saveSnippetsToStorage(snippets)
+
+    if (typeof setStatus !== 'undefined') {
+      setStatus(`スニペット「${snippet.name}」を保存しました`, 'success')
+    }
+    return true
+  }
+
+  /**
+   * スニペット一覧を取得
+   * @returns {Array} スニペット配列
+   */
+  getSnippets() {
+    try {
+      const stored = localStorage.getItem(GuiEditorManager.SNIPPET_STORAGE_KEY)
+      return stored ? JSON.parse(stored) : []
+    } catch (e) {
+      console.warn('Failed to load snippets:', e)
+      return []
+    }
+  }
+
+  /**
+   * スニペットをストレージに保存
+   * @param {Array} snippets - スニペット配列
+   */
+  _saveSnippetsToStorage(snippets) {
+    try {
+      localStorage.setItem(GuiEditorManager.SNIPPET_STORAGE_KEY, JSON.stringify(snippets))
+    } catch (e) {
+      console.error('Failed to save snippets:', e)
+    }
+  }
+
+  /**
+   * スニペットからノードを挿入
+   * @param {string} snippetId - スニペットID
+   * @returns {string|null} 作成されたノードID、またはnull
+   */
+  insertFromSnippet(snippetId) {
+    const snippets = this.getSnippets()
+    const snippet = snippets.find(s => s.id === snippetId)
+
+    if (!snippet) {
+      if (typeof setStatus !== 'undefined') {
+        setStatus('スニペットが見つかりません', 'error')
+      }
+      return null
+    }
+
+    if (!this.appState.model) {
+      if (typeof setStatus !== 'undefined') {
+        setStatus('モデルを読み込んでください', 'warn')
+      }
+      return null
+    }
+
+    // Generate unique ID based on snippet name
+    const baseId = snippet.nodeData.id || 'snippet_node'
+    const newId = this._generateUniqueNodeId(baseId)
+
+    // Deep copy the node data
+    const newNode = JSON.parse(JSON.stringify(snippet.nodeData))
+    newNode.id = newId
+
+    // Add to model
+    this.appState.model.nodes[newId] = newNode
+
+    // Refresh UI
+    if (this.nodeList) {
+      this.renderNodeList()
+    }
+
+    // Save draft
+    this.saveDraftModel()
+
+    // Select the new node
+    this.selectNode(newId)
+
+    if (typeof setStatus !== 'undefined') {
+      setStatus(`スニペット「${snippet.name}」から「${newId}」を挿入しました`, 'success')
+    }
+
+    return newId
+  }
+
+  /**
+   * スニペットを削除
+   * @param {string} snippetId - スニペットID
+   * @returns {boolean} 成功したかどうか
+   */
+  deleteSnippet(snippetId) {
+    const snippets = this.getSnippets()
+    const index = snippets.findIndex(s => s.id === snippetId)
+
+    if (index === -1) {
+      if (typeof setStatus !== 'undefined') {
+        setStatus('スニペットが見つかりません', 'error')
+      }
+      return false
+    }
+
+    const deletedSnippet = snippets.splice(index, 1)[0]
+    this._saveSnippetsToStorage(snippets)
+
+    if (typeof setStatus !== 'undefined') {
+      setStatus(`スニペット「${deletedSnippet.name}」を削除しました`, 'success')
+    }
+    return true
+  }
+
+  /**
+   * スニペット名を更新
+   * @param {string} snippetId - スニペットID
+   * @param {string} newName - 新しい名前
+   * @returns {boolean} 成功したかどうか
+   */
+  renameSnippet(snippetId, newName) {
+    const snippets = this.getSnippets()
+    const snippet = snippets.find(s => s.id === snippetId)
+
+    if (!snippet) {
+      return false
+    }
+
+    snippet.name = newName
+    this._saveSnippetsToStorage(snippets)
+    return true
+  }
 }
