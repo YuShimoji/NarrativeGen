@@ -184,7 +184,11 @@ export class ValidationPanel {
       [ValidationCategory.CIRCULAR_REFERENCE]: '循環参照',
       [ValidationCategory.MISSING_START_NODE]: 'スタートノード欠損',
       [ValidationCategory.EMPTY_CHOICE]: '空の選択肢',
-      [ValidationCategory.MISSING_CHOICE_TARGET]: '遷移先未設定'
+      [ValidationCategory.MISSING_CHOICE_TARGET]: '遷移先未設定',
+      [ValidationCategory.SELF_REFERENCE]: '自己参照',
+      [ValidationCategory.DEAD_END]: 'デッドエンド',
+      [ValidationCategory.EMPTY_NODE_TEXT]: '空テキスト',
+      [ValidationCategory.UNDEFINED_FLAG]: '未定義フラグ'
     }
     return labels[category] || category
   }

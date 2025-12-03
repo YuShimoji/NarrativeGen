@@ -1570,11 +1570,18 @@
           <div style="margin: 1.5rem 0;">
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">テンプレート:</label>
             <select id="nodeTemplate" style="width: 100%;">
-              <option value="conversation">会話 (キャラクターの台詞)</option>
-              <option value="choice">選択 (プレイヤー選択肢)</option>
-              <option value="info">情報 (状況説明)</option>
-              <option value="action">アクション (イベント)</option>
-              <option value="blank">空白</option>
+              <optgroup label="組み込みテンプレート">
+                <option value="conversation">会話 (キャラクターの台詞)</option>
+                <option value="choice">選択 (プレイヤー選択肢)</option>
+                <option value="info">情報 (状況説明)</option>
+                <option value="action">アクション (イベント)</option>
+                <option value="branch">分岐 (条件分岐)</option>
+                <option value="ending">エンディング</option>
+                <option value="blank">空白</option>
+              </optgroup>
+              <optgroup id="customTemplateGroup" label="カスタムテンプレート">
+                <!-- Custom templates will be populated here -->
+              </optgroup>
             </select>
           </div>
           <div style="margin: 1.5rem 0;">
@@ -1588,7 +1595,32 @@
           </div>
           <div style="margin-top: 1rem; text-align: right; display: flex; gap: 0.5rem; justify-content: flex-end;">
             <button id="cancelQuickNodeBtn">キャンセル</button>
+            <button id="manageTemplatesBtn" class="secondary">テンプレート管理</button>
             <button id="createQuickNodeBtn" style="background: var(--color-secondary); color: white; border: none;">作成</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Template Manager Modal -->
+      <div id="templateModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+          <h3>カスタムテンプレート管理</h3>
+          <div class="template-save-section" style="margin: 1rem 0; padding: 1rem; background: rgba(0,0,0,0.1); border-radius: 8px;">
+            <p style="margin: 0 0 0.5rem; font-size: 0.875rem; color: var(--color-text-muted);">
+              選択中のノードをテンプレートとして保存できます
+            </p>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="text" id="customTemplateNameInput" placeholder="テンプレート名を入力..." style="flex: 1;">
+              <button id="saveCustomTemplateBtn" class="primary">保存</button>
+            </div>
+          </div>
+          <div id="customTemplateList" class="snippet-list" style="max-height: 300px; overflow-y: auto; margin: 1rem 0;">
+            <p class="template-empty" style="color: var(--color-text-muted); text-align: center; padding: 2rem;">
+              カスタムテンプレートがありません
+            </p>
+          </div>
+          <div style="margin-top: 1rem; text-align: right;">
+            <button id="closeTemplateModalBtn">閉じる</button>
           </div>
         </div>
       </div>

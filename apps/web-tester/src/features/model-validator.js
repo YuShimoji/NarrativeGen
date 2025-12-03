@@ -29,7 +29,11 @@ export const ValidationCategory = {
   CIRCULAR_REFERENCE: 'circular_reference',
   MISSING_START_NODE: 'missing_start_node',
   EMPTY_CHOICE: 'empty_choice',
-  MISSING_CHOICE_TARGET: 'missing_choice_target'
+  MISSING_CHOICE_TARGET: 'missing_choice_target',
+  SELF_REFERENCE: 'self_reference',
+  DEAD_END: 'dead_end',
+  EMPTY_NODE_TEXT: 'empty_node_text',
+  UNDEFINED_FLAG: 'undefined_flag'
 }
 
 /**
@@ -79,6 +83,10 @@ export class ModelValidator {
     this._validateOrphanNodes(model)
     this._validateEmptyChoices(model)
     this._detectCircularReferences(model)
+    this._validateSelfReferences(model)
+    this._validateDeadEnds(model)
+    this._validateEmptyNodeText(model)
+    this._validateFlags(model)
 
     // 結果をソート（エラー優先）
     this.issues.sort((a, b) => {
@@ -236,6 +244,128 @@ export class ModelValidator {
         `循環参照を検出: ${cycle.join(' → ')} → ${cycle[0]}`,
         { cycle }
       ))
+    }
+  }
+
+  /**
+   * 自己参照の検出（ノードが自分自身に遷移）
+   */
+  _validateSelfReferences(model) {
+    for (const [nodeId, node] of Object.entries(model.nodes)) {
+      if (!node.choices) continue
+
+      for (let i = 0; i < node.choices.length; i++) {
+        const choice = node.choices[i]
+        if (choice.target === nodeId) {
+          this.issues.push(new ValidationIssue(
+            ValidationCategory.SELF_REFERENCE,
+            ValidationSeverity.WARNING,
+            nodeId,
+            `ノード「${nodeId}」の選択肢${i + 1}が自分自身を参照しています`,
+            { choiceIndex: i, choiceText: choice.text }
+          ))
+        }
+      }
+    }
+  }
+
+  /**
+   * デッドエンド検出（選択肢がなく、エンディングでもないノード）
+   */
+  _validateDeadEnds(model) {
+    for (const [nodeId, node] of Object.entries(model.nodes)) {
+      // 選択肢がない、または空の選択肢配列
+      const hasNoChoices = !node.choices || node.choices.length === 0
+      
+      // 有効な遷移先を持つ選択肢がない
+      const hasNoValidTargets = node.choices && 
+        node.choices.length > 0 && 
+        node.choices.every(c => !c.target)
+
+      if (hasNoChoices || hasNoValidTargets) {
+        // エンディングノードとしてマークされているかチェック
+        const isEnding = node.isEnding || 
+                        node.type === 'ending' ||
+                        nodeId.toLowerCase().includes('end') ||
+                        nodeId.toLowerCase().includes('ending')
+
+        if (!isEnding) {
+          this.issues.push(new ValidationIssue(
+            ValidationCategory.DEAD_END,
+            ValidationSeverity.WARNING,
+            nodeId,
+            `ノード「${nodeId}」は遷移先がありません（デッドエンドの可能性）`,
+            { hasChoices: !!node.choices, choiceCount: node.choices?.length || 0 }
+          ))
+        }
+      }
+    }
+  }
+
+  /**
+   * 空のノードテキスト検出
+   */
+  _validateEmptyNodeText(model) {
+    for (const [nodeId, node] of Object.entries(model.nodes)) {
+      if (!node.text || node.text.trim() === '') {
+        this.issues.push(new ValidationIssue(
+          ValidationCategory.EMPTY_NODE_TEXT,
+          ValidationSeverity.INFO,
+          nodeId,
+          `ノード「${nodeId}」のテキストが空です`
+        ))
+      }
+    }
+  }
+
+  /**
+   * フラグの整合性チェック（条件で使用されるフラグが効果で設定されているか）
+   */
+  _validateFlags(model) {
+    const setFlags = new Set()    // 効果で設定されるフラグ
+    const usedFlags = new Map()   // 条件で使用されるフラグ → ノードID
+
+    // 全ノードをスキャンしてフラグを収集
+    for (const [nodeId, node] of Object.entries(model.nodes)) {
+      if (!node.choices) continue
+
+      for (const choice of node.choices) {
+        // 効果からフラグを収集
+        if (choice.effects) {
+          for (const effect of choice.effects) {
+            if (effect.type === 'setFlag' && effect.flag) {
+              setFlags.add(effect.flag)
+            }
+          }
+        }
+
+        // 条件からフラグを収集
+        if (choice.conditions) {
+          for (const condition of choice.conditions) {
+            if (condition.type === 'flag' && condition.flag) {
+              if (!usedFlags.has(condition.flag)) {
+                usedFlags.set(condition.flag, [])
+              }
+              usedFlags.get(condition.flag).push({ nodeId, choiceText: choice.text })
+            }
+          }
+        }
+      }
+    }
+
+    // 使用されているが設定されていないフラグを検出
+    for (const [flag, usages] of usedFlags) {
+      if (!setFlags.has(flag)) {
+        for (const usage of usages) {
+          this.issues.push(new ValidationIssue(
+            ValidationCategory.UNDEFINED_FLAG,
+            ValidationSeverity.WARNING,
+            usage.nodeId,
+            `フラグ「${flag}」が条件で使用されていますが、どこにも設定されていません`,
+            { flag, choiceText: usage.choiceText }
+          ))
+        }
+      }
     }
   }
 

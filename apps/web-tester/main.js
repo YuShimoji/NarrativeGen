@@ -1819,6 +1819,117 @@ if (snippetModal) {
 }
 
 // ============================================================================
+// Custom Template Event Listeners
+// ============================================================================
+
+const manageTemplatesBtn = document.getElementById('manageTemplatesBtn')
+const templateModal = document.getElementById('templateModal')
+const customTemplateNameInput = document.getElementById('customTemplateNameInput')
+const saveCustomTemplateBtn = document.getElementById('saveCustomTemplateBtn')
+const customTemplateList = document.getElementById('customTemplateList')
+const closeTemplateModalBtn = document.getElementById('closeTemplateModalBtn')
+const customTemplateGroup = document.getElementById('customTemplateGroup')
+
+// Render custom template list in modal
+function renderCustomTemplateList() {
+  if (!customTemplateList || !guiEditorManager) return
+
+  const templates = guiEditorManager.getCustomTemplates()
+
+  if (templates.length === 0) {
+    customTemplateList.innerHTML = `
+      <p class="template-empty" style="color: var(--color-text-muted); text-align: center; padding: 2rem;">
+        カスタムテンプレートがありません
+      </p>
+    `
+    return
+  }
+
+  customTemplateList.innerHTML = templates.map(template => `
+    <div class="snippet-item" data-template-id="${template.id}">
+      <div class="snippet-info">
+        <div class="snippet-name">${template.name}</div>
+        <div class="snippet-meta">作成: ${new Date(template.createdAt).toLocaleDateString('ja-JP')}</div>
+      </div>
+      <div class="snippet-actions-group">
+        <button class="delete-template-btn" data-template-id="${template.id}">削除</button>
+      </div>
+    </div>
+  `).join('')
+
+  // Add delete event listeners
+  customTemplateList.querySelectorAll('.delete-template-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const templateId = btn.dataset.templateId
+      if (confirm('このテンプレートを削除しますか？')) {
+        guiEditorManager.deleteCustomTemplate(templateId)
+        renderCustomTemplateList()
+        updateCustomTemplateOptions()
+      }
+    })
+  })
+}
+
+// Update custom template options in quick node modal
+function updateCustomTemplateOptions() {
+  if (!customTemplateGroup || !guiEditorManager) return
+
+  const templates = guiEditorManager.getCustomTemplates()
+
+  if (templates.length === 0) {
+    customTemplateGroup.innerHTML = '<option disabled>カスタムテンプレートなし</option>'
+    return
+  }
+
+  customTemplateGroup.innerHTML = templates.map(template => 
+    `<option value="${template.id}">${template.name}</option>`
+  ).join('')
+}
+
+// Open template manager modal
+if (manageTemplatesBtn) {
+  manageTemplatesBtn.addEventListener('click', () => {
+    if (templateModal) {
+      templateModal.style.display = 'flex'
+      templateModal.classList.add('show')
+      renderCustomTemplateList()
+    }
+  })
+}
+
+// Save custom template
+if (saveCustomTemplateBtn) {
+  saveCustomTemplateBtn.addEventListener('click', () => {
+    const name = customTemplateNameInput?.value.trim() || ''
+    if (guiEditorManager.saveAsCustomTemplate(name)) {
+      if (customTemplateNameInput) customTemplateNameInput.value = ''
+      renderCustomTemplateList()
+      updateCustomTemplateOptions()
+    }
+  })
+}
+
+// Close template modal
+if (closeTemplateModalBtn) {
+  closeTemplateModalBtn.addEventListener('click', () => {
+    if (templateModal) {
+      templateModal.style.display = 'none'
+      templateModal.classList.remove('show')
+    }
+  })
+}
+
+// Close modal on backdrop click
+if (templateModal) {
+  templateModal.addEventListener('click', (e) => {
+    if (e.target === templateModal) {
+      templateModal.style.display = 'none'
+      templateModal.classList.remove('show')
+    }
+  })
+}
+
+// ============================================================================
 // Module Initialization
 // ============================================================================
 

@@ -253,8 +253,30 @@ export class GuiEditorManager {
     if (quickNodeText) quickNodeText.value = ''
     if (nodeTemplate) nodeTemplate.value = 'blank'
 
+    // Update custom template options
+    this._updateCustomTemplateOptions()
+
     modal.style.display = 'flex'
     modal.classList.add('show')
+  }
+
+  /**
+   * カスタムテンプレートのセレクトオプションを更新
+   */
+  _updateCustomTemplateOptions() {
+    const customTemplateGroup = document.getElementById('customTemplateGroup')
+    if (!customTemplateGroup) return
+
+    const templates = this.getCustomTemplates()
+
+    if (templates.length === 0) {
+      customTemplateGroup.innerHTML = '<option disabled>カスタムテンプレートなし</option>'
+      return
+    }
+
+    customTemplateGroup.innerHTML = templates.map(template => 
+      `<option value="${template.id}">${template.name}</option>`
+    ).join('')
   }
 
   createQuickNode() {
@@ -277,12 +299,12 @@ export class GuiEditorManager {
       return
     }
 
-    // Get template
-    const template = this.getNodeTemplate(templateKey)
+    // Get template (supports both built-in and custom templates)
+    const template = this.getTemplateNodeData(templateKey)
     const newNode = {
       id: nodeId,
       text: nodeText || template.text,
-      choices: JSON.parse(JSON.stringify(template.choices)) // Deep copy
+      choices: template.choices ? JSON.parse(JSON.stringify(template.choices)) : []
     }
 
     // Add to model
@@ -888,6 +910,7 @@ export class GuiEditorManager {
   // ============================================================================
 
   static SNIPPET_STORAGE_KEY = 'narrativegen_snippets'
+  static CUSTOM_TEMPLATE_STORAGE_KEY = 'narrativegen_custom_templates'
 
   /**
    * 選択中のノードをスニペットとして保存
@@ -1047,5 +1070,136 @@ export class GuiEditorManager {
     snippet.name = newName
     this._saveSnippetsToStorage(snippets)
     return true
+  }
+
+  // ============================================================================
+  // Custom Template functionality
+  // ============================================================================
+
+  /**
+   * 選択中のノードをカスタムテンプレートとして保存
+   * @param {string} templateName - テンプレート名
+   * @returns {boolean} 成功したかどうか
+   */
+  saveAsCustomTemplate(templateName) {
+    if (!this.selectedNodeId) {
+      if (typeof setStatus !== 'undefined') {
+        setStatus('テンプレート保存するノードを選択してください', 'warn')
+      }
+      return false
+    }
+
+    if (!this.appState.model || !this.appState.model.nodes[this.selectedNodeId]) {
+      if (typeof setStatus !== 'undefined') {
+        setStatus('ノードが見つかりません', 'error')
+      }
+      return false
+    }
+
+    if (!templateName || !templateName.trim()) {
+      if (typeof setStatus !== 'undefined') {
+        setStatus('テンプレート名を入力してください', 'warn')
+      }
+      return false
+    }
+
+    const node = this.appState.model.nodes[this.selectedNodeId]
+    const template = {
+      id: `custom_${Date.now()}`,
+      name: templateName.trim(),
+      createdAt: new Date().toISOString(),
+      // Store only the essential node structure (no id)
+      nodeData: {
+        text: node.text || '',
+        choices: node.choices ? JSON.parse(JSON.stringify(node.choices)) : []
+      }
+    }
+
+    const templates = this.getCustomTemplates()
+    templates.push(template)
+    this._saveCustomTemplatesToStorage(templates)
+
+    if (typeof setStatus !== 'undefined') {
+      setStatus(`テンプレート「${template.name}」を保存しました`, 'success')
+    }
+    return true
+  }
+
+  /**
+   * カスタムテンプレート一覧を取得
+   * @returns {Array} テンプレート配列
+   */
+  getCustomTemplates() {
+    try {
+      const stored = localStorage.getItem(GuiEditorManager.CUSTOM_TEMPLATE_STORAGE_KEY)
+      return stored ? JSON.parse(stored) : []
+    } catch (e) {
+      console.warn('Failed to load custom templates:', e)
+      return []
+    }
+  }
+
+  /**
+   * カスタムテンプレートをストレージに保存
+   * @param {Array} templates - テンプレート配列
+   */
+  _saveCustomTemplatesToStorage(templates) {
+    try {
+      localStorage.setItem(GuiEditorManager.CUSTOM_TEMPLATE_STORAGE_KEY, JSON.stringify(templates))
+    } catch (e) {
+      console.error('Failed to save custom templates:', e)
+    }
+  }
+
+  /**
+   * カスタムテンプレートを削除
+   * @param {string} templateId - テンプレートID
+   * @returns {boolean} 成功したかどうか
+   */
+  deleteCustomTemplate(templateId) {
+    const templates = this.getCustomTemplates()
+    const index = templates.findIndex(t => t.id === templateId)
+
+    if (index === -1) {
+      if (typeof setStatus !== 'undefined') {
+        setStatus('テンプレートが見つかりません', 'error')
+      }
+      return false
+    }
+
+    const deletedTemplate = templates.splice(index, 1)[0]
+    this._saveCustomTemplatesToStorage(templates)
+
+    if (typeof setStatus !== 'undefined') {
+      setStatus(`テンプレート「${deletedTemplate.name}」を削除しました`, 'success')
+    }
+    return true
+  }
+
+  /**
+   * カスタムテンプレートを取得（IDで検索）
+   * @param {string} templateId - テンプレートID
+   * @returns {Object|null} テンプレートデータ
+   */
+  getCustomTemplateById(templateId) {
+    const templates = this.getCustomTemplates()
+    return templates.find(t => t.id === templateId) || null
+  }
+
+  /**
+   * テンプレート（組み込み＋カスタム）からノードデータを取得
+   * @param {string} templateKey - テンプレートキー（組み込み）またはカスタムテンプレートID
+   * @returns {Object} ノードデータ
+   */
+  getTemplateNodeData(templateKey) {
+    // Check if it's a custom template
+    if (templateKey.startsWith('custom_')) {
+      const customTemplate = this.getCustomTemplateById(templateKey)
+      if (customTemplate) {
+        return JSON.parse(JSON.stringify(customTemplate.nodeData))
+      }
+    }
+    // Fall back to built-in templates
+    return this.getNodeTemplate(templateKey)
   }
 }
