@@ -352,14 +352,6 @@ function hideErrors() {
 // Save/Load System (via SaveManager)
 // ============================================================================
 
-function startAutoSave() {
-  saveManager.startAutoSave()
-}
-
-function stopAutoSave() {
-  saveManager.stopAutoSave()
-}
-
 function showCsvPreview(file) {
   csvFileName.textContent = file.name
   const reader = new FileReader()
