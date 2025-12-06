@@ -25,6 +25,14 @@ export class NodeRenderer {
     this.onNodeSelect = callback
   }
 
+  /**
+   * ConditionEffectEditor インスタンスを取得
+   * @returns {ConditionEffectEditor}
+   */
+  getConditionEffectEditor() {
+    return this.conditionEffectEditor
+  }
+
   // Main rendering function
   renderNodeList() {
     if (!this.nodeList) return

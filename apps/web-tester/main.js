@@ -1,4 +1,6 @@
-﻿// Handle potential IDE extension conflicts (e.g., migrationWizard.js errors)
+﻿console.log('[main.js] File loading started')
+
+// Handle potential IDE extension conflicts (e.g., migrationWizard.js errors)
 try {
   // Check if we're in an IDE environment that might have conflicting scripts
   if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
@@ -68,6 +70,30 @@ import {
   ADVANCED_ENABLED_STORAGE_KEY,
   DRAFT_MODEL_STORAGE_KEY
 } from './src/config/constants.js'
+
+// ============================================================================
+// Early Module Instantiation (to avoid TDZ errors in event handlers)
+// ============================================================================
+console.log('[main.js] Early module instantiation starting')
+const appState = new AppState()
+const dom = new DOMManager()
+const eventManager = new EventManager()
+const storyManager = new StoryManager(appState)
+const graphManager = new GraphManager(appState)
+const debugManager = new DebugManager(appState)
+const guiEditorManager = new GuiEditorManager(appState)
+const referenceManager = new ReferenceManager()
+const csvManager = new CsvManager(appState)
+const aiManager = new AiManager(appState)
+const lexiconManager = new LexiconManager()
+const themeManager = new ThemeManager()
+const validationPanel = new ValidationPanel(appState)
+const lexiconUIManager = new LexiconUIManager()
+const keyBindingUIManager = new KeyBindingUIManager()
+const mermaidPreviewManager = new MermaidPreviewManager()
+const saveManager = new SaveManager()
+const keyBindingManager = new KeyBindingManager()
+// ============================================================================
 
 // Utility function for resolving variables in text (browser-compatible)
 function resolveVariables(text, session, model) {
@@ -893,25 +919,6 @@ if (enableAdvancedFeatures) {
   })
 }
 
-guiEditBtn.addEventListener('click', () => {
-  if (!getCurrentSession()) {
-    setStatus('GUI編集するにはまずモデルを読み込んでください', 'warn')
-    return
-  }
-
-  // Hide all tab panels
-  storyPanel.classList.remove('active')
-  graphPanel.classList.remove('active')
-  debugPanel.classList.remove('active')
-  advancedPanel.classList.remove('active')
-  if (referencePanel) referencePanel.classList.remove('active')
-
-  // Show GUI edit mode
-  guiEditorManager.renderNodeList()
-  guiEditMode.style.display = 'block'
-  setControlsEnabled(false)
-})
-
 function initAIProviderInstance() {
   if (!aiProviderInstance) {
     aiProviderInstance = createAIProvider(aiConfig)
@@ -1388,9 +1395,6 @@ downloadTopBtn.addEventListener('click', () => {
 // Save/Load System (via SaveManager)
 // ============================================================================
 
-// SaveManager instance will be initialized later with proper dependencies
-const saveManager = new SaveManager()
-
 // Legacy function wrappers for backward compatibility
 function renderSaveSlots() {
   saveManager.renderSlots()
@@ -1524,7 +1528,6 @@ const batchEditManager = {
     renderNodeList()
   }
 }
-
 function checkForDraftModel() {
   const draftData = localStorage.getItem(DRAFT_MODEL_STORAGE_KEY)
   if (!draftData) return
@@ -1553,20 +1556,24 @@ function checkForDraftModel() {
 }
 
 // モーダルイベントリスナー
-document.getElementById('cancelParaphraseBtn').removeEventListener('click', () => guiEditorManager.hideParaphraseModal())
+const cancelParaphraseBtn = document.getElementById('cancelParaphraseBtn')
+if (cancelParaphraseBtn) {
+  cancelParaphraseBtn.removeEventListener('click', () => guiEditorManager.hideParaphraseModal())
+}
 
 // モーダル外クリックで閉じる
-document.getElementById('paraphraseModal').removeEventListener('click', (e) => {
-  if (e.target.id === 'paraphraseModal') {
-    guiEditorManager.hideParaphraseModal()
-  }
-})
+const paraphraseModalEl = document.getElementById('paraphraseModal')
+if (paraphraseModalEl) {
+  paraphraseModalEl.removeEventListener('click', (e) => {
+    if (e.target.id === 'paraphraseModal') {
+      guiEditorManager.hideParaphraseModal()
+    }
+  })
+}
 
 // Initialize status and check for draft model on load
-initLexiconUI()
 checkForDraftModel()
 setStatus('初期化完了 - モデルを読み込んでください', 'info')
-
 // Batch edit event listeners
 if (batchEditBtn) batchEditBtn.addEventListener('click', () => guiEditorManager.getBatchEditManager().openModal())
 if (applyTextReplaceBtn) applyTextReplaceBtn.addEventListener('click', () => guiEditorManager.getBatchEditManager().applyTextReplace())
@@ -1922,26 +1929,9 @@ if (templateModal) {
 }
 
 // ============================================================================
-// Module Initialization
+// Module Initialization (managers are instantiated early, see top of file)
 // ============================================================================
-
-// Initialize modules
-const appState = new AppState()
-const dom = new DOMManager()
-const eventManager = new EventManager()
-const storyManager = new StoryManager(appState)
-const graphManager = new GraphManager(appState)
-const debugManager = new DebugManager(appState)
-const guiEditorManager = new GuiEditorManager(appState)
-const referenceManager = new ReferenceManager()
-const csvManager = new CsvManager(appState)
-const aiManager = new AiManager(appState)
-const lexiconManager = new LexiconManager()
-const themeManager = new ThemeManager()
-const validationPanel = new ValidationPanel(appState)
-const lexiconUIManager = new LexiconUIManager()
-const keyBindingUIManager = new KeyBindingUIManager()
-const mermaidPreviewManager = new MermaidPreviewManager()
+console.log('[main.js] Starting module initialization')
 
 // Initialize story manager
 storyManager.initialize(document.getElementById('storyPanel'))
@@ -1972,7 +1962,6 @@ validationPanel.initialize(
     }
   }
 )
-
 // Initialize Mermaid preview manager
 mermaidPreviewManager.initialize(document.querySelector('.app-container'))
 
@@ -2015,14 +2004,18 @@ saveManager.updateUI = function () {
 // Key binding initialization is done after keyBindingUIManager setup (see below)
 
 // Initialize GUI editor manager
-guiEditorManager.initialize(
-  document.getElementById('nodeList'),
-  document.getElementById('guiEditMode'),
-  document.getElementById('batchEditModal'),
-  document.getElementById('quickNodeModal'),
-  document.getElementById('batchChoiceModal'),
-  document.getElementById('paraphraseModal')
-)
+try {
+  guiEditorManager.initialize(
+    document.getElementById('nodeList'),
+    document.getElementById('guiEditMode'),
+    document.getElementById('batchEditModal'),
+    document.getElementById('quickNodeModal'),
+    document.getElementById('batchChoiceModal'),
+    document.getElementById('paraphraseModal')
+  )
+} catch (error) {
+  console.error('[main.js] guiEditorManager.initialize failed:', error)
+}
 
 // Initialize reference manager
 referenceManager.initialize(
@@ -2172,3 +2165,5 @@ if (guiEditBtn) {
     }
   })
 }
+
+console.log('[main.js] File execution completed')

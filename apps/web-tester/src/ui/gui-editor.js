@@ -208,9 +208,14 @@ export class GuiEditorManager {
   _setupConditionEffectHandlers() {
     if (!this.nodeList) return
 
-    const conditionEffectEditor = this.nodeRenderer.getConditionEffectEditor()
-    
-    conditionEffectEditor.setupEventListeners(this.nodeList, {
+    try {
+      const conditionEffectEditor = this.nodeRenderer.getConditionEffectEditor()
+      if (!conditionEffectEditor) {
+        console.warn('[GuiEditorManager] conditionEffectEditor not available')
+        return
+      }
+      
+      conditionEffectEditor.setupEventListeners(this.nodeList, {
       onAddCondition: (nodeId, choiceIndex, newCondition) => {
         this._addConditionToChoice(nodeId, choiceIndex, newCondition)
       },
@@ -227,6 +232,9 @@ export class GuiEditorManager {
         this._handleConditionEffectChange(e)
       }
     })
+    } catch (error) {
+      console.warn('[GuiEditorManager] _setupConditionEffectHandlers failed:', error)
+    }
   }
 
   /**
