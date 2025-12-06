@@ -134,6 +134,7 @@ class ErrorBoundary {
 
 // Initialize AppState early to avoid TDZ errors
 const appState = new AppState()
+let mermaidPreviewManager
 
 const startBtn = document.getElementById('startBtn')
 const choicesContainer = document.getElementById('choices')
@@ -1547,7 +1548,6 @@ document.getElementById('paraphraseModal').removeEventListener('click', (e) => {
 })
 
 // Initialize status and check for draft model on load
-initLexiconUI()
 checkForDraftModel()
 setStatus('初期化完了 - モデルを読み込んでください', 'info')
 
@@ -1924,7 +1924,7 @@ const themeManager = new ThemeManager()
 const validationPanel = new ValidationPanel(appState)
 const lexiconUIManager = new LexiconUIManager()
 const keyBindingUIManager = new KeyBindingUIManager()
-const mermaidPreviewManager = new MermaidPreviewManager()
+mermaidPreviewManager = new MermaidPreviewManager()
 
 // Initialize story manager
 storyManager.initialize(document.getElementById('storyPanel'))
