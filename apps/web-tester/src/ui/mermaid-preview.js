@@ -95,17 +95,28 @@ export class MermaidPreviewManager {
 
   // Mermaid初期化
   initializeMermaid() {
+    const getColor = (varName, fallback) => {
+      const value = getComputedStyle(document.documentElement).getPropertyValue(varName).trim()
+      return value || fallback
+    }
+
     mermaid.initialize({
       startOnLoad: false,
-      theme: 'dark',
+      theme: 'base',
       themeVariables: {
-        background: 'var(--color-background)',
-        primaryColor: 'var(--color-primary)',
-        primaryTextColor: 'var(--color-text)',
-        primaryBorderColor: 'var(--color-border)',
-        lineColor: 'var(--color-text-muted)',
-        secondaryColor: 'var(--color-surface)',
-        tertiaryColor: 'var(--color-surface-light)'
+        background: getColor('--color-background', '#1a1a1a'),
+        primaryColor: getColor('--color-primary', '#3b82f6'),
+        primaryTextColor: getColor('--color-text', '#e5e5e5'),
+        primaryBorderColor: getColor('--color-border', '#404040'),
+        lineColor: getColor('--color-text-muted', '#a3a3a3'),
+        secondaryColor: getColor('--color-surface', '#262626'),
+        tertiaryColor: getColor('--color-surface-light', '#404040'),
+        mainBkg: getColor('--color-background', '#1a1a1a'),
+        nodeBorder: getColor('--color-border', '#404040'),
+        clusterBkg: getColor('--color-surface', '#262626'),
+        clusterBorder: getColor('--color-border', '#404040'),
+        defaultLinkColor: getColor('--color-text-muted', '#a3a3a3'),
+        fontFamily: 'Inter, sans-serif'
       },
       flowchart: {
         useMaxWidth: true,
