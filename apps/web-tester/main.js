@@ -132,6 +132,9 @@ class ErrorBoundary {
   }
 }
 
+// Initialize AppState early to avoid TDZ errors
+const appState = new AppState()
+
 const startBtn = document.getElementById('startBtn')
 const choicesContainer = document.getElementById('choices')
 const stateView = document.getElementById('stateView')
@@ -1906,8 +1909,7 @@ if (templateModal) {
 // Module Initialization
 // ============================================================================
 
-// Initialize modules
-const appState = new AppState()
+// Initialize modules (appState is already initialized at the top of the file)
 const dom = new DOMManager()
 const eventManager = new EventManager()
 const storyManager = new StoryManager(appState)
