@@ -145,11 +145,12 @@ export class MermaidPreviewManager {
     Object.entries(model.nodes).forEach(([nodeId, node]) => {
       const label = this.escapeMermaidLabel(node.text?.substring(0, 30) || '空')
       const nodeType = this.getNodeType(node)
+      const safeNodeId = this.escapeMermaidNodeId(nodeId)
 
       if (nodeType === 'choice') {
-        diagram += `    ${nodeId}{${label}}\n`
+        diagram += `    ${safeNodeId}{${label}}\n`
       } else {
-        diagram += `    ${nodeId}[${label}]\n`
+        diagram += `    ${safeNodeId}[${label}]\n`
       }
     })
 
@@ -158,11 +159,13 @@ export class MermaidPreviewManager {
     // エッジ定義
     Object.entries(model.nodes).forEach(([nodeId, node]) => {
       if (node.choices) {
+        const safeNodeId = this.escapeMermaidNodeId(nodeId)
         node.choices.forEach((choice, index) => {
           if (choice.target && model.nodes[choice.target]) {
             const choiceLabel = choice.text?.substring(0, 20) || `選択${index + 1}`
             const escapedLabel = this.escapeMermaidLabel(choiceLabel)
-            diagram += `    ${nodeId} -->|${escapedLabel}| ${choice.target}\n`
+            const safeTargetId = this.escapeMermaidNodeId(choice.target)
+            diagram += `    ${safeNodeId} -->|${escapedLabel}| ${safeTargetId}\n`
           }
         })
       }
@@ -171,10 +174,33 @@ export class MermaidPreviewManager {
     return diagram
   }
 
+  // Mermaid ノード ID エスケープ（予約語を回避）
+  escapeMermaidNodeId(nodeId) {
+    const reservedWords = ['end', 'start', 'graph', 'subgraph', 'direction', 'click', 'style', 'class', 'classDef', 'linkStyle']
+    const lowerNodeId = nodeId.toLowerCase()
+    
+    if (reservedWords.includes(lowerNodeId)) {
+      return `node_${nodeId}`
+    }
+    
+    if (/[^a-zA-Z0-9_]/.test(nodeId)) {
+      return `node_${nodeId.replace(/[^a-zA-Z0-9_]/g, '_')}`
+    }
+    
+    return nodeId
+  }
+
   // Mermaidラベルエスケープ
   escapeMermaidLabel(label) {
     return label
-      .replace(/"/g, '\\"')
+      .replace(/"/g, "'")
+      .replace(/\[/g, '(')
+      .replace(/\]/g, ')')
+      .replace(/\{/g, '(')
+      .replace(/\}/g, ')')
+      .replace(/\|/g, '/')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
       .replace(/\n/g, ' ')
       .replace(/\r/g, '')
       .trim()

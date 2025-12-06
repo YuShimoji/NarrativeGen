@@ -208,25 +208,33 @@ export class GuiEditorManager {
   _setupConditionEffectHandlers() {
     if (!this.nodeList) return
 
-    const conditionEffectEditor = this.nodeRenderer.getConditionEffectEditor()
-    
-    conditionEffectEditor.setupEventListeners(this.nodeList, {
-      onAddCondition: (nodeId, choiceIndex, newCondition) => {
-        this._addConditionToChoice(nodeId, choiceIndex, newCondition)
-      },
-      onAddEffect: (nodeId, choiceIndex, newEffect) => {
-        this._addEffectToChoice(nodeId, choiceIndex, newEffect)
-      },
-      onDeleteCondition: (nodeId, choiceIndex, conditionIndex) => {
-        this._deleteConditionFromChoice(nodeId, choiceIndex, conditionIndex)
-      },
-      onDeleteEffect: (nodeId, choiceIndex, effectIndex) => {
-        this._deleteEffectFromChoice(nodeId, choiceIndex, effectIndex)
-      },
-      onValueChange: (e) => {
-        this._handleConditionEffectChange(e)
+    try {
+      const conditionEffectEditor = this.nodeRenderer.getConditionEffectEditor()
+      if (!conditionEffectEditor) {
+        console.warn('[GuiEditorManager] conditionEffectEditor not available')
+        return
       }
-    })
+      
+      conditionEffectEditor.setupEventListeners(this.nodeList, {
+        onAddCondition: (nodeId, choiceIndex, newCondition) => {
+          this._addConditionToChoice(nodeId, choiceIndex, newCondition)
+        },
+        onAddEffect: (nodeId, choiceIndex, newEffect) => {
+          this._addEffectToChoice(nodeId, choiceIndex, newEffect)
+        },
+        onDeleteCondition: (nodeId, choiceIndex, conditionIndex) => {
+          this._deleteConditionFromChoice(nodeId, choiceIndex, conditionIndex)
+        },
+        onDeleteEffect: (nodeId, choiceIndex, effectIndex) => {
+          this._deleteEffectFromChoice(nodeId, choiceIndex, effectIndex)
+        },
+        onValueChange: (e) => {
+          this._handleConditionEffectChange(e)
+        }
+      })
+    } catch (error) {
+      console.warn('[GuiEditorManager] _setupConditionEffectHandlers failed:', error)
+    }
   }
 
   /**

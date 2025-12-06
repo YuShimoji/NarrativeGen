@@ -893,25 +893,6 @@ if (enableAdvancedFeatures) {
   })
 }
 
-guiEditBtn.addEventListener('click', () => {
-  if (!getCurrentSession()) {
-    setStatus('GUI編集するにはまずモデルを読み込んでください', 'warn')
-    return
-  }
-
-  // Hide all tab panels
-  storyPanel.classList.remove('active')
-  graphPanel.classList.remove('active')
-  debugPanel.classList.remove('active')
-  advancedPanel.classList.remove('active')
-  if (referencePanel) referencePanel.classList.remove('active')
-
-  // Show GUI edit mode
-  guiEditorManager.renderNodeList()
-  guiEditMode.style.display = 'block'
-  setControlsEnabled(false)
-})
-
 function initAIProviderInstance() {
   if (!aiProviderInstance) {
     aiProviderInstance = createAIProvider(aiConfig)
