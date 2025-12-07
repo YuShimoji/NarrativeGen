@@ -1,0 +1,856 @@
+/**
+ * NarrativeGen Web Tester - GUI Editor Styles
+ * 
+ * Styles specific to the GUI model editing interface.
+ */
+
+/* ==========================================================================
+   GUI Editor Layout
+   ========================================================================== */
+
+.gui-edit-layout {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.gui-edit-header {
+  flex-shrink: 0;
+  padding: 1rem;
+}
+
+.gui-edit-header h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.gui-edit-info {
+  background: rgba(59, 130, 246, 0.12);
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+  font-size: 0.9em;
+}
+
+.gui-edit-info-kbd {
+  background: rgba(0, 0, 0, 0.18);
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
+.gui-edit-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.gui-edit-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gui-edit-content {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+  padding: 0 1rem 1rem;
+}
+
+/* ==========================================================================
+   Node List
+   ========================================================================== */
+
+.gui-node-list {
+  flex: 2;
+  min-width: 0;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+/* ==========================================================================
+   Node Editor
+   ========================================================================== */
+
+.node-editor {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 0.75rem 0.5rem;
+  margin-bottom: 0.5rem;
+  position: relative;
+  cursor: grab;
+  transition: all 0.2s ease;
+}
+
+.node-editor h3 {
+  margin: 0 0 0.5rem;
+  font-size: 13px;
+}
+
+.node-id-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.node-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.node-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Node Selection */
+.select-node-btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.select-node-btn:hover {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.node-editor.selected {
+  border: 2px solid var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.2);
+}
+
+.node-editor.selected .node-header {
+  background: rgba(91, 141, 239, 0.1);
+  margin: -0.75rem -0.75rem 0.5rem -0.75rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.node-editor.selected .select-node-btn {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.node-editor .highlight {
+  animation: highlight-pulse 2s ease-out;
+}
+
+/* Drag and Drop */
+.node-editor.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+  cursor: grabbing;
+  z-index: 1000;
+}
+
+.node-editor.drag-over {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary);
+  background: rgba(33, 150, 243, 0.1);
+  border-top: 3px solid var(--color-primary);
+}
+
+.node-editor::before,
+.choice-editor::before {
+  content: '⋮⋮';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1;
+  opacity: 0.5;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.node-editor:hover::before,
+.choice-editor:hover::before {
+  opacity: 1;
+}
+
+.node-editor.dragging::before,
+.choice-editor.dragging::before {
+  opacity: 0;
+}
+
+/* ==========================================================================
+   Choices Editor
+   ========================================================================== */
+
+.choices-editor {
+  margin: 0.25rem 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.choice-editor {
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-light);
+  position: relative;
+  cursor: grab;
+  transition: all 0.2s ease;
+}
+
+.choice-editor.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+  cursor: grabbing;
+  z-index: 1000;
+}
+
+.choice-editor.drag-over {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary);
+  background: rgba(33, 150, 243, 0.1);
+  border-left: 3px solid var(--color-primary);
+}
+
+.choice-basic {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.choice-basic label {
+  flex: 1;
+  min-width: 200px;
+}
+
+.choice-advanced {
+  margin: 0.5rem 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.choice-advanced summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  padding: 0.25rem;
+}
+
+.choice-advanced summary:hover {
+  color: var(--color-primary);
+}
+
+.choice-conditions-effects {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 800px) {
+  .choice-conditions-effects {
+    grid-template-columns: 1fr;
+  }
+}
+
+.choice-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  justify-content: flex-end;
+}
+
+/* ==========================================================================
+   Conditions/Effects Editor
+   ========================================================================== */
+
+.conditions-editor,
+.effects-editor {
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.editor-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--color-primary);
+}
+
+.conditions-list,
+.effects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.empty-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.condition-item,
+.effect-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+  padding: 0.25rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.condition-item select,
+.effect-item select {
+  width: auto;
+  min-width: 80px;
+  padding: 0.2rem;
+  font-size: 0.8rem;
+}
+
+.condition-item input,
+.effect-item input {
+  flex: 1;
+  min-width: 60px;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.8rem;
+}
+
+.effect-equals {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   Batch Choice
+   ========================================================================== */
+
+.gui-batch-choice-empty {
+  font-size: 0.9em;
+  color: var(--color-text-muted);
+}
+
+.gui-batch-choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gui-batch-choice-item {
+  padding: 0.75rem;
+  background: var(--color-surface-light);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.gui-batch-choice-item-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.gui-batch-choice-item-text {
+  font-size: 0.9em;
+  color: var(--color-text-muted);
+}
+
+.gui-batch-choice-item-target {
+  font-size: 0.85em;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
+/* ==========================================================================
+   Search and Filter
+   ========================================================================== */
+
+.gui-search-filter {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  max-width: 300px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.5rem;
+}
+
+.search-box input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
+
+.search-box .btn-icon {
+  padding: 0.125rem 0.375rem;
+  font-size: 0.875rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+}
+
+.search-box .btn-icon:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+.filter-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-box label {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.filter-box select {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.search-result-count {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.search-result-count.no-results {
+  color: var(--color-warning, #f59e0b);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   Live Preview Panel
+   ========================================================================== */
+
+.live-preview-panel {
+  flex: 1;
+  min-width: 300px;
+  max-width: 400px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.live-preview-panel.collapsed {
+  max-width: 40px;
+  min-width: 40px;
+}
+
+.live-preview-panel.collapsed .preview-content {
+  display: none;
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.preview-header h3 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.preview-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.preview-node-display {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  min-height: 100px;
+}
+
+.preview-placeholder {
+  color: var(--color-text-muted);
+  text-align: center;
+  font-style: italic;
+}
+
+.preview-node-id {
+  font-size: 0.75rem;
+  color: var(--color-primary);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.preview-node-text {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.preview-choices {
+  margin-bottom: 1rem;
+}
+
+.preview-choice-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  margin-bottom: 0.25rem;
+  background: rgba(91, 141, 239, 0.1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.preview-choice-item:hover {
+  background: rgba(91, 141, 239, 0.2);
+}
+
+.preview-choice-arrow {
+  color: var(--color-primary);
+  font-weight: bold;
+}
+
+.preview-choice-text {
+  flex: 1;
+  font-size: 0.85rem;
+}
+
+.preview-choice-target {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.preview-path {
+  border-top: 1px solid var(--color-border);
+  padding-top: 1rem;
+}
+
+.preview-path h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+}
+
+#pathDisplay {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.path-node {
+  display: inline-block;
+  padding: 0.125rem 0.375rem;
+  background: var(--color-bg);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.path-node:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+.path-arrow {
+  margin: 0 0.25rem;
+  color: var(--color-text-muted);
+}
+
+/* ==========================================================================
+   Validation Panel
+   ========================================================================== */
+
+.validation-panel {
+  padding: 1rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.validation-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.validation-header.status-ok {
+  border-color: #4caf50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.validation-header.status-warning {
+  border-color: #ff9800;
+  background: rgba(255, 152, 0, 0.1);
+}
+
+.validation-header.status-error {
+  border-color: #f44336;
+  background: rgba(244, 67, 54, 0.1);
+}
+
+.validation-title {
+  flex: 1;
+  font-weight: 600;
+}
+
+.validation-header .btn-refresh {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.25rem;
+}
+
+.validation-summary {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.validation-summary .summary-item {
+  flex: 1;
+  text-align: center;
+  padding: 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.validation-summary .summary-item.has-issues {
+  border-color: var(--color-primary);
+}
+
+.validation-summary .count {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--color-primary);
+}
+
+.validation-summary .label {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.validation-issues {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.validation-issue {
+  padding: 0.75rem 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.validation-issue:hover {
+  border-color: var(--color-primary);
+}
+
+.validation-issue.error {
+  border-left: 3px solid #f44336;
+}
+
+.validation-issue.warning {
+  border-left: 3px solid #ff9800;
+}
+
+.validation-issue.info {
+  border-left: 3px solid #2196f3;
+}
+
+.validation-issue .issue-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.validation-issue .issue-icon {
+  font-size: 0.9rem;
+}
+
+.validation-issue .issue-category {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+}
+
+.validation-issue .issue-node {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-primary);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.validation-issue .issue-message {
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.validation-issue .issue-details {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.validation-empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--color-text-muted);
+}
+
+.validation-empty .validation-icon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.node-validation-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 0.7rem;
+  border-radius: 50%;
+  margin-left: 0.25rem;
+}
+
+.node-validation-badge.badge-error {
+  background: rgba(244, 67, 54, 0.2);
+}
+
+.node-validation-badge.badge-warning {
+  background: rgba(255, 152, 0, 0.2);
+}
+
+.node-validation-badge.badge-info {
+  background: rgba(33, 150, 243, 0.2);
+}
+
+/* ==========================================================================
+   Snippet List
+   ========================================================================== */
+
+.snippet-list {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.snippet-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  transition: background 0.2s ease;
+}
+
+.snippet-item:last-child {
+  border-bottom: none;
+}
+
+.snippet-item:hover {
+  background: rgba(91, 141, 239, 0.1);
+}
+
+.snippet-info {
+  flex: 1;
+}
+
+.snippet-name {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.snippet-meta {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.snippet-actions-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.snippet-actions-group button {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}

@@ -12,6 +12,53 @@ try {
   console.warn('IDE environment check failed', { error: error.message })
 }
 
+// Force layout isolation from external styles (IDE preview, extensions, etc.)
+// This runs immediately to prevent layout shift
+;(function forceLayoutIsolation() {
+  const forceStyles = `
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      overflow: hidden !important;
+    }
+    .app-container {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: 100vw !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      z-index: 9999 !important;
+    }
+    .panel {
+      width: 100% !important;
+      max-width: none !important;
+      margin: 0 !important;
+    }
+  `
+  const styleEl = document.createElement('style')
+  styleEl.id = 'narrativegen-layout-isolation'
+  styleEl.textContent = forceStyles
+  document.head.appendChild(styleEl)
+  
+  // Also apply inline styles as fallback
+  const appContainer = document.querySelector('.app-container')
+  if (appContainer) {
+    appContainer.style.cssText = 'position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; max-width: 100vw !important; margin: 0 !important; padding: 0 !important; z-index: 9999 !important; display: flex; flex-direction: column; overflow: hidden;'
+  }
+  
+  const panel = document.querySelector('.panel')
+  if (panel) {
+    panel.style.cssText = 'width: 100% !important; max-width: none !important; margin: 0 !important; flex: 1; display: flex; flex-direction: column; min-height: 0;'
+  }
+})()
+
 // Import required functions from engine
 import {
   createAIProvider,
@@ -135,6 +182,7 @@ class ErrorBoundary {
 // Initialize AppState early to avoid TDZ errors
 const appState = new AppState()
 let mermaidPreviewManager
+const keyBindingManager = new KeyBindingManager()
 
 const startBtn = document.getElementById('startBtn')
 const choicesContainer = document.getElementById('choices')
@@ -2137,17 +2185,25 @@ if (guiEditBtn) {
       return
     }
     
-    const isCurrentlyEditing = guiEditMode.style.display !== 'none'
+    const isCurrentlyEditing = guiEditMode.classList.contains('active')
     
     if (isCurrentlyEditing) {
       // Exit GUI edit mode
+      guiEditMode.classList.remove('active')
       guiEditMode.style.display = 'none'
+      if (storyPanel) {
+        storyPanel.classList.add('active')
+      }
       guiEditBtn.textContent = '編集'
       guiEditBtn.innerHTML = '<svg class="icon icon-sm"><use href="#icon-edit"></use></svg>編集'
       setStatus('GUI編集モードを終了しました')
     } else {
       // Enter GUI edit mode
-      guiEditMode.style.display = 'block'
+      guiEditMode.classList.add('active')
+      guiEditMode.style.removeProperty('display')
+      if (storyPanel) {
+        storyPanel.classList.remove('active')
+      }
       guiEditBtn.textContent = '閲覧'
       guiEditBtn.innerHTML = '<svg class="icon icon-sm"><use href="#icon-eye"></use></svg>閲覧'
       guiEditorManager.nodeRenderer.renderNodeList()
