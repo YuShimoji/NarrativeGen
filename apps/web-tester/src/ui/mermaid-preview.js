@@ -85,11 +85,22 @@ export class MermaidPreviewManager {
     rightPane.appendChild(header)
     rightPane.appendChild(this.mermaidContainer)
 
-    // メインコンテナに追加
-    const mainContainer = document.querySelector('.app-container')
-    if (mainContainer) {
-      mainContainer.style.flexDirection = 'row'
-      mainContainer.appendChild(rightPane)
+    // #storyContent 内に追加（.app-container のレイアウトを壊さない）
+    const storyContent = document.getElementById('storyContent')
+    if (storyContent) {
+      storyContent.appendChild(rightPane)
+    } else {
+      // フォールバック: .panel 内に追加
+      const panel = document.querySelector('.panel')
+      if (panel) {
+        // .panel 内のコンテンツを flexbox でラップ
+        const contentArea = panel.querySelector('.content-area') || panel.querySelector('.tab-content.active')
+        if (contentArea) {
+          contentArea.style.display = 'flex'
+          contentArea.style.flexDirection = 'row'
+          contentArea.appendChild(rightPane)
+        }
+      }
     }
   }
 
