@@ -876,7 +876,29 @@ if (enableAdvancedFeatures) {
 }
 
 // Tab event listeners
+function exitGuiEditMode() {
+  if (!guiEditMode) return
+
+  const isActive = guiEditMode.classList.contains('active') || guiEditMode.style.display !== 'none'
+  if (!isActive) return
+
+  guiEditMode.classList.remove('active')
+  guiEditMode.style.display = 'none'
+
+  if (storyPanel) {
+    storyPanel.classList.add('active')
+  }
+
+  if (guiEditBtn) {
+    guiEditBtn.textContent = '編集'
+    guiEditBtn.innerHTML = '<svg class="icon icon-sm"><use href="#icon-edit"></use></svg>編集'
+  }
+}
+
 function switchTab(tabName) {
+  // タブ切り替え時は必ず GUI 編集モードを終了する
+  exitGuiEditMode()
+
   // Hide all panels
   storyPanel.classList.remove('active')
   graphPanel.classList.remove('active')
