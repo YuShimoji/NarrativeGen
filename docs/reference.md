@@ -95,7 +95,7 @@ paraphraseJa(text, { lexicon: customLexicon })
 }
 ```
 
-### 3.2 レキシコン拡張（提案・未実装）
+### 3.2 レキシコン拡張（部分実装・提案）
 
 #### 3.2.1 GUI クイック追加
 
@@ -131,15 +131,13 @@ paraphraseJa(text, { lexicon: customLexicon })
 }
 ```
 
-**動作**:
+**動作（2025-12-11 現在）**:
 1. モデル読み込み時に `meta.paraphraseLexicon` を検出
-2. デザイナーレキシコンとマージ（モデル側が優先 or オプション選択）
+2. Web Tester 側でエンジンのレキシコンとデザイナーレキシコンにマージ
 3. セッション中は統合されたレキシコンを使用
 
-**実装方針**:
-- `loadModel()` 後に `meta.paraphraseLexicon` をチェック
-- `setParaphraseLexicon()` でマージ
-- エクスポート時に `meta` セクションに含める
+**未実装/今後の案**:
+- モデルエクスポート時に `meta.paraphraseLexicon` を自動で含める
 
 #### 3.2.3 レキシコン JSON スキーマ
 
@@ -164,10 +162,9 @@ paraphraseJa(text, { lexicon: customLexicon })
 - 値は文字列配列（同義語リスト、1個以上）
 - 空配列は許可しない
 
-**実装方針**:
-- `packages/engine-ts/schemas/lexicon.schema.json` に配置
-- インポート時にスキーマ検証（ajv 等）
-- エラー時はユーザーに警告表示
+**実装状況 / 方針**:
+- スキーマファイル自体は `packages/engine-ts/schemas/lexicon.schema.json` に追加済み
+- インポート時のスキーマ検証（ajv 等）やエラー表示は未実装（提案段階）
 
 ## 4. ストーリー画面のサイドバー切替
 - 機能: 左側の「選択肢と状態」を一時的に隠し、本文を広く表示。

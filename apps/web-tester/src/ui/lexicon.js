@@ -277,4 +277,15 @@ export class LexiconManager {
 
     return results
   }
+
+  applyRuntimeLexicon(runtimeLexicon) {
+    if (!runtimeLexicon || typeof runtimeLexicon !== 'object' || Array.isArray(runtimeLexicon)) {
+      return
+    }
+    if (!this.validateLexicon(runtimeLexicon)) {
+      console.warn('Invalid runtime lexicon, ignoring')
+      return
+    }
+    this.lexicon = this.mergeLexicons(this.lexicon, runtimeLexicon)
+  }
 }

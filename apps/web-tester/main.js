@@ -158,6 +158,26 @@ async function loadModel(modelName) {
   return response.json()
 }
 
+function applyModelParaphraseLexicon(model) {
+  if (!model || !model.meta || !model.meta.paraphraseLexicon) return
+
+  const runtimeLexicon = model.meta.paraphraseLexicon
+
+  try {
+    setParaphraseLexicon(runtimeLexicon, { merge: true })
+  } catch (e) {
+    Logger.warn('Failed to apply model embedded paraphrase lexicon to engine', e)
+  }
+
+  try {
+    if (typeof lexiconManager !== 'undefined' && lexiconManager && typeof lexiconManager.applyRuntimeLexicon === 'function') {
+      lexiconManager.applyRuntimeLexicon(runtimeLexicon)
+    }
+  } catch (e) {
+    Logger.warn('Failed to apply model embedded paraphrase lexicon to UI lexicon manager', e)
+  }
+}
+
 // Error boundary for UI operations
 class ErrorBoundary {
   static wrap(operation, fallbackMessage = '操作に失敗しました') {
@@ -530,6 +550,7 @@ function renderChoices() {
 // Apply error boundaries to critical operations
 const safeStartSession = ErrorBoundary.wrap(async (modelName) => {
   const model = await loadModel(modelName)
+  applyModelParaphraseLexicon(model)
   appState.model = model
   startNewSession(appState.model)
   setCurrentModelName(modelName)
@@ -758,6 +779,7 @@ startBtn.addEventListener('click', async () => {
       loadEntitiesCatalog(),
     ])
 
+    applyModelParaphraseLexicon(model)
     appState.model = model
     startNewSession(appState.model)
     setCurrentModelName(sampleId)
@@ -794,6 +816,7 @@ fileInput.addEventListener('change', async (e) => {
       loadEntitiesCatalog(),
     ])
 
+    applyModelParaphraseLexicon(model)
     appState.model = model
     startNewSession(appState.model)
     setCurrentModelName(file.name)
@@ -843,6 +866,7 @@ dropZone.addEventListener('drop', async (e) => {
     }
 
     hideErrors()
+    applyModelParaphraseLexicon(model)
     appState.model = model
     startNewSession(appState.model)
     setCurrentModelName(file.name)
