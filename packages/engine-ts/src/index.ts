@@ -3,6 +3,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import Ajv from 'ajv'
+import type { AnySchema } from 'ajv'
 
 import type {
   Choice,
@@ -94,7 +95,7 @@ function loadSchema(): unknown {
 
 export function loadModel(modelData: unknown): Model {
   const ajv = new Ajv({ allErrors: true })
-  const schema = loadSchema() as any
+  const schema = loadSchema() as AnySchema
   const validate = ajv.compile(schema)
   if (!validate(modelData)) {
     const err = ajv.errorsText(validate.errors ?? [], { separator: '\n' })

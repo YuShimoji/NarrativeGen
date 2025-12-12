@@ -284,6 +284,13 @@ export class NodeRenderer {
     })
     
     this.appState.model.nodes = reorderedNodes
+
+    // 順序の永続化（任意）: metadata.nodeOrder があれば更新、なければ生成
+    if (!this.appState.model.metadata) {
+      this.appState.model.metadata = {}
+    }
+    this.appState.model.metadata.nodeOrder = [...nodeIds]
+
     this.renderNodeList()
     this._notifyModelUpdate()
   }
