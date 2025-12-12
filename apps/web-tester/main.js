@@ -1160,18 +1160,49 @@ previewBtn.addEventListener('click', () => {
   alert('小説プレビュー:\n\n' + story)
 })
 
-downloadBtn.addEventListener('click', () => {
-  if (!appState.model) return
-  const json = JSON.stringify(appState.model, null, 2)
+function buildExportModel() {
+  if (!appState.model) return null
+
+  const exportModel = {
+    ...appState.model,
+    nodes: appState.model.nodes,
+    meta: appState.model.meta ? { ...appState.model.meta } : {}
+  }
+
+  try {
+    const runtimeLexicon = getParaphraseLexicon()
+    if (runtimeLexicon && typeof runtimeLexicon === 'object' && Object.keys(runtimeLexicon).length > 0) {
+      exportModel.meta.paraphraseLexicon = runtimeLexicon
+    }
+  } catch (e) {
+    Logger.warn('Failed to embed paraphrase lexicon into exported model', e)
+  }
+
+  if (exportModel.meta && Object.keys(exportModel.meta).length === 0) {
+    delete exportModel.meta
+  }
+
+  return exportModel
+}
+
+function downloadExportModel(filename) {
+  const exportModel = buildExportModel()
+  if (!exportModel) return
+  const json = JSON.stringify(exportModel, null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'model.json'
+  a.download = filename
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
+}
+
+downloadBtn.addEventListener('click', () => {
+  if (!appState.model) return
+  downloadExportModel('model.json')
 })
 
 // Story log helpers
@@ -1452,17 +1483,8 @@ downloadTopBtn.addEventListener('click', () => {
     setStatus('まずモデルを読み込んでください', 'warn')
     return
   }
-  const json = JSON.stringify(appState.model, null, 2)
-  const blob = new Blob([json], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
   const modelName = getCurrentModelName()
-  a.download = modelName ? `${modelName}.json` : 'model.json'
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+  downloadExportModel(modelName ? `${modelName}.json` : 'model.json')
 })
 
 // ============================================================================

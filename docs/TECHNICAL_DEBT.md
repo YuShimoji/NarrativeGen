@@ -91,7 +91,7 @@ src/
 - [x] モデル埋め込み (`meta.paraphraseLexicon`)
 - [x] Lexicon JSON スキーマ定義（`packages/engine-ts/schemas/lexicon.schema.json`）
 - [ ] インポート時のスキーマ検証（ajv 等）
-- [ ] モデルエクスポート時の `meta.paraphraseLexicon` 自動埋め込み
+- [x] モデルエクスポート時の `meta.paraphraseLexicon` 自動埋め込み
 
 ---
 

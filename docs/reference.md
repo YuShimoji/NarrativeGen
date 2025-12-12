@@ -136,8 +136,8 @@ paraphraseJa(text, { lexicon: customLexicon })
 2. Web Tester 側でエンジンのレキシコンとデザイナーレキシコンにマージ
 3. セッション中は統合されたレキシコンを使用
 
-**未実装/今後の案**:
-- モデルエクスポート時に `meta.paraphraseLexicon` を自動で含める
+**実装済み**:
+- モデルエクスポート（JSON保存）時に `meta.paraphraseLexicon` を自動で含める
 
 #### 3.2.3 レキシコン JSON スキーマ
 
