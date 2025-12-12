@@ -1,6 +1,6 @@
 # NarrativeGen プロジェクトステータス
 
-**最終更新**: 2025-12-08
+**最終更新**: 2025-12-12
 
 ## 概要
 
@@ -50,6 +50,7 @@ NarrativeGen/
 - ✅ キーバインドシステム (カスタマイズ可能)
 - ✅ AI 機能 (モック、OpenAI 統合)
 - ✅ レキシコンエディタ
+- ✅ モデル埋め込みレキシコン (`meta.paraphraseLexicon`) の取り込み
 - ✅ テーマ切替 (6種類プリセット)
 - ✅ 保存/読み込み (SaveManager、自動保存)
 - ✅ CSV エクスポート/インポート
@@ -77,9 +78,11 @@ NarrativeGen/
 - ミニマップ
 
 ### レキシコン拡張
-- GUI からのクイック追加
-- モデル埋め込み (`meta.paraphraseLexicon`)
-- JSON スキーマ定義
+- ⏳ GUI からのクイック追加
+- ✅ モデル埋め込み (`meta.paraphraseLexicon`)（Web Tester で取り込み実装済み）
+- ✅ JSON スキーマ定義（`packages/engine-ts/schemas/lexicon.schema.json`）
+- ⏳ インポート時のスキーマ検証（ajv 等）
+- ⏳ モデルエクスポート時の `meta.paraphraseLexicon` 自動埋め込み
 
 ### AI 機能拡張
 - Ollama 統合 (ローカル LLM)
