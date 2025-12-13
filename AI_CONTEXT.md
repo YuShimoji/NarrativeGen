@@ -3,8 +3,12 @@
 ## 現在の状況
 
 - 作業対象: `apps/web-tester`（GUIエディタ/条件効果/実行画面/保存）
-- ブランチ: `main`（`origin/main` と同期、作業ツリーに未コミット変更あり）
-- 目的: GUI一括編集（Batch Choice Editing）の構造化対応、raw(JSON) 往復、後方互換維持。
+- ブランチ: `lexicon-ux-ajv-packages-casing`（作業ツリー: clean）
+- 目的: Lexicon UX（GUIクイック追加 + Ajv スキーマ検証 + runtime 同期）および `Packages/` の表記統一（Linux/CI の case-sensitive 対応）。
+
+## 参照リンク
+
+- PR: https://github.com/YuShimoji/NarrativeGen/pull/64
 
 ## 今回の決定事項
 
@@ -13,7 +17,7 @@
 - GUI保存/キャンセル時のモード終了は `exitGuiEditMode()` に統一。
 - ストーリー描画は UIコンテナ（`#storyContent`）ではなく、本文エリア（`#storyView`）に限定する。
 
-## 直近の変更（未コミット）
+## 直近の変更（コミット済み）
 
 - `apps/web-tester/src/ui/story.js`
   - `StoryManager` の描画先を `#storyView` 優先に修正（UI破壊防止）
@@ -34,6 +38,15 @@
   - 構造化条件/効果対応の反映など、現状に合わせて更新。
 - `docs/PROJECT_STATUS.md`
   - `meta.paraphraseLexicon` のエクスポート時自動埋め込みを「実装済み」に更新。
+- `apps/web-tester/src/ui/lexicon-ui-manager.js`
+  - Lexicon JSON の import/merge/replace に Ajv スキーマ検証を追加
+  - クイック追加フォーム（原文 + variants）の UI 操作を追加
+  - designer lexicon 変更時に engine runtime lexicon へ同期
+- `apps/web-tester/main.js`
+  - 起動時に designer lexicon を engine runtime lexicon に初期反映
+  - Lexicon UI からの変更を engine runtime lexicon へ適用するコールバックを接続
+- 各所
+  - `packages/` → `Packages/` の表記をコード/CI/docs で統一
 
 ## 検証（実施済み）
 
@@ -43,12 +56,11 @@
 
 ## 次の中断可能点
 
-- ドキュメント整合（OpenSpec/PROJECT_STATUS/AI_CONTEXT）の更新をコミットに含める。
-- Lexicon UX（GUIクイック追加 + import検証）実装に着手。
+- A2 の手動テストガイド（回帰）を実施し、結果をドキュメントに記録する。
+- ルールSSOTとして参照している `docs/Windsurf_AI_Collab_Rules_v1.1.md` がリポジトリ内に存在しないため、実ファイルの所在を確認する。
 
 ## Backlog / 次タスク
 
 - `docs/GUI_EDITOR_TEST_GUIDE.md` に沿った手動テスト（回帰）を実施し、レポート化。
 - `timeWindow` 条件のエンジン仕様との最終整合確認。
-- レキシコン: GUIクイック追加、インポート時スキーマ検証（Ajv）。
 - Phase 2: 読み取り専用のグラフビュー（スパイク）を最小で実装。
