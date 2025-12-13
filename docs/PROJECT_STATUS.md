@@ -1,6 +1,6 @@
 # NarrativeGen プロジェクトステータス
 
-**最終更新**: 2025-12-12
+**最終更新**: 2025-12-14
 
 ## 概要
 
@@ -10,7 +10,7 @@ NarrativeGen は、インタラクティブストーリー/ビジュアルノベ
 
 ```
 NarrativeGen/
-├── packages/
+├── Packages/
 │   └── engine-ts/          # TypeScript コアエンジン
 ├── apps/
 │   └── web-tester/         # Web ベースのテスト・編集ツール
@@ -78,11 +78,11 @@ NarrativeGen/
 - ミニマップ
 
 ### レキシコン拡張
-- ⏳ GUI からのクイック追加
+- ✅ GUI からのクイック追加
 - ✅ モデル埋め込み (`meta.paraphraseLexicon`)（Web Tester で取り込み実装済み）
-- ✅ JSON スキーマ定義（`packages/engine-ts/schemas/lexicon.schema.json`）
-- ⏳ インポート時のスキーマ検証（ajv 等）
-- ⏳ モデルエクスポート時の `meta.paraphraseLexicon` 自動埋め込み
+- ✅ JSON スキーマ定義（`Packages/engine-ts/schemas/lexicon.schema.json`）
+- ✅ インポート/マージ/置換時のスキーマ検証（ajv）
+- ✅ モデルエクスポート時の `meta.paraphraseLexicon` 自動埋め込み
 
 ### AI 機能拡張
 - Ollama 統合 (ローカル LLM)

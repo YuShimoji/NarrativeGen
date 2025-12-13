@@ -38,7 +38,7 @@ Relative references must start with either "/", "./", or "../".
 
 2. **engine-ts をビルド**:
    ```bash
-   cd packages/engine-ts
+   cd Packages/engine-ts
    npm run build
    ```
 

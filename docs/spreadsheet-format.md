@@ -125,7 +125,7 @@ inn,ぐっすり眠った。体力が回復した。,,,,,
 
 ### エンジン側（変更不要）
 
-現在のエンジン（`packages/engine-ts`）は既に以下をサポート：
+現在のエンジン（`Packages/engine-ts`）は既に以下をサポート：
 - `Condition`: flag, resource, timeWindow
 - `Effect`: setFlag, addResource, goto
 - `Model.flags`, `Model.resources`

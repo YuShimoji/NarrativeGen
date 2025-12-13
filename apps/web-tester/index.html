@@ -2033,6 +2033,15 @@
                   <button id="lexiconImportBtn" title="synonyms.json を読み込み、下のテキストに表示">JSONインポート</button>
                   <input type="file" id="lexiconFileInput" accept=".json" style="display: none;">
                 </div>
+                <div id="lexiconQuickAdd" style="margin: 0.75rem 0; padding: 0.75rem; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface);">
+                  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.5rem;">
+                    <label style="flex: 1; min-width: 220px;">原文: <input type="text" id="lexiconQuickOriginal" style="width: 100%;"></label>
+                    <button id="lexiconQuickAddBtn" title="原文とバリアントを辞書に追加し、ローカル保存します">クイック追加</button>
+                    <button id="lexiconQuickClearBtn" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);" title="入力欄をクリアします">クリア</button>
+                  </div>
+                  <label>バリアント（改行区切り）:</label>
+                  <textarea id="lexiconQuickVariants" style="width: 100%; min-height: 90px; font-family: 'JetBrains Mono','Fira Code', monospace; font-size: 0.9rem;"></textarea>
+                </div>
                 <textarea id="lexiconTextarea" style="width: 100%; min-height: 220px; font-family: 'JetBrains Mono','Fira Code', monospace; font-size: 0.9rem;"></textarea>
                 <p style="font-size: 0.85em; color: var(--color-text-muted); margin-top: 0.5rem;">キー完全一致で置換。ここに追加した語彙はローカル保存され、言い換え候補の生成に使用されます。</p>
               </div>

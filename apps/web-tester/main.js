@@ -71,7 +71,7 @@ import {
   paraphraseJa,
   getParaphraseLexicon,
   setParaphraseLexicon,
-} from '../../packages/engine-ts/dist/browser.js'
+} from '../../Packages/engine-ts/dist/browser.js'
 
 // Import local modules
 import { ThemeManager, setupThemeEventListeners } from './src/ui/theme.js'
@@ -2155,8 +2155,24 @@ aiManager.initialize(
 // Initialize lexicon manager
 lexiconManager.initialize()
 
+// Keep engine runtime paraphrase lexicon in sync with designer lexicon
+const applyToRuntimeLexicon = (lexicon, options) => {
+  try {
+    setParaphraseLexicon(lexicon, options)
+  } catch (e) {
+    Logger.warn('Failed to apply designer lexicon to engine runtime lexicon', e)
+  }
+}
+
+try {
+  const designerLexicon = lexiconManager.getLexicon()
+  applyToRuntimeLexicon(designerLexicon, { merge: true })
+} catch (e) {
+  Logger.warn('Failed to initialize engine runtime lexicon from designer lexicon', e)
+}
+
 // Initialize lexicon UI manager
-lexiconUIManager.initialize(lexiconManager, setStatus)
+lexiconUIManager.initialize(lexiconManager, setStatus, applyToRuntimeLexicon)
 lexiconUIManager.initUI()
 
 // Initialize key binding UI manager with dependencies

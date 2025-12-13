@@ -31,7 +31,7 @@
   - `outcome`: `{ type: string; value: string }` 任意メタデータ（UI表示等に利用）
 
 ## Validation Pipeline (TypeScript)
-- **AJV 検証**: `packages/engine-ts/src/index.ts` の `loadModel()` が JSON Schema で構造を検証。
+- **AJV 検証**: `Packages/engine-ts/src/index.ts` の `loadModel()` が JSON Schema で構造を検証。
 - **整合性チェック**: 同関数内 `assertModelIntegrity()` が以下を確認。
   - `startNode` が `nodes` に存在すること
   - ノードキーと `node.id` の一致
@@ -84,7 +84,7 @@ AI アシスト機能（次の物語展開生成・言い換え）の設計に�
 
 - ✅ **Phase 1**: モック実装（Web Tester の AI提案ボタンでランダムサンプル）
 - ✅ **Phase 2**: プロンプト設計 + OpenAI API 統合
-  - `packages/engine-ts/src/ai-provider.ts` に OpenAIProvider 実装
+  - `Packages/engine-ts/src/ai-provider.ts` に OpenAIProvider 実装
   - Web Tester AI タブで API キー設定可能
   - 次のノード生成と言い換え機能が動作
   - エラーハンドリングとフォールバック実装済み

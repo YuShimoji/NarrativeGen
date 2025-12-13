@@ -24,7 +24,7 @@ npm run build:all
 **期待結果:**
 - ✅ npm install がエラーなく完了
 - ✅ npm run build:all がエラーなく完了
-- ✅ packages/engine-ts/dist/ にJavaScriptファイルが生成
+- ✅ Packages/engine-ts/dist/ にJavaScriptファイルが生成
 - ✅ apps/web-tester/dist/ にHTML/CSS/JSファイルが生成
 
 ### 1.2 開発サーバー起動テスト

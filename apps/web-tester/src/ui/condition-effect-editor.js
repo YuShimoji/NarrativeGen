@@ -24,7 +24,6 @@ export const ConditionTypes = {
 export const EffectTypes = {
   SET_FLAG: 'setFlag',        // フラグ設定: setFlag:name=value
   ADD_RESOURCE: 'addResource', // リソース加算: addResource:name=value
-  SET_RESOURCE: 'setResource', // リソース設定: setResource:name=value
   SET_VARIABLE: 'setVariable',  // 変数設定: setVariable:name=value
   GOTO: 'goto' // 遷移: goto:target
 }
