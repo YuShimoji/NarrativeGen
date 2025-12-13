@@ -12,10 +12,15 @@ export class GraphManager {
     this.nodeShape = 'circle'
     this.fontSize = 12
     this.showConditions = false
+    this.onNodeClick = null
   }
 
   initialize(containerElement) {
     this.container = containerElement
+  }
+
+  setOnNodeClick(callback) {
+    this.onNodeClick = callback
   }
 
   render() {
@@ -193,6 +198,13 @@ export class GraphManager {
           d.fy = null
         }))
 
+    node
+      .style('cursor', 'pointer')
+      .on('click', (event, d) => {
+        if (event.defaultPrevented) return
+        if (this.onNodeClick) this.onNodeClick(d.id)
+      })
+
     // Add node labels
     let labels
     if (!shouldVirtualize) {
@@ -205,6 +217,13 @@ export class GraphManager {
         .attr('font-size', `${this.fontSize}px`)
         .attr('fill', '#333')
         .text(d => d.id)
+
+      labels
+        .style('cursor', 'pointer')
+        .on('click', (event, d) => {
+          if (event.defaultPrevented) return
+          if (this.onNodeClick) this.onNodeClick(d.id)
+        })
 
       // Position labels based on shape
       if (this.nodeShape === 'circle') {
