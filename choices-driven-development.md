@@ -44,10 +44,10 @@
   - .NET SDK ランタイム（Unity SDK）を Release ビルド（警告のみ、エラーなし）
   - CLI サンプル実行（linear.json 経路で start → scene1 → end を確認）
   - .gitignore を整備（[Bb]uild/ を追加、余計なインデントを除去、packages/sdk-unity/src/ を ignore）
-  - packages/sdk-unity/src/ 配下は未使用のスタブ/空ファイルのため、一旦 ignore 方針（将来必要になれば正式導入）
+  - Packages/sdk-unity/src/ 配下は未使用のスタブ/空ファイルのため、一旦 ignore 方針（将来必要になれば正式導入）
 
 - Next:
-  - TS エンジン（packages/engine-ts/）の雛形整備とモデル検証ツールの有効化（必要最小限）
+  - TS エンジン（Packages/engine-ts/）の雛形整備とモデル検証ツールの有効化（必要最小限）
   - C# ランタイムの NUnit テスト雛形追加（Engine/Model/Session の単体テスト）
   - CLI に引数指定（モデルパス）と簡易検証モードフラグを追加（将来のCI前提）
 

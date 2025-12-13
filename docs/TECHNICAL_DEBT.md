@@ -87,10 +87,10 @@ src/
 
 **残タスク**:
 
-- [ ] GUI からのクイック追加
+- [x] GUI からのクイック追加
 - [x] モデル埋め込み (`meta.paraphraseLexicon`)
-- [x] Lexicon JSON スキーマ定義（`packages/engine-ts/schemas/lexicon.schema.json`）
-- [ ] インポート時のスキーマ検証（ajv 等）
+- [x] Lexicon JSON スキーマ定義（`Packages/engine-ts/schemas/lexicon.schema.json`）
+- [x] インポート時のスキーマ検証（ajv 等）
 - [x] モデルエクスポート時の `meta.paraphraseLexicon` 自動埋め込み
 
 ---

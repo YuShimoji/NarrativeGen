@@ -3,7 +3,7 @@
  * Handles application session state and operations
  */
 
-import { startSession as engineStartSession } from '../../../../packages/engine-ts/dist/browser.js'
+import { startSession as engineStartSession } from '../../../../Packages/engine-ts/dist/browser.js'
 
 // Session state
 let currentSession = null

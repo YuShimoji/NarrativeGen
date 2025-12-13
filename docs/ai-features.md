@@ -138,7 +138,7 @@ NarrativeGen の言い換えは「非AIの決定的（deterministic）なバリ�
 [ライターが採用・編集]
 ```
 
-#### インターフェース（実装済み: packages/engine-ts/src/paraphrase.ts）
+#### インターフェース（実装済み: Packages/engine-ts/src/paraphrase.ts）
 
 ```typescript
 export type ParaphraseStyle = 'desu-masu' | 'da-dearu' | 'plain'

@@ -83,7 +83,7 @@
 
 - **Dagre.js**: 有向グラフのレイアウト計算
 - **既存 GraphManager / D3.js**: 描画レイヤーとして再利用を検討
-- TypeScript 型情報: 可能であれば `packages/engine-ts` の型と整合させる
+- TypeScript 型情報: 可能であれば `Packages/engine-ts` の型と整合させる
 
 ### 5.2 データフロー概要
 

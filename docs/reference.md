@@ -3,7 +3,7 @@
 このページは、今後の仕様／GUIマッピングを一元管理する「SSOT（Single Source of Truth）」です。
 
 > **現状メモ（2025-11 時点）**: 以下の v1.1 仕様（`nodeType`, `next`, `onEnter` など）は**提案段階**であり、
-> TypeScript エンジン (`packages/engine-ts/src/types.ts` の `NodeDef`) にはまだ導入されていません。
+> TypeScript エンジン (`Packages/engine-ts/src/types.ts` の `NodeDef`) にはまだ導入されていません。
 > 現行実装では `NodeDef { id, text?, choices? }` のみが有効です。
 
 ## 1. モデル仕様 v1.1（提案）
@@ -163,8 +163,8 @@ paraphraseJa(text, { lexicon: customLexicon })
 - 空配列は許可しない
 
 **実装状況 / 方針**:
-- スキーマファイル自体は `packages/engine-ts/schemas/lexicon.schema.json` に追加済み
-- インポート時のスキーマ検証（ajv 等）やエラー表示は未実装（提案段階）
+- スキーマファイル自体は `Packages/engine-ts/schemas/lexicon.schema.json` に追加済み
+- Web Tester の `LexiconUIManager` が Ajv によるスキーマ検証を実装済み（マージ/置換/インポート）
 
 ## 4. ストーリー画面のサイドバー切替
 - 機能: 左側の「選択肢と状態」を一時的に隠し、本文を広く表示。
