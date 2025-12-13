@@ -333,21 +333,26 @@ export class ModelValidator {
         // 効果からフラグを収集
         if (choice.effects) {
           for (const effect of choice.effects) {
-            if (effect.type === 'setFlag' && effect.flag) {
-              setFlags.add(effect.flag)
-            }
+            if (!effect || typeof effect !== 'object') continue
+            if (effect.type !== 'setFlag') continue
+            const flagKey = effect.key ?? effect.flag
+            if (!flagKey) continue
+            setFlags.add(flagKey)
           }
         }
 
         // 条件からフラグを収集
         if (choice.conditions) {
           for (const condition of choice.conditions) {
-            if (condition.type === 'flag' && condition.flag) {
-              if (!usedFlags.has(condition.flag)) {
-                usedFlags.set(condition.flag, [])
-              }
-              usedFlags.get(condition.flag).push({ nodeId, choiceText: choice.text })
+            if (!condition || typeof condition !== 'object') continue
+            if (condition.type !== 'flag') continue
+            const flagKey = condition.key ?? condition.flag
+            if (!flagKey) continue
+
+            if (!usedFlags.has(flagKey)) {
+              usedFlags.set(flagKey, [])
             }
+            usedFlags.get(flagKey).push({ nodeId, choiceText: choice.text })
           }
         }
       }

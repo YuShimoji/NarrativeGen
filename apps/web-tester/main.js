@@ -107,6 +107,7 @@ import {
 import { KeyBindingManager } from './src/ui/keybinding-manager.js'
 import { SaveManager } from './src/features/save-manager.js'
 import { ValidationPanel } from './src/ui/validation-panel.js'
+import { ModelValidator, ValidationSeverity } from './src/features/model-validator.js'
 import { LexiconUIManager } from './src/ui/lexicon-ui-manager.js'
 import { KeyBindingUIManager } from './src/ui/key-binding-ui-manager.js'
 import {
@@ -401,6 +402,19 @@ if (typeof window !== 'undefined') {
 function renderDebugInfo() {
   if (typeof debugManager !== 'undefined' && debugManager) {
     debugManager.render()
+  }
+}
+
+function validateModel(nodesOrModel) {
+  try {
+    const model = nodesOrModel?.nodes ? nodesOrModel : { nodes: nodesOrModel }
+    const validator = new ModelValidator()
+    const issues = validator.validate(model)
+    return issues
+      .filter((i) => i.severity === ValidationSeverity.ERROR)
+      .map((i) => `${i.nodeId ? `[${i.nodeId}] ` : ''}${i.message}`)
+  } catch (err) {
+    return [err?.message ?? String(err)]
   }
 }
 
@@ -1313,10 +1327,7 @@ saveGuiBtn.addEventListener('click', () => {
     // Restart session with current model
     startNewSession(appState.model)
     setCurrentModelName('gui-edited')
-    guiEditMode.style.display = 'none'
-
-    // Show story panel
-    storyPanel.classList.add('active')
+    exitGuiEditMode()
 
     setStatus('GUI編集を保存しました', 'success')
     setControlsEnabled(true)
@@ -1331,10 +1342,7 @@ saveGuiBtn.addEventListener('click', () => {
 })
 
 cancelGuiBtn.addEventListener('click', () => {
-  guiEditMode.style.display = 'none'
-  
-  // Show story panel
-  storyPanel.classList.add('active')
+  exitGuiEditMode()
   
   setControlsEnabled(true)
 })
