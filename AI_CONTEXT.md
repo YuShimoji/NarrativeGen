@@ -47,6 +47,9 @@
   - Lexicon UI からの変更を engine runtime lexicon へ適用するコールバックを接続
 - 各所
   - `packages/` → `Packages/` の表記をコード/CI/docs で統一
+- `docs/UI_IMPROVEMENTS_TEST.md`, `docs/GUI_EDITOR_TEST_GUIDE.md`
+  - 手動回帰テストの実施記録欄を追加
+  - Puppeteer によるスモーク結果を記録（起動/実行/タブ切替/GUI編集入退場/レキシコン操作）
 
 ## 検証（実施済み）
 
@@ -56,11 +59,11 @@
 
 ## 次の中断可能点
 
-- A2 の手動テストガイド（回帰）を実施し、結果をドキュメントに記録する。
+- PR #64 のレビュー/マージ待ち（Lexicon UX + `Packages/` 表記統一 + 回帰スモーク記録）。
 - ルールSSOTとして参照している `docs/Windsurf_AI_Collab_Rules_v1.1.md` がリポジトリ内に存在しないため、実ファイルの所在を確認する。
 
 ## Backlog / 次タスク
 
-- `docs/GUI_EDITOR_TEST_GUIDE.md` に沿った手動テスト（回帰）を実施し、レポート化。
+- `docs/GUI_EDITOR_TEST_GUIDE.md` に沿った手動テスト（回帰）を継続（必要に応じて追加観点/自動化）。
 - `timeWindow` 条件のエンジン仕様との最終整合確認。
 - Phase 2: 読み取り専用のグラフビュー（スパイク）を最小で実装。
