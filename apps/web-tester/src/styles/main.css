@@ -1,0 +1,860 @@
+/**
+ * NarrativeGen Web Tester - Main Stylesheet
+ * 
+ * This file consolidates all application styles, extracted from index.html
+ * for better maintainability and cache efficiency.
+ */
+
+/* ==========================================================================
+   CSS Variables - Modern Seamless Theme
+   ========================================================================== */
+:root {
+  --color-primary: #5b8def;
+  --color-primary-dark: #4a7bd4;
+  --color-secondary: #5b8def;
+  --color-secondary-dark: #4a7bd4;
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-error: #f87171;
+  --color-background: #1e1e1e;
+  --color-surface: #252526;
+  --color-surface-light: #2d2d30;
+  --color-text: #e0e0e0;
+  --color-text-muted: #808080;
+  --color-border: #3c3c3c;
+  --color-hover: #37373d;
+  --icon-color: #c5c5c5;
+  --sidebar-width: 48px;
+  --header-height: 40px;
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+}
+
+/* ==========================================================================
+   Reset & Base - External Style Isolation
+   ========================================================================== */
+
+/* Force override any external styles (IDE preview, extensions, etc.) */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+body {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  font-family: var(--font-family);
+  font-size: 13px;
+  line-height: 1.5;
+  background: var(--color-background);
+  color: var(--color-text);
+  overflow: hidden !important;
+}
+
+/* ==========================================================================
+   App Container - Viewport Lock
+   ========================================================================== */
+
+.app-container {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   Header
+   ========================================================================== */
+
+.header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: 8px 16px;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}
+
+/* ==========================================================================
+   Panel - Main Content Area
+   ========================================================================== */
+
+.panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--color-background);
+  margin: 0 !important;
+  padding: 0;
+  max-width: none !important;
+  width: 100% !important;
+}
+
+.content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ==========================================================================
+   Tabs
+   ========================================================================== */
+
+.tabs {
+  display: flex;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 8px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.tab-btn {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: none;
+}
+
+.tab-btn:hover {
+  color: var(--color-text);
+  background: var(--color-hover);
+  transform: none;
+  box-shadow: none;
+}
+
+.tab-btn.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  background: transparent;
+}
+
+.tab-content {
+  flex: 1;
+  background: var(--color-background);
+  padding: 0;
+  border: none;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tab-content:not(.active) {
+  display: none;
+}
+
+/* ==========================================================================
+   Typography
+   ========================================================================== */
+
+h1 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  letter-spacing: -0.3px;
+}
+
+h1 .brand {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+h2, h3, h4 {
+  color: var(--color-text);
+}
+
+label {
+  color: var(--color-text);
+}
+
+/* ==========================================================================
+   Form Controls
+   ========================================================================== */
+
+input[type='text'],
+input[type='password'],
+select,
+textarea {
+  padding: 6px 10px;
+  font-size: 12px;
+  background: var(--color-surface-light);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s ease;
+}
+
+textarea {
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+input[type='text']:focus,
+input[type='password']:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+select {
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+button {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: var(--color-surface-light);
+  color: var(--color-text);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+button:hover:not(:disabled) {
+  background: var(--color-hover);
+  border-color: var(--color-text-muted);
+}
+
+button:active:not(:disabled) {
+  background: var(--color-surface);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+button.secondary {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+button.secondary:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.theme-button {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-light);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.theme-button:hover {
+  background: var(--color-hover);
+  border-color: var(--color-text-muted);
+}
+
+.btn-small {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-secondary);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-small:hover {
+  opacity: 0.9;
+}
+
+.btn-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.btn-icon:hover {
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+}
+
+/* ==========================================================================
+   Toolbar
+   ========================================================================== */
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--color-border);
+  margin: 0 4px;
+}
+
+.control-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 0;
+  background: transparent;
+}
+
+/* ==========================================================================
+   Story View
+   ========================================================================== */
+
+.story-view {
+  background: var(--color-background);
+  color: var(--color-text);
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  min-height: 150px;
+  max-height: none;
+  flex: 1;
+  overflow: auto;
+  white-space: pre-wrap;
+  border: 1px solid var(--color-border);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.story-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   Pre / Code
+   ========================================================================== */
+
+pre {
+  background: var(--color-surface-light);
+  color: var(--color-text);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  max-height: 200px;
+  overflow: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  border: 1px solid var(--color-border);
+}
+
+/* ==========================================================================
+   Icons
+   ========================================================================== */
+
+.icon {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  vertical-align: middle;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.icon-sm { width: 12px; height: 12px; }
+.icon-md { width: 16px; height: 16px; }
+.icon-lg { width: 20px; height: 20px; }
+
+button .icon {
+  stroke: currentColor;
+  margin-right: 2px;
+}
+
+/* ==========================================================================
+   Choice Buttons
+   ========================================================================== */
+
+.choice-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  background: var(--color-surface-light);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1.4;
+  transition: all 0.15s ease;
+}
+
+.choice-btn:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.choice-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Modal
+   ========================================================================== */
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal.show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--color-border);
+  animation: scaleIn 0.2s ease-out;
+  color: var(--color-text);
+}
+
+.modal-content h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+
+@keyframes highlight-pulse {
+  0% { box-shadow: 0 0 0 3px var(--color-primary); }
+  100% { box-shadow: none; }
+}
+
+/* ==========================================================================
+   Status Bar
+   ========================================================================== */
+
+#statusText {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  margin: 0;
+  background: var(--color-surface-light);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+#statusText[data-type="success"] {
+  background: rgba(74, 222, 128, 0.15);
+  color: var(--color-success);
+  border-left: 3px solid var(--color-success);
+}
+
+#statusText[data-type="error"] {
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--color-error);
+  border-left: 3px solid var(--color-error);
+}
+
+#statusText[data-type="warn"] {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--color-warning);
+  border-left: 3px solid var(--color-warning);
+}
+
+#statusText[data-type="info"] {
+  background: rgba(91, 141, 239, 0.15);
+  color: var(--color-primary);
+  border-left: 3px solid var(--color-primary);
+}
+
+/* ==========================================================================
+   Error Panel
+   ========================================================================== */
+
+.error-panel {
+  background: rgba(239, 68, 68, 0.2);
+  border: 2px solid var(--color-error);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  display: none;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  animation: slideIn 0.4s ease-out;
+  color: var(--color-text);
+}
+
+/* ==========================================================================
+   Graph Container
+   ========================================================================== */
+
+.graph-container,
+.debug-container,
+.ai-container {
+  background: var(--color-background);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  overflow: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.graph-container {
+  position: relative;
+}
+
+#graphSvg {
+  flex: 1;
+  min-height: 300px;
+  background: var(--color-background);
+}
+
+#graphControls {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+#graphControls label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+/* ==========================================================================
+   Save/Load UI
+   ========================================================================== */
+
+.save-slot {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 12px;
+  background: var(--color-surface);
+}
+
+.save-slot .slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.save-slot .slot-info {
+  font-size: 0.9em;
+  color: var(--color-text-muted);
+}
+
+.save-slot .slot-empty {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.save-slot .slot-timestamp {
+  font-size: 0.8em;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+
+.save-slot .slot-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.save-slot button {
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.save-slot button:hover:not(:disabled) {
+  background: var(--color-primary);
+  border-color: var(--color-primary-dark);
+  color: var(--color-text);
+}
+
+.save-slot button:disabled {
+  background: rgba(107, 114, 128, 0.3);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.save-slot .save-btn {
+  background: var(--color-success);
+  color: white;
+  border-color: var(--color-success);
+}
+
+.save-slot .save-btn:hover:not(:disabled) {
+  background: #059669;
+}
+
+.save-slot .load-btn {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.save-slot .load-btn:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.save-slot .clear-btn {
+  background: var(--color-error);
+  color: white;
+  border-color: var(--color-error);
+}
+
+.save-slot .clear-btn:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.auto-save-info {
+  border: 1px solid var(--color-warning);
+  background: rgba(245, 158, 11, 0.2);
+}
+
+.auto-save-info .slot-header {
+  color: var(--color-text);
+}
+
+/* ==========================================================================
+   Debug Container
+   ========================================================================== */
+
+.debug-container > div {
+  margin-bottom: 20px;
+}
+
+.debug-container h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.debug-container > div:last-child {
+  border-bottom: none;
+}
+
+.reachable-node,
+.unreachable-node {
+  border-radius: var(--radius-md);
+  margin: 0.5rem 0;
+  transition: all 0.3s ease;
+}
+
+.reachable-node:hover,
+.unreachable-node:hover {
+  transform: translateX(4px);
+}
+
+/* ==========================================================================
+   Variant Selection Modal
+   ========================================================================== */
+
+.variant-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 1rem 0;
+}
+
+.variant-item {
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.variant-item:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  color: white;
+}
+
+.variant-item.selected {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary);
+  color: white;
+}

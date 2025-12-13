@@ -17,7 +17,7 @@ export class StoryManager {
 
   initialize(container) {
     this.storyContainer = container
-    this.scrollContainer = container.querySelector('#storyContent')
+    this.scrollContainer = container.querySelector('#storyView') || container.querySelector('#storyContent')
     if (!this.scrollContainer) {
       Logger.warn('Story container not found')
       return false

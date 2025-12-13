@@ -63,8 +63,108 @@
   - 同義語辞書のキーと完全一致で置換。英語/日本語の小規模辞書を同梱。
   - `style: 'desu-masu'|'da-dearu'|'plain'`（英語は通常 `plain`）
 - UI: 「言い換え」→ モーダルに複数候補 → クリックで適用。
-- TODO（提案）
-  - 英語のケース/末尾句読点をゆるくマッチ、辞書拡充オプション読込。
+
+### 3.1 デザイナー拡張レキシコン（実装済み）
+
+デザイナーがランタイムでレキシコン（同義語辞書）を追加・編集できる機能。
+
+**エンジンAPI**:
+```typescript
+// 現在のレキシコンを取得
+getParaphraseLexicon(): Record<string, string[]>
+
+// レキシコンを設定（上書き）
+setParaphraseLexicon(lexicon: Record<string, string[]>): void
+
+// 呼び出し時にオーバーライド
+paraphraseJa(text, { lexicon: customLexicon })
+```
+
+**Web Tester UI** (AI パネル内):
+- テキストエリアで JSON 形式のレキシコンを編集
+- 「読込」「マージ」「置換」ボタンで反映
+- 「インポート」「エクスポート」でファイル入出力
+- localStorage に永続化（キー: `narrativegen_designer_lexicon`）
+
+**レキシコン形式**:
+```json
+{
+  "hello": ["hi", "hey", "greetings"],
+  "goodbye": ["bye", "farewell", "see you"],
+  "こんにちは": ["おはよう", "やあ", "ごきげんよう"]
+}
+```
+
+### 3.2 レキシコン拡張（部分実装・提案）
+
+#### 3.2.1 GUI クイック追加
+
+**目的**: GUI 編集中に、テキストを選択して即座にレキシコンエントリを追加。
+
+**UI 案**:
+1. テキスト入力欄で単語/フレーズを選択
+2. 右クリックまたはボタンで「レキシコンに追加」
+3. ミニモーダルで同義語を入力（カンマ区切り）
+4. 確定で即座にレキシコンに反映
+
+**実装方針**:
+- `GuiEditorManager` に `addToLexicon(word: string, synonyms: string[])` メソッド追加
+- `LexiconUIManager` と連携して localStorage 更新
+- 追加後は「言い換え」ボタンで即座に利用可能
+
+#### 3.2.2 モデル埋め込みレキシコン
+
+**目的**: モデル JSON 内にレキシコンを埋め込み、モデル配布時に同梱。
+
+**仕様案**:
+```json
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "start",
+  "meta": {
+    "paraphraseLexicon": {
+      "dragon": ["wyrm", "drake", "serpent"],
+      "castle": ["fortress", "stronghold", "citadel"]
+    }
+  },
+  "nodes": { ... }
+}
+```
+
+**動作（2025-12-11 現在）**:
+1. モデル読み込み時に `meta.paraphraseLexicon` を検出
+2. Web Tester 側でエンジンのレキシコンとデザイナーレキシコンにマージ
+3. セッション中は統合されたレキシコンを使用
+
+**実装済み**:
+- モデルエクスポート（JSON保存）時に `meta.paraphraseLexicon` を自動で含める
+
+#### 3.2.3 レキシコン JSON スキーマ
+
+**目的**: レキシコン形式の検証とエディタ補完。
+
+**スキーマ案** (`lexicon.schema.json`):
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "NarrativeGen Paraphrase Lexicon",
+  "type": "object",
+  "additionalProperties": {
+    "type": "array",
+    "items": { "type": "string" },
+    "minItems": 1
+  }
+}
+```
+
+**検証ポイント**:
+- キーは文字列（単語/フレーズ）
+- 値は文字列配列（同義語リスト、1個以上）
+- 空配列は許可しない
+
+**実装状況 / 方針**:
+- スキーマファイル自体は `packages/engine-ts/schemas/lexicon.schema.json` に追加済み
+- インポート時のスキーマ検証（ajv 等）やエラー表示は未実装（提案段階）
 
 ## 4. ストーリー画面のサイドバー切替
 - 機能: 左側の「選択肢と状態」を一時的に隠し、本文を広く表示。

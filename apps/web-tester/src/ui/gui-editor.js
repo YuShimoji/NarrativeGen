@@ -216,22 +216,22 @@ export class GuiEditorManager {
       }
       
       conditionEffectEditor.setupEventListeners(this.nodeList, {
-      onAddCondition: (nodeId, choiceIndex, newCondition) => {
-        this._addConditionToChoice(nodeId, choiceIndex, newCondition)
-      },
-      onAddEffect: (nodeId, choiceIndex, newEffect) => {
-        this._addEffectToChoice(nodeId, choiceIndex, newEffect)
-      },
-      onDeleteCondition: (nodeId, choiceIndex, conditionIndex) => {
-        this._deleteConditionFromChoice(nodeId, choiceIndex, conditionIndex)
-      },
-      onDeleteEffect: (nodeId, choiceIndex, effectIndex) => {
-        this._deleteEffectFromChoice(nodeId, choiceIndex, effectIndex)
-      },
-      onValueChange: (e) => {
-        this._handleConditionEffectChange(e)
-      }
-    })
+        onAddCondition: (nodeId, choiceIndex, newCondition) => {
+          this._addConditionToChoice(nodeId, choiceIndex, newCondition)
+        },
+        onAddEffect: (nodeId, choiceIndex, newEffect) => {
+          this._addEffectToChoice(nodeId, choiceIndex, newEffect)
+        },
+        onDeleteCondition: (nodeId, choiceIndex, conditionIndex) => {
+          this._deleteConditionFromChoice(nodeId, choiceIndex, conditionIndex)
+        },
+        onDeleteEffect: (nodeId, choiceIndex, effectIndex) => {
+          this._deleteEffectFromChoice(nodeId, choiceIndex, effectIndex)
+        },
+        onValueChange: (e) => {
+          this._handleConditionEffectChange(e)
+        }
+      })
     } catch (error) {
       console.warn('[GuiEditorManager] _setupConditionEffectHandlers failed:', error)
     }
@@ -548,21 +548,65 @@ export class GuiEditorManager {
     const conditionText = document.getElementById('batchConditionText')?.value.trim()
     const effectText = document.getElementById('batchEffectText')?.value.trim()
 
-    let modified = 0
+    const conditionEffectEditor = this.nodeRenderer.getConditionEffectEditor()
+    if (!conditionEffectEditor) {
+      setStatus('❌ 条件/効果エディタが初期化されていません', 'error')
+      return
+    }
+
+    if (!applyCondition && !applyEffect) {
+      setStatus('❌ 適用対象（条件/効果）を選択してください', 'error')
+      return
+    }
+
+    if (applyCondition && !conditionText) {
+      setStatus('❌ 共通条件の入力が空です', 'error')
+      return
+    }
+
+    if (applyEffect && !effectText) {
+      setStatus('❌ 共通効果の入力が空です', 'error')
+      return
+    }
+
+    const parsedCondition = applyCondition ? conditionEffectEditor.parseConditionInput(conditionText) : null
+    if (applyCondition && !parsedCondition) {
+      setStatus('❌ 共通条件をパースできませんでした', 'error')
+      return
+    }
+
+    const parsedEffect = applyEffect ? conditionEffectEditor.parseEffectInput(effectText) : null
+    if (applyEffect && !parsedEffect) {
+      setStatus('❌ 共通効果をパースできませんでした', 'error')
+      return
+    }
+
+    const cloneValue = (v) => {
+      if (!v || typeof v !== 'object') return v
+      try {
+        return JSON.parse(JSON.stringify(v))
+      } catch {
+        return v
+      }
+    }
+
+    let modifiedChoices = 0
 
     if (node.choices) {
       node.choices.forEach(choice => {
+        let changed = false
         if (applyCondition && conditionText) {
           choice.conditions = choice.conditions || []
-          // Simple parsing - in production, use proper parser
-          choice.conditions.push(conditionText)
-          modified++
+          choice.conditions.push(cloneValue(parsedCondition))
+          changed = true
         }
         if (applyEffect && effectText) {
           choice.effects = choice.effects || []
-          choice.effects.push(effectText)
-          modified++
+          choice.effects.push(cloneValue(parsedEffect))
+          changed = true
         }
+
+        if (changed) modifiedChoices++
       })
     }
 
@@ -575,7 +619,9 @@ export class GuiEditorManager {
       this.renderNodeList()
     }
 
-    setStatus(`✅ ${node.choices.length}個の選択肢に変更を適用しました`, 'success')
+    this.modelUpdater.saveDraftModel()
+
+    setStatus(`✅ ${modifiedChoices}個の選択肢に変更を適用しました`, 'success')
   }
 
   // Paraphrase functionality
@@ -989,7 +1035,7 @@ export class GuiEditorManager {
       return node.choices.some(choice => {
         const hasConditionResource = choice.conditions?.some(c => c.type === 'resource')
         const hasEffectResource = choice.effects?.some(e => 
-          e.type === 'addResource' || e.type === 'setResource'
+          e.type === 'addResource'
         )
         return hasConditionResource || hasEffectResource
       })

@@ -1,6 +1,4 @@
-﻿console.log('[main.js] File loading started')
-
-// Handle potential IDE extension conflicts (e.g., migrationWizard.js errors)
+﻿// Handle potential IDE extension conflicts (e.g., migrationWizard.js errors)
 try {
   // Check if we're in an IDE environment that might have conflicting scripts
   if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
@@ -13,6 +11,55 @@ try {
 } catch (error) {
   console.warn('IDE environment check failed', { error: error.message })
 }
+
+// Force layout isolation from external styles (IDE preview, extensions, etc.)
+// This runs immediately to prevent layout shift
+;(function forceLayoutIsolation() {
+  const forceStyles = `
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      overflow: hidden !important;
+    }
+    .app-container {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: 100vw !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      z-index: 9999 !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+    .panel {
+      width: 100% !important;
+      max-width: none !important;
+      margin: 0 !important;
+    }
+  `
+  const styleEl = document.createElement('style')
+  styleEl.id = 'narrativegen-layout-isolation'
+  styleEl.textContent = forceStyles
+  document.head.appendChild(styleEl)
+  
+  // Also apply inline styles as fallback
+  const appContainer = document.querySelector('.app-container')
+  if (appContainer) {
+    appContainer.style.cssText = 'position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; max-width: 100vw !important; margin: 0 !important; padding: 0 !important; z-index: 9999 !important; display: flex !important; flex-direction: column !important; overflow: hidden;'
+  }
+  
+  const panel = document.querySelector('.panel')
+  if (panel) {
+    panel.style.cssText = 'width: 100% !important; max-width: none !important; margin: 0 !important; flex: 1; display: flex; flex-direction: column; min-height: 0;'
+  }
+})()
 
 // Import required functions from engine
 import {
@@ -60,6 +107,7 @@ import {
 import { KeyBindingManager } from './src/ui/keybinding-manager.js'
 import { SaveManager } from './src/features/save-manager.js'
 import { ValidationPanel } from './src/ui/validation-panel.js'
+import { ModelValidator, ValidationSeverity } from './src/features/model-validator.js'
 import { LexiconUIManager } from './src/ui/lexicon-ui-manager.js'
 import { KeyBindingUIManager } from './src/ui/key-binding-ui-manager.js'
 import {
@@ -70,30 +118,6 @@ import {
   ADVANCED_ENABLED_STORAGE_KEY,
   DRAFT_MODEL_STORAGE_KEY
 } from './src/config/constants.js'
-
-// ============================================================================
-// Early Module Instantiation (to avoid TDZ errors in event handlers)
-// ============================================================================
-console.log('[main.js] Early module instantiation starting')
-const appState = new AppState()
-const dom = new DOMManager()
-const eventManager = new EventManager()
-const storyManager = new StoryManager(appState)
-const graphManager = new GraphManager(appState)
-const debugManager = new DebugManager(appState)
-const guiEditorManager = new GuiEditorManager(appState)
-const referenceManager = new ReferenceManager()
-const csvManager = new CsvManager(appState)
-const aiManager = new AiManager(appState)
-const lexiconManager = new LexiconManager()
-const themeManager = new ThemeManager()
-const validationPanel = new ValidationPanel(appState)
-const lexiconUIManager = new LexiconUIManager()
-const keyBindingUIManager = new KeyBindingUIManager()
-const mermaidPreviewManager = new MermaidPreviewManager()
-const saveManager = new SaveManager()
-const keyBindingManager = new KeyBindingManager()
-// ============================================================================
 
 // Utility function for resolving variables in text (browser-compatible)
 function resolveVariables(text, session, model) {
@@ -135,6 +159,26 @@ async function loadModel(modelName) {
   return response.json()
 }
 
+function applyModelParaphraseLexicon(model) {
+  if (!model || !model.meta || !model.meta.paraphraseLexicon) return
+
+  const runtimeLexicon = model.meta.paraphraseLexicon
+
+  try {
+    setParaphraseLexicon(runtimeLexicon, { merge: true })
+  } catch (e) {
+    Logger.warn('Failed to apply model embedded paraphrase lexicon to engine', e)
+  }
+
+  try {
+    if (typeof lexiconManager !== 'undefined' && lexiconManager && typeof lexiconManager.applyRuntimeLexicon === 'function') {
+      lexiconManager.applyRuntimeLexicon(runtimeLexicon)
+    }
+  } catch (e) {
+    Logger.warn('Failed to apply model embedded paraphrase lexicon to UI lexicon manager', e)
+  }
+}
+
 // Error boundary for UI operations
 class ErrorBoundary {
   static wrap(operation, fallbackMessage = '操作に失敗しました') {
@@ -157,6 +201,11 @@ class ErrorBoundary {
     }
   }
 }
+
+// Initialize AppState early to avoid TDZ errors
+const appState = new AppState()
+let mermaidPreviewManager
+const keyBindingManager = new KeyBindingManager()
 
 const startBtn = document.getElementById('startBtn')
 const choicesContainer = document.getElementById('choices')
@@ -356,6 +405,19 @@ function renderDebugInfo() {
   }
 }
 
+function validateModel(nodesOrModel) {
+  try {
+    const model = nodesOrModel?.nodes ? nodesOrModel : { nodes: nodesOrModel }
+    const validator = new ModelValidator()
+    const issues = validator.validate(model)
+    return issues
+      .filter((i) => i.severity === ValidationSeverity.ERROR)
+      .map((i) => `${i.nodeId ? `[${i.nodeId}] ` : ''}${i.message}`)
+  } catch (err) {
+    return [err?.message ?? String(err)]
+  }
+}
+
 function showErrors(errors) {
   if (!errors || errors.length === 0) {
     hideErrors()
@@ -502,6 +564,7 @@ function renderChoices() {
 // Apply error boundaries to critical operations
 const safeStartSession = ErrorBoundary.wrap(async (modelName) => {
   const model = await loadModel(modelName)
+  applyModelParaphraseLexicon(model)
   appState.model = model
   startNewSession(appState.model)
   setCurrentModelName(modelName)
@@ -730,6 +793,7 @@ startBtn.addEventListener('click', async () => {
       loadEntitiesCatalog(),
     ])
 
+    applyModelParaphraseLexicon(model)
     appState.model = model
     startNewSession(appState.model)
     setCurrentModelName(sampleId)
@@ -766,6 +830,7 @@ fileInput.addEventListener('change', async (e) => {
       loadEntitiesCatalog(),
     ])
 
+    applyModelParaphraseLexicon(model)
     appState.model = model
     startNewSession(appState.model)
     setCurrentModelName(file.name)
@@ -815,6 +880,7 @@ dropZone.addEventListener('drop', async (e) => {
     }
 
     hideErrors()
+    applyModelParaphraseLexicon(model)
     appState.model = model
     startNewSession(appState.model)
     setCurrentModelName(file.name)
@@ -848,7 +914,29 @@ if (enableAdvancedFeatures) {
 }
 
 // Tab event listeners
+function exitGuiEditMode() {
+  if (!guiEditMode) return
+
+  const isActive = guiEditMode.classList.contains('active') || guiEditMode.style.display !== 'none'
+  if (!isActive) return
+
+  guiEditMode.classList.remove('active')
+  guiEditMode.style.display = 'none'
+
+  if (storyPanel) {
+    storyPanel.classList.add('active')
+  }
+
+  if (guiEditBtn) {
+    guiEditBtn.textContent = '編集'
+    guiEditBtn.innerHTML = '<svg class="icon icon-sm"><use href="#icon-edit"></use></svg>編集'
+  }
+}
+
 function switchTab(tabName) {
+  // タブ切り替え時は必ず GUI 編集モードを終了する
+  exitGuiEditMode()
+
   // Hide all panels
   storyPanel.classList.remove('active')
   graphPanel.classList.remove('active')
@@ -1086,18 +1174,49 @@ previewBtn.addEventListener('click', () => {
   alert('小説プレビュー:\n\n' + story)
 })
 
-downloadBtn.addEventListener('click', () => {
-  if (!appState.model) return
-  const json = JSON.stringify(appState.model, null, 2)
+function buildExportModel() {
+  if (!appState.model) return null
+
+  const exportModel = {
+    ...appState.model,
+    nodes: appState.model.nodes,
+    meta: appState.model.meta ? { ...appState.model.meta } : {}
+  }
+
+  try {
+    const runtimeLexicon = getParaphraseLexicon()
+    if (runtimeLexicon && typeof runtimeLexicon === 'object' && Object.keys(runtimeLexicon).length > 0) {
+      exportModel.meta.paraphraseLexicon = runtimeLexicon
+    }
+  } catch (e) {
+    Logger.warn('Failed to embed paraphrase lexicon into exported model', e)
+  }
+
+  if (exportModel.meta && Object.keys(exportModel.meta).length === 0) {
+    delete exportModel.meta
+  }
+
+  return exportModel
+}
+
+function downloadExportModel(filename) {
+  const exportModel = buildExportModel()
+  if (!exportModel) return
+  const json = JSON.stringify(exportModel, null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'model.json'
+  a.download = filename
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
+}
+
+downloadBtn.addEventListener('click', () => {
+  if (!appState.model) return
+  downloadExportModel('model.json')
 })
 
 // Story log helpers
@@ -1208,10 +1327,7 @@ saveGuiBtn.addEventListener('click', () => {
     // Restart session with current model
     startNewSession(appState.model)
     setCurrentModelName('gui-edited')
-    guiEditMode.style.display = 'none'
-
-    // Show story panel
-    storyPanel.classList.add('active')
+    exitGuiEditMode()
 
     setStatus('GUI編集を保存しました', 'success')
     setControlsEnabled(true)
@@ -1226,10 +1342,7 @@ saveGuiBtn.addEventListener('click', () => {
 })
 
 cancelGuiBtn.addEventListener('click', () => {
-  guiEditMode.style.display = 'none'
-  
-  // Show story panel
-  storyPanel.classList.add('active')
+  exitGuiEditMode()
   
   setControlsEnabled(true)
 })
@@ -1378,22 +1491,16 @@ downloadTopBtn.addEventListener('click', () => {
     setStatus('まずモデルを読み込んでください', 'warn')
     return
   }
-  const json = JSON.stringify(appState.model, null, 2)
-  const blob = new Blob([json], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
   const modelName = getCurrentModelName()
-  a.download = modelName ? `${modelName}.json` : 'model.json'
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+  downloadExportModel(modelName ? `${modelName}.json` : 'model.json')
 })
 
 // ============================================================================
 // Save/Load System (via SaveManager)
 // ============================================================================
+
+// SaveManager instance will be initialized later with proper dependencies
+const saveManager = new SaveManager()
 
 // Legacy function wrappers for backward compatibility
 function renderSaveSlots() {
@@ -1528,6 +1635,7 @@ const batchEditManager = {
     renderNodeList()
   }
 }
+
 function checkForDraftModel() {
   const draftData = localStorage.getItem(DRAFT_MODEL_STORAGE_KEY)
   if (!draftData) return
@@ -1556,24 +1664,19 @@ function checkForDraftModel() {
 }
 
 // モーダルイベントリスナー
-const cancelParaphraseBtn = document.getElementById('cancelParaphraseBtn')
-if (cancelParaphraseBtn) {
-  cancelParaphraseBtn.removeEventListener('click', () => guiEditorManager.hideParaphraseModal())
-}
+document.getElementById('cancelParaphraseBtn').removeEventListener('click', () => guiEditorManager.hideParaphraseModal())
 
 // モーダル外クリックで閉じる
-const paraphraseModalEl = document.getElementById('paraphraseModal')
-if (paraphraseModalEl) {
-  paraphraseModalEl.removeEventListener('click', (e) => {
-    if (e.target.id === 'paraphraseModal') {
-      guiEditorManager.hideParaphraseModal()
-    }
-  })
-}
+document.getElementById('paraphraseModal').removeEventListener('click', (e) => {
+  if (e.target.id === 'paraphraseModal') {
+    guiEditorManager.hideParaphraseModal()
+  }
+})
 
 // Initialize status and check for draft model on load
 checkForDraftModel()
 setStatus('初期化完了 - モデルを読み込んでください', 'info')
+
 // Batch edit event listeners
 if (batchEditBtn) batchEditBtn.addEventListener('click', () => guiEditorManager.getBatchEditManager().openModal())
 if (applyTextReplaceBtn) applyTextReplaceBtn.addEventListener('click', () => guiEditorManager.getBatchEditManager().applyTextReplace())
@@ -1929,9 +2032,25 @@ if (templateModal) {
 }
 
 // ============================================================================
-// Module Initialization (managers are instantiated early, see top of file)
+// Module Initialization
 // ============================================================================
-console.log('[main.js] Starting module initialization')
+
+// Initialize modules (appState is already initialized at the top of the file)
+const dom = new DOMManager()
+const eventManager = new EventManager()
+const storyManager = new StoryManager(appState)
+const graphManager = new GraphManager(appState)
+const debugManager = new DebugManager(appState)
+const guiEditorManager = new GuiEditorManager(appState)
+const referenceManager = new ReferenceManager()
+const csvManager = new CsvManager(appState)
+const aiManager = new AiManager(appState)
+const lexiconManager = new LexiconManager()
+const themeManager = new ThemeManager()
+const validationPanel = new ValidationPanel(appState)
+const lexiconUIManager = new LexiconUIManager()
+const keyBindingUIManager = new KeyBindingUIManager()
+mermaidPreviewManager = new MermaidPreviewManager()
 
 // Initialize story manager
 storyManager.initialize(document.getElementById('storyPanel'))
@@ -1962,6 +2081,7 @@ validationPanel.initialize(
     }
   }
 )
+
 // Initialize Mermaid preview manager
 mermaidPreviewManager.initialize(document.querySelector('.app-container'))
 
@@ -2004,18 +2124,14 @@ saveManager.updateUI = function () {
 // Key binding initialization is done after keyBindingUIManager setup (see below)
 
 // Initialize GUI editor manager
-try {
-  guiEditorManager.initialize(
-    document.getElementById('nodeList'),
-    document.getElementById('guiEditMode'),
-    document.getElementById('batchEditModal'),
-    document.getElementById('quickNodeModal'),
-    document.getElementById('batchChoiceModal'),
-    document.getElementById('paraphraseModal')
-  )
-} catch (error) {
-  console.error('[main.js] guiEditorManager.initialize failed:', error)
-}
+guiEditorManager.initialize(
+  document.getElementById('nodeList'),
+  document.getElementById('guiEditMode'),
+  document.getElementById('batchEditModal'),
+  document.getElementById('quickNodeModal'),
+  document.getElementById('batchChoiceModal'),
+  document.getElementById('paraphraseModal')
+)
 
 // Initialize reference manager
 referenceManager.initialize(
@@ -2147,17 +2263,25 @@ if (guiEditBtn) {
       return
     }
     
-    const isCurrentlyEditing = guiEditMode.style.display !== 'none'
+    const isCurrentlyEditing = guiEditMode.classList.contains('active')
     
     if (isCurrentlyEditing) {
       // Exit GUI edit mode
+      guiEditMode.classList.remove('active')
       guiEditMode.style.display = 'none'
+      if (storyPanel) {
+        storyPanel.classList.add('active')
+      }
       guiEditBtn.textContent = '編集'
       guiEditBtn.innerHTML = '<svg class="icon icon-sm"><use href="#icon-edit"></use></svg>編集'
       setStatus('GUI編集モードを終了しました')
     } else {
       // Enter GUI edit mode
-      guiEditMode.style.display = 'block'
+      guiEditMode.classList.add('active')
+      guiEditMode.style.removeProperty('display')
+      if (storyPanel) {
+        storyPanel.classList.remove('active')
+      }
       guiEditBtn.textContent = '閲覧'
       guiEditBtn.innerHTML = '<svg class="icon icon-sm"><use href="#icon-eye"></use></svg>閲覧'
       guiEditorManager.nodeRenderer.renderNodeList()
@@ -2165,5 +2289,3 @@ if (guiEditBtn) {
     }
   })
 }
-
-console.log('[main.js] File execution completed')
