@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 using NarrativeGen.Runtime;
@@ -157,3 +158,4 @@ public class NarrativeModelEditor : Editor
         }
     }
 }
+#endif

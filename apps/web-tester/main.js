@@ -2058,6 +2058,37 @@ storyManager.initialize(document.getElementById('storyPanel'))
 // Initialize graph manager
 graphManager.initialize(document.getElementById('graphSvg'))
 
+graphManager.setOnNodeClick((nodeId) => {
+  if (!appState.model) {
+    setStatus('まずモデルを読み込んでください', 'warn')
+    return
+  }
+
+  switchTab('story')
+
+  guiEditMode.classList.add('active')
+  guiEditMode.style.removeProperty('display')
+  if (storyPanel) {
+    storyPanel.classList.remove('active')
+  }
+  if (guiEditBtn) {
+    guiEditBtn.textContent = '閲覧'
+    guiEditBtn.innerHTML = '<svg class="icon icon-sm"><use href="#icon-eye"></use></svg>閲覧'
+  }
+
+  guiEditorManager.nodeRenderer.renderNodeList()
+  guiEditorManager.selectNode(nodeId)
+
+  const nodeCard = document.querySelector(`[data-node-id="${nodeId}"]`)
+  if (nodeCard) {
+    nodeCard.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    nodeCard.classList.add('highlight')
+    setTimeout(() => nodeCard.classList.remove('highlight'), 2000)
+  }
+
+  setStatus(`ノード「${nodeId}」にジャンプしました`, 'success')
+})
+
 // Initialize debug manager
 debugManager.initialize(
   document.getElementById('flagsDisplay'),
