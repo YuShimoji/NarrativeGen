@@ -43,8 +43,8 @@ class Logger {
       level: typeof level === 'string' ? level.toUpperCase() : level,
       message,
       ...data,
-      userAgent: navigator?.userAgent || 'unknown',
-      url: window?.location?.href || 'unknown'
+      userAgent: typeof navigator !== 'undefined' && navigator?.userAgent ? navigator.userAgent : 'unknown',
+      url: typeof window !== 'undefined' && window?.location?.href ? window.location.href : 'unknown'
     }
 
     // Console output
@@ -58,6 +58,7 @@ class Logger {
 
   static storeLogEntry(logEntry) {
     try {
+      if (typeof sessionStorage === 'undefined') return
       const logs = JSON.parse(sessionStorage.getItem(LOG_STORAGE_KEY) || '[]')
       logs.push(logEntry)
 
@@ -74,6 +75,7 @@ class Logger {
 
   static getStoredLogs() {
     try {
+      if (typeof sessionStorage === 'undefined') return []
       return JSON.parse(sessionStorage.getItem(LOG_STORAGE_KEY) || '[]')
     } catch (error) {
       console.warn('Failed to retrieve stored logs:', error)
@@ -83,6 +85,7 @@ class Logger {
 
   static clearStoredLogs() {
     try {
+      if (typeof sessionStorage === 'undefined') return true
       sessionStorage.removeItem(LOG_STORAGE_KEY)
       return true
     } catch (error) {
