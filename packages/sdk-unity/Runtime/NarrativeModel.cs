@@ -4,103 +4,126 @@ using System.Collections.Generic;
 namespace NarrativeGen.Runtime
 {
 #if UNITY_5_3_OR_NEWER
+    /// <summary>Main class for NarrativeGen models in Unity.</summary>
     [UnityEngine.CreateAssetMenu(fileName = "New Narrative Model", menuName = "NarrativeGen/Model")]
     public class NarrativeModel : UnityEngine.ScriptableObject
 #else
+    /// <summary>Main class for NarrativeGen models in Unity.</summary>
     public class NarrativeModel
 #endif
     {
-#if UNITY_5_3_OR_NEWER
-        [UnityEngine.Header("Model Settings")]
-#endif
-        public string modelName;
-        public string startNodeId;
+        /// <summary>Name of the narrative model.</summary>
+        public string? modelName;
+        /// <summary>ID of the starting node.</summary>
+        public string? startNodeId;
 
-#if UNITY_5_3_OR_NEWER
-        [UnityEngine.Header("Flags")]
-#endif
+        /// <summary>Initial flags for the narrative.</summary>
         public List<FlagEntry> initialFlags = new List<FlagEntry>();
 
-#if UNITY_5_3_OR_NEWER
-        [UnityEngine.Header("Resources")]
-#endif
+        /// <summary>Initial resources for the narrative.</summary>
         public List<ResourceEntry> initialResources = new List<ResourceEntry>();
 
-#if UNITY_5_3_OR_NEWER
-        [UnityEngine.Header("Nodes")]
-#endif
+        /// <summary>List of nodes in the narrative.</summary>
         public List<NodeEntry> nodes = new List<NodeEntry>();
 
+        /// <summary>Entry for a flag.</summary>
         [System.Serializable]
         public class FlagEntry
         {
-            public string key;
+            /// <summary>Key of the flag.</summary>
+            public string? key;
+            /// <summary>Value of the flag.</summary>
             public bool value;
         }
 
+        /// <summary>Entry for a resource.</summary>
         [System.Serializable]
         public class ResourceEntry
         {
-            public string key;
+            /// <summary>Key of the resource.</summary>
+            public string? key;
+            /// <summary>Value of the resource.</summary>
             public float value;
         }
 
+        /// <summary>Entry for a node.</summary>
         [System.Serializable]
         public class NodeEntry
         {
-            public string id;
-#if UNITY_5_3_OR_NEWER
-            [UnityEngine.TextArea(3, 10)]
-#endif
-            public string text;
+            /// <summary>ID of the node.</summary>
+            public string? id;
+            /// <summary>Text of the node.</summary>
+            public string? text;
+            /// <summary>List of choices for the node.</summary>
             public List<ChoiceEntry> choices = new List<ChoiceEntry>();
         }
 
+        /// <summary>Entry for a choice.</summary>
         [System.Serializable]
         public class ChoiceEntry
         {
-            public string id;
-#if UNITY_5_3_OR_NEWER
-            [UnityEngine.TextArea(2, 3)]
-#endif
-            public string text;
-            public string targetNodeId;
+            /// <summary>ID of the choice.</summary>
+            public string? id;
+            /// <summary>Text of the choice.</summary>
+            public string? text;
+            /// <summary>Target node ID.</summary>
+            public string? targetNodeId;
+            /// <summary>List of conditions for the choice.</summary>
             public List<ConditionEntry> conditions = new List<ConditionEntry>();
+            /// <summary>List of effects for the choice.</summary>
             public List<EffectEntry> effects = new List<EffectEntry>();
         }
 
+        /// <summary>Entry for a condition.</summary>
         [System.Serializable]
         public class ConditionEntry
         {
+            /// <summary>Type of the condition.</summary>
             public ConditionType type;
-            public string key;
-            public string op; // for resource conditions
-            public string value; // string representation of value
+            /// <summary>Key for the condition.</summary>
+            public string? key;
+            /// <summary>Operator for resource conditions.</summary>
+            public string? op;
+            /// <summary>Value for the condition as string.</summary>
+            public string? value;
         }
 
+        /// <summary>Entry for an effect.</summary>
         [System.Serializable]
         public class EffectEntry
         {
+            /// <summary>Type of the effect.</summary>
             public EffectType type;
-            public string key;
-            public string value; // string representation of value
+            /// <summary>Key for the effect.</summary>
+            public string? key;
+            /// <summary>Value for the effect as string.</summary>
+            public string? value;
         }
 
+        /// <summary>Types of conditions.</summary>
         public enum ConditionType
         {
+            /// <summary>Flag condition.</summary>
             Flag,
+            /// <summary>Resource condition.</summary>
             Resource,
+            /// <summary>Time window condition.</summary>
             TimeWindow
         }
 
+        /// <summary>Types of effects.</summary>
         public enum EffectType
         {
+            /// <summary>Set flag effect.</summary>
             SetFlag,
+            /// <summary>Add resource effect.</summary>
             AddResource,
+            /// <summary>Goto effect.</summary>
             Goto
         }
 
-        // Convert to JSON format for runtime use
+        /// <summary>Convert the model to JSON format for runtime use.</summary>
+        /// <returns>JSON string representation of the model.</returns>
         public string ToJson()
         {
             var model = new

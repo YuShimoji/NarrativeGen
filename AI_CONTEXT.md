@@ -1,14 +1,12 @@
-# AI_CONTEXT
-
 ## 現在の状況
 
-- 作業対象: `apps/web-tester`（GUIエディタ/条件効果/実行画面/保存）
-- ブランチ: `lexicon-ux-ajv-packages-casing`（作業ツリー: clean）
-- 目的: Lexicon UX（GUIクイック追加 + Ajv スキーマ検証 + runtime 同期）および `Packages/` の表記統一（Linux/CI の case-sensitive 対応）。
+- 作業対象: プロジェクト全体（lexicon UX, Ajv, Packages/ 統一, 申送り）
+- ブランチ: `main`（作業完了、反映済み）
+- 目的: すべての変更を main に反映、申送りドキュメント作成完了。
 
 ## 参照リンク
 
-- PR: https://github.com/YuShimoji/NarrativeGen/pull/64
+- PR: https://github.com/YuShimoji/NarrativeGen/pull/64 (merged)
 
 ## 今回の決定事項
 
@@ -50,17 +48,21 @@
 - `docs/UI_IMPROVEMENTS_TEST.md`, `docs/GUI_EDITOR_TEST_GUIDE.md`
   - 手動回帰テストの実施記録欄を追加
   - Puppeteer によるスモーク結果を記録（起動/実行/タブ切替/GUI編集入退場/レキシコン操作）
+- `docs/archive/HANDOVER_2025-12-15.md`
+  - 作業申送りドキュメント作成（調査内容、変更内容、次回ポイント含む）
+- main ブランチ
+  - lexicon-ux-ajv-packages-casing を fast-forward merge し、origin/main に push
 
 ## 検証（実施済み）
 
 - Puppeteer: `branching_flags` で GUI編集→条件追加→保存→選択肢が絞られること、`draft_model` が object 保存されること。
 - `apps/web-tester`: `npm run build` 成功。
 - ルート: `npm run check`（lint/test/validate/build）成功。
+- git: merge/push 成功、log で確認済み。
 
 ## 次の中断可能点
 
-- PR #64 のレビュー/マージ待ち（Lexicon UX + `Packages/` 表記統一 + 回帰スモーク記録）。
-- ルールSSOTとして参照している `docs/Windsurf_AI_Collab_Rules_v1.1.md` がリポジトリ内に存在しないため、実ファイルの所在を確認する。
+- 新規作業の開始（spec v1.1, GUI v2 等）。AI_CONTEXT をリセットし、mode/report_style を確認。
 
 ## Backlog / 次タスク
 
