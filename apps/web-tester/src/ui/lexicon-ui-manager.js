@@ -5,7 +5,7 @@
  */
 
 import Ajv from 'ajv'
-import lexiconSchema from '../../../../Packages/engine-ts/schemas/lexicon.schema.json'
+import lexiconSchema from '../../../../packages/engine-ts/schemas/lexicon.schema.json'
 import Logger from '../core/logger.js'
 
 export class LexiconUIManager {

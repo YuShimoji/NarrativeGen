@@ -7,7 +7,7 @@ const rootDir = fileURLToPath(new URL('.', import.meta.url))
 export default defineConfig({
   resolve: {
     alias: {
-      '@narrativegen/engine-ts': path.resolve(rootDir, '../../Packages/engine-ts'),
+      '@narrativegen/engine-ts': path.resolve(rootDir, '../../packages/engine-ts'),
     },
   },
   server: {
@@ -18,7 +18,7 @@ export default defineConfig({
       allow: [
         path.resolve(rootDir, '..'),
         path.resolve(rootDir, '../../'),
-        path.resolve(rootDir, '../../Packages/engine-ts'),
+        path.resolve(rootDir, '../../packages/engine-ts'),
         path.resolve(rootDir, '../../models'),
       ],
     },

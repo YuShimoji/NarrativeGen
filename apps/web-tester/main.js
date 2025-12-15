@@ -71,7 +71,7 @@ import {
   paraphraseJa,
   getParaphraseLexicon,
   setParaphraseLexicon,
-} from '../../Packages/engine-ts/dist/browser.js'
+} from '../../packages/engine-ts/dist/browser.js'
 
 // Import local modules
 import { ThemeManager, setupThemeEventListeners } from './src/ui/theme.js'

@@ -11,9 +11,17 @@
     "lint": "node -e \"console.log('web-tester: lint not configured (skipped)')\""
   },
   "dependencies": {
-    "@narrativegen/engine-ts": "file:../../Packages/engine-ts",
+    "@narrativegen/engine-ts": "file:../../packages/engine-ts",
     "d3": "^7.9.0",
     "mermaid": "^11.12.1"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.52.4"
+  },
+  "overrides": {
+    "vite": {
+      "rollup": "npm:@rollup/wasm-node"
+    }
   },
   "devDependencies": {
     "vite": "^5.4.9"

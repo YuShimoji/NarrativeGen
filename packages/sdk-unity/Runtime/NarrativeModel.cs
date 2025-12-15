@@ -1,23 +1,34 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace NarrativeGen.Runtime
 {
-    [CreateAssetMenu(fileName = "New Narrative Model", menuName = "NarrativeGen/Model")]
-    public class NarrativeModel : ScriptableObject
+#if UNITY_5_3_OR_NEWER
+    [UnityEngine.CreateAssetMenu(fileName = "New Narrative Model", menuName = "NarrativeGen/Model")]
+    public class NarrativeModel : UnityEngine.ScriptableObject
+#else
+    public class NarrativeModel
+#endif
     {
-        [Header("Model Settings")]
+#if UNITY_5_3_OR_NEWER
+        [UnityEngine.Header("Model Settings")]
+#endif
         public string modelName;
         public string startNodeId;
 
-        [Header("Flags")]
+#if UNITY_5_3_OR_NEWER
+        [UnityEngine.Header("Flags")]
+#endif
         public List<FlagEntry> initialFlags = new List<FlagEntry>();
 
-        [Header("Resources")]
+#if UNITY_5_3_OR_NEWER
+        [UnityEngine.Header("Resources")]
+#endif
         public List<ResourceEntry> initialResources = new List<ResourceEntry>();
 
-        [Header("Nodes")]
+#if UNITY_5_3_OR_NEWER
+        [UnityEngine.Header("Nodes")]
+#endif
         public List<NodeEntry> nodes = new List<NodeEntry>();
 
         [System.Serializable]
@@ -38,7 +49,9 @@ namespace NarrativeGen.Runtime
         public class NodeEntry
         {
             public string id;
-            [TextArea(3, 10)]
+#if UNITY_5_3_OR_NEWER
+            [UnityEngine.TextArea(3, 10)]
+#endif
             public string text;
             public List<ChoiceEntry> choices = new List<ChoiceEntry>();
         }
@@ -47,7 +60,9 @@ namespace NarrativeGen.Runtime
         public class ChoiceEntry
         {
             public string id;
-            [TextArea(2, 3)]
+#if UNITY_5_3_OR_NEWER
+            [UnityEngine.TextArea(2, 3)]
+#endif
             public string text;
             public string targetNodeId;
             public List<ConditionEntry> conditions = new List<ConditionEntry>();
@@ -97,7 +112,11 @@ namespace NarrativeGen.Runtime
                 nodes = GetNodesDictionary()
             };
 
-            return JsonUtility.ToJson(model);
+#if UNITY_5_3_OR_NEWER
+            return UnityEngine.JsonUtility.ToJson(model);
+#else
+            throw new NotSupportedException("NarrativeModel.ToJson requires UnityEngine.JsonUtility (UNITY_5_3_OR_NEWER).\n");
+#endif
         }
 
         private Dictionary<string, bool> GetFlagsDictionary()

@@ -4,7 +4,7 @@
  */
 
 import { getCurrentSession } from '../core/session.js'
-import { getAvailableChoices } from '../../../../Packages/engine-ts/dist/browser.js'
+import { getAvailableChoices } from '../../../../packages/engine-ts/dist/browser.js'
 
 export class DebugManager {
   constructor(appState) {

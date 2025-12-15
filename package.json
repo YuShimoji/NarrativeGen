@@ -23,10 +23,15 @@
   "homepage": "https://github.com/YuShimoji/NarrativeGen#readme",
   "private": true,
   "workspaces": [
-    "Packages/engine-ts",
-    "Packages/backend",
+    "packages/engine-ts",
+    "packages/backend",
     "apps/*"
   ],
+  "overrides": {
+    "vite": {
+      "rollup": "npm:@rollup/wasm-node"
+    }
+  },
   "scripts": {
     "build": "npm run build:all",
     "build:all": "npm run build:engine && npm run build:tester",
