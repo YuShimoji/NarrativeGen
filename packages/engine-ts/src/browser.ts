@@ -43,6 +43,7 @@ function evalCondition(
   cond: Condition,
   flags: FlagState,
   resources: ResourceState,
+  variables: Record<string, string>,
   time: number,
 ): boolean {
   if (cond.type === 'flag') {
@@ -55,7 +56,31 @@ function evalCondition(
   if (cond.type === 'timeWindow') {
     return time >= cond.start && time <= cond.end
   }
-  return true
+  if (cond.type === 'and') {
+    return cond.conditions.every((c) => evalCondition(c, flags, resources, variables, time))
+  }
+  if (cond.type === 'or') {
+    return cond.conditions.some((c) => evalCondition(c, flags, resources, variables, time))
+  }
+  if (cond.type === 'not') {
+    return !evalCondition(cond.condition, flags, resources, variables, time)
+  }
+  if (cond.type === 'variable') {
+    const v = variables[cond.key] ?? ''
+    switch (cond.op) {
+      case '==':
+        return v === cond.value
+      case '!=':
+        return v !== cond.value
+      case 'contains':
+        return v.includes(cond.value)
+      case '!contains':
+        return !v.includes(cond.value)
+      default:
+        return false
+    }
+  }
+  return false
 }
 
 function applyEffect(effect: Effect, session: SessionState): SessionState {
@@ -64,7 +89,16 @@ function applyEffect(effect: Effect, session: SessionState): SessionState {
   }
   if (effect.type === 'addResource') {
     const cur = session.resources[effect.key] ?? 0
-    return { ...session, resources: { ...session.resources, [effect.key]: cur + effect.delta } }
+    const delta = 'delta' in effect ? effect.delta : effect.value
+    if (!Number.isFinite(delta)) return session
+    return { ...session, resources: { ...session.resources, [effect.key]: cur + delta } }
+  }
+  if (effect.type === 'setResource') {
+    if (!Number.isFinite(effect.value)) return session
+    return { ...session, resources: { ...session.resources, [effect.key]: effect.value } }
+  }
+  if (effect.type === 'setVariable') {
+    return { ...session, variables: { ...session.variables, [effect.key]: effect.value } }
   }
   if (effect.type === 'goto') {
     return { ...session, nodeId: effect.target }
@@ -77,6 +111,7 @@ export function startSession(model: Model, initial?: Partial<SessionState>): Ses
     nodeId: initial?.nodeId ?? model.startNode,
     flags: { ...(model.flags ?? {}), ...(initial?.flags ?? {}) },
     resources: { ...(model.resources ?? {}), ...(initial?.resources ?? {}) },
+    variables: { ...(initial?.variables ?? {}) },
     time: initial?.time ?? 0,
   }
 }
@@ -87,7 +122,7 @@ export function getAvailableChoices(session: SessionState, model: Model): Choice
   const choices = node.choices ?? []
   return choices.filter((c) =>
     (c.conditions ?? []).every((cond) =>
-      evalCondition(cond, session.flags, session.resources, session.time),
+      evalCondition(cond, session.flags, session.resources, session.variables, session.time),
     ),
   )
 }
