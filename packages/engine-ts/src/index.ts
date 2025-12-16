@@ -31,16 +31,23 @@ function isResourceStateRecord(value: unknown): value is ResourceState {
   return Object.values(value).every((entry) => typeof entry === 'number' && Number.isFinite(entry))
 }
 
+function isVariableStateRecord(value: unknown): value is Record<string, string> {
+  if (!isRecord(value)) return false
+  return Object.values(value).every((entry) => typeof entry === 'string')
+}
+
 function isSessionState(value: unknown): value is SessionState {
   if (!isRecord(value)) return false
   const nodeId = value.nodeId
   const time = value.time
   const flags = value.flags
   const resources = value.resources
+  const variables = value.variables
   if (typeof nodeId !== 'string') return false
   if (typeof time !== 'number' || Number.isNaN(time)) return false
   if (!isFlagStateRecord(flags)) return false
   if (!isResourceStateRecord(resources)) return false
+  if (!isVariableStateRecord(variables)) return false
   return true
 }
 
@@ -103,6 +110,7 @@ export function startSession(model: Model, initial?: Partial<SessionState>): Ses
     nodeId: initial?.nodeId ?? model.startNode,
     flags: { ...(model.flags ?? {}), ...(initial?.flags ?? {}) },
     resources: { ...(model.resources ?? {}), ...(initial?.resources ?? {}) },
+    variables: { ...(initial?.variables ?? {}) },
     time: initial?.time ?? 0,
   }
 }
@@ -126,6 +134,7 @@ function evalCondition(
   cond: Condition,
   flags: FlagState,
   resources: ResourceState,
+  variables: Record<string, string>,
   time: number,
 ): boolean {
   if (cond.type === 'flag') {
@@ -138,7 +147,31 @@ function evalCondition(
   if (cond.type === 'timeWindow') {
     return time >= cond.start && time <= cond.end
   }
-  return true
+  if (cond.type === 'variable') {
+    const v = variables[cond.key] ?? ''
+    switch (cond.op) {
+      case '==':
+        return v === cond.value
+      case '!=':
+        return v !== cond.value
+      case 'contains':
+        return v.includes(cond.value)
+      case '!contains':
+        return !v.includes(cond.value)
+      default:
+        return false
+    }
+  }
+  if (cond.type === 'and') {
+    return cond.conditions.every((c) => evalCondition(c, flags, resources, variables, time))
+  }
+  if (cond.type === 'or') {
+    return cond.conditions.some((c) => evalCondition(c, flags, resources, variables, time))
+  }
+  if (cond.type === 'not') {
+    return !evalCondition(cond.condition, flags, resources, variables, time)
+  }
+  return false
 }
 
 function applyEffect(effect: Effect, session: SessionState): SessionState {
@@ -147,7 +180,16 @@ function applyEffect(effect: Effect, session: SessionState): SessionState {
   }
   if (effect.type === 'addResource') {
     const cur = session.resources[effect.key] ?? 0
-    return { ...session, resources: { ...session.resources, [effect.key]: cur + effect.delta } }
+    const delta = 'delta' in effect ? effect.delta : effect.value
+    if (!Number.isFinite(delta)) return session
+    return { ...session, resources: { ...session.resources, [effect.key]: cur + delta } }
+  }
+  if (effect.type === 'setResource') {
+    if (!Number.isFinite(effect.value)) return session
+    return { ...session, resources: { ...session.resources, [effect.key]: effect.value } }
+  }
+  if (effect.type === 'setVariable') {
+    return { ...session, variables: { ...session.variables, [effect.key]: effect.value } }
   }
   if (effect.type === 'goto') {
     return { ...session, nodeId: effect.target }
@@ -161,7 +203,7 @@ export function getAvailableChoices(session: SessionState, model: Model): Choice
   const choices = node.choices ?? []
   return choices.filter((c) =>
     (c.conditions ?? []).every((cond) =>
-      evalCondition(cond, session.flags, session.resources, session.time),
+      evalCondition(cond, session.flags, session.resources, session.variables, session.time),
     ),
   )
 }
@@ -194,8 +236,15 @@ export function serialize(session: SessionState): string {
 
 export function deserialize(payload: string): SessionState {
   const parsed: unknown = JSON.parse(payload)
-  if (!isSessionState(parsed)) {
+  if (!isRecord(parsed)) {
     throw new Error('Invalid session payload')
   }
-  return parsed
+  const normalized: Record<string, unknown> = { ...parsed }
+  if (!('variables' in normalized)) {
+    normalized.variables = {}
+  }
+  if (!isSessionState(normalized)) {
+    throw new Error('Invalid session payload')
+  }
+  return normalized
 }

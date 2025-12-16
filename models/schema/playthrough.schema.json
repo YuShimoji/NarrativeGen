@@ -29,75 +29,13 @@
                 "conditions": {
                   "type": "array",
                   "items": {
-                    "oneOf": [
-                      {
-                        "type": "object",
-                        "required": ["type", "key", "value"],
-                        "properties": {
-                          "type": { "const": "flag" },
-                          "key": { "type": "string" },
-                          "value": { "type": "boolean" }
-                        },
-                        "additionalProperties": false
-                      },
-                      {
-                        "type": "object",
-                        "required": ["type", "key", "op", "value"],
-                        "properties": {
-                          "type": { "const": "resource" },
-                          "key": { "type": "string" },
-                          "op": { "type": "string", "enum": [">=", "<=", ">", "<", "=="] },
-                          "value": { "type": "number" }
-                        },
-                        "additionalProperties": false
-                      },
-                      {
-                        "type": "object",
-                        "required": ["type", "start", "end"],
-                        "properties": {
-                          "type": { "const": "timeWindow" },
-                          "start": { "type": "number" },
-                          "end": { "type": "number" }
-                        },
-                        "additionalProperties": false
-                      }
-                    ]
+                    "$ref": "#/definitions/condition"
                   }
                 },
                 "effects": {
                   "type": "array",
                   "items": {
-                    "oneOf": [
-                      {
-                        "type": "object",
-                        "required": ["type", "key", "value"],
-                        "properties": {
-                          "type": { "const": "setFlag" },
-                          "key": { "type": "string" },
-                          "value": { "type": "boolean" }
-                        },
-                        "additionalProperties": false
-                      },
-                      {
-                        "type": "object",
-                        "required": ["type", "key", "delta"],
-                        "properties": {
-                          "type": { "const": "addResource" },
-                          "key": { "type": "string" },
-                          "delta": { "type": "number" }
-                        },
-                        "additionalProperties": false
-                      },
-                      {
-                        "type": "object",
-                        "required": ["type", "target"],
-                        "properties": {
-                          "type": { "const": "goto" },
-                          "target": { "type": "string" }
-                        },
-                        "additionalProperties": false
-                      }
-                    ]
+                    "$ref": "#/definitions/effect"
                   }
                 },
                 "outcome": {
@@ -116,6 +54,144 @@
         },
         "additionalProperties": false
       }
+    }
+  },
+  "definitions": {
+    "condition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "key", "value"],
+          "properties": {
+            "type": { "const": "flag" },
+            "key": { "type": "string" },
+            "value": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "key", "op", "value"],
+          "properties": {
+            "type": { "const": "resource" },
+            "key": { "type": "string" },
+            "op": { "type": "string", "enum": [">=", "<=", ">", "<", "=="] },
+            "value": { "type": "number" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "key", "op", "value"],
+          "properties": {
+            "type": { "const": "variable" },
+            "key": { "type": "string" },
+            "op": { "type": "string", "enum": ["==", "!=", "contains", "!contains"] },
+            "value": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "start", "end"],
+          "properties": {
+            "type": { "const": "timeWindow" },
+            "start": { "type": "number" },
+            "end": { "type": "number" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "conditions"],
+          "properties": {
+            "type": { "const": "and" },
+            "conditions": { "type": "array", "items": { "$ref": "#/definitions/condition" } }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "conditions"],
+          "properties": {
+            "type": { "const": "or" },
+            "conditions": { "type": "array", "items": { "$ref": "#/definitions/condition" } }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "condition"],
+          "properties": {
+            "type": { "const": "not" },
+            "condition": { "$ref": "#/definitions/condition" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "effect": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "key", "value"],
+          "properties": {
+            "type": { "const": "setFlag" },
+            "key": { "type": "string" },
+            "value": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "key", "delta"],
+          "properties": {
+            "type": { "const": "addResource" },
+            "key": { "type": "string" },
+            "delta": { "type": "number" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "key", "value"],
+          "properties": {
+            "type": { "const": "addResource" },
+            "key": { "type": "string" },
+            "value": { "type": "number" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "key", "value"],
+          "properties": {
+            "type": { "const": "setResource" },
+            "key": { "type": "string" },
+            "value": { "type": "number" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "key", "value"],
+          "properties": {
+            "type": { "const": "setVariable" },
+            "key": { "type": "string" },
+            "value": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "target"],
+          "properties": {
+            "type": { "const": "goto" },
+            "target": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      ]
     }
   },
   "additionalProperties": false
