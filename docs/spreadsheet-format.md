@@ -37,6 +37,7 @@
 
 | 列名 | 型 | 説明 | 例 |
 |------|-----|------|-----|
+| `node_group` | string | ノードが属するグループパス（フォルダ）。Node Hierarchy Phase 2 用（仕様は `.openspec/node-hierarchy-spec.md` を参照） | `chapters/intro` |
 | `choice_conditions` | string | 選択肢表示の条件（セミコロン区切り） | `flag:has_key=true;resource:gold>=10` |
 | `choice_effects` | string | 選択肢選択時の効果（セミコロン区切り） | `setFlag:visited_room=true;addResource:gold=-5` |
 | `choice_outcome_type` | string | 選択結果のタイプ | `ADD_ITEM`, `REMOVE_ITEM` |
@@ -161,3 +162,12 @@ CSV パーサーが適切な JSON を生成すれば、エンジン側の変更�
 - [エンジン仕様](./engine-spec.md)
 - [AI機能仕様](./ai-features.md)
 - [Unity SDK ガイド](../packages/sdk-unity/README.md)
+
+## Node Hierarchy Phase 2（仕様の正本）
+
+`node_group` 列を使ってノードを階層（フォルダ）管理する Phase 2 は、仕様を `.openspec/node-hierarchy-spec.md` に集約しています。
+
+- **canonical node id**（`Model.nodes` のキー / `node.id` / `choice.target` の表現）
+- **CSV の相対/絶対 `choice_target` 解決規約**
+
+実装・テスト・ドキュメント更新はこの正本に従って進めてください。

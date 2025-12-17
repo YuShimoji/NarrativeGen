@@ -1,5 +1,5 @@
 # OpenSpec: Node Hierarchy System
-**Spec Version**: 1.0
+**Spec Version**: 1.1
 **Status**: Design Complete ✅
 **Priority**: High
 **Target Release**: Q1 2026
@@ -25,7 +25,18 @@ The current flat node structure requires all node IDs to be globally unique acro
 ## Solution Design
 
 ### Core Concept
-Replace the flat `nodes: Record<string, Node>` structure with a hierarchical `nodeGroups: Record<string, NodeGroup>` system where:
+Node Hierarchy is introduced as a **naming + resolution layer** for node identifiers.
+
+**Phase 2 (CSV Integration)** keeps the existing JSON contract (`Model.nodes: Record<string, Node>`). Hierarchy is represented by using a **canonical node id string** as:
+
+- `canonical_node_id = "<node_group>/<node_id>"`
+- If `node_group` is empty (root), `canonical_node_id = "<node_id>"`
+
+This allows the engine to stay unchanged while CSV import/export can support folder-like organization.
+
+Future phases may introduce a dedicated `nodeGroups` structure for UI/authoring, but **it is not part of the Phase 2 runtime contract**.
+
+Replace the flat `nodes: Record<string, Node>` authoring experience with a hierarchical folder system where:
 - Node IDs are unique only within their group
 - Groups can be nested (folders within folders)
 - Full node paths are resolved dynamically
@@ -48,10 +59,34 @@ interface HierarchicalModel extends Omit<Model, 'nodes'> {
 }
 ```
 
+**Note**: The above interfaces are a *design reference for authoring/UI*. Phase 2 does **not** require the runtime JSON model to adopt these fields.
+
+## Canonical Node ID (Phase 2 Contract)
+
+### Definition
+
+- **`node_group`**: slash-separated path (folder path), relative to root.
+  - Example: `chapters/intro`, `chapters/main_quest/battlefield`
+  - Root group is represented as an empty string.
+- **`node_id`**: local node identifier, unique within the same `node_group`.
+  - Must not contain `/`.
+- **canonical node id**: string used as the node key in `Model.nodes` *and* the value of `NodeDef.id`.
+  - Root: `start`
+  - Non-root: `chapters/intro/start`
+
+### JSON storage rule
+
+When importing CSV with `node_group`, Phase 2 stores nodes in the existing schema:
+
+- `model.nodes[canonicalId].id === canonicalId`
+- `model.startNode` must be a canonical id as well
+- `choice.target` / `goto.target` must be canonical ids
+
 ### Node Resolution
 
 ```typescript
 // Example hierarchy:
+// (folder-like view)
 // root/
 //   ├── chapters/
 //   │   ├── intro/
@@ -62,32 +97,56 @@ interface HierarchicalModel extends Omit<Model, 'nodes'> {
 //   │       └── victory
 //   └── side_quests/
 //       └── shop_visit
+//
+// Canonical node ids (Phase 2 JSON / runtime)
+// - chapters/intro/start
+// - chapters/main/battle
+// - side_quests/shop_visit
 
-// Local IDs (unique within group)
-resolveNodeId(model, "start", ["chapters", "intro"])     // → "chapters.intro.start"
-resolveNodeId(model, "battle", ["chapters", "main"])     // → "chapters.main.battle"
-
-// Full paths
-resolveNodeId(model, "chapters.intro.start")             // → "chapters.intro.start"
-resolveNodeId(model, "chapters.main.battle")             // → "chapters.main.battle"
+// In Phase 2, resolution rules mainly apply to CSV target strings.
 ```
 
-## CSV Format Extension
+## CSV Format Extension (Phase 2)
 
-### Current Format
-```csv
-node_id,node_text,choice_id,choice_text,choice_target
-start,Welcome...,learn,Learn basics,intro/tutorial
-tutorial,Tutorial...,back,Go back,start
-```
+### Columns
 
-### Extended Format
+- Existing format (legacy):
+  - `node_id,node_text,choice_id,choice_text,choice_target,...`
+- Extended format (Phase 2):
+  - `node_group,node_id,node_text,choice_id,choice_text,choice_target,...`
+
+### Extended Format (example)
 ```csv
 node_group,node_id,node_text,choice_id,choice_text,choice_target
 chapters/intro,start,Welcome...,learn,Learn basics,intro/tutorial
-chapters/intro/tutorial,tutorial,Tutorial...,back,Go back,start
+chapters/intro,tutorial,Tutorial...,back,Go back,start
 chapters/main,battle,Battle scene...,fight,Fight,main/victory
 ```
+
+### Target Resolution Rules (Phase 2)
+
+When `node_group` is present, `choice_target` (and `goto:<target>` in effects) is resolved into a **canonical node id**.
+
+- **Empty target**: treated as self-loop (`canonical(current)`)
+- **Absolute target**: starts with `/`
+  - Example: `/chapters/intro/start` → `chapters/intro/start`
+- **Relative-to-parent target**: contains `/` but does not start with `/`, `./`, or `../`
+  - Interpret as relative to the **parent folder** of the current `node_group` (equivalent to `../<target>`)
+  - Example:
+    - current `node_group = chapters/intro`
+    - `choice_target = intro/tutorial` → `chapters/intro/tutorial`
+- **Relative-to-current target**: starts with `./`
+  - Example: `./tutorial` from `chapters/intro` → `chapters/intro/tutorial`
+- **Relative-up target**: starts with `../` (may repeat)
+  - Example: `../main/battle` from `chapters/intro` → `chapters/main/battle`
+- **Local id**: does not contain `/` and does not start with `.`
+  - Example: `tutorial` from `chapters/intro` → `chapters/intro/tutorial`
+
+### Backward Compatibility
+
+- If the CSV has no `node_group` column, the loader behaves as today:
+  - `choice_target` is treated as a flat `node_id`.
+- In Phase 2, engines and validators remain unchanged as long as the importer outputs canonical ids into the existing `Model.nodes` structure.
 
 ### Migration Path
 - **Phase 1**: Support both formats (backward compatible)
@@ -98,7 +157,7 @@ chapters/main,battle,Battle scene...,fight,Fight,main/victory
 ## UI/UX Improvements
 
 ### Folder Tree Navigation
-```
+```text
 📁 chapters/
 ├── 📁 intro/
 │   ├── 📄 start
@@ -149,7 +208,7 @@ chapters/main,battle,Battle scene...,fight,Fight,main/victory
 - **Caching**: Cache resolved node paths
 - **Indexing**: Build efficient lookup tables
 
-### Backward Compatibility
+### Backward Compatibility (Design)
 - **Dual Support**: Support both flat and hierarchical models
 - **Migration Tools**: Automated conversion utilities
 - **Graceful Degradation**: Fall back to flat mode for legacy models
@@ -205,4 +264,4 @@ chapters/main,battle,Battle scene...,fight,Fight,main/victory
 ---
 **Spec Owner**: AI Assistant
 **Reviewers**: Development Team
-**Last Updated**: 2025-10-31
+**Last Updated**: 2025-12-17

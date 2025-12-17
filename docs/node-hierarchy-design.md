@@ -1,6 +1,11 @@
 // Node Hierarchy System Design Proposal
 // ノードを階層構造で管理できるようにする
 
+// NOTE:
+// - 本ファイルは初期の設計メモです。
+// - Phase 2（CSV Integration）の仕様正本は `.openspec/node-hierarchy-spec.md` を参照してください。
+// - Phase 2 の runtime は `Model.nodes` を維持し、canonical node id は `node_group/node_id`（rootは `node_id`）です。
+
 /**
  * ノードグループ（フォルダ）定義
  * ノードを論理的にグループ化し、管理しやすくする
@@ -35,7 +40,7 @@ export interface HierarchicalModel extends Omit<Model, 'nodes'> {
  * @param model 階層モデル
  * @param localId ローカルノードID
  * @param groupPath 検索対象のグループパス（オプション）
- * @returns 完全なノードID（group.subgroup.nodeId の形式）
+ * @returns 完全なノードID（group/subgroup/nodeId の形式）
  */
 export function resolveNodeId(
   model: HierarchicalModel,
@@ -48,13 +53,13 @@ export function resolveNodeId(
   for (const groupId of searchPath) {
     const group = model.nodeGroups[groupId]
     if (group?.nodes[localId]) {
-      return `${groupId}.${localId}`
+      return `${groupId}/${localId}`
     }
     // サブグループも検索
     if (group?.subgroups) {
       for (const [subId, subgroup] of Object.entries(group.subgroups)) {
         if (subgroup.nodes[localId]) {
-          return `${groupId}.${subId}.${localId}`
+          return `${groupId}/${subId}/${localId}`
         }
       }
     }
