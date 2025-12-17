@@ -28,6 +28,10 @@ NarrativeGen is an interactive story engine that allows users to create, edit, a
    - **Goal**: Organize nodes in hierarchical folder structure to eliminate global ID constraints
    - **Current Issue**: All node IDs must be globally unique across entire project
    - **Solution**: Implement NodeGroup system with local scoping
+   - **Contract (Phase 2 / CSV Integration)**:
+     - canonical node id（`Model.nodes` のキー / `node.id` / `choice.target`）は `node_group/node_id`（rootは `node_id`）
+     - CSV の `choice_target` は相対/絶対規約に従って canonical id に解決
+     - 仕様正本: `.openspec/node-hierarchy-spec.md`
    - **Benefits**:
      - Easier management of large story projects
      - Logical organization (chapters, quests, etc.)
