@@ -64,8 +64,18 @@
 
 - 新規作業の開始（spec v1.1, GUI v2 等）。AI_CONTEXT をリセットし、mode/report_style を確認。
 
+## Worker完了ステータス
+
+- （現在、実行中のWorkerはありません。Workerが起動されたら、ここに `worker_name: status, priority: P, timeout: T` 形式で記録されます）
+
 ## Backlog / 次タスク
 
 - `docs/GUI_EDITOR_TEST_GUIDE.md` に沿った手動テスト（回帰）を継続（必要に応じて追加観点/自動化）。
 - `timeWindow` 条件のエンジン仕様との最終整合確認。
 - Phase 2: 読み取り専用のグラフビュー（スパイク）を最小で実装。
+
+## タスク管理（短期/中期/長期）
+
+### 短期（Next）
+
+- [done] 未完了タスクなし（docs/tasks/ に OPEN / IN_PROGRESS なし）

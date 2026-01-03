@@ -49,3 +49,13 @@ GitHubAutoApprove: false
 - Short-term: セットアップ完了、Complete Gate確認
 - Mid-term: Orchestrator/Workerの自律動作環境確立
 - Long-term: 継続的な運用体制の確立
+
+## Proposals
+
+- セットアップ完了後の最優先タスクを確認・整理
+- プロジェクト固有のワークフロー調整（必要に応じて）
+
+## リスク
+
+- セットアップ直後のため、運用フローに不慣れな点がある可能性
+- GitHubAutoApproveがfalseのため、push操作は手動確認が必要
