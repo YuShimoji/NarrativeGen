@@ -24,6 +24,9 @@ IN_PROGRESS
 - [x] TASK_007作成: プロジェクト固有ワークフロー調整スクリプト作成
 - [x] TASK_008作成: REPORT_CONFIG.ymlのプロジェクトルート配置
 
+### P5: Worker起動用プロンプト生成
+- [x] TASK_007のWorkerプロンプト生成: docs/tasks/WORKER_PROMPT_TASK_007.md
+
 ## 作業記録（継続）
 
 ### P0: SSOT確認
