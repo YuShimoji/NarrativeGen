@@ -1,0 +1,103 @@
+# NarrativeGen プロジェクト固有のレポート設定
+# このファイルは .shared-workflows/REPORT_CONFIG.yml をベースに、
+# NarrativeGen固有の設定を追加・拡張します。
+
+# デフォルトスタイル（.shared-workflows/REPORT_CONFIG.ymlから継承）
+default_style: standard
+strict_mode: true
+
+# 禁止表現（.shared-workflows/REPORT_CONFIG.ymlの設定に加えて、NarrativeGen固有の表現を追加）
+banned_phrases:
+  # .shared-workflows/REPORT_CONFIG.ymlから継承される禁止表現
+  - 了解しました
+  - 続けてください
+  - 特にありません
+  - 完了しました
+  - 向上されました
+  - 問題ありません
+  # NarrativeGen固有の禁止表現
+  - 実装しました（具体的な内容を記載）
+  - 修正しました（何を修正したか明記）
+  - 追加しました（何を追加したか明記）
+  - 削除しました（何を削除したか明記）
+  - Unity関連の用語を誤用（例: "GameObject"を"ゲームオブジェクト"と表記しない、適切なUnity用語を使用）
+
+# スタイルプリセット（.shared-workflows/REPORT_CONFIG.ymlから継承）
+style_presets:
+  standard:
+    headers:
+      - 概要
+      - 現状
+      - 次のアクション
+    notes: |-
+      目的・現状・次のアクションを含む標準的な報告。必要に応じて箇条書きを使用。
+      NarrativeGenプロジェクトでは、Unity C#開発に関する技術的な詳細も含める。
+  concise:
+    headers:
+      - 要点
+      - 次のアクション
+    notes: |-
+      200文字程度で要点のみを伝える。重複した情報は省略。
+      NarrativeGen固有の技術的詳細（Unity、C#、エンジン統合等）は簡潔に記載。
+  narrative:
+    headers:
+      - 今日の旅路
+      - 発見
+      - 次に挑むこと
+    notes: |-
+      物語調で経緯を説明し、学びや気付きも記載。
+      NarrativeGenの開発における技術的な発見や課題解決の過程を物語として記述。
+  creative:
+    headers:
+      - 状況
+      - ハイライト
+      - 次の一歩
+    notes: |-
+      比喩や比喩的表現を交えて、感情や勢いを含めた報告。禁止表現には注意。
+      NarrativeGenの開発における創造的な解決策やアプローチを強調。
+  custom_innovation:
+    headers:
+      - Vision
+      - Options
+      - Commitments
+    notes: |-
+      未来志向の提案や大胆な仮説検証を行う際に使用。リスクと成功条件を明示する。
+      NarrativeGenのアーキテクチャ改善や新機能提案に適したスタイル。
+  handover:
+    headers:
+      - 進捗
+      - 次の中断可能点
+      - 決定事項
+      - リスク/懸念
+      - Backlog（将来提案）
+    notes: |-
+      HANDOVER用のレイアウト。標準レポートの必須ヘッダー（概要/現状/次のアクション）は要求しない。
+      NarrativeGenプロジェクトの技術的負債や将来の改善点も記載。
+
+# 創造性トリガー（.shared-workflows/REPORT_CONFIG.ymlから継承）
+creativity_triggers:
+  default:
+    - 代替案を最低2件提示する。
+    - リスクとメリットを併記する。
+  standard:
+    - リスクとメリットを表形式で整理する。
+  concise:
+    - 主要ポイントを3行以内でまとめる。
+  narrative:
+    - 比喩を1つ用いて状況を説明する。
+    - 学びを1つ抽出し、次回への示唆を述べる。
+  creative:
+    - 代替案を3件提示する。
+    - 人間とAIの協働アイデアを1つ提案する。
+  custom_innovation:
+    - 未来志向の大胆な提案を行い、成功条件を定義する。
+
+# プロンプトオーバーライド（.shared-workflows/REPORT_CONFIG.ymlから継承）
+prompt_overrides: {}
+
+# 適応設定（.shared-workflows/REPORT_CONFIG.ymlから継承）
+adaptation:
+  score_threshold:
+    creativity: 7
+    clarity: 7
+  fallback_style: standard

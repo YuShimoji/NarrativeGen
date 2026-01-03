@@ -7,7 +7,7 @@
 
 ## 基本情報
 
-- **最終更新**: 2026-01-03T22:04:00Z
+- **最終更新**: 2026-01-04T00:00:00Z
 - **更新者**: Orchestrator
 
 ## GitHubAutoApprove
@@ -27,6 +27,8 @@ GitHubAutoApprove: false
 - **Phase 4: 参照の固定化**: COMPLETED — SSOT補完、CLI確認、sw-doctor実行完了
 - **Phase 5: 運用フラグ設定**: COMPLETED — GitHubAutoApprove設定済み
 - **Phase 6: 変更をコミット**: COMPLETED
+- **TASK_007**: COMPLETED — プロジェクト固有ワークフロー調整スクリプト作成（narrgen-doctor.js）
+- **TASK_008**: CLOSED — REPORT_CONFIG.ymlのプロジェクトルート配置
 - **P0-P2: 通常運用フェーズ**: COMPLETED — SSOT確認、同期、監査、Complete Gate、状況把握完了
 
 ## ブロッカー
@@ -36,6 +38,7 @@ GitHubAutoApprove: false
 ## バックログ
 
 - セットアップ完了後の最優先タスクを確認
+- TASK_007、TASK_008完了により、プロジェクト固有の検証・レポート設定が整備済み
 
 ## Verification
 
@@ -43,8 +46,15 @@ GitHubAutoApprove: false
 
 ## Latest Orchestrator Report
 
-- File: docs/inbox/REPORT_ORCH_20260103_2204.md
+- File: docs/reports/REPORT_ORCH_20260103_2204.md
 - Summary: プロジェクト初期セットアップ完了（shared-workflows統合、運用ストレージ作成、参照固定化、監査是正）
+
+## Latest Worker Reports
+
+- **TASK_007**: docs/reports/REPORT_TASK_007_20260103.md
+  - Summary: プロジェクト固有ワークフロー調整スクリプト（narrgen-doctor.js）作成完了。26/26チェックがパス。
+- **TASK_008**: docs/reports/REPORT_TASK_008_20260103_2338.md
+  - Summary: REPORT_CONFIG.ymlのプロジェクトルート配置完了。プロジェクト固有設定の優先読み込みを実装。
 
 ## Outlook
 

@@ -1,11 +1,12 @@
 # Task: プロジェクト固有ワークフロー調整スクリプト作成
 
-Status: OPEN
+Status: COMPLETED
 Tier: 1
 Branch: main
 Owner: Worker
 Created: 2026-01-03T22:10:00Z
-Report: （未作成）
+Completed: 2026-01-03
+Report: docs/inbox/REPORT_TASK_007_ProjectSpecificWorkflowScripts.md
 
 ## Objective
 
@@ -39,16 +40,16 @@ NarrativeGenプロジェクト（Unity C#、TypeScript、Web Tester）に特化�
 
 ## DoD
 
-- [ ] `scripts/narrgen-doctor.js` が作成され、以下の検証を実行できる:
-  - [ ] Unity C#プロジェクト構造の存在確認（Packages/sdk-unity/）
-  - [ ] TypeScriptエンジンのビルド可能性確認（Packages/engine-ts/）
-  - [ ] Web Testerのビルド可能性確認（apps/web-tester/）
-  - [ ] 依存関係の整合性確認（package.json、workspace設定）
-  - [ ] テスト環境の準備可能性確認（TEST_PROCEDURES.mdの前提条件）
-- [ ] スクリプトが`npm run check`と整合性を保っている
-- [ ] エラー時の復旧手順がドキュメント化されている
-- [ ] docs/inbox/ にレポート（REPORT_TASK_007_*.md）が作成されている
-- [ ] 本チケットの Report 欄にレポートパスが追記されている
+- [x] `scripts/narrgen-doctor.js` が作成され、以下の検証を実行できる:
+  - [x] Unity C#プロジェクト構造の存在確認（Packages/sdk-unity/）
+  - [x] TypeScriptエンジンのビルド可能性確認（Packages/engine-ts/）
+  - [x] Web Testerのビルド可能性確認（apps/web-tester/）
+  - [x] 依存関係の整合性確認（package.json、workspace設定）
+  - [x] テスト環境の準備可能性確認（TEST_PROCEDURES.mdの前提条件）
+- [x] スクリプトが`npm run check`と整合性を保っている
+- [x] エラー時の復旧手順がドキュメント化されている
+- [x] docs/inbox/ にレポート（REPORT_TASK_007_*.md）が作成されている
+- [x] 本チケットの Report 欄にレポートパスが追記されている
 
 ## Notes
 

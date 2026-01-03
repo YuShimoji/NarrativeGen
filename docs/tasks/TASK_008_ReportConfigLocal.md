@@ -1,11 +1,11 @@
 # Task: REPORT_CONFIG.ymlのプロジェクトルート配置
 
-Status: OPEN
+Status: CLOSED
 Tier: 2
 Branch: main
 Owner: Worker
 Created: 2026-01-03T22:10:00Z
-Report: （未作成）
+Report: docs/inbox/REPORT_TASK_008_20260103_2338.md
 
 ## Objective
 
@@ -35,12 +35,12 @@ REPORT_CONFIG.ymlをプロジェクトルートに配置し、プロジェクト
 
 ## DoD
 
-- [ ] プロジェクトルートに`REPORT_CONFIG.yml`が作成されている
-- [ ] `.shared-workflows/REPORT_CONFIG.yml`の設定を継承しつつ、プロジェクト固有の設定を追加できる
-- [ ] `report-validator.js`がプロジェクトルートの設定を優先的に読み込むことを確認
-- [ ] プロジェクト固有の禁止表現やスタイル設定が追加されている（例: NarrativeGen固有の用語）
-- [ ] docs/inbox/ にレポート（REPORT_TASK_008_*.md）が作成されている
-- [ ] 本チケットの Report 欄にレポートパスが追記されている
+- [x] プロジェクトルートに`REPORT_CONFIG.yml`が作成されている
+- [x] `.shared-workflows/REPORT_CONFIG.yml`の設定を継承しつつ、プロジェクト固有の設定を追加できる
+- [x] `report-validator.js`がプロジェクトルートの設定を優先的に読み込むことを確認
+- [x] プロジェクト固有の禁止表現やスタイル設定が追加されている（例: NarrativeGen固有の用語）
+- [x] docs/inbox/ にレポート（REPORT_TASK_008_*.md）が作成されている
+- [x] 本チケットの Report 欄にレポートパスが追記されている
 
 ## Notes
 
