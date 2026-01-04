@@ -7,13 +7,13 @@ KICKSTART_20260103T194038Z
 2026-01-03T19:40:38Z
 
 ## 現在のフェーズ
-P2: 状況把握
+P5: Worker起動用プロンプト生成
 
 ## ステータス
 COMPLETED
 
 ## 次フェーズ/次アクション
-- 新規タスク起票時: P3（分割と戦略）から再開
+- Worker納品回収時: P1（Sync & Merge）から再開
 - 次回セッション: P0（SSOT確認）から開始
 
 ### P6: Orchestrator Report（最終）
@@ -106,7 +106,22 @@ COMPLETED
 ### P2: 状況把握（未実装機能整理）
 - [x] 未実装機能の調査: docs/NEXT_PHASE_PROPOSAL.md、docs/TECHNICAL_DEBT.md、docs/OpenSpec-WebTester.mdを確認
 - [x] 次のタスクまとめドキュメント作成: docs/NEXT_TASKS_SUMMARY.md作成
-- [x] 検索アイコンの表示問題を記録: ブラウザ（ポート5273）で表示されない問題を記録
+- [x] 検索アイコンの表示問題を記録: ブラウザ（ポート5273）で表示されない問題を記録（修正完了）
+
+### P3: 分割と戦略（次のタスク起票）
+- [x] タスク分類: TASK_015（Tier 2）、TASK_016（Tier 2）、TASK_017（Tier 2）
+- [x] 並列化可能性: TASK_015、TASK_016、TASK_017は独立しており、並列実行可能
+- [x] Focus Area/Forbidden Area決定: 各タスクに記載済み
+
+### P4: チケット発行（次のタスク起票）
+- [x] TASK_015作成: Phase 2グラフビューの編集機能実装
+- [x] TASK_016作成: GUIエディタのバッチテキスト置換機能実装
+- [x] TASK_017作成: マルチエンディング可視化機能実装
+
+### P5: Worker起動用プロンプト生成（次のタスク起票）
+- [x] WORKER_PROMPT_TASK_015.md作成: Phase 2グラフビューの編集機能実装用Workerプロンプト生成
+- [x] WORKER_PROMPT_TASK_016.md作成: GUIエディタのバッチテキスト置換機能実装用Workerプロンプト生成
+- [x] WORKER_PROMPT_TASK_017.md作成: マルチエンディング可視化機能実装用Workerプロンプト生成
 
 ### P6: Orchestrator Report（Push完了）
 - [x] git push origin main実行: 完了
