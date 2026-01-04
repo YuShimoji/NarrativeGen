@@ -7,7 +7,7 @@
 
 ## 基本情報
 
-- **最終更新**: 2026-01-04T21:30:00Z
+- **最終更新**: 2026-01-04T22:00:00Z
 - **更新者**: Orchestrator
 
 ## GitHubAutoApprove
@@ -33,6 +33,7 @@ GitHubAutoApprove: false
 - **TASK_010**: DONE — timeWindow条件のエンジン仕様との最終整合確認完了（不整合2件を記録、修正タスク推奨）
 - **TASK_011**: DONE — OpenSpec-WebTester.mdにtimeWindow条件の仕様を追加完了
 - **TASK_012**: DONE — spreadsheet-format.mdにtimeWindow条件の評価ロジックを明記完了
+- **TASK_013**: OPEN — Phase 2読み取り専用のグラフビュー（スパイク）を最小で実装（Workerプロンプト生成済み）
 - **P0-P2: 通常運用フェーズ**: COMPLETED — SSOT確認、同期、監査、Complete Gate、状況把握完了
 - **P3-P5: 新規タスク起票**: COMPLETED — TASK_009/TASK_010起票、Workerプロンプト生成完了
 
@@ -45,6 +46,7 @@ GitHubAutoApprove: false
 - TASK_007、TASK_008完了により、プロジェクト固有の検証・レポート設定が整備済み
 - TASK_009: ユーザーによる手動テスト実施待ち
 - TASK_010の推奨アクション（TASK_011, TASK_012）は完了
+- TASK_013: Phase 2グラフビュー実装（Workerプロンプト生成済み、Workerに割り当て可能）
 
 ## Verification
 
