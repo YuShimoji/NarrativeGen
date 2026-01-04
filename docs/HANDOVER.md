@@ -38,6 +38,9 @@ GitHubAutoApprove: false
 - **TASK_015**: OPEN — Phase 2グラフビューの編集機能実装（Workerプロンプト生成済み）
 - **TASK_016**: OPEN — GUIエディタのバッチテキスト置換機能実装（Workerプロンプト生成済み）
 - **TASK_017**: OPEN — マルチエンディング可視化機能実装（Workerプロンプト生成済み）
+- **TASK_018**: OPEN — GUIエディタのロールバック機能実装（Workerプロンプト生成済み）
+- **TASK_019**: OPEN — ドラフト復元UIの改善（Workerプロンプト生成済み）
+- **TASK_020**: OPEN — Phase 2グラフビューのレスポンシブ対応（Workerプロンプト生成済み）
 - **P0-P2: 通常運用フェーズ**: COMPLETED — SSOT確認、同期、監査、Complete Gate、状況把握完了
 - **P3-P5: 新規タスク起票**: COMPLETED — TASK_009/TASK_010起票、Workerプロンプト生成完了、TASK_014起票完了
 
@@ -53,6 +56,7 @@ GitHubAutoApprove: false
 - TASK_013: Phase 2グラフビュー実装完了。手動テスト実施待ち（サンプルモデルでの動作確認）
 - TASK_014: GUIエディタバグ修正完了。検索・フィルタ機能のテストが実施可能になった
 - TASK_015/TASK_016/TASK_017: 次のタスク起票完了。未実装機能から優先度の高いものを選んでタスク化
+- TASK_018/TASK_019/TASK_020: 進行中に見つかった課題をタスク化（GUIエディタのロールバック機能、ドラフト復元UI、グラフビューのレスポンシブ対応）
 
 ## Verification
 

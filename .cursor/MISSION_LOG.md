@@ -122,6 +122,12 @@ COMPLETED
 - [x] WORKER_PROMPT_TASK_015.md作成: Phase 2グラフビューの編集機能実装用Workerプロンプト生成
 - [x] WORKER_PROMPT_TASK_016.md作成: GUIエディタのバッチテキスト置換機能実装用Workerプロンプト生成
 - [x] WORKER_PROMPT_TASK_017.md作成: マルチエンディング可視化機能実装用Workerプロンプト生成
+- [x] TASK_018作成: GUIエディタのロールバック機能実装
+- [x] TASK_019作成: ドラフト復元UIの改善
+- [x] TASK_020作成: Phase 2グラフビューのレスポンシブ対応
+- [x] WORKER_PROMPT_TASK_018.md作成: GUIエディタのロールバック機能実装用Workerプロンプト生成
+- [x] WORKER_PROMPT_TASK_019.md作成: ドラフト復元UIの改善用Workerプロンプト生成
+- [x] WORKER_PROMPT_TASK_020.md作成: Phase 2グラフビューのレスポンシブ対応用Workerプロンプト生成
 
 ### P6: Orchestrator Report（Push完了）
 - [x] git push origin main実行: 完了
