@@ -177,15 +177,25 @@ export function setupThemeEventListeners(themeManager) {
     themeBtn.addEventListener('click', () => {
       initPaletteUI(themeManager, window.setStatus || console.log)
       paletteModal.style.display = 'flex'
-      paletteModal.classList.add('show')
+      // opacityをリセットしてからshowクラスを追加（リフローを強制）
+      paletteModal.style.opacity = ''
+      // リフロー後にopacityを1に設定
+      requestAnimationFrame(() => {
+        paletteModal.style.opacity = '1'
+        paletteModal.classList.add('show')
+      })
     })
   }
 
   if (closePaletteBtn && paletteModal) {
     closePaletteBtn.addEventListener('click', () => {
+      // トランジションを開始するためにopacityを0に設定
+      paletteModal.style.opacity = '0'
       paletteModal.classList.remove('show')
+      // トランジション完了後にdisplay: noneを設定
       setTimeout(() => {
         paletteModal.style.display = 'none'
+        paletteModal.style.opacity = '' // opacityをリセット
       }, 300)
     })
   }
@@ -194,9 +204,13 @@ export function setupThemeEventListeners(themeManager) {
   if (paletteModal) {
     paletteModal.addEventListener('click', (e) => {
       if (e.target === paletteModal) {
+        // トランジションを開始するためにopacityを0に設定
+        paletteModal.style.opacity = '0'
         paletteModal.classList.remove('show')
+        // トランジション完了後にdisplay: noneを設定
         setTimeout(() => {
           paletteModal.style.display = 'none'
+          paletteModal.style.opacity = '' // opacityをリセット
         }, 300)
       }
     })

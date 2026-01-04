@@ -1343,8 +1343,24 @@ saveGuiBtn.addEventListener('click', () => {
 })
 
 cancelGuiBtn.addEventListener('click', () => {
-  exitGuiEditMode()
+  // 元モデルを復元
+  const restored = guiEditorManager.restoreOriginalModel()
   
+  if (restored) {
+    // ドラフトもクリア
+    localStorage.removeItem(DRAFT_MODEL_STORAGE_KEY)
+    
+    // UIを更新
+    if (guiEditorManager.nodeList) {
+      guiEditorManager.renderNodeList()
+    }
+    
+    setStatus('編集をキャンセルし、元のモデルに戻しました', 'info')
+  } else {
+    setStatus('元のモデルが見つかりませんでした', 'warn')
+  }
+  
+  exitGuiEditMode()
   setControlsEnabled(true)
 })
 
@@ -1643,24 +1659,47 @@ function checkForDraftModel() {
 
   try {
     const draft = JSON.parse(draftData)
-    if (confirm('未保存のドラフトモデルが見つかりました。読み込みますか？')) {
-      // Restore model and session using centralized state
-      appState.model = draft.model
-      startNewSession(appState.model)
-      setCurrentModelName(draft.modelName || 'draft')
-      appState.storyLog = draft.storyLog || []
+    if (!draft.model) return
 
-      setStatus('ドラフトモデルを読み込みました', 'success')
-      renderState()
-      renderChoices()
-      storyManager.renderStory()
-      renderDebugInfo()
+    // モーダルでドラフト情報を表示
+    if (guiEditorManager && guiEditorManager.openDraftRestoreModal) {
+      guiEditorManager.openDraftRestoreModal()
+    } else {
+      // フォールバック: 簡易ダイアログ
+      if (confirm('未保存のドラフトモデルが見つかりました。読み込みますか？')) {
+        restoreDraftModel(draft)
+      } else {
+        // キャンセル時はドラフトを削除しない（ユーザーが後で復元できるように）
+      }
     }
   } catch (error) {
     console.warn('Failed to load draft model:', error)
-  } finally {
-    // Clear draft after handling (success or failure)
+  }
+}
+
+/**
+ * ドラフトモデルを復元（内部関数）
+ * @param {Object} draft - ドラフトデータ
+ */
+function restoreDraftModel(draft) {
+  try {
+    // Restore model and session using centralized state
+    appState.model = draft.model
+    startNewSession(appState.model)
+    setCurrentModelName(draft.modelName || 'draft')
+    appState.storyLog = draft.storyLog || []
+
+    setStatus('ドラフトモデルを読み込みました', 'success')
+    renderState()
+    renderChoices()
+    storyManager.renderStory()
+    renderDebugInfo()
+
+    // ドラフトを削除
     localStorage.removeItem(DRAFT_MODEL_STORAGE_KEY)
+  } catch (error) {
+    console.error('Failed to restore draft model:', error)
+    setStatus('ドラフトの復元に失敗しました', 'error')
   }
 }
 
@@ -1693,9 +1732,15 @@ const themeBtn = document.getElementById('themeBtn')
 // Quick Node Creation
 // ===========================
 // NOTE: NODE_TEMPLATES is imported from constants.js
+const createQuickNodeBtn = document.getElementById('createQuickNodeBtn')
+const cancelQuickNodeBtn = document.getElementById('cancelQuickNodeBtn')
 
 if (createQuickNodeBtn) {
   createQuickNodeBtn.addEventListener('click', () => guiEditorManager.createQuickNode())
+}
+
+if (cancelQuickNodeBtn) {
+  cancelQuickNodeBtn.addEventListener('click', () => guiEditorManager.closeQuickNodeModal())
 }
 
 // N key for quick node creation is now handled by KeyBindingManager (quickNode action)
@@ -1907,6 +1952,46 @@ if (closeSnippetModalBtn) {
     if (snippetModal) {
       snippetModal.style.display = 'none'
       snippetModal.classList.remove('show')
+    }
+  })
+}
+
+// Draft restore modal event listeners
+const cancelDraftRestoreBtn = document.getElementById('cancelDraftRestoreBtn')
+const confirmDraftRestoreBtn = document.getElementById('confirmDraftRestoreBtn')
+
+if (cancelDraftRestoreBtn) {
+  cancelDraftRestoreBtn.addEventListener('click', () => {
+    if (guiEditorManager && guiEditorManager.closeDraftRestoreModal) {
+      guiEditorManager.closeDraftRestoreModal()
+    }
+    // キャンセル時はドラフトを削除しない（ユーザーが後で復元できるように）
+  })
+}
+
+if (confirmDraftRestoreBtn) {
+  confirmDraftRestoreBtn.addEventListener('click', () => {
+    if (guiEditorManager && guiEditorManager.getDraftInfo) {
+      const draftInfo = guiEditorManager.getDraftInfo()
+      if (draftInfo) {
+        restoreDraftModel(draftInfo)
+        guiEditorManager.closeDraftRestoreModal()
+      } else {
+        setStatus('ドラフトが見つかりません', 'error')
+        guiEditorManager.closeDraftRestoreModal()
+      }
+    }
+  })
+}
+
+// Close draft restore modal on backdrop click
+const draftRestoreModal = document.getElementById('draftRestoreModal')
+if (draftRestoreModal) {
+  draftRestoreModal.addEventListener('click', (e) => {
+    if (e.target === draftRestoreModal) {
+      if (guiEditorManager && guiEditorManager.closeDraftRestoreModal) {
+        guiEditorManager.closeDraftRestoreModal()
+      }
     }
   })
 }
@@ -2134,7 +2219,8 @@ guiEditorManager.initialize(
   document.getElementById('batchEditModal'),
   document.getElementById('quickNodeModal'),
   document.getElementById('batchChoiceModal'),
-  document.getElementById('paraphraseModal')
+  document.getElementById('paraphraseModal'),
+  document.getElementById('draftRestoreModal')
 )
 
 // Initialize reference manager
@@ -2307,6 +2393,9 @@ if (guiEditBtn) {
       setStatus('GUI編集モードを終了しました')
     } else {
       // Enter GUI edit mode
+      // 元モデルを保存（ロールバック用）
+      guiEditorManager.saveOriginalModel()
+      
       guiEditMode.classList.add('active')
       guiEditMode.style.removeProperty('display')
       if (storyPanel) {

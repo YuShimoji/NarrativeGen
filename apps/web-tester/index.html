@@ -2151,6 +2151,10 @@
                       <h4>遷移パス</h4>
                       <div id="pathDisplay"></div>
                     </div>
+                    <div id="endingVisualization" class="preview-path" style="border-top: 1px solid var(--color-border); padding-top: 1rem; margin-top: 1rem;">
+                      <h4>マルチエンディング可視化</h4>
+                      <div id="endingVisualizationDisplay"></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2173,29 +2177,106 @@
       </div>
     </div>
 
+    <!-- ドラフト復元モーダル -->
+    <div id="draftRestoreModal" class="modal" style="display: none;">
+      <div class="modal-content" style="max-width: 600px;">
+        <h3>ドラフト復元</h3>
+        <div id="draftInfo" style="margin: 1.5rem 0;">
+          <div style="padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border: 1px solid var(--color-border);">
+            <div style="margin-bottom: 0.75rem;">
+              <strong style="display: block; margin-bottom: 0.5rem; color: var(--color-text);">モデル名:</strong>
+              <span id="draftModelName" style="color: var(--color-text-muted);">-</span>
+            </div>
+            <div style="margin-bottom: 0.75rem;">
+              <strong style="display: block; margin-bottom: 0.5rem; color: var(--color-text);">保存日時:</strong>
+              <span id="draftTimestamp" style="color: var(--color-text-muted);">-</span>
+            </div>
+            <div style="margin-bottom: 0.75rem;">
+              <strong style="display: block; margin-bottom: 0.5rem; color: var(--color-text);">ノード数:</strong>
+              <span id="draftNodeCount" style="color: var(--color-text-muted);">-</span>
+            </div>
+            <div>
+              <strong style="display: block; margin-bottom: 0.5rem; color: var(--color-text);">ストーリーログ:</strong>
+              <span id="draftStoryLogCount" style="color: var(--color-text-muted);">-</span>
+            </div>
+          </div>
+        </div>
+        <div style="padding: 1rem; background: rgba(251, 191, 36, 0.1); border-radius: 8px; border: 1px solid var(--color-warning); margin-bottom: 1rem;">
+          <p style="margin: 0; color: var(--color-text); font-size: 0.9rem;">
+            ⚠️ 現在のモデルは上書きされます。復元しますか？
+          </p>
+        </div>
+        <div class="modal-buttons" style="margin-top: 1rem;">
+          <button id="cancelDraftRestoreBtn">キャンセル</button>
+          <button id="confirmDraftRestoreBtn" class="primary">復元</button>
+        </div>
+      </div>
+    </div>
+
     <!-- バッチ編集モーダル -->
     <div id="batchEditModal" class="modal" style="display: none;">
-      <div class="modal-content">
+      <div class="modal-content" style="max-width: 800px;">
         <h3>バッチ編集</h3>
-        <div style="margin-bottom: 1rem;">
-          <h4>ノードテキスト検索・置換</h4>
-          <label>検索: <input type="text" id="searchText" placeholder="検索するテキスト"></label>
-          <label>置換: <input type="text" id="replaceText" placeholder="置換するテキスト"></label>
-          <button id="applyTextReplaceBtn">適用</button>
+        
+        <!-- タブナビゲーション -->
+        <div class="batch-edit-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--color-border);">
+          <button class="batch-edit-tab active" data-tab="node-text">ノードテキスト置換</button>
+          <button class="batch-edit-tab" data-tab="choice-text">選択肢テキスト置換</button>
+          <button class="batch-edit-tab" data-tab="target">ターゲット変更</button>
         </div>
-        <div style="margin-bottom: 1rem;">
-          <h4>選択肢テキスト一括置換</h4>
-          <label>検索: <input type="text" id="choiceSearchText" placeholder="選択肢内の検索テキスト"></label>
-          <label>置換: <input type="text" id="choiceReplaceText" placeholder="置換するテキスト"></label>
-          <button id="applyChoiceReplaceBtn">適用</button>
+
+        <!-- ノードテキスト置換タブ -->
+        <div id="batchTabNodeText" class="batch-edit-tab-content active">
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">検索テキスト:</label>
+            <input type="text" id="searchText" placeholder="検索するテキスト（正規表現可）" style="width: 100%; margin-bottom: 0.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <input type="checkbox" id="useRegex">
+              <span>正規表現を使用</span>
+            </label>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">置換テキスト:</label>
+            <input type="text" id="replaceText" placeholder="置換するテキスト" style="width: 100%;">
+          </div>
+          
+          <!-- プレビューセクション -->
+          <div style="margin-bottom: 1rem; padding: 1rem; background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid var(--color-border);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <h4 style="margin: 0; font-size: 0.9rem; font-weight: 600;">置換プレビュー</h4>
+              <button id="updatePreviewBtn" style="padding: 0.25rem 0.75rem; font-size: 0.85rem;">プレビュー更新</button>
+            </div>
+            <div id="replacePreview" style="max-height: 300px; overflow-y: auto; font-size: 0.85rem;">
+              <p style="color: var(--color-text-muted); margin: 0; font-style: italic;">検索テキストを入力してプレビューを更新してください</p>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+            <button id="applyTextReplaceBtn" class="primary">適用</button>
+          </div>
         </div>
-        <div style="margin-bottom: 1rem;">
-          <h4>ターゲットノード一括変更</h4>
-          <label>変更元ノード: <input type="text" id="oldTargetText" placeholder="現在のターゲット"></label>
-          <label>変更先ノード: <input type="text" id="newTargetText" placeholder="新しいターゲット"></label>
-          <button id="applyTargetReplaceBtn">適用</button>
+
+        <!-- 選択肢テキスト置換タブ -->
+        <div id="batchTabChoiceText" class="batch-edit-tab-content" style="display: none;">
+          <div style="margin-bottom: 1rem;">
+            <h4>選択肢テキスト一括置換</h4>
+            <label>検索: <input type="text" id="choiceSearchText" placeholder="選択肢内の検索テキスト"></label>
+            <label>置換: <input type="text" id="choiceReplaceText" placeholder="置換するテキスト"></label>
+            <button id="applyChoiceReplaceBtn">適用</button>
+          </div>
         </div>
-        <div class="modal-buttons">
+
+        <!-- ターゲット変更タブ -->
+        <div id="batchTabTarget" class="batch-edit-tab-content" style="display: none;">
+          <div style="margin-bottom: 1rem;">
+            <h4>ターゲットノード一括変更</h4>
+            <label>変更元ノード: <input type="text" id="oldTargetText" placeholder="現在のターゲット"></label>
+            <label>変更先ノード: <input type="text" id="newTargetText" placeholder="新しいターゲット"></label>
+            <button id="applyTargetReplaceBtn">適用</button>
+          </div>
+        </div>
+
+        <div class="modal-buttons" style="margin-top: 1rem;">
           <button id="closeBatchEditBtn">閉じる</button>
         </div>
       </div>

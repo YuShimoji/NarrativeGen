@@ -1,11 +1,11 @@
 # Task: spreadsheet-format.mdにtimeWindow条件の評価ロジックを明記
 
-Status: OPEN
+Status: DONE
 Tier: 2
 Branch: main
 Owner: Worker
 Created: 2026-01-04T20:00:00Z
-Report: （未作成）
+Report: docs/reports/REPORT_TASK_012_20260104_2125.md
 
 ## Objective
 
@@ -37,13 +37,19 @@ Report: （未作成）
 
 ## DoD
 
-- [ ] `docs/spreadsheet-format.md`の`timeWindow`条件セクションに評価ロジックを明記
-- [ ] 境界の扱い（両端を含む）を明確に記載
+- [x] `docs/spreadsheet-format.md`の`timeWindow`条件セクションに評価ロジックを明記
+  - **結果**: 「timeWindow条件の評価ロジック」サブセクションを追加し、`time >= start && time <= end`を明記
+- [x] 境界の扱い（両端を含む）を明確に記載
+  - **結果**: 「開始時間と終了時間の両端を含む（inclusive）」と明記し、具体例（時間5、7、10が含まれ、時間4、11が含まれない）を追加
   - 例: 「`timeWindow:5-10`は、現在の時間が5以上10以下（両端を含む）の場合に条件を満たします」
-- [ ] 使用例を追加（既存の記載を補完）
-- [ ] エンジン実装との整合性を確認
-- [ ] docs/inbox/ にレポート（REPORT_TASK_012_*.md）が作成されている
-- [ ] 本チケットの Report 欄にレポートパスが追記されている
+- [x] 使用例を追加（既存の記載を補完）
+  - **結果**: 例3に説明を追加し、時間5から10（両端を含む）の範囲で動作することを明記
+- [x] エンジン実装との整合性を確認
+  - **結果**: 3つの実装ファイル（`index.ts`, `session-ops.ts`, `browser.ts`）すべてで`time >= cond.start && time <= cond.end`の実装を確認し、仕様書と一致
+- [x] docs/inbox/ にレポート（REPORT_TASK_012_*.md）が作成されている
+  - **結果**: `docs/reports/REPORT_TASK_012_20260104_2125.md`を作成
+- [x] 本チケットの Report 欄にレポートパスが追記されている
+  - **結果**: `docs/reports/REPORT_TASK_012_20260104_2125.md`を追記
 
 ## Notes
 

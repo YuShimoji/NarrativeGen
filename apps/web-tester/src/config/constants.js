@@ -46,6 +46,12 @@ export const ADVANCED_ENABLED_STORAGE_KEY = 'narrativeGenAdvancedEnabled'
  */
 export const DRAFT_MODEL_STORAGE_KEY = 'draft_model'
 
+/**
+ * 元モデル（GUI編集開始時のスナップショット）のlocalStorageキー
+ * @constant {string}
+ */
+export const ORIGINAL_MODEL_STORAGE_KEY = 'original_model'
+
 // ============================================================================
 // Node Templates for Quick Creation
 // ============================================================================
@@ -240,6 +246,7 @@ export default {
   KEY_BINDINGS_STORAGE_KEY,
   ADVANCED_ENABLED_STORAGE_KEY,
   DRAFT_MODEL_STORAGE_KEY,
+  ORIGINAL_MODEL_STORAGE_KEY,
   NODE_TEMPLATES,
   STATUS_MESSAGE_DURATION,
   AUTOSAVE_INTERVAL,

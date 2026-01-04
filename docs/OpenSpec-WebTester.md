@@ -101,7 +101,173 @@ NarrativeGen Web Tester は、`engine-ts` が提供する物語エンジンを�
 
 ---
 
-## 4. 既知のギャップ・今後の優先課題
+## 4. 条件システム
+
+Web Tester は、エンジン (`engine-ts`) が提供する条件システムを完全にサポートしています。選択肢の表示可否を制御するために、以下の条件タイプを使用できます。
+
+### 4.1 条件の種類
+
+#### フラグ条件 (`flag`)
+
+フラグの真偽値をチェックします。
+
+- **形式**: `{ type: 'flag', key: string, value: boolean }`
+- **評価ロジック**: `flags[key] === value` (未定義の場合は `false` として扱う)
+- **使用例**:
+  ```json
+  { "type": "flag", "key": "hasKey", "value": true }
+  ```
+  - フラグ `hasKey` が `true` の場合に条件を満たします
+
+#### リソース条件 (`resource`)
+
+リソースの数値を比較演算子でチェックします。
+
+- **形式**: `{ type: 'resource', key: string, op: '>=' | '<=' | '>' | '<' | '==', value: number }`
+- **評価ロジック**: `resources[key] ?? 0` と `value` を `op` で比較 (未定義の場合は `0` として扱う)
+- **使用例**:
+  ```json
+  { "type": "resource", "key": "gold", "op": ">=", "value": 50 }
+  ```
+  - リソース `gold` が 50 以上の場合に条件を満たします
+
+#### 変数条件 (`variable`)
+
+変数の文字列値を比較演算子でチェックします。
+
+- **形式**: `{ type: 'variable', key: string, op: '==' | '!=' | 'contains' | '!contains', value: string }`
+- **評価ロジック**: 
+  - `==`: `variables[key] ?? '' === value`
+  - `!=`: `variables[key] ?? '' !== value`
+  - `contains`: `(variables[key] ?? '').includes(value)`
+  - `!contains`: `!(variables[key] ?? '').includes(value)`
+- **使用例**:
+  ```json
+  { "type": "variable", "key": "playerClass", "op": "contains", "value": "warrior" }
+  ```
+  - 変数 `playerClass` に "warrior" が含まれる場合に条件を満たします
+
+#### 時間ウィンドウ条件 (`timeWindow`)
+
+現在の時間が指定された範囲内にあるかをチェックします。
+
+- **形式**: `{ type: 'timeWindow', start: number, end: number }`
+- **評価ロジック**: `time >= start && time <= end` (両端を含む、inclusive)
+- **使用例**:
+  ```json
+  { "type": "timeWindow", "start": 5, "end": 10 }
+  ```
+  - 現在の時間が 5 以上 10 以下（両端を含む）の場合に条件を満たします
+  - 例: 時間が 5, 6, 7, 8, 9, 10 のいずれかの場合に条件を満たします
+
+### 4.2 複合条件
+
+複数の条件を組み合わせることができます。
+
+#### AND条件 (`and`)
+
+すべての条件が満たされる必要があります。
+
+- **形式**: `{ type: 'and', conditions: Condition[] }`
+- **評価ロジック**: すべての `conditions` が `true` を返す場合に `true`
+- **使用例**:
+  ```json
+  {
+    "type": "and",
+    "conditions": [
+      { "type": "flag", "key": "hasKey", "value": true },
+      { "type": "resource", "key": "hp", "op": ">", "value": 0 }
+    ]
+  }
+  ```
+
+#### OR条件 (`or`)
+
+いずれかの条件が満たされれば十分です。
+
+- **形式**: `{ type: 'or', conditions: Condition[] }`
+- **評価ロジック**: いずれかの `conditions` が `true` を返す場合に `true`
+- **使用例**:
+  ```json
+  {
+    "type": "or",
+    "conditions": [
+      { "type": "flag", "key": "hasSword", "value": true },
+      { "type": "flag", "key": "hasBow", "value": true }
+    ]
+  }
+  ```
+
+#### NOT条件 (`not`)
+
+条件の結果を反転します。
+
+- **形式**: `{ type: 'not', condition: Condition }`
+- **評価ロジック**: `condition` の結果を反転
+- **使用例**:
+  ```json
+  {
+    "type": "not",
+    "condition": { "type": "flag", "key": "isDead", "value": true }
+  }
+  ```
+
+### 4.3 条件の使用例
+
+#### 例1: 時間ゲート付き選択肢
+
+```json
+{
+  "id": "visitMarket",
+  "text": "市場に行く（時間: 5-10）",
+  "target": "market",
+  "conditions": [
+    { "type": "timeWindow", "start": 5, "end": 10 }
+  ]
+}
+```
+
+#### 例2: 複合条件（フラグ + リソース + 時間ウィンドウ）
+
+```json
+{
+  "id": "specialEvent",
+  "text": "特別イベントに参加",
+  "target": "event",
+  "conditions": [
+    {
+      "type": "and",
+      "conditions": [
+        { "type": "flag", "key": "hasTicket", "value": true },
+        { "type": "resource", "key": "gold", "op": ">=", "value": 100 },
+        { "type": "timeWindow", "start": 8, "end": 12 }
+      ]
+    }
+  ]
+}
+```
+
+この例では、以下のすべての条件を満たす必要があります：
+- フラグ `hasTicket` が `true`
+- リソース `gold` が 100 以上
+- 現在の時間が 8 以上 12 以下（両端を含む）
+
+### 4.4 GUI エディタでの条件編集
+
+GUI エディタ (`src/ui/condition-effect-editor.js`) では、以下の形式で条件を編集できます：
+
+- **構造化フォーム**: 各条件タイプに対応した入力フィールド
+- **文字列形式**: CSV インポート時などに使用される文字列形式
+  - `flag:key=true`
+  - `resource:key>=100`
+  - `variable:key==value`
+  - `timeWindow:5-10` または `time:5-10`
+
+GUI エディタは、文字列形式とオブジェクト形式の両方をサポートし、エンジンが期待する形式（オブジェクト形式）に自動変換します。
+
+---
+
+## 5. 既知のギャップ・今後の優先課題
 
 ### 4.1 GUI エディタ周りのギャップ
 
@@ -134,7 +300,7 @@ NarrativeGen Web Tester は、`engine-ts` が提供する物語エンジンを�
 
 ---
 
-## 5. バックログ (抜粋)
+## 6. バックログ (抜粋)
 
 以下は、主に Web Tester / GUI エディタに関する今後のバックログです。優先度は状況に応じて調整してください。
 
@@ -156,7 +322,7 @@ NarrativeGen Web Tester は、`engine-ts` が提供する物語エンジンを�
 
 ---
 
-## 6. テストと受け入れ基準 (抜粋)
+## 7. テストと受け入れ基準 (抜粋)
 
 詳細なテスト手順は `UI_IMPROVEMENTS_TEST.md` および `PHASE1_TEST_GUIDE.md` を参照。ここでは Web Tester 全体としての受け入れ基準を簡潔にまとめる。
 

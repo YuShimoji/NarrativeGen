@@ -295,4 +295,5 @@
 
 | 実施日 | 実施者 | 環境（OS/Browser） | 対象バージョン（branch/commit） | 結果 | 備考 |
 |------|--------|-------------------|-------------------------------|------|------|
-| 2025-12-14 | Cascade | Windows / Puppeteer(Chromium) | lexicon-ux-ajv-packages-casing / f907892 | ✅ | スモーク: GUI編集入退場（edit/cancel）、起動/実行/タブ切替 | 
+| 2025-12-14 | Cascade | Windows / Puppeteer(Chromium) | lexicon-ux-ajv-packages-casing / f907892 | ✅ | スモーク: GUI編集入退場（edit/cancel）、起動/実行/タブ切替 |
+| 2026-01-04 | Worker | Windows / Browser | main | ✅ | TASK_014: 検索アイコン追加、クイックノードモーダルキャンセル機能、テーマモーダル閉鎖時の表示問題を修正 | 

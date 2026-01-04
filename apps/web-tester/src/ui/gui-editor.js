@@ -38,13 +38,14 @@ export class GuiEditorManager {
     this.batchEditor = new BatchEditor(appState)
   }
 
-  initialize(nodeListElement, guiEditModeElement, batchEditModalElement, quickNodeModalElement, batchChoiceModalElement, paraphraseModalElement) {
+  initialize(nodeListElement, guiEditModeElement, batchEditModalElement, quickNodeModalElement, batchChoiceModalElement, paraphraseModalElement, draftRestoreModalElement) {
     this.nodeList = nodeListElement
     this.guiEditMode = guiEditModeElement
     this.batchEditModal = batchEditModalElement
     this.quickNodeModal = quickNodeModalElement
     this.batchChoiceModal = batchChoiceModalElement
     this.paraphraseModal = paraphraseModalElement
+    this.draftRestoreModal = draftRestoreModalElement
 
     // Initialize sub-managers
     this.nodeRenderer.initialize(nodeListElement)
@@ -57,7 +58,8 @@ export class GuiEditorManager {
     // Setup drag and drop functionality
     this.nodeRenderer.setupDragAndDrop()
     this.nodeRenderer.setOnModelUpdate(() => {
-      // モデル更新時の追加処理があればここに
+      // モデル更新時にマルチエンディング可視化を更新
+      this._updateEndingVisualization()
     })
 
     // Setup node selection callback
@@ -67,6 +69,11 @@ export class GuiEditorManager {
 
     // Initialize live preview
     this._initializeLivePreview()
+    
+    // モデル変更時にマルチエンディング可視化を更新
+    if (this.appState.model) {
+      this._updateEndingVisualization()
+    }
   }
 
   /**
@@ -200,6 +207,278 @@ export class GuiEditorManager {
     const div = document.createElement('div')
     div.textContent = text
     return div.innerHTML
+  }
+
+  /**
+   * エンディングノードかどうかを判定
+   */
+  _isEndingNode(nodeId, node) {
+    if (!node) return false
+    
+    // 選択肢がない、または空の選択肢配列
+    const hasNoChoices = !node.choices || node.choices.length === 0
+    
+    // 有効な遷移先を持つ選択肢がない
+    const hasNoValidTargets = node.choices && 
+      node.choices.length > 0 && 
+      node.choices.every(c => !c.target)
+
+    if (hasNoChoices || hasNoValidTargets) {
+      // エンディングノードとしてマークされているかチェック
+      return node.isEnding || 
+             node.type === 'ending' ||
+             nodeId.toLowerCase().includes('end') ||
+             nodeId.toLowerCase().includes('ending')
+    }
+    
+    return false
+  }
+
+  /**
+   * 全エンディングノードを検出
+   */
+  _findAllEndingNodes() {
+    if (!this.appState.model) return []
+    
+    const endingNodes = []
+    for (const [nodeId, node] of Object.entries(this.appState.model.nodes)) {
+      if (this._isEndingNode(nodeId, node)) {
+        endingNodes.push(nodeId)
+      }
+    }
+    return endingNodes
+  }
+
+  /**
+   * 条件を文字列としてフォーマット
+   */
+  _formatCondition(condition) {
+    if (!condition) return ''
+    
+    if (condition.type === 'flag') {
+      return `flag:${condition.key}=${condition.value}`
+    }
+    if (condition.type === 'resource') {
+      return `res:${condition.key}${condition.op}${condition.value}`
+    }
+    if (condition.type === 'variable') {
+      return `var:${condition.key}${condition.op}${condition.value}`
+    }
+    if (condition.type === 'timeWindow') {
+      return `time:${condition.start}-${condition.end}`
+    }
+    if (condition.type === 'and') {
+      return `AND(${condition.conditions.map(c => this._formatCondition(c)).join(', ')})`
+    }
+    if (condition.type === 'or') {
+      return `OR(${condition.conditions.map(c => this._formatCondition(c)).join(', ')})`
+    }
+    if (condition.type === 'not') {
+      return `NOT(${this._formatCondition(condition.condition)})`
+    }
+    return JSON.stringify(condition)
+  }
+
+  /**
+   * パスの到達条件を計算（パス上の全選択肢の条件を結合）
+   */
+  _calculatePathConditions(path) {
+    if (!this.appState.model || path.length < 2) return []
+    
+    const conditions = []
+    
+    for (let i = 0; i < path.length - 1; i++) {
+      const currentNodeId = path[i]
+      const nextNodeId = path[i + 1]
+      const currentNode = this.appState.model.nodes[currentNodeId]
+      
+      if (!currentNode || !currentNode.choices) continue
+      
+      // 次のノードへの選択肢を探す
+      for (const choice of currentNode.choices) {
+        if (choice.target === nextNodeId) {
+          // この選択肢の条件を追加
+          if (choice.conditions && choice.conditions.length > 0) {
+            conditions.push({
+              fromNode: currentNodeId,
+              toNode: nextNodeId,
+              choiceText: choice.text || '',
+              conditions: choice.conditions
+            })
+          }
+          break
+        }
+      }
+    }
+    
+    return conditions
+  }
+
+  /**
+   * エンディングノードへの全パスを抽出（DFS、最適化版）
+   * 大規模モデルでもパフォーマンスを維持するため、深さ制限と最大パス数を設定
+   */
+  _findAllPathsToEnding(endingNodeId, visited = new Set(), currentPath = [], maxDepth = 50, maxPaths = 100) {
+    if (!this.appState.model) return []
+    
+    const startNodeId = this.appState.model.startNode || this.appState.model.meta?.startNodeId || 'start'
+    
+    // スタートノードから開始
+    if (currentPath.length === 0) {
+      currentPath = [startNodeId]
+      visited = new Set([startNodeId])
+    }
+    
+    // 深さ制限チェック
+    if (currentPath.length > maxDepth) {
+      return []
+    }
+    
+    const paths = []
+    const currentNodeId = currentPath[currentPath.length - 1]
+    
+    // エンディングノードに到達した場合
+    if (currentNodeId === endingNodeId) {
+      return [currentPath]
+    }
+    
+    // 最大パス数に達した場合は探索を停止
+    if (paths.length >= maxPaths) {
+      return paths
+    }
+    
+    const currentNode = this.appState.model.nodes[currentNodeId]
+    if (!currentNode || !currentNode.choices) return []
+    
+    // 各選択肢を探索
+    for (const choice of currentNode.choices) {
+      if (!choice.target) continue
+      
+      const targetNodeId = choice.target
+      
+      // 循環参照を防ぐ（既にパスに含まれている場合はスキップ）
+      if (currentPath.includes(targetNodeId)) continue
+      
+      // 新しいパスを作成
+      const newPath = [...currentPath, targetNodeId]
+      
+      // 再帰的に探索
+      const subPaths = this._findAllPathsToEnding(endingNodeId, visited, newPath, maxDepth, maxPaths - paths.length)
+      paths.push(...subPaths)
+      
+      // 最大パス数に達した場合は探索を停止
+      if (paths.length >= maxPaths) {
+        break
+      }
+    }
+    
+    return paths
+  }
+
+  /**
+   * マルチエンディング可視化を更新
+   */
+  _updateEndingVisualization() {
+    if (!this.endingVisualizationDisplay || !this.appState.model) return
+    
+    const endingNodes = this._findAllEndingNodes()
+    
+    if (endingNodes.length === 0) {
+      this.endingVisualizationDisplay.innerHTML = `
+        <p style="color: var(--color-text-muted); font-size: 0.85rem; text-align: center; padding: 1rem;">
+          エンディングノードが見つかりません
+        </p>
+      `
+      return
+    }
+    
+    let html = `<div class="ending-visualization-header">
+      <h4 style="margin: 0 0 0.5rem; font-size: 0.875rem; font-weight: 600;">
+        エンディング一覧 (${endingNodes.length}個)
+      </h4>
+    </div>`
+    
+    // 各エンディングについて処理
+    for (const endingNodeId of endingNodes) {
+      const endingNode = this.appState.model.nodes[endingNodeId]
+      const paths = this._findAllPathsToEnding(endingNodeId)
+      
+      html += `<div class="ending-item" style="margin-bottom: 1rem; padding: 0.75rem; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-sm);">
+        <div class="ending-header" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <span class="ending-node-id" style="font-weight: 600; color: var(--color-primary); cursor: pointer;" data-node="${endingNodeId}">${endingNodeId}</span>
+          <span class="ending-path-count" style="font-size: 0.75rem; color: var(--color-text-muted);">(${paths.length}パス)</span>
+        </div>
+        <div class="ending-node-text" style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 0.5rem; max-height: 3em; overflow: hidden; text-overflow: ellipsis;">
+          ${this._escapeHtml((endingNode.text || '(テキストなし)').substring(0, 100))}
+        </div>
+        <div class="ending-paths" style="margin-top: 0.5rem;">
+      `
+      
+      if (paths.length === 0) {
+        html += `<p style="font-size: 0.75rem; color: var(--color-text-muted); font-style: italic;">スタートノードから到達不能</p>`
+      } else {
+        // パスを表示（最大5パスまで）
+        const displayPaths = paths.slice(0, 5)
+        for (let i = 0; i < displayPaths.length; i++) {
+          const path = displayPaths[i]
+          const conditions = this._calculatePathConditions(path)
+          
+          html += `<div class="ending-path-item" style="margin-bottom: 0.5rem; padding: 0.5rem; background: rgba(91, 141, 239, 0.05); border-radius: var(--radius-sm);">
+            <div class="path-nodes" style="display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
+          `
+          
+          // パス上のノードを表示
+          path.forEach((nodeId, idx) => {
+            html += `<span class="path-node-small" style="padding: 0.125rem 0.375rem; background: var(--color-surface); border-radius: 3px; font-size: 0.75rem; cursor: pointer; color: var(--color-primary);" data-node="${nodeId}">${nodeId}</span>`
+            if (idx < path.length - 1) {
+              html += `<span style="color: var(--color-text-muted); font-size: 0.75rem;">→</span>`
+            }
+          })
+          
+          html += `</div>`
+          
+          // 到達条件を表示
+          if (conditions.length > 0) {
+            html += `<div class="path-conditions" style="margin-top: 0.25rem; padding-top: 0.25rem; border-top: 1px solid var(--color-border);">
+              <div style="font-size: 0.7rem; color: var(--color-text-muted); margin-bottom: 0.25rem;">到達条件:</div>
+            `
+            
+            conditions.forEach(condGroup => {
+              if (condGroup.conditions && condGroup.conditions.length > 0) {
+                const condTexts = condGroup.conditions.map(c => this._formatCondition(c))
+                html += `<div style="font-size: 0.7rem; color: var(--color-text-muted); padding-left: 0.5rem;">
+                  ${condGroup.fromNode} → ${condGroup.toNode}: ${condTexts.join(', ')}
+                </div>`
+              }
+            })
+            
+            html += `</div>`
+          }
+          
+          html += `</div>`
+        }
+        
+        if (paths.length > 5) {
+          html += `<p style="font-size: 0.7rem; color: var(--color-text-muted); font-style: italic; margin-top: 0.25rem;">
+            他 ${paths.length - 5} パスがあります
+          </p>`
+        }
+      }
+      
+      html += `</div></div>`
+    }
+    
+    this.endingVisualizationDisplay.innerHTML = html
+    
+    // ノードクリックハンドラを追加
+    this.endingVisualizationDisplay.querySelectorAll('.path-node-small, .ending-node-id').forEach(el => {
+      el.addEventListener('click', () => {
+        const nodeId = el.dataset.node
+        if (nodeId) {
+          this.selectNode(nodeId)
+        }
+      })
+    })
   }
 
   /**
@@ -368,7 +647,10 @@ export class GuiEditorManager {
 
   // Main rendering function
   renderNodeList() {
-    return this.nodeRenderer.renderNodeList()
+    const result = this.nodeRenderer.renderNodeList()
+    // ノードリスト更新時にマルチエンディング可視化を更新
+    this._updateEndingVisualization()
+    return result
   }
 
   renderChoicesForNode(nodeId) {
@@ -380,9 +662,19 @@ export class GuiEditorManager {
     return {
       openModal: () => this.batchEditor.openModal(),
       closeModal: () => this.batchEditor.closeModal(),
-      applyTextReplace: () => this.batchEditor.applyTextReplace(),
-      applyChoiceReplace: () => this.batchEditor.applyChoiceTextReplace(),
-      applyTargetReplace: () => this.batchEditor.applyTargetReplace(),
+      applyTextReplace: () => {
+        this.batchEditor.applyTextReplace()
+        this.renderNodeList()
+      },
+      applyChoiceReplace: () => {
+        this.batchEditor.applyChoiceTextReplace()
+        this.renderNodeList()
+      },
+      applyTargetReplace: () => {
+        this.batchEditor.applyTargetReplace()
+        this.renderNodeList()
+      },
+      updatePreview: () => this.batchEditor.updateReplacePreview(),
       refreshUI: () => this.renderNodeList()
     }
   }
@@ -671,7 +963,65 @@ export class GuiEditorManager {
 
   // Draft model functionality
   saveDraftModel() {
-    return this.modelUpdater.saveDraftModel()
+    const result = this.modelUpdater.saveDraftModel()
+    // モデル保存時にマルチエンディング可視化を更新
+    this._updateEndingVisualization()
+    return result
+  }
+
+  /**
+   * GUI編集モード開始時に元モデルを保存
+   * キャンセル時に復元するために使用
+   */
+  saveOriginalModel() {
+    if (!this.appState.model) return
+
+    try {
+      const originalData = {
+        model: JSON.parse(JSON.stringify(this.appState.model)), // Deep copy
+        modelName: getCurrentModelName(),
+        timestamp: new Date().toISOString()
+      }
+      localStorage.setItem(ORIGINAL_MODEL_STORAGE_KEY, JSON.stringify(originalData))
+    } catch (error) {
+      console.warn('Failed to save original model:', error)
+    }
+  }
+
+  /**
+   * 元モデルを復元
+   * @returns {boolean} 復元に成功したかどうか
+   */
+  restoreOriginalModel() {
+    try {
+      const originalDataStr = localStorage.getItem(ORIGINAL_MODEL_STORAGE_KEY)
+      if (!originalDataStr) {
+        return false
+      }
+
+      const originalData = JSON.parse(originalDataStr)
+      if (!originalData.model) {
+        return false
+      }
+
+      // 元モデルを復元
+      this.appState.model = JSON.parse(JSON.stringify(originalData.model)) // Deep copy
+      
+      // 元モデルのストレージをクリア
+      localStorage.removeItem(ORIGINAL_MODEL_STORAGE_KEY)
+      
+      return true
+    } catch (error) {
+      console.warn('Failed to restore original model:', error)
+      return false
+    }
+  }
+
+  /**
+   * 元モデルのストレージをクリア
+   */
+  clearOriginalModel() {
+    localStorage.removeItem(ORIGINAL_MODEL_STORAGE_KEY)
   }
 
   // Node management
@@ -1400,5 +1750,100 @@ export class GuiEditorManager {
     }
     // Fall back to built-in templates
     return this.getNodeTemplate(templateKey)
+  }
+
+  // ============================================================================
+  // Draft Restore UI functionality
+  // ============================================================================
+
+  /**
+   * ドラフト情報を取得
+   * @returns {Object|null} ドラフトデータ、またはnull
+   */
+  getDraftInfo() {
+    try {
+      const draftData = localStorage.getItem(DRAFT_MODEL_STORAGE_KEY)
+      if (!draftData) return null
+
+      const draft = JSON.parse(draftData)
+      if (!draft.model) return null
+
+      return {
+        model: draft.model,
+        modelName: draft.modelName || 'draft',
+        storyLog: draft.storyLog || [],
+        timestamp: draft.timestamp || new Date().toISOString(),
+        nodeCount: draft.model.nodes ? Object.keys(draft.model.nodes).length : 0,
+        storyLogCount: draft.storyLog ? draft.storyLog.length : 0
+      }
+    } catch (error) {
+      console.warn('Failed to get draft info:', error)
+      return null
+    }
+  }
+
+  /**
+   * ドラフト復元モーダルを開く
+   * @returns {boolean} ドラフトが存在する場合true
+   */
+  openDraftRestoreModal() {
+    const draftInfo = this.getDraftInfo()
+    if (!draftInfo) {
+      if (typeof setStatus !== 'undefined') {
+        setStatus('復元可能なドラフトが見つかりません', 'warn')
+      }
+      return false
+    }
+
+    const modal = this.draftRestoreModal
+    if (!modal) {
+      console.warn('[GuiEditorManager] draftRestoreModal not initialized')
+      return false
+    }
+
+    // ドラフト情報を表示
+    const modelNameEl = document.getElementById('draftModelName')
+    const timestampEl = document.getElementById('draftTimestamp')
+    const nodeCountEl = document.getElementById('draftNodeCount')
+    const storyLogCountEl = document.getElementById('draftStoryLogCount')
+
+    if (modelNameEl) {
+      modelNameEl.textContent = draftInfo.modelName
+    }
+    if (timestampEl) {
+      const date = new Date(draftInfo.timestamp)
+      timestampEl.textContent = date.toLocaleString('ja-JP', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      })
+    }
+    if (nodeCountEl) {
+      nodeCountEl.textContent = `${draftInfo.nodeCount}個`
+    }
+    if (storyLogCountEl) {
+      storyLogCountEl.textContent = `${draftInfo.storyLogCount}件`
+    }
+
+    // モーダルを表示
+    modal.style.display = 'flex'
+    modal.classList.add('show')
+
+    return true
+  }
+
+  /**
+   * ドラフト復元モーダルを閉じる
+   */
+  closeDraftRestoreModal() {
+    if (!this.draftRestoreModal) return
+
+    this.draftRestoreModal.classList.remove('show')
+    setTimeout(() => {
+      this.draftRestoreModal.style.display = 'none'
+    }, 300)
   }
 }

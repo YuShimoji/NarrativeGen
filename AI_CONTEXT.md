@@ -80,3 +80,4 @@
 
 - [pending] プロジェクト固有ワークフロー調整スクリプト作成 (ref: docs/tasks/TASK_007_ProjectSpecificWorkflowScripts.md, Status: COMPLETED)
 - [pending] REPORT_CONFIG.ymlのプロジェクトルート配置 (ref: docs/tasks/TASK_008_ReportConfigLocal.md, Status: CLOSED)
+- [pending] GUIエディタ手動テスト実施 (ref: docs/tasks/TASK_009_GUIEditorManualTesting.md, Status: OPEN（テスト準備完了、ユーザーによる手動テスト実施待ち）)
