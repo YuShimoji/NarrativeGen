@@ -80,6 +80,7 @@ import { DOMManager } from './src/ui/dom.js'
 import { EventManager } from './src/ui/events.js'
 import { StoryManager } from './src/ui/story.js'
 import { GraphManager } from './src/ui/graph.js'
+import { GraphEditorManager } from './src/ui/graph-editor/GraphEditorManager.js'
 import { DebugManager } from './src/ui/debug.js'
 import { GuiEditorManager } from './src/ui/gui-editor.js'
 import { ReferenceManager } from './src/ui/reference.js'
@@ -2039,7 +2040,10 @@ if (templateModal) {
 const dom = new DOMManager()
 const eventManager = new EventManager()
 const storyManager = new StoryManager(appState)
-const graphManager = new GraphManager(appState)
+// Phase 2: 新しいグラフエディタを使用（読み取り専用ビュー）
+const graphManager = new GraphEditorManager(appState)
+// 既存のGraphManagerは将来の拡張のために保持
+// const oldGraphManager = new GraphManager(appState)
 const debugManager = new DebugManager(appState)
 const guiEditorManager = new GuiEditorManager(appState)
 const referenceManager = new ReferenceManager()
@@ -2212,11 +2216,20 @@ setupThemeEventListeners(themeManager)
 themeManager.loadSavedPalette()
 
 // Set up graph control event listeners
+// Phase 2: 新しいGraphEditorManager用のイベントリスナー
 if (fitGraphBtn) {
-  fitGraphBtn.onclick = () => graphManager.fitToView()
+  fitGraphBtn.onclick = () => {
+    if (graphManager && typeof graphManager.fitToView === 'function') {
+      graphManager.fitToView()
+    }
+  }
 }
 if (resetGraphBtn) {
-  resetGraphBtn.onclick = () => graphManager.reset()
+  resetGraphBtn.onclick = () => {
+    if (graphManager && typeof graphManager.reset === 'function') {
+      graphManager.reset()
+    }
+  }
 }
 if (graphSettingsBtn) {
   graphSettingsBtn.onclick = () => {
@@ -2224,33 +2237,34 @@ if (graphSettingsBtn) {
     graphSettings.style.display = graphSettings.style.display === 'none' ? 'block' : 'none'
   }
 }
-if (nodeShape) {
-  nodeShape.onchange = () => graphManager.setNodeShape(nodeShape.value)
-}
-if (fontSize) {
-  fontSize.oninput = () => graphManager.setFontSize(parseInt(fontSize.value))
-}
-if (showConditions) {
-  showConditions.onchange = () => graphManager.setShowConditions(showConditions.checked)
-}
-if (saveGraphPreset) {
-  saveGraphPreset.onclick = () => {
-    if (graphManager.savePreset()) {
-      setStatus('グラフプリセットを保存しました', 'success')
-    } else {
-      setStatus('プリセットの保存に失敗しました', 'warn')
-    }
-  }
-}
-if (loadGraphPreset) {
-  loadGraphPreset.onclick = () => {
-    if (graphManager.loadPreset()) {
-      setStatus('グラフプリセットを読み込みました', 'success')
-    } else {
-      setStatus('保存されたプリセットがありません', 'warn')
-    }
-  }
-}
+// Phase 2: 以下の機能は将来の拡張として実装予定
+// if (nodeShape) {
+//   nodeShape.onchange = () => graphManager.setNodeShape(nodeShape.value)
+// }
+// if (fontSize) {
+//   fontSize.oninput = () => graphManager.setFontSize(parseInt(fontSize.value))
+// }
+// if (showConditions) {
+//   showConditions.onchange = () => graphManager.setShowConditions(showConditions.checked)
+// }
+// if (saveGraphPreset) {
+//   saveGraphPreset.onclick = () => {
+//     if (graphManager.savePreset()) {
+//       setStatus('グラフプリセットを保存しました', 'success')
+//     } else {
+//       setStatus('プリセットの保存に失敗しました', 'warn')
+//     }
+//   }
+// }
+// if (loadGraphPreset) {
+//   loadGraphPreset.onclick = () => {
+//     if (graphManager.loadPreset()) {
+//       setStatus('グラフプリセットを読み込みました', 'success')
+//     } else {
+//       setStatus('保存されたプリセットがありません', 'warn')
+//     }
+//   }
+// }
 
 // CSV import/export event listeners
 if (importCsvBtn) {
@@ -2305,3 +2319,7 @@ if (guiEditBtn) {
     }
   })
 }
+
+// Phase 2: GraphEditorManagerからアクセスできるようにグローバル変数を公開
+window.guiEditorManager = guiEditorManager
+window.switchTab = switchTab
