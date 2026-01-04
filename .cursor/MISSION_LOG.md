@@ -7,7 +7,7 @@ KICKSTART_20260103T194038Z
 2026-01-03T19:40:38Z
 
 ## 現在のフェーズ
-P1.5: 巡回監査
+P2: 状況把握
 
 ## ステータス
 COMPLETED
@@ -102,6 +102,11 @@ COMPLETED
 
 ### P1.5: 巡回監査（TASK_014回収後）
 - [x] orchestrator-audit.js実行: OK（タスク8件、レポート0件、異常なし）
+
+### P2: 状況把握（未実装機能整理）
+- [x] 未実装機能の調査: docs/NEXT_PHASE_PROPOSAL.md、docs/TECHNICAL_DEBT.md、docs/OpenSpec-WebTester.mdを確認
+- [x] 次のタスクまとめドキュメント作成: docs/NEXT_TASKS_SUMMARY.md作成
+- [x] 検索アイコンの表示問題を記録: ブラウザ（ポート5273）で表示されない問題を記録
 
 ### P6: Orchestrator Report（Push完了）
 - [x] git push origin main実行: 完了
