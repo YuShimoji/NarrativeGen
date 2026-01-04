@@ -5,7 +5,7 @@ Tier: 2
 Branch: main
 Owner: Worker
 Created: 2026-01-04T12:18:00Z
-Report: docs/inbox/REPORT_TASK_010_20260104.md
+Report: docs/reports/REPORT_TASK_010_20260104.md
 
 ## Objective
 
