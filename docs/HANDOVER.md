@@ -7,7 +7,7 @@
 
 ## 基本情報
 
-- **最終更新**: 2026-01-05T01:20:00Z
+- **最終更新**: 2026-01-05T02:00:00Z
 - **更新者**: Orchestrator
 
 ## GitHubAutoApprove
@@ -35,12 +35,12 @@ GitHubAutoApprove: false
 - **TASK_012**: DONE — spreadsheet-format.mdにtimeWindow条件の評価ロジックを明記完了
 - **TASK_013**: DONE — Phase 2読み取り専用のグラフビュー（スパイク）を最小で実装完了
 - **TASK_014**: CLOSED — GUIエディタバグ修正完了（検索UI、クイックノードモーダル、テーマモーダル）
-- **TASK_015**: OPEN — Phase 2グラフビューの編集機能実装（Workerプロンプト生成済み）
-- **TASK_016**: OPEN — GUIエディタのバッチテキスト置換機能実装（Workerプロンプト生成済み）
-- **TASK_017**: OPEN — マルチエンディング可視化機能実装（Workerプロンプト生成済み）
-- **TASK_018**: OPEN — GUIエディタのロールバック機能実装（Workerプロンプト生成済み）
-- **TASK_019**: OPEN — ドラフト復元UIの改善（Workerプロンプト生成済み）
-- **TASK_020**: OPEN — Phase 2グラフビューのレスポンシブ対応（Workerプロンプト生成済み）
+- **TASK_015**: CLOSED — Phase 2グラフビューの編集機能実装完了
+- **TASK_016**: CLOSED — GUIエディタのバッチテキスト置換機能実装完了
+- **TASK_017**: CLOSED — マルチエンディング可視化機能実装完了
+- **TASK_018**: CLOSED — GUIエディタのロールバック機能実装完了
+- **TASK_019**: CLOSED — ドラフト復元UIの改善完了
+- **TASK_020**: CLOSED — Phase 2グラフビューのレスポンシブ対応完了
 - **P0-P2: 通常運用フェーズ**: COMPLETED — SSOT確認、同期、監査、Complete Gate、状況把握完了
 - **P3-P5: 新規タスク起票**: COMPLETED — TASK_009/TASK_010起票、Workerプロンプト生成完了、TASK_014起票完了
 
@@ -85,6 +85,18 @@ GitHubAutoApprove: false
   - Summary: Phase 2読み取り専用のグラフビュー（スパイク）を最小で実装完了。Dagre.jsを使用した階層型レイアウトでストーリー構造を可視化。既存のリスト形式GUIエディタを補完。
 - **TASK_014**: docs/reports/REPORT_TASK_014_20260104.md
   - Summary: GUIエディタバグ修正完了。検索UIの虫眼鏡アイコン追加、クイックノードモーダルのキャンセル機能実装、テーマモーダル閉鎖時の表示問題修正。すべての修正について動作確認済み。
+- **TASK_015**: docs/reports/REPORT_TASK_015_Phase2GraphViewEditing.md
+  - Summary: Phase 2グラフビューの編集機能実装完了。ノード追加・削除、エッジ（選択肢）編集、インライン編集機能を実装。既存のGUIエディタとの状態同期も維持。
+- **TASK_016**: docs/reports/REPORT_TASK_016_20260105.md
+  - Summary: GUIエディタのバッチテキスト置換機能実装完了。正規表現サポートと置換前プレビュー機能を追加。既存機能を破壊することなく、タブ構造で機能を整理。
+- **TASK_017**: docs/reports/REPORT_TASK_017_20260105_0127.md
+  - Summary: マルチエンディング可視化機能実装完了。全エンディングパスを自動抽出し、ツリー構造で表示。各エンディングへの到達条件も表示。リアルタイムプレビューパネルに統合。
+- **TASK_018**: docs/reports/REPORT_TASK_018_20260105.md
+  - Summary: GUIエディタのロールバック機能実装完了。GUI編集モード開始時に元モデルを保存し、キャンセル時に復元できるようになった。ドラフト自動保存機能との整合性も維持。
+- **TASK_019**: docs/reports/REPORT_TASK_019_20260105_0128.md
+  - Summary: ドラフト復元UIの改善完了。簡易ダイアログから専用モーダルに置き換え。ドラフト情報（モデル名、保存日時、ノード数、ストーリーログ件数）を表示。
+- **TASK_020**: docs/reports/REPORT_TASK_020_GraphViewResponsive.md
+  - Summary: Phase 2グラフビューのレスポンシブ対応完了。ウィンドウサイズ変更時に自動的にレイアウトを再計算。ResizeObserverとデバウンス処理（300ms）を実装。
 
 ## Outlook
 

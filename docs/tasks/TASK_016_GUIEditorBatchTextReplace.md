@@ -1,11 +1,11 @@
 # Task: GUIエディタのバッチテキスト置換機能実装
 
-Status: OPEN
+Status: CLOSED
 Tier: 2
 Branch: main
 Owner: Worker
 Created: 2026-01-05T01:15:00Z
-Report: （未作成）
+Report: docs/inbox/REPORT_TASK_016_20260105.md
 
 ## Objective
 

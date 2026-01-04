@@ -1,11 +1,11 @@
 # Task: マルチエンディング可視化機能実装
 
-Status: OPEN
+Status: CLOSED
 Tier: 2
 Branch: main
 Owner: Worker
 Created: 2026-01-05T01:15:00Z
-Report: （未作成）
+Report: docs/inbox/REPORT_TASK_017_20260105_0127.md
 
 ## Objective
 

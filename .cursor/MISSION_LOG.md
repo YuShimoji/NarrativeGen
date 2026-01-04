@@ -7,13 +7,13 @@ KICKSTART_20260103T194038Z
 2026-01-03T19:40:38Z
 
 ## 現在のフェーズ
-P5: Worker起動用プロンプト生成
+P1.5: 巡回監査
 
 ## ステータス
 COMPLETED
 
 ## 次フェーズ/次アクション
-- Worker納品回収時: P1（Sync & Merge）から再開
+- 新規タスク起票時: P3（分割と戦略）から再開
 - 次回セッション: P0（SSOT確認）から開始
 
 ### P6: Orchestrator Report（最終）
@@ -128,6 +128,15 @@ COMPLETED
 - [x] WORKER_PROMPT_TASK_018.md作成: GUIエディタのロールバック機能実装用Workerプロンプト生成
 - [x] WORKER_PROMPT_TASK_019.md作成: ドラフト復元UIの改善用Workerプロンプト生成
 - [x] WORKER_PROMPT_TASK_020.md作成: Phase 2グラフビューのレスポンシブ対応用Workerプロンプト生成
+
+### P1: Sync & Merge（TASK_015〜TASK_020回収）
+- [x] Workerレポート回収: TASK_015, TASK_016, TASK_017, TASK_018, TASK_019, TASK_020のレポートを確認
+- [x] HANDOVER統合: 6タスクのレポートをHANDOVERに統合
+- [x] レポートアーカイブ: 6タスクのレポートをdocs/reports/にアーカイブ
+- [x] タスクステータス更新: TASK_015〜TASK_020をCLOSEDに更新
+
+### P1.5: 巡回監査（TASK_015〜TASK_020回収後）
+- [x] orchestrator-audit.js実行: タスクステータス、レポート統合状況を確認
 
 ### P6: Orchestrator Report（Push完了）
 - [x] git push origin main実行: 完了

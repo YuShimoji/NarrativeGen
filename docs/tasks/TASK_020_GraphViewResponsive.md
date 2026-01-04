@@ -1,11 +1,11 @@
 # Task: Phase 2グラフビューのレスポンシブ対応
 
-Status: OPEN
+Status: CLOSED
 Tier: 3
 Branch: main
 Owner: Worker
 Created: 2026-01-05T01:25:00Z
-Report: （未作成）
+Report: docs/inbox/REPORT_TASK_020_GraphViewResponsive.md
 
 ## Objective
 
