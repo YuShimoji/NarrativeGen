@@ -7,14 +7,13 @@ KICKSTART_20260103T194038Z
 2026-01-03T19:40:38Z
 
 ## 現在のフェーズ
-P1.5: 巡回監査
+P1: Sync & Merge
 
 ## ステータス
-COMPLETED
+IN_PROGRESS
 
 ## 次フェーズ/次アクション
-- 新規タスク起票時: P3（分割と戦略）から再開
-- 次回セッション: P0（SSOT確認）から開始
+- P1.5（巡回監査）に進む
 
 ### P6: Orchestrator Report（最終）
 - [x] レポート作成: docs/reports/REPORT_ORCH_20260104_1218.md
@@ -58,6 +57,12 @@ COMPLETED
 - [x] レポートアーカイブ: docs/reports/に移動完了
 - [x] HANDOVER.md更新: Latest Worker Reports欄追加、進捗更新
 - [x] 推奨アクション対応: TASK_011、TASK_012を起票
+
+### P1: Sync & Merge（TASK_011/TASK_012回収）
+- [x] Workerレポート回収: TASK_011（DONE、OpenSpec-WebTester.mdにtimeWindow条件の仕様を追加完了）、TASK_012（DONE、spreadsheet-format.mdにtimeWindow条件の評価ロジックを明記完了）のレポートを確認
+- [x] レポートアーカイブ: docs/reports/に移動完了
+- [x] HANDOVER.md更新: Latest Worker Reports欄追加、進捗更新
+- [x] タスクステータス更新: TASK_011をDONEに更新
 
 ### P1.5: 巡回監査（再実行）
 - [x] orchestrator-audit.js実行: OK（異常なし）

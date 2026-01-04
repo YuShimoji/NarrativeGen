@@ -7,7 +7,7 @@
 
 ## 基本情報
 
-- **最終更新**: 2026-01-04T20:00:00Z
+- **最終更新**: 2026-01-04T21:30:00Z
 - **更新者**: Orchestrator
 
 ## GitHubAutoApprove
@@ -31,6 +31,8 @@ GitHubAutoApprove: false
 - **TASK_008**: CLOSED — REPORT_CONFIG.ymlのプロジェクトルート配置
 - **TASK_009**: OPEN — GUIエディタ手動テスト実施（テスト準備完了、ユーザーによる手動テスト実施待ち）
 - **TASK_010**: DONE — timeWindow条件のエンジン仕様との最終整合確認完了（不整合2件を記録、修正タスク推奨）
+- **TASK_011**: DONE — OpenSpec-WebTester.mdにtimeWindow条件の仕様を追加完了
+- **TASK_012**: DONE — spreadsheet-format.mdにtimeWindow条件の評価ロジックを明記完了
 - **P0-P2: 通常運用フェーズ**: COMPLETED — SSOT確認、同期、監査、Complete Gate、状況把握完了
 - **P3-P5: 新規タスク起票**: COMPLETED — TASK_009/TASK_010起票、Workerプロンプト生成完了
 
@@ -42,8 +44,7 @@ GitHubAutoApprove: false
 
 - TASK_007、TASK_008完了により、プロジェクト固有の検証・レポート設定が整備済み
 - TASK_009: ユーザーによる手動テスト実施待ち
-- TASK_011: OpenSpec-WebTester.mdにtimeWindow条件の仕様を追加（TASK_010の推奨アクション）
-- TASK_012: spreadsheet-format.mdにtimeWindow条件の評価ロジックを明記（TASK_010の推奨アクション）
+- TASK_010の推奨アクション（TASK_011, TASK_012）は完了
 
 ## Verification
 
@@ -64,6 +65,10 @@ GitHubAutoApprove: false
   - Summary: GUIエディタ手動テスト実施。テスト準備完了、開発サーバー起動済み。ユーザーによる手動テスト実施待ち。
 - **TASK_010**: docs/reports/REPORT_TASK_010_20260104.md
   - Summary: timeWindow条件のエンジン仕様との最終整合確認完了。不整合2件を記録（OpenSpec-WebTester.mdに記載なし、評価ロジックの明記不足）。修正タスク（TASK_011, TASK_012）を推奨。
+- **TASK_011**: docs/reports/REPORT_TASK_011_20260104.md
+  - Summary: OpenSpec-WebTester.mdにtimeWindow条件の仕様を追加完了。セクション4「条件システム」を新規追加し、すべての条件タイプの仕様を包括的に記載。
+- **TASK_012**: docs/reports/REPORT_TASK_012_20260104_2125.md
+  - Summary: spreadsheet-format.mdにtimeWindow条件の評価ロジックを明記完了。境界の扱い（両端を含む）を明確に記載し、使用例を追加。
 
 ## Outlook
 

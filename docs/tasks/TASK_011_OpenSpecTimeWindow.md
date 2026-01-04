@@ -1,11 +1,11 @@
 # Task: OpenSpec-WebTester.mdにtimeWindow条件の仕様を追加
 
-Status: OPEN
+Status: DONE
 Tier: 2
 Branch: main
 Owner: Worker
 Created: 2026-01-04T20:00:00Z
-Report: （未作成）
+Report: docs/reports/REPORT_TASK_011_20260104.md
 
 ## Objective
 
