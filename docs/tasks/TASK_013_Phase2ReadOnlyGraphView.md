@@ -1,11 +1,11 @@
 # Task: Phase 2 読み取り専用のグラフビュー（スパイク）を最小で実装
 
-Status: OPEN
+Status: DONE
 Tier: 2
 Branch: main
 Owner: Worker
 Created: 2026-01-04T22:00:00Z
-Report: （未作成）
+Report: docs/reports/REPORT_TASK_013_Phase2ReadOnlyGraphView.md
 
 ## Objective
 
