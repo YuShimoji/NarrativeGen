@@ -33,7 +33,11 @@ IN_PROGRESS
 - [x] TASK_007作成: プロジェクト固有ワークフロー調整スクリプト作成
 - [x] TASK_008作成: REPORT_CONFIG.ymlのプロジェクトルート配置
 
-### P5: Worker起動用プロンプト生成
+### P5: Worker起動用プロンプト生成（再実行）
+- [x] TASK_009のWorkerプロンプト生成: docs/tasks/WORKER_PROMPT_TASK_009.md
+- [x] TASK_010のWorkerプロンプト生成: docs/tasks/WORKER_PROMPT_TASK_010.md
+
+### P5: Worker起動用プロンプト生成（初回）
 - [x] TASK_007のWorkerプロンプト生成: docs/tasks/WORKER_PROMPT_TASK_007.md
 
 ### P1: Sync & Merge（再実行）
