@@ -7,8 +7,8 @@
 
 ## 基本情報
 
-- **最終更新**: 2026-01-04T12:30:00Z
-- **更新者**: Worker
+- **最終更新**: 2026-01-04T20:00:00Z
+- **更新者**: Orchestrator
 
 ## GitHubAutoApprove
 
@@ -29,7 +29,7 @@ GitHubAutoApprove: false
 - **Phase 6: 変更をコミット**: COMPLETED
 - **TASK_007**: COMPLETED — プロジェクト固有ワークフロー調整スクリプト作成（narrgen-doctor.js）
 - **TASK_008**: CLOSED — REPORT_CONFIG.ymlのプロジェクトルート配置
-- **TASK_009**: OPEN — GUIエディタ手動テスト実施（Workerプロンプト生成済み）
+- **TASK_009**: OPEN — GUIエディタ手動テスト実施（テスト準備完了、ユーザーによる手動テスト実施待ち）
 - **TASK_010**: DONE — timeWindow条件のエンジン仕様との最終整合確認完了（不整合2件を記録、修正タスク推奨）
 - **P0-P2: 通常運用フェーズ**: COMPLETED — SSOT確認、同期、監査、Complete Gate、状況把握完了
 - **P3-P5: 新規タスク起票**: COMPLETED — TASK_009/TASK_010起票、Workerプロンプト生成完了
@@ -41,7 +41,9 @@ GitHubAutoApprove: false
 ## バックログ
 
 - TASK_007、TASK_008完了により、プロジェクト固有の検証・レポート設定が整備済み
-- TASK_009、TASK_010がWorkerに割り当て待ち
+- TASK_009: ユーザーによる手動テスト実施待ち
+- TASK_011: OpenSpec-WebTester.mdにtimeWindow条件の仕様を追加（TASK_010の推奨アクション）
+- TASK_012: spreadsheet-format.mdにtimeWindow条件の評価ロジックを明記（TASK_010の推奨アクション）
 
 ## Verification
 
@@ -58,7 +60,9 @@ GitHubAutoApprove: false
   - Summary: プロジェクト固有ワークフロー調整スクリプト（narrgen-doctor.js）作成完了。26/26チェックがパス。
 - **TASK_008**: docs/reports/REPORT_TASK_008_20260103_2338.md
   - Summary: REPORT_CONFIG.ymlのプロジェクトルート配置完了。プロジェクト固有設定の優先読み込みを実装。
-- **TASK_010**: docs/inbox/REPORT_TASK_010_20260104.md
+- **TASK_009**: docs/reports/REPORT_TASK_009_20260104_1952.md
+  - Summary: GUIエディタ手動テスト実施。テスト準備完了、開発サーバー起動済み。ユーザーによる手動テスト実施待ち。
+- **TASK_010**: docs/reports/REPORT_TASK_010_20260104.md
   - Summary: timeWindow条件のエンジン仕様との最終整合確認完了。不整合2件を記録（OpenSpec-WebTester.mdに記載なし、評価ロジックの明記不足）。修正タスク（TASK_011, TASK_012）を推奨。
 
 ## Outlook
