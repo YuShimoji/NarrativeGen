@@ -78,4 +78,5 @@
 
 ### 短期（Next）
 
-- [done] 未完了タスクなし（docs/tasks/ に OPEN / IN_PROGRESS なし）
+- [pending] プロジェクト固有ワークフロー調整スクリプト作成 (ref: docs/tasks/TASK_007_ProjectSpecificWorkflowScripts.md, Status: COMPLETED)
+- [pending] REPORT_CONFIG.ymlのプロジェクトルート配置 (ref: docs/tasks/TASK_008_ReportConfigLocal.md, Status: CLOSED)
