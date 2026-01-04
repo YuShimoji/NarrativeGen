@@ -1,11 +1,11 @@
 # Task: GUIエディタバグ修正
 
-Status: OPEN
+Status: CLOSED
 Tier: 2
 Branch: main
 Owner: Worker
 Created: 2026-01-04T22:30:00Z
-Report: （未作成）
+Report: docs/reports/REPORT_TASK_014_20260104.md
 
 ## Objective
 

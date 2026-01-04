@@ -7,14 +7,13 @@ KICKSTART_20260103T194038Z
 2026-01-03T19:40:38Z
 
 ## 現在のフェーズ
-P5: Worker起動用プロンプト生成
+P1: Sync & Merge
 
 ## ステータス
-COMPLETED
+IN_PROGRESS
 
 ## 次フェーズ/次アクション
-- Worker納品回収時: P1（Sync & Merge）から再開
-- 次回セッション: P0（SSOT確認）から開始
+- P1.5（巡回監査）に進む
 
 ### P6: Orchestrator Report（最終）
 - [x] レポート作成: docs/reports/REPORT_ORCH_20260104_1218.md
@@ -93,6 +92,12 @@ COMPLETED
 
 ### P1.5: 巡回監査（TASK_013回収後）
 - [x] orchestrator-audit.js実行: OK（タスク7件、レポート0件、異常なし）
+
+### P1: Sync & Merge（TASK_014回収）
+- [x] Workerレポート回収: TASK_014（CLOSED、GUIエディタバグ修正完了）のレポートを確認
+- [x] レポートアーカイブ: docs/reports/に移動完了
+- [x] HANDOVER.md更新: Latest Worker Reports欄追加、進捗更新
+- [x] タスクステータス更新: TASK_014をCLOSEDに更新
 
 ### P6: Orchestrator Report（Push完了）
 - [x] git push origin main実行: 完了

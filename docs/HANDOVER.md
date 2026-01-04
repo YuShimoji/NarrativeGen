@@ -7,7 +7,7 @@
 
 ## 基本情報
 
-- **最終更新**: 2026-01-04T22:35:00Z
+- **最終更新**: 2026-01-05T00:30:00Z
 - **更新者**: Orchestrator
 
 ## GitHubAutoApprove
@@ -34,7 +34,7 @@ GitHubAutoApprove: false
 - **TASK_011**: DONE — OpenSpec-WebTester.mdにtimeWindow条件の仕様を追加完了
 - **TASK_012**: DONE — spreadsheet-format.mdにtimeWindow条件の評価ロジックを明記完了
 - **TASK_013**: DONE — Phase 2読み取り専用のグラフビュー（スパイク）を最小で実装完了
-- **TASK_014**: OPEN — GUIエディタバグ修正（検索UI、クイックノードモーダル、テーマモーダル）
+- **TASK_014**: CLOSED — GUIエディタバグ修正完了（検索UI、クイックノードモーダル、テーマモーダル）
 - **P0-P2: 通常運用フェーズ**: COMPLETED — SSOT確認、同期、監査、Complete Gate、状況把握完了
 - **P3-P5: 新規タスク起票**: COMPLETED — TASK_009/TASK_010起票、Workerプロンプト生成完了、TASK_014起票完了
 
@@ -45,10 +45,10 @@ GitHubAutoApprove: false
 ## バックログ
 
 - TASK_007、TASK_008完了により、プロジェクト固有の検証・レポート設定が整備済み
-- TASK_009: 手動テスト実施中、検索・フィルタ機能のテストが実施できない状況（TASK_014で修正予定）
+- TASK_009: 手動テスト実施中、検索・フィルタ機能のテストが実施できない状況はTASK_014で修正完了
 - TASK_010の推奨アクション（TASK_011, TASK_012）は完了
 - TASK_013: Phase 2グラフビュー実装完了。手動テスト実施待ち（サンプルモデルでの動作確認）
-- TASK_014: GUIエディタバグ修正（検索UI、クイックノードモーダル、テーマモーダル）をWorkerに割り当て可能
+- TASK_014: GUIエディタバグ修正完了。検索・フィルタ機能のテストが実施可能になった
 
 ## Verification
 
@@ -75,6 +75,8 @@ GitHubAutoApprove: false
   - Summary: spreadsheet-format.mdにtimeWindow条件の評価ロジックを明記完了。境界の扱い（両端を含む）を明確に記載し、使用例を追加。
 - **TASK_013**: docs/reports/REPORT_TASK_013_Phase2ReadOnlyGraphView.md
   - Summary: Phase 2読み取り専用のグラフビュー（スパイク）を最小で実装完了。Dagre.jsを使用した階層型レイアウトでストーリー構造を可視化。既存のリスト形式GUIエディタを補完。
+- **TASK_014**: docs/reports/REPORT_TASK_014_20260104.md
+  - Summary: GUIエディタバグ修正完了。検索UIの虫眼鏡アイコン追加、クイックノードモーダルのキャンセル機能実装、テーマモーダル閉鎖時の表示問題修正。すべての修正について動作確認済み。
 
 ## Outlook
 
