@@ -51,6 +51,9 @@ IN_PROGRESS
 - [x] TASK_009のWorkerプロンプト生成: docs/tasks/WORKER_PROMPT_TASK_009.md
 - [x] TASK_010のWorkerプロンプト生成: docs/tasks/WORKER_PROMPT_TASK_010.md
 
+### P5: Worker起動用プロンプト生成（Phase 2グラフビュー）
+- [x] TASK_013のWorkerプロンプト生成: docs/tasks/WORKER_PROMPT_TASK_013.md
+
 ### P5: Worker起動用プロンプト生成（初回）
 - [x] TASK_007のWorkerプロンプト生成: docs/tasks/WORKER_PROMPT_TASK_007.md
 
