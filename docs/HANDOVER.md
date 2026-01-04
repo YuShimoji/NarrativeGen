@@ -7,7 +7,7 @@
 
 ## 基本情報
 
-- **最終更新**: 2026-01-05T01:00:00Z
+- **最終更新**: 2026-01-05T01:20:00Z
 - **更新者**: Orchestrator
 
 ## GitHubAutoApprove
@@ -35,6 +35,9 @@ GitHubAutoApprove: false
 - **TASK_012**: DONE — spreadsheet-format.mdにtimeWindow条件の評価ロジックを明記完了
 - **TASK_013**: DONE — Phase 2読み取り専用のグラフビュー（スパイク）を最小で実装完了
 - **TASK_014**: CLOSED — GUIエディタバグ修正完了（検索UI、クイックノードモーダル、テーマモーダル）
+- **TASK_015**: OPEN — Phase 2グラフビューの編集機能実装（Workerプロンプト生成済み）
+- **TASK_016**: OPEN — GUIエディタのバッチテキスト置換機能実装（Workerプロンプト生成済み）
+- **TASK_017**: OPEN — マルチエンディング可視化機能実装（Workerプロンプト生成済み）
 - **P0-P2: 通常運用フェーズ**: COMPLETED — SSOT確認、同期、監査、Complete Gate、状況把握完了
 - **P3-P5: 新規タスク起票**: COMPLETED — TASK_009/TASK_010起票、Workerプロンプト生成完了、TASK_014起票完了
 
@@ -49,6 +52,7 @@ GitHubAutoApprove: false
 - TASK_010の推奨アクション（TASK_011, TASK_012）は完了
 - TASK_013: Phase 2グラフビュー実装完了。手動テスト実施待ち（サンプルモデルでの動作確認）
 - TASK_014: GUIエディタバグ修正完了。検索・フィルタ機能のテストが実施可能になった
+- TASK_015/TASK_016/TASK_017: 次のタスク起票完了。未実装機能から優先度の高いものを選んでタスク化
 
 ## Verification
 
