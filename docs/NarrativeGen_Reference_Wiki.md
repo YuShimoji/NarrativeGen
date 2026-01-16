@@ -1,4 +1,4 @@
-# NarrativeGen Web Tester リファレンスWiki
+﻿# NarrativeGen Web Tester リファレンスWiki
 
 ## 概要
 

@@ -78,6 +78,6 @@
 
 ### 短期（Next）
 
-- [pending] プロジェクト固有ワークフロー調整スクリプト作成 (ref: docs/tasks/TASK_007_ProjectSpecificWorkflowScripts.md, Status: COMPLETED)
-- [pending] REPORT_CONFIG.ymlのプロジェクトルート配置 (ref: docs/tasks/TASK_008_ReportConfigLocal.md, Status: CLOSED)
-- [pending] GUIエディタ手動テスト実施 (ref: docs/tasks/TASK_009_GUIEditorManualTesting.md, Status: OPEN（テスト準備完了、ユーザーによる手動テスト実施待ち）)
+- [pending] Phase 2グラフビュー高度編集機能実装 (ref: docs/tasks/TASK_021_Phase2GraphViewAdvancedEditing.md, Status: OPEN)
+- [pending] GUIエディタ高度バッチ操作機能実装 (ref: docs/tasks/TASK_022_GUIEditorAdvancedBatchOperations.md, Status: COMPLETED)
+- [pending] マルチエンディング可視化機能拡張実装 (ref: docs/tasks/TASK_023_MultiEndingVisualizationEnhanced.md, Status: OPEN)

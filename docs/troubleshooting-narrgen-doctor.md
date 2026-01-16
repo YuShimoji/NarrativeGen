@@ -1,4 +1,4 @@
-# NarrativeGen Doctor - エラー時の復旧手順
+﻿# NarrativeGen Doctor - エラー時の復旧手順
 
 このドキュメントは、`scripts/narrgen-doctor.js`で検出されたエラーや警告に対する復旧手順を説明します。
 

@@ -1,4 +1,4 @@
-# Windsurf: AI 協調開発ルール (SSOT / latest)
+﻿# Windsurf: AI 協調開発ルール (SSOT / latest)
 
 > **重要**: 本ファイルは Windsurf 環境における協調開発の単一正本（SSOT）です。  
 > すべての AI エージェントおよび人間オペレータは、本ルールを最優先で遵守してください。

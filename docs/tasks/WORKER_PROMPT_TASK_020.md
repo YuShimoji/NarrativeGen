@@ -1,4 +1,4 @@
-# Worker Prompt: TASK_020 Phase 2グラフビューのレスポンシブ対応
+﻿# Worker Prompt: TASK_020 Phase 2グラフビューのレスポンシブ対応
 
 ## 参照
 - チケット: docs/tasks/TASK_020_GraphViewResponsive.md

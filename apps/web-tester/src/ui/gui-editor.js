@@ -9,6 +9,17 @@ import { NodeRenderer } from './node-renderer.js'
 import { ModelUpdater } from './model-updater.js'
 import { NodeManager } from './node-manager.js'
 import { BatchEditor } from './batch-editor.js'
+import { EndingAnalyzer } from './ending-analyzer.js'
+import { PathTracker } from './path-tracker.js'
+import { StatsPanel } from './stats-panel.js'
+import {
+  exportEndingStructureAsText,
+  exportConditionsAsCsv,
+  exportStatsAsJson,
+  exportVisualizationAsPng,
+  exportReportAsPdf,
+  exportAll
+} from '../utils/export-utils.js'
 
 export class GuiEditorManager {
   constructor(appState) {
@@ -30,12 +41,23 @@ export class GuiEditorManager {
     this.previewNodeDisplay = null
     this.previewChoices = null
     this.pathDisplay = null
+    this.endingVisualizationDisplay = null
+    this.endingStatsPanel = null
 
     // Initialize sub-managers
     this.nodeRenderer = new NodeRenderer(appState)
     this.modelUpdater = new ModelUpdater(appState)
     this.nodeManager = new NodeManager(appState)
     this.batchEditor = new BatchEditor(appState)
+
+    // Initialize ending analysis modules
+    this.endingAnalyzer = new EndingAnalyzer(appState)
+    this.pathTracker = new PathTracker(appState)
+    this.statsPanel = new StatsPanel(appState)
+
+    // Analysis state
+    this.currentAnalysisResult = null
+    this.selectedEndingId = null
   }
 
   initialize(nodeListElement, guiEditModeElement, batchEditModalElement, quickNodeModalElement, batchChoiceModalElement, paraphraseModalElement, draftRestoreModalElement) {
@@ -84,6 +106,8 @@ export class GuiEditorManager {
     this.previewNodeDisplay = document.getElementById('previewNodeDisplay')
     this.previewChoices = document.getElementById('previewChoices')
     this.pathDisplay = document.getElementById('pathDisplay')
+    this.endingVisualizationDisplay = document.getElementById('endingVisualizationDisplay')
+    this.endingStatsPanel = document.getElementById('endingStatsPanel')
 
     const toggleBtn = document.getElementById('togglePreviewBtn')
     if (toggleBtn && this.livePreviewPanel) {
@@ -91,6 +115,27 @@ export class GuiEditorManager {
         this.livePreviewPanel.classList.toggle('collapsed')
       })
     }
+
+    // Initialize stats panel
+    if (this.endingStatsPanel) {
+      this.statsPanel.initialize(this.endingStatsPanel)
+      this.statsPanel.setOnEndingClick((endingId) => {
+        this._focusEnding(endingId)
+      })
+    }
+
+    // Setup path tracker callbacks
+    this.pathTracker.setCallbacks({
+      onNodeHighlight: (nodeId, index, total) => {
+        // Update UI during path animation
+      },
+      onPathComplete: (path) => {
+        // Path animation complete
+      }
+    })
+
+    // Setup export button handlers
+    this._setupExportHandlers()
   }
 
   /**
@@ -479,6 +524,161 @@ export class GuiEditorManager {
         }
       })
     })
+
+    // パスアイテムにインタラクティブハンドラを追加
+    this.endingVisualizationDisplay.querySelectorAll('.ending-path-item').forEach(item => {
+      item.addEventListener('mouseenter', () => {
+        const nodes = Array.from(item.querySelectorAll('.path-node-small')).map(n => n.dataset.node)
+        if (nodes.length > 0) {
+          this.pathTracker.highlightPath(nodes, false)
+        }
+      })
+
+      item.addEventListener('mouseleave', () => {
+        this.pathTracker.clearHighlight()
+      })
+
+      item.addEventListener('click', (e) => {
+        if (e.target.classList.contains('path-node-small')) return
+        const nodes = Array.from(item.querySelectorAll('.path-node-small')).map(n => n.dataset.node)
+        if (nodes.length > 0) {
+          this.pathTracker.focusPath(nodes)
+          this._showPathDetails(nodes)
+        }
+      })
+    })
+  }
+
+  /**
+   * エンディング分析を実行
+   */
+  runEndingAnalysis() {
+    if (!this.appState.model) return null
+
+    this.endingAnalyzer.clearCache()
+    this.currentAnalysisResult = this.endingAnalyzer.analyzeAll()
+
+    // 統計パネルを更新
+    if (this.statsPanel && this.currentAnalysisResult) {
+      this.statsPanel.setAnalysisResult(this.currentAnalysisResult)
+    }
+
+    // 可視化を更新
+    this._updateEndingVisualization()
+
+    return this.currentAnalysisResult
+  }
+
+  /**
+   * エンディングにフォーカス
+   */
+  _focusEnding(endingId) {
+    this.selectedEndingId = endingId
+
+    // エンディングアイテムをハイライト
+    this.endingVisualizationDisplay?.querySelectorAll('.ending-item').forEach(item => {
+      const nodeIdEl = item.querySelector('.ending-node-id')
+      if (nodeIdEl?.dataset.node === endingId) {
+        item.classList.add('ending-focused')
+        item.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      } else {
+        item.classList.remove('ending-focused')
+      }
+    })
+
+    // 最初のパスをハイライト
+    const endingResult = this.currentAnalysisResult?.endings?.find(e => e.endingId === endingId)
+    if (endingResult?.paths?.[0]) {
+      this.pathTracker.highlightPath(endingResult.paths[0].nodes, true)
+    }
+  }
+
+  /**
+   * パス詳細を表示
+   */
+  _showPathDetails(path) {
+    const detailsHtml = this.pathTracker.renderPathDetails(path)
+    
+    // パス詳細パネルがあれば更新
+    const pathDetailsPanel = document.getElementById('pathDetailsPanel')
+    if (pathDetailsPanel) {
+      pathDetailsPanel.innerHTML = detailsHtml
+      pathDetailsPanel.classList.add('visible')
+    }
+  }
+
+  /**
+   * エクスポートハンドラをセットアップ
+   */
+  _setupExportHandlers() {
+    const exportTextBtn = document.getElementById('exportEndingText')
+    const exportCsvBtn = document.getElementById('exportEndingCsv')
+    const exportJsonBtn = document.getElementById('exportEndingJson')
+    const exportPngBtn = document.getElementById('exportEndingPng')
+    const exportPdfBtn = document.getElementById('exportEndingPdf')
+    const exportAllBtn = document.getElementById('exportEndingAll')
+    const runAnalysisBtn = document.getElementById('runEndingAnalysis')
+
+    const getModelName = () => getCurrentModelName() || 'model'
+
+    if (exportTextBtn) {
+      exportTextBtn.addEventListener('click', () => {
+        if (this.currentAnalysisResult) {
+          exportEndingStructureAsText(this.currentAnalysisResult, getModelName())
+        }
+      })
+    }
+
+    if (exportCsvBtn) {
+      exportCsvBtn.addEventListener('click', () => {
+        if (this.currentAnalysisResult) {
+          exportConditionsAsCsv(this.currentAnalysisResult, getModelName())
+        }
+      })
+    }
+
+    if (exportJsonBtn) {
+      exportJsonBtn.addEventListener('click', () => {
+        if (this.currentAnalysisResult && this.statsPanel) {
+          exportStatsAsJson(this.statsPanel.getStatsAsJson(), getModelName())
+        }
+      })
+    }
+
+    if (exportPngBtn) {
+      exportPngBtn.addEventListener('click', async () => {
+        if (this.endingVisualizationDisplay) {
+          await exportVisualizationAsPng(this.endingVisualizationDisplay, `ending-viz-${getModelName()}.png`)
+        }
+      })
+    }
+
+    if (exportPdfBtn) {
+      exportPdfBtn.addEventListener('click', async () => {
+        if (this.currentAnalysisResult) {
+          await exportReportAsPdf(this.currentAnalysisResult, this.statsPanel?.getStatsAsJson(), getModelName())
+        }
+      })
+    }
+
+    if (exportAllBtn) {
+      exportAllBtn.addEventListener('click', async () => {
+        if (this.currentAnalysisResult) {
+          await exportAll(
+            this.currentAnalysisResult,
+            this.statsPanel?.getStatsAsJson(),
+            this.endingVisualizationDisplay,
+            getModelName()
+          )
+        }
+      })
+    }
+
+    if (runAnalysisBtn) {
+      runAnalysisBtn.addEventListener('click', () => {
+        this.runEndingAnalysis()
+      })
+    }
   }
 
   /**
@@ -660,7 +860,10 @@ export class GuiEditorManager {
   // Batch editing functionality
   getBatchEditManager() {
     return {
-      openModal: () => this.batchEditor.openModal(),
+      openModal: () => {
+        this.batchEditor.openModal()
+        this.batchEditor._updateHistoryUI()
+      },
       closeModal: () => this.batchEditor.closeModal(),
       applyTextReplace: () => {
         this.batchEditor.applyTextReplace()
@@ -675,7 +878,23 @@ export class GuiEditorManager {
         this.renderNodeList()
       },
       updatePreview: () => this.batchEditor.updateReplacePreview(),
-      refreshUI: () => this.renderNodeList()
+      refreshUI: () => this.renderNodeList(),
+      // Advanced batch operations
+      undo: () => {
+        this.batchEditor.undo()
+        this.renderNodeList()
+      },
+      redo: () => {
+        this.batchEditor.redo()
+        this.renderNodeList()
+      },
+      exportHistory: () => this.batchEditor.exportHistory(),
+      importHistory: (file) => this.batchEditor.importHistory(file),
+      clearHistory: () => this.batchEditor.clearHistory(),
+      getHistoryState: () => this.batchEditor.getHistoryState(),
+      getFilterSettings: () => this.batchEditor.getFilterSettings(),
+      updateFilterSettings: (settings) => this.batchEditor.updateFilterSettings(settings),
+      resetFilters: () => this.batchEditor.resetFilters()
     }
   }
 

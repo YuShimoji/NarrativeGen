@@ -1,4 +1,4 @@
-# Worker Prompt: TASK_013_Phase2ReadOnlyGraphView
+﻿# Worker Prompt: TASK_013_Phase2ReadOnlyGraphView
 
 ## 参照
 - チケット: docs/tasks/TASK_013_Phase2ReadOnlyGraphView.md

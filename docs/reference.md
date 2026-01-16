@@ -1,4 +1,4 @@
-# NarrativeGen リファレンス（Draft v1.1）
+﻿# NarrativeGen リファレンス（Draft v1.1）
 
 このページは、今後の仕様／GUIマッピングを一元管理する「SSOT（Single Source of Truth）」です。
 

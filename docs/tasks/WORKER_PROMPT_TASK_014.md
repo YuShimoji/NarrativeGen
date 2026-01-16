@@ -1,4 +1,4 @@
-# Worker Prompt: TASK_014 GUIエディタバグ修正
+﻿# Worker Prompt: TASK_014 GUIエディタバグ修正
 
 ## タスク情報
 

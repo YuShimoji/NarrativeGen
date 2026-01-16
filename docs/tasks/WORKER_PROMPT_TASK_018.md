@@ -1,4 +1,4 @@
-# Worker Prompt: TASK_018 GUIエディタのロールバック機能実装
+﻿# Worker Prompt: TASK_018 GUIエディタのロールバック機能実装
 
 ## 参照
 - チケット: docs/tasks/TASK_018_GUIEditorRollback.md

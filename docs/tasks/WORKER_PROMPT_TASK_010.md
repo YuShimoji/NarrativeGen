@@ -1,4 +1,4 @@
-# Worker Prompt: TASK_010_TimeWindowConditionSpec
+﻿# Worker Prompt: TASK_010_TimeWindowConditionSpec
 
 ## 参照
 - チケット: docs/tasks/TASK_010_TimeWindowConditionSpec.md

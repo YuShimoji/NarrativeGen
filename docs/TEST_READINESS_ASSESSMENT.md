@@ -1,4 +1,4 @@
-# テスト可能性評価（Test Readiness Assessment）
+﻿# テスト可能性評価（Test Readiness Assessment）
 
 **評価日**: 2026-01-03  
 **評価者**: Orchestrator

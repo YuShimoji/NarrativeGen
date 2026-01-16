@@ -1,4 +1,4 @@
-# Task: REPORT_CONFIG.ymlのプロジェクトルート配置
+﻿# Task: REPORT_CONFIG.ymlのプロジェクトルート配置
 
 Status: CLOSED
 Tier: 2

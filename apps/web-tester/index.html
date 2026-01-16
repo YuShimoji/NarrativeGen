@@ -2151,9 +2151,34 @@
                       <h4>遷移パス</h4>
                       <div id="pathDisplay"></div>
                     </div>
-                    <div id="endingVisualization" class="preview-path" style="border-top: 1px solid var(--color-border); padding-top: 1rem; margin-top: 1rem;">
-                      <h4>マルチエンディング可視化</h4>
+                    <div id="endingVisualization" class="preview-path ending-visualization-section" style="border-top: 1px solid var(--color-border); padding-top: 1rem; margin-top: 1rem;">
+                      <div class="ending-viz-header">
+                        <h4>マルチエンディング可視化</h4>
+                        <div class="ending-viz-controls">
+                          <button id="runEndingAnalysis" class="btn-sm primary" title="エンディング分析を実行">
+                            <svg class="icon icon-sm"><use href="#icon-search"></use></svg>
+                            分析実行
+                          </button>
+                        </div>
+                      </div>
                       <div id="endingVisualizationDisplay"></div>
+                      
+                      <!-- 統計パネル -->
+                      <div id="endingStatsPanel" class="ending-stats-panel"></div>
+                      
+                      <!-- パス詳細パネル -->
+                      <div id="pathDetailsPanel" class="path-details-panel"></div>
+                      
+                      <!-- エクスポートボタン -->
+                      <div class="ending-export-controls">
+                        <span class="export-label">エクスポート:</span>
+                        <button id="exportEndingText" class="btn-xs" title="テキスト形式でエクスポート">TXT</button>
+                        <button id="exportEndingCsv" class="btn-xs" title="CSV形式でエクスポート">CSV</button>
+                        <button id="exportEndingJson" class="btn-xs" title="JSON形式でエクスポート">JSON</button>
+                        <button id="exportEndingPng" class="btn-xs" title="PNG画像でエクスポート">PNG</button>
+                        <button id="exportEndingPdf" class="btn-xs" title="PDFレポートでエクスポート">PDF</button>
+                        <button id="exportEndingAll" class="btn-xs primary" title="全形式で一括エクスポート">全て</button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2227,18 +2252,67 @@
 
         <!-- ノードテキスト置換タブ -->
         <div id="batchTabNodeText" class="batch-edit-tab-content active">
+          <!-- 検索・置換セクション -->
           <div style="margin-bottom: 1rem;">
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">検索テキスト:</label>
             <input type="text" id="searchText" placeholder="検索するテキスト（正規表現可）" style="width: 100%; margin-bottom: 0.5rem;">
-            <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-              <input type="checkbox" id="useRegex">
-              <span>正規表現を使用</span>
-            </label>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+              <label style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" id="useRegex">
+                <span>正規表現を使用</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" id="caseSensitive">
+                <span>大文字小文字を区別</span>
+              </label>
+            </div>
           </div>
           <div style="margin-bottom: 1rem;">
             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">置換テキスト:</label>
-            <input type="text" id="replaceText" placeholder="置換するテキスト" style="width: 100%;">
+            <input type="text" id="replaceText" placeholder="置換するテキスト（正規表現では $1, $2 でキャプチャグループ参照可）" style="width: 100%;">
           </div>
+          
+          <!-- フィルタセクション -->
+          <details style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(0,0,0,0.05); border-radius: 8px; border: 1px solid var(--color-border);">
+            <summary style="cursor: pointer; font-weight: 600; font-size: 0.9rem;">高度なフィルタ</summary>
+            <div style="margin-top: 0.75rem;">
+              <div style="margin-bottom: 0.5rem;">
+                <span style="font-size: 0.85rem; font-weight: 500;">ノードタイプ:</span>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.25rem;">
+                  <label style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.85rem;">
+                    <input type="checkbox" class="batch-filter-node-type" value="start">開始
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.85rem;">
+                    <input type="checkbox" class="batch-filter-node-type" value="passage">通常
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.85rem;">
+                    <input type="checkbox" class="batch-filter-node-type" value="choice">選択肢
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.85rem;">
+                    <input type="checkbox" class="batch-filter-node-type" value="end">終了
+                  </label>
+                </div>
+              </div>
+              <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                <label style="font-size: 0.85rem;">
+                  条件あり:
+                  <select id="batchFilterConditions" style="margin-left: 0.25rem; font-size: 0.85rem;">
+                    <option value="">すべて</option>
+                    <option value="true">あり</option>
+                    <option value="false">なし</option>
+                  </select>
+                </label>
+                <label style="font-size: 0.85rem;">
+                  論理:
+                  <select id="batchFilterLogicMode" style="margin-left: 0.25rem; font-size: 0.85rem;">
+                    <option value="AND">AND（すべて満たす）</option>
+                    <option value="OR">OR（いずれか満たす）</option>
+                  </select>
+                </label>
+              </div>
+              <button id="batchResetFiltersBtn" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.8rem;">フィルタをリセット</button>
+            </div>
+          </details>
           
           <!-- プレビューセクション -->
           <div style="margin-bottom: 1rem; padding: 1rem; background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid var(--color-border);">
@@ -2251,7 +2325,21 @@
             </div>
           </div>
 
-          <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+          <!-- 履歴・操作セクション -->
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <button id="batchUndoBtn" title="元に戻す (Undo)" disabled style="padding: 0.25rem 0.5rem; font-size: 0.85rem;">↶ 元に戻す</button>
+              <button id="batchRedoBtn" title="やり直す (Redo)" disabled style="padding: 0.25rem 0.5rem; font-size: 0.85rem;">↷ やり直す</button>
+              <span id="batchHistoryCount" style="font-size: 0.75rem; color: var(--color-text-muted);">0/0</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button id="batchExportHistoryBtn" title="履歴をエクスポート" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">📤 履歴出力</button>
+              <button id="batchImportHistoryBtn" title="履歴をインポート" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">📥 履歴読込</button>
+              <button id="batchClearHistoryBtn" title="履歴をクリア" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">🗑️ 履歴消去</button>
+            </div>
+          </div>
+          
+          <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
             <button id="applyTextReplaceBtn" class="primary">適用</button>
           </div>
         </div>

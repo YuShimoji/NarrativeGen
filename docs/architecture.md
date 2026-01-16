@@ -1,4 +1,4 @@
-# Architecture
+﻿# Architecture
 
 ## Goals
 - 単純で安全に拡張可能なナラティブ再生エンジン

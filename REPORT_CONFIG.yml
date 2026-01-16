@@ -20,7 +20,7 @@ banned_phrases:
   - 修正しました（何を修正したか明記）
   - 追加しました（何を追加したか明記）
   - 削除しました（何を削除したか明記）
-  - Unity関連の用語を誤用（例: "GameObject"を"ゲームオブジェクト"と表記しない、適切なUnity用語を使用）
+  - 'Unity関連の用語を誤用（例: "GameObject"を"ゲームオブジェクト"と表記しない、適切なUnity用語を使用）'
 
 # スタイルプリセット（.shared-workflows/REPORT_CONFIG.ymlから継承）
 style_presets:

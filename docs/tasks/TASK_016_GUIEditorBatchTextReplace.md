@@ -1,4 +1,4 @@
-# Task: GUIエディタのバッチテキスト置換機能実装
+﻿# Task: GUIエディタのバッチテキスト置換機能実装
 
 Status: CLOSED
 Tier: 2

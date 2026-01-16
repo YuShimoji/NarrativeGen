@@ -1,4 +1,4 @@
-# Web Tester UI改善テスト手順書
+﻿# Web Tester UI改善テスト手順書
 
 ## 概要
 本ドキュメントは、Web TesterのUI改善（OpenSpec backlogから優先度順に実装）のテスト手順と期待結果を記載しています。

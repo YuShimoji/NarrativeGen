@@ -1,4 +1,4 @@
-# Task: spreadsheet-format.mdにtimeWindow条件の評価ロジックを明記
+﻿# Task: spreadsheet-format.mdにtimeWindow条件の評価ロジックを明記
 
 Status: DONE
 Tier: 2

@@ -1,4 +1,4 @@
-# Task: Phase 2グラフビューの編集機能実装
+﻿# Task: Phase 2グラフビューの編集機能実装
 
 Status: CLOSED
 Tier: 2

@@ -1,4 +1,4 @@
-# Worker Prompt: TASK_009_GUIEditorManualTesting
+﻿# Worker Prompt: TASK_009_GUIEditorManualTesting
 
 ## 参照
 - チケット: docs/tasks/TASK_009_GUIEditorManualTesting.md

@@ -1,4 +1,4 @@
-# Worker Prompt: TASK_017 マルチエンディング可視化機能実装
+﻿# Worker Prompt: TASK_017 マルチエンディング可視化機能実装
 
 ## 参照
 - チケット: docs/tasks/TASK_017_MultiEndingVisualization.md

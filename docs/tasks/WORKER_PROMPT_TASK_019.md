@@ -1,4 +1,4 @@
-# Worker Prompt: TASK_019 ドラフト復元UIの改善
+﻿# Worker Prompt: TASK_019 ドラフト復元UIの改善
 
 ## 参照
 - チケット: docs/tasks/TASK_019_DraftRestoreUI.md

@@ -1,4 +1,4 @@
-# Task: ドラフト復元UIの改善
+﻿# Task: ドラフト復元UIの改善
 
 Status: CLOSED
 Tier: 2

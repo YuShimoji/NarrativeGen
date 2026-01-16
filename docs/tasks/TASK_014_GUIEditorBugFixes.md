@@ -1,4 +1,4 @@
-# Task: GUIエディタバグ修正
+﻿# Task: GUIエディタバグ修正
 
 Status: CLOSED
 Tier: 2

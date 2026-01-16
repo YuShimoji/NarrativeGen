@@ -19,10 +19,19 @@ export class GraphEditorManager {
     // 編集状態管理
     this.selectedNodeId = null
     this.selectedEdge = null // { from: string, to: string, choiceId: string }
+    this.selectedNodeIds = new Set() // 複数選択用
     this.dragSourceNodeId = null // エッジ作成用のドラッグ元ノード
     this.editingNodeId = null // インライン編集中のノードID
     this.contextMenu = null // 右クリックメニュー要素
     this._lastNodeClick = { nodeId: null, time: 0 } // ダブルクリック検出用
+    
+    // 複数選択・範囲選択
+    this.selection = {
+      isSelecting: false,
+      selectionRect: null,
+      startPoint: null,
+      endPoint: null
+    }
     
     // レスポンシブ対応
     this.resizeObserver = null // ResizeObserverインスタンス
@@ -37,6 +46,27 @@ export class GraphEditorManager {
       branch: '#f97316',     // オレンジ
       ending: '#ef4444'      // 赤
     }
+    
+    // ミニマップ関連
+    this.minimap = {
+      enabled: true,
+      width: 200,
+      height: 150,
+      margin: 10,
+      scale: 0.15,
+      container: null,
+      svg: null,
+      g: null,
+      viewport: null
+    }
+    
+    // グリッドスナップ関連
+    this.grid = {
+      enabled: true,
+      size: 20, // グリッドサイズ（ピクセル）
+      snapThreshold: 10, // スナップする閾値
+      showGrid: false // グリッド線の表示
+    }
   }
 
   /**
@@ -49,6 +79,7 @@ export class GraphEditorManager {
     this._setupEventHandlers()
     this._setupResizeObserver()
     this._createContextMenu()
+    this._setupMinimap()
   }
 
   /**
@@ -59,7 +90,11 @@ export class GraphEditorManager {
     if (this.container) {
       this.container.addEventListener('keydown', (event) => {
         if (event.key === 'Delete' || event.key === 'Backspace') {
-          if (this.selectedNodeId) {
+          if (this.selectedNodeIds.size > 0) {
+            // 複数選択時の一括削除
+            this._deleteMultipleNodes()
+            event.preventDefault()
+          } else if (this.selectedNodeId) {
             this._deleteNode(this.selectedNodeId)
             event.preventDefault()
           } else if (this.selectedEdge) {
@@ -69,10 +104,13 @@ export class GraphEditorManager {
         }
         // Escapeキーで選択解除・編集モード終了
         if (event.key === 'Escape') {
-          this.selectedNodeId = null
-          this.selectedEdge = null
-          this.editingNodeId = null
+          this._clearSelection()
           this.render()
+        }
+        // Ctrl+Aで全選択
+        if (event.key === 'a' && event.ctrlKey) {
+          this._selectAllNodes()
+          event.preventDefault()
         }
       })
       
@@ -258,6 +296,8 @@ export class GraphEditorManager {
       .on('zoom', (event) => {
         if (this.g) {
           this.g.attr('transform', event.transform)
+          // ミニマップのビューポートを更新
+          this._updateViewportRect()
         }
       })
 
@@ -613,14 +653,20 @@ export class GraphEditorManager {
         return nodeData.color
       })
       .attr('stroke', (d) => {
+        if (this.selectedNodeIds.has(d)) {
+          return '#3b82f6' // 複数選択時は青
+        }
         if (this.selectedNodeId === d) {
           return '#3b82f6' // 選択時は青
         }
         return '#fff'
       })
       .attr('stroke-width', (d) => {
+        if (this.selectedNodeIds.has(d)) {
+          return 3 // 複数選択時は太め
+        }
         if (this.selectedNodeId === d) {
-          return 4 // 選択時は太く
+          return 4 // 単一選択時はさらに太く
         }
         return 2
       })
@@ -642,14 +688,14 @@ export class GraphEditorManager {
 
     // ホバー効果（選択時は変更しない）
     node.on('mouseenter', function(event, d) {
-      if (this.selectedNodeId !== d) {
+      if (!this.selectedNodeIds.has(d) && this.selectedNodeId !== d) {
         d3.select(this).select('rect')
           .attr('stroke-width', 3)
           .attr('opacity', 0.9)
       }
     })
     .on('mouseleave', function(event, d) {
-      if (this.selectedNodeId !== d) {
+      if (!this.selectedNodeIds.has(d) && this.selectedNodeId !== d) {
         d3.select(this).select('rect')
           .attr('stroke-width', 2)
           .attr('opacity', 1)
@@ -667,15 +713,22 @@ export class GraphEditorManager {
     // キャンバス上でのクリック（選択解除）
     this.svg.on('click', (event) => {
       if (event.target === this.svg.node() || event.target.tagName === 'svg') {
-        this.selectedNodeId = null
-        this.selectedEdge = null
-        this.dragSourceNodeId = null
+        this._clearSelection()
         this.render()
       }
     })
 
     // 全体を表示範囲にフィット
     this.fitToView()
+
+    // グリッド線を描画
+    this._drawGrid()
+
+    // 条件・効果のインジケータを描画
+    this._drawIndicators()
+
+    // ミニマップを更新
+    this._updateMinimap()
   }
 
   /**
@@ -693,9 +746,22 @@ export class GraphEditorManager {
       return
     }
 
-    // 通常の選択
-    this.selectedNodeId = nodeId
-    this.selectedEdge = null
+    // Ctrlキー押下時の複数選択
+    if (event && event.ctrlKey) {
+      if (this.selectedNodeIds.has(nodeId)) {
+        this.selectedNodeIds.delete(nodeId)
+      } else {
+        this.selectedNodeIds.add(nodeId)
+      }
+      this.selectedNodeId = null
+      this.selectedEdge = null
+    } else {
+      // 通常の選択
+      this.selectedNodeId = nodeId
+      this.selectedNodeIds.clear()
+      this.selectedEdge = null
+    }
+
     this.render()
 
     // GUIエディタとの状態同期：ノードを選択
@@ -1179,6 +1245,546 @@ export class GraphEditorManager {
   }
 
   /**
+   * ミニマップをセットアップ
+   */
+  _setupMinimap() {
+    if (!this.minimap.enabled) return
+
+    // ミニマップコンテナを作成
+    this.minimap.container = document.createElement('div')
+    this.minimap.container.id = 'graph-minimap'
+    this.minimap.container.style.cssText = `
+      position: absolute;
+      bottom: ${this.minimap.margin}px;
+      right: ${this.minimap.margin}px;
+      width: ${this.minimap.width}px;
+      height: ${this.minimap.height}px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      overflow: hidden;
+      z-index: 100;
+    `
+
+    this.container.appendChild(this.minimap.container)
+
+    // ミニマップSVGを作成
+    this.minimap.svg = d3.select(this.minimap.container)
+      .append('svg')
+      .attr('width', this.minimap.width)
+      .attr('height', this.minimap.height)
+
+    // クリックで移動するイベント
+    this.minimap.svg.on('click', (event) => {
+      this._handleMinimapClick(event)
+    })
+  }
+
+  /**
+   * ミニマップを更新
+   */
+  _updateMinimap() {
+    if (!this.minimap.enabled || !this.minimap.svg || !this.g) return
+
+    // メイングラフの境界を取得
+    const mainBounds = this.g.node().getBBox()
+    if (mainBounds.width === 0 || mainBounds.height === 0) return
+
+    // ミニマップのスケールを計算
+    const scaleX = (this.minimap.width - 20) / mainBounds.width
+    const scaleY = (this.minimap.height - 20) / mainBounds.height
+    const minimapScale = Math.min(scaleX, scaleY, this.minimap.scale)
+
+    // ミニマップをクリア
+    this.minimap.svg.selectAll('*').remove()
+
+    // グラフ内容をミニマップにコピー
+    const mainContent = this.g.node().cloneNode(true)
+    const minimapG = this.minimap.svg.append('g')
+      .attr('transform', `translate(10, 10) scale(${minimapScale})`)
+
+    // クローンしたコンテンツを追加
+    const clonedNode = document.importNode(mainContent, true)
+    const foreignObject = minimapG.append('foreignObject')
+      .attr('width', mainBounds.width)
+      .attr('height', mainBounds.height)
+      .attr('x', -mainBounds.x)
+      .attr('y', -mainBounds.y)
+
+    const wrapper = document.createElement('div')
+    wrapper.style.cssText = `
+      width: ${mainBounds.width}px;
+      height: ${mainBounds.height}px;
+      transform: scale(${minimapScale});
+      transform-origin: top left;
+    `
+    wrapper.appendChild(clonedNode)
+    foreignObject.node().appendChild(wrapper)
+
+    // 現在のビューポート矩形を描画
+    this._updateViewportRect(mainBounds, minimapScale)
+  }
+
+  /**
+   * ビューポート矩形を更新
+   */
+  _updateViewportRect(mainBounds = null, minimapScale = null) {
+    if (!this.minimap.svg || !this.g) return
+
+    // 引数がなければ計算
+    if (!mainBounds) {
+      mainBounds = this.g.node().getBBox()
+    }
+    if (mainBounds.width === 0 || mainBounds.height === 0) return
+
+    if (!minimapScale) {
+      const scaleX = (this.minimap.width - 20) / mainBounds.width
+      const scaleY = (this.minimap.height - 20) / mainBounds.height
+      minimapScale = Math.min(scaleX, scaleY, this.minimap.scale)
+    }
+
+    // 現在のズーム状態を取得
+    const transform = d3.zoomTransform(this.svg.node())
+    
+    // ビューポートの範囲を計算
+    const containerWidth = this.container.clientWidth
+    const containerHeight = this.container.clientHeight
+    
+    const viewportLeft = -transform.x / transform.k
+    const viewportTop = -transform.y / transform.k
+    const viewportWidth = containerWidth / transform.k
+    const viewportHeight = containerHeight / transform.k
+
+    // 既存のビューポートを削除
+    this.minimap.svg.select('.viewport-rect').remove()
+
+    // 新しいビューポート矩形を描画
+    this.minimap.svg.append('rect')
+      .attr('class', 'viewport-rect')
+      .attr('x', 10 + (viewportLeft - mainBounds.x) * minimapScale)
+      .attr('y', 10 + (viewportTop - mainBounds.y) * minimapScale)
+      .attr('width', viewportWidth * minimapScale)
+      .attr('height', viewportHeight * minimapScale)
+      .attr('fill', 'rgba(59, 130, 246, 0.2)')
+      .attr('stroke', '#3b82f6')
+      .attr('stroke-width', 2)
+      .style('cursor', 'move')
+  }
+
+  /**
+   * 選択をクリア
+   */
+  _clearSelection() {
+    this.selectedNodeId = null
+    this.selectedEdge = null
+    this.selectedNodeIds.clear()
+    this.dragSourceNodeId = null
+    this.editingNodeId = null
+  }
+
+  /**
+   * 全ノードを選択
+   */
+  _selectAllNodes() {
+    if (!this.appState.model || !this.appState.model.nodes) return
+
+    this.selectedNodeIds.clear()
+    this.selectedNodeId = null
+    this.selectedEdge = null
+
+    Object.keys(this.appState.model.nodes).forEach(nodeId => {
+      this.selectedNodeIds.add(nodeId)
+    })
+
+    this.render()
+    if (typeof window.setStatus === 'function') {
+      window.setStatus(`${this.selectedNodeIds.size}個のノードを選択しました`, 'info')
+    }
+  }
+
+  /**
+   * 複数ノードを一括削除
+   */
+  _deleteMultipleNodes() {
+    if (!this.appState.model || this.selectedNodeIds.size === 0) return
+
+    const nodeCount = this.selectedNodeIds.size
+    
+    // 最後のノードは削除できない
+    if (Object.keys(this.appState.model.nodes).length <= nodeCount) {
+      if (typeof window.setStatus === 'function') {
+        window.setStatus('少なくとも1つのノードが必要です', 'warn')
+      }
+      return
+    }
+
+    // 開始ノードが含まれる場合は別のノードを開始ノードに設定
+    let newStartNode = null
+    if (this.selectedNodeIds.has(this.appState.model.startNode)) {
+      const remainingNodes = Object.keys(this.appState.model.nodes).filter(id => 
+        !this.selectedNodeIds.has(id)
+      )
+      if (remainingNodes.length > 0) {
+        newStartNode = remainingNodes[0]
+        this.appState.model.startNode = newStartNode
+      }
+    }
+
+    // ノードを削除
+    this.selectedNodeIds.forEach(nodeId => {
+      delete this.appState.model.nodes[nodeId]
+    })
+
+    // 他のノードから削除されたノードへの参照を削除
+    Object.values(this.appState.model.nodes).forEach(node => {
+      if (node.choices) {
+        node.choices = node.choices.filter(choice => !this.selectedNodeIds.has(choice.target))
+      }
+    })
+
+    // 選択状態をクリア
+    this._clearSelection()
+
+    // GUIエディタを更新
+    this._syncWithGuiEditor()
+
+    // グラフを再描画
+    this.render()
+
+    if (typeof window.setStatus === 'function') {
+      window.setStatus(`✅ ${nodeCount}個のノードを削除しました`, 'success')
+    }
+  }
+
+  /**
+   * 座標をグリッドにスナップ
+   * @param {number} coordinate - 座標値
+   * @returns {number} スナップ後の座標値
+   */
+  _snapToGrid(coordinate) {
+    if (!this.grid.enabled) return coordinate
+    
+    const gridSize = this.grid.size
+    const halfGrid = gridSize / 2
+    const snappedCoordinate = Math.round(coordinate / gridSize) * gridSize
+    
+    // 閾値内の場合のみスナップ
+    if (Math.abs(coordinate - snappedCoordinate) <= this.grid.snapThreshold) {
+      return snappedCoordinate
+    }
+    
+    return coordinate
+  }
+
+  /**
+   * グリッド線を描画
+   */
+  _drawGrid() {
+    if (!this.grid.showGrid || !this.g) return
+
+    // 既存のグリッドを削除
+    this.g.select('.grid-group').remove()
+
+    const bounds = this.g.node().getBBox()
+    if (bounds.width === 0 || bounds.height === 0) return
+
+    const gridGroup = this.g.insert('g', ':first-child')
+      .attr('class', 'grid-group')
+
+    const gridSize = this.grid.size
+    const startX = Math.floor(bounds.x / gridSize) * gridSize
+    const endX = Math.ceil((bounds.x + bounds.width) / gridSize) * gridSize
+    const startY = Math.floor(bounds.y / gridSize) * gridSize
+    const endY = Math.ceil((bounds.y + bounds.height) / gridSize) * gridSize
+
+    // 垂直線
+    for (let x = startX; x <= endX; x += gridSize) {
+      gridGroup.append('line')
+        .attr('x1', x)
+        .attr('y1', bounds.y)
+        .attr('x2', x)
+        .attr('y2', bounds.y + bounds.height)
+        .attr('stroke', '#e0e0e0')
+        .attr('stroke-width', 0.5)
+        .attr('opacity', 0.5)
+    }
+
+    // 水平線
+    for (let y = startY; y <= endY; y += gridSize) {
+      gridGroup.append('line')
+        .attr('x1', bounds.x)
+        .attr('y1', y)
+        .attr('x2', bounds.x + bounds.width)
+        .attr('y2', y)
+        .attr('stroke', '#e0e0e0')
+        .attr('stroke-width', 0.5)
+        .attr('opacity', 0.5)
+    }
+  }
+
+  /**
+   * グリッドスナップのON/OFFを切り替え
+   */
+  toggleGridSnap() {
+    this.grid.enabled = !this.grid.enabled
+    if (typeof window.setStatus === 'function') {
+      window.setStatus(
+        `グリッドスナップ: ${this.grid.enabled ? 'ON' : 'OFF'}`,
+        this.grid.enabled ? 'success' : 'info'
+      )
+    }
+  }
+
+  /**
+   * グリッド線表示のON/OFFを切り替え
+   */
+  toggleGridDisplay() {
+    this.grid.showGrid = !this.grid.showGrid
+    if (this.grid.showGrid) {
+      this._drawGrid()
+    } else {
+      this.g.select('.grid-group').remove()
+    }
+    if (typeof window.setStatus === 'function') {
+      window.setStatus(
+        `グリッド線表示: ${this.grid.showGrid ? 'ON' : 'OFF'}`,
+        this.grid.showGrid ? 'success' : 'info'
+      )
+    }
+  }
+
+  /**
+   * 条件・効果のインジケータを描画
+   */
+  _drawIndicators() {
+    if (!this.g || !this.appState.model) return
+
+    // 既存のインジケータを削除
+    this.g.selectAll('.indicator').remove()
+
+    // グラフデータを再構築して位置情報を取得
+    const { nodes, edges } = this._buildGraphData()
+    const graph = this._calculateLayout(nodes, edges)
+
+    Object.entries(this.appState.model.nodes).forEach(([nodeId, node]) => {
+      const graphNode = graph.node(nodeId)
+      if (!graphNode) return
+
+      const x = graphNode.x
+      const y = graphNode.y
+      const width = graphNode.width
+      const height = graphNode.height
+
+      // ノード条件インジケータ
+      this._drawNodeConditionIndicators(node, x, y, width, height)
+
+      // 選択肢の条件・効果インジケータ
+      if (node.choices) {
+        node.choices.forEach(choice => {
+          this._drawChoiceIndicators(choice, nodeId, x, y, width, height, graph)
+        })
+      }
+    })
+  }
+
+  /**
+   * ノードの条件インジケータを描画
+   */
+  _drawNodeConditionIndicators(node, x, y, width, height) {
+    const indicators = []
+
+    // timeWindow条件
+    if (node.timeWindow) {
+      indicators.push({
+        type: 'time',
+        color: '#f59e0b',
+        symbol: '⏱',
+        tooltip: `時間制限: ${node.timeWindow.start}-${node.timeWindow.end}`
+      })
+    }
+
+    // flags条件
+    if (node.flags && node.flags.length > 0) {
+      indicators.push({
+        type: 'flags',
+        color: '#8b5cf6',
+        symbol: '🚩',
+        tooltip: `フラグ条件: ${node.flags.join(', ')}`
+      })
+    }
+
+    // リソース条件
+    if (node.resources) {
+      indicators.push({
+        type: 'resources',
+        color: '#10b981',
+        symbol: '💎',
+        tooltip: 'リソース条件あり'
+      })
+    }
+
+    // インジケータを描画
+    indicators.forEach((indicator, index) => {
+      const indicatorX = x + width / 2 - 10 + (index * 12)
+      const indicatorY = y - height / 2 - 10
+
+      this.g.append('circle')
+        .attr('class', 'indicator node-indicator')
+        .attr('cx', indicatorX)
+        .attr('cy', indicatorY)
+        .attr('r', 6)
+        .attr('fill', indicator.color)
+        .attr('stroke', '#fff')
+        .attr('stroke-width', 1)
+        .style('cursor', 'pointer')
+        .append('title')
+        .text(indicator.tooltip)
+
+      this.g.append('text')
+        .attr('class', 'indicator node-indicator-text')
+        .attr('x', indicatorX)
+        .attr('y', indicatorY + 2)
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'middle')
+        .attr('font-size', '8px')
+        .attr('fill', '#fff')
+        .attr('pointer-events', 'none')
+        .text(indicator.symbol)
+    })
+  }
+
+  /**
+   * 選択肢の条件・効果インジケータを描画
+   */
+  _drawChoiceIndicators(choice, fromNodeId, x, y, width, height, graph) {
+    const indicators = []
+
+    // 選択肢の条件
+    if (choice.conditions && choice.conditions.length > 0) {
+      indicators.push({
+        type: 'condition',
+        color: '#f59e0b',
+        symbol: '?',
+        tooltip: `条件: ${choice.conditions.map(c => `${c.flag} ${c.operator} ${c.value}`).join(', ')}`
+      })
+    }
+
+    // onEnter効果
+    if (choice.onEnter && choice.onEnter.length > 0) {
+      indicators.push({
+        type: 'effect',
+        color: '#10b981',
+        symbol: '✨',
+        tooltip: `効果: ${choice.onEnter.map(e => `${e.type}: ${e.value}`).join(', ')}`
+      })
+    }
+
+    // next効果
+    if (choice.next) {
+      indicators.push({
+        type: 'next',
+        color: '#3b82f6',
+        symbol: '→',
+        tooltip: `自動遷移: ${choice.next}`
+      })
+    }
+
+    // エッジのインジケータを描画
+    if (indicators.length > 0) {
+      // エッジのパスを取得して中点にインジケータを配置
+      const edgeElement = this.g.select(`g.edge`).filter(function() {
+        const edgeData = d3.select(this).datum()
+        return edgeData && edgeData.v === fromNodeId && edgeData.w === choice.target
+      })
+
+      if (!edgeElement.empty()) {
+        const edgePath = edgeElement.select('path')
+        const pathLength = edgePath.node().getTotalLength()
+        const midPoint = edgePath.node().getPointAtLength(pathLength / 2)
+
+        indicators.forEach((indicator, index) => {
+          const offsetX = (index - indicators.length / 2 + 0.5) * 15
+
+          this.g.append('circle')
+            .attr('class', 'indicator edge-indicator')
+            .attr('cx', midPoint.x + offsetX)
+            .attr('cy', midPoint.y)
+            .attr('r', 5)
+            .attr('fill', indicator.color)
+            .attr('stroke', '#fff')
+            .attr('stroke-width', 1)
+            .style('cursor', 'pointer')
+            .append('title')
+            .text(indicator.tooltip)
+
+          this.g.append('text')
+            .attr('class', 'indicator edge-indicator-text')
+            .attr('x', midPoint.x + offsetX)
+            .attr('y', midPoint.y + 1)
+            .attr('text-anchor', 'middle')
+            .attr('dominant-baseline', 'middle')
+            .attr('font-size', '7px')
+            .attr('fill', '#fff')
+            .attr('pointer-events', 'none')
+            .text(indicator.symbol)
+        })
+      }
+    }
+  }
+
+  /**
+   * インジケータのクリック処理
+   */
+  _handleIndicatorClick(event, indicatorData) {
+    event.stopPropagation()
+    
+    // 詳細情報を表示（モーダルやツールチップ拡張）
+    if (typeof window.setStatus === 'function') {
+      window.setStatus(indicatorData.tooltip, 'info')
+    }
+  }
+
+  /**
+   * ミニマップクリック処理
+   */
+  _handleMinimapClick(event) {
+    if (!this.zoom || !this.g) return
+
+    const rect = this.minimap.container.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
+
+    // メイングラフの境界を取得
+    const mainBounds = this.g.node().getBBox()
+    if (mainBounds.width === 0 || mainBounds.height === 0) return
+
+    // スケールを計算
+    const scaleX = (this.minimap.width - 20) / mainBounds.width
+    const scaleY = (this.minimap.height - 20) / mainBounds.height
+    const minimapScale = Math.min(scaleX, scaleY, this.minimap.scale)
+
+    // クリック位置をメイングラフ座標に変換
+    const mainX = (x - 10) / minimapScale + mainBounds.x
+    const mainY = (y - 10) / minimapScale + mainBounds.y
+
+    // クリック位置を中心にビューを移動
+    const containerWidth = this.container.clientWidth
+    const containerHeight = this.container.clientHeight
+    const translate = [
+      containerWidth / 2 - mainX,
+      containerHeight / 2 - mainY
+    ]
+
+    this.svg.transition()
+      .duration(300)
+      .call(
+        this.zoom.transform,
+        d3.zoomIdentity.translate(translate[0], translate[1])
+      )
+  }
+
+  /**
    * リソースをクリーンアップ
    */
   dispose() {
@@ -1188,6 +1794,14 @@ export class GraphEditorManager {
     if (this.contextMenu) {
       this.contextMenu.remove()
       this.contextMenu = null
+    }
+
+    // ミニマップを削除
+    if (this.minimap.container) {
+      this.minimap.container.remove()
+      this.minimap.container = null
+      this.minimap.svg = null
+      this.minimap.g = null
     }
 
     // SVGをクリア

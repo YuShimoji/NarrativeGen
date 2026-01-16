@@ -1,4 +1,4 @@
-# Worker Prompt: TASK_015 Phase 2グラフビューの編集機能実装
+﻿# Worker Prompt: TASK_015 Phase 2グラフビューの編集機能実装
 
 ## 参照
 - チケット: docs/tasks/TASK_015_Phase2GraphViewEditing.md

@@ -1,4 +1,4 @@
-# NarrativeGen Web Tester OpenSpec
+﻿# NarrativeGen Web Tester OpenSpec
 
 最終更新: 2025-12-13
 更新者: Cascade (AIエージェント)

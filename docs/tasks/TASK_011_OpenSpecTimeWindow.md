@@ -1,4 +1,4 @@
-# Task: OpenSpec-WebTester.mdにtimeWindow条件の仕様を追加
+﻿# Task: OpenSpec-WebTester.mdにtimeWindow条件の仕様を追加
 
 Status: DONE
 Tier: 2

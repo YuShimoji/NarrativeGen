@@ -1,4 +1,4 @@
-# Task: マルチエンディング可視化機能実装
+﻿# Task: マルチエンディング可視化機能実装
 
 Status: CLOSED
 Tier: 2

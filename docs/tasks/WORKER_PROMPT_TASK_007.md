@@ -1,4 +1,4 @@
-# Worker Prompt: TASK_007_ProjectSpecificWorkflowScripts
+﻿# Worker Prompt: TASK_007_ProjectSpecificWorkflowScripts
 
 ## 参照
 - チケット: docs/tasks/TASK_007_ProjectSpecificWorkflowScripts.md

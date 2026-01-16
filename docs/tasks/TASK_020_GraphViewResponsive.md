@@ -1,4 +1,4 @@
-# Task: Phase 2グラフビューのレスポンシブ対応
+﻿# Task: Phase 2グラフビューのレスポンシブ対応
 
 Status: CLOSED
 Tier: 3

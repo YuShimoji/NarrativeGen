@@ -1,4 +1,4 @@
-# Task: GUIエディタのロールバック機能実装
+﻿# Task: GUIエディタのロールバック機能実装
 
 Status: CLOSED
 Tier: 2
