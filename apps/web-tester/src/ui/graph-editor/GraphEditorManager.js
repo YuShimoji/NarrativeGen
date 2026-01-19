@@ -15,7 +15,7 @@ export class GraphEditorManager {
     this.svg = null
     this.zoom = null
     this.g = null // ズーム可能なコンテナグループ
-    
+
     // 編集状態管理
     this.selectedNodeId = null
     this.selectedEdge = null // { from: string, to: string, choiceId: string }
@@ -24,7 +24,7 @@ export class GraphEditorManager {
     this.editingNodeId = null // インライン編集中のノードID
     this.contextMenu = null // 右クリックメニュー要素
     this._lastNodeClick = { nodeId: null, time: 0 } // ダブルクリック検出用
-    
+
     // 複数選択・範囲選択
     this.selection = {
       isSelecting: false,
@@ -32,12 +32,23 @@ export class GraphEditorManager {
       startPoint: null,
       endPoint: null
     }
-    
+
+    // Drag & Drop state
+    this.drag = {
+      active: false,
+      nodeId: null,
+      startX: 0,
+      startY: 0,
+      offsetX: 0,
+      offsetY: 0,
+      multiSelectPositions: new Map() // For preserving relative positions
+    }
+
     // レスポンシブ対応
     this.resizeObserver = null // ResizeObserverインスタンス
     this.resizeDebounceTimer = null // デバウンス用タイマー
     this.resizeDebounceDelay = 300 // デバウンス遅延時間（ms）
-    
+
     // ノードタイプ別の色定義
     this.nodeColors = {
       start: '#22c55e',      // 緑
@@ -46,7 +57,7 @@ export class GraphEditorManager {
       branch: '#f97316',     // オレンジ
       ending: '#ef4444'      // 赤
     }
-    
+
     // ミニマップ関連
     this.minimap = {
       enabled: true,
@@ -59,7 +70,7 @@ export class GraphEditorManager {
       g: null,
       viewport: null
     }
-    
+
     // グリッドスナップ関連
     this.grid = {
       enabled: true,
@@ -113,7 +124,7 @@ export class GraphEditorManager {
           event.preventDefault()
         }
       })
-      
+
       // フォーカス可能にする
       this.container.setAttribute('tabindex', '0')
     }
@@ -244,8 +255,8 @@ export class GraphEditorManager {
         if (nodeId) {
           this.dragSourceNodeId = nodeId
           if (typeof window.setStatus === 'function') {
-        window.setStatus('接続先のノードをクリックしてください', 'info')
-      }
+            window.setStatus('接続先のノードをクリックしてください', 'info')
+          }
         }
         break
       case 'edit-edge':
@@ -323,7 +334,7 @@ export class GraphEditorManager {
       .attr('y', '-50%')
       .attr('width', '200%')
       .attr('height', '200%')
-    
+
     filter.append('feDropShadow')
       .attr('dx', '2')
       .attr('dy', '2')
@@ -353,7 +364,7 @@ export class GraphEditorManager {
     // 選択肢がない場合
     if (!node.choices || node.choices.length === 0) {
       // 他のノードから参照されていない場合は終了ノードとして扱う
-      const isReferenced = Object.values(this.appState.model.nodes).some(n => 
+      const isReferenced = Object.values(this.appState.model.nodes).some(n =>
         n.choices && n.choices.some(c => c.target === nodeId)
       )
       return isReferenced ? 'conversation' : 'ending'
@@ -362,10 +373,10 @@ export class GraphEditorManager {
     // 選択肢がある場合
     if (node.choices && node.choices.length > 0) {
       // 条件がある選択肢があるかチェック
-      const hasConditions = node.choices.some(choice => 
+      const hasConditions = node.choices.some(choice =>
         choice.conditions && choice.conditions.length > 0
       )
-      
+
       // 条件がある場合は分岐、ない場合は選択
       return hasConditions ? 'branch' : 'choice'
     }
@@ -398,7 +409,8 @@ export class GraphEditorManager {
         nodeType: nodeType,
         color: color,
         width: 120,
-        height: 60
+        height: 60,
+        graphPosition: node.graphPosition // 追加：カスタム位置情報
       })
 
       // エッジ（選択肢）を生成
@@ -438,12 +450,17 @@ export class GraphEditorManager {
 
     // ノードを追加
     nodes.forEach(node => {
+      // カスタム位置がある場合はDagre計算から除外するか、固定位置として扱う
+      // Dagreは固定位置をサポートしないため、計算後の処理で上書きするが、
+      // グラフ全体への影響を避けるため、ここでは設定だけ行う
       g.setNode(node.id, {
         width: node.width,
         height: node.height,
         label: node.label,
         nodeType: node.nodeType,
-        color: node.color
+        color: node.color,
+        // カスタム位置情報を保持
+        graphPosition: node.graphPosition
       })
     })
 
@@ -457,6 +474,15 @@ export class GraphEditorManager {
 
     // レイアウトを計算
     dagre.layout(g)
+
+    // カスタム位置を持つノードの位置を上書き
+    g.nodes().forEach(v => {
+      const node = g.node(v)
+      if (node.graphPosition) {
+        node.x = node.graphPosition.x
+        node.y = node.graphPosition.y
+      }
+    })
 
     return g
   }
@@ -611,7 +637,7 @@ export class GraphEditorManager {
         // ダブルクリックの検出のため、クリックイベントで処理
         const now = Date.now()
         const lastClick = this._lastNodeClick || { nodeId: null, time: 0 }
-        
+
         if (lastClick.nodeId === d && now - lastClick.time < 300) {
           // ダブルクリック
           event.stopPropagation()
@@ -627,6 +653,15 @@ export class GraphEditorManager {
         event.stopPropagation()
         this._showContextMenu(event, d, null)
       })
+
+    // ドラッグ動作を設定
+    const dragBehavior = d3.drag()
+      .filter(event => !event.button) // 左クリックのみ
+      .on('start', (event, d) => this._onNodeDragStart(d, event))
+      .on('drag', (event, d) => this._onNodeDrag(event, d))
+      .on('end', (event, d) => this._onNodeDragEnd(d))
+
+    node.call(dragBehavior)
 
     // ノードの背景（矩形）- 選択状態に応じてスタイルを変更
     node.append('rect')
@@ -687,20 +722,20 @@ export class GraphEditorManager {
       })
 
     // ホバー効果（選択時は変更しない）
-    node.on('mouseenter', function(event, d) {
+    node.on('mouseenter', function (event, d) {
       if (!this.selectedNodeIds.has(d) && this.selectedNodeId !== d) {
         d3.select(this).select('rect')
           .attr('stroke-width', 3)
           .attr('opacity', 0.9)
       }
     })
-    .on('mouseleave', function(event, d) {
-      if (!this.selectedNodeIds.has(d) && this.selectedNodeId !== d) {
-        d3.select(this).select('rect')
-          .attr('stroke-width', 2)
-          .attr('opacity', 1)
-      }
-    })
+      .on('mouseleave', function (event, d) {
+        if (!this.selectedNodeIds.has(d) && this.selectedNodeId !== d) {
+          d3.select(this).select('rect')
+            .attr('stroke-width', 2)
+            .attr('opacity', 1)
+        }
+      })
 
     // キャンバス上での右クリック（ノード追加メニュー）
     this.svg.on('contextmenu', (event) => {
@@ -736,6 +771,9 @@ export class GraphEditorManager {
    * @param {string} nodeId - クリックされたノードID
    */
   _onNodeClick(nodeId, event = null) {
+    // ドラッグ直後のクリックイベントは無視
+    if (this.drag.active) return
+
     // エッジ作成モードの場合
     if (this.dragSourceNodeId && this.dragSourceNodeId !== nodeId) {
       this._createEdge(this.dragSourceNodeId, nodeId)
@@ -1193,7 +1231,7 @@ export class GraphEditorManager {
       if (window.guiEditorManager.nodeRenderer && typeof window.guiEditorManager.nodeRenderer.renderNodeList === 'function') {
         window.guiEditorManager.nodeRenderer.renderNodeList()
       }
-      
+
       // ドラフトを保存
       if (window.guiEditorManager.modelUpdater && typeof window.guiEditorManager.modelUpdater.saveDraftModel === 'function') {
         window.guiEditorManager.modelUpdater.saveDraftModel()
@@ -1346,11 +1384,11 @@ export class GraphEditorManager {
 
     // 現在のズーム状態を取得
     const transform = d3.zoomTransform(this.svg.node())
-    
+
     // ビューポートの範囲を計算
     const containerWidth = this.container.clientWidth
     const containerHeight = this.container.clientHeight
-    
+
     const viewportLeft = -transform.x / transform.k
     const viewportTop = -transform.y / transform.k
     const viewportWidth = containerWidth / transform.k
@@ -1410,7 +1448,7 @@ export class GraphEditorManager {
     if (!this.appState.model || this.selectedNodeIds.size === 0) return
 
     const nodeCount = this.selectedNodeIds.size
-    
+
     // 最後のノードは削除できない
     if (Object.keys(this.appState.model.nodes).length <= nodeCount) {
       if (typeof window.setStatus === 'function') {
@@ -1422,7 +1460,7 @@ export class GraphEditorManager {
     // 開始ノードが含まれる場合は別のノードを開始ノードに設定
     let newStartNode = null
     if (this.selectedNodeIds.has(this.appState.model.startNode)) {
-      const remainingNodes = Object.keys(this.appState.model.nodes).filter(id => 
+      const remainingNodes = Object.keys(this.appState.model.nodes).filter(id =>
         !this.selectedNodeIds.has(id)
       )
       if (remainingNodes.length > 0) {
@@ -1464,16 +1502,16 @@ export class GraphEditorManager {
    */
   _snapToGrid(coordinate) {
     if (!this.grid.enabled) return coordinate
-    
+
     const gridSize = this.grid.size
     const halfGrid = gridSize / 2
     const snappedCoordinate = Math.round(coordinate / gridSize) * gridSize
-    
+
     // 閾値内の場合のみスナップ
     if (Math.abs(coordinate - snappedCoordinate) <= this.grid.snapThreshold) {
       return snappedCoordinate
     }
-    
+
     return coordinate
   }
 
@@ -1693,7 +1731,7 @@ export class GraphEditorManager {
     // エッジのインジケータを描画
     if (indicators.length > 0) {
       // エッジのパスを取得して中点にインジケータを配置
-      const edgeElement = this.g.select(`g.edge`).filter(function() {
+      const edgeElement = this.g.select(`g.edge`).filter(function () {
         const edgeData = d3.select(this).datum()
         return edgeData && edgeData.v === fromNodeId && edgeData.w === choice.target
       })
@@ -1738,7 +1776,7 @@ export class GraphEditorManager {
    */
   _handleIndicatorClick(event, indicatorData) {
     event.stopPropagation()
-    
+
     // 詳細情報を表示（モーダルやツールチップ拡張）
     if (typeof window.setStatus === 'function') {
       window.setStatus(indicatorData.tooltip, 'info')
@@ -1787,36 +1825,304 @@ export class GraphEditorManager {
   /**
    * リソースをクリーンアップ
    */
-  dispose() {
-    this._cleanupResizeObserver()
-    
-    // コンテキストメニューを削除
-    if (this.contextMenu) {
-      this.contextMenu.remove()
-      this.contextMenu = null
-    }
-
-    // ミニマップを削除
-    if (this.minimap.container) {
-      this.minimap.container.remove()
-      this.minimap.container = null
-      this.minimap.svg = null
-      this.minimap.g = null
-    }
-
-    // SVGをクリア
-    if (this.svg) {
-      d3.select(this.container).selectAll('*').remove()
-      this.svg = null
-    }
-
-    // 状態をリセット
-    this.container = null
-    this.g = null
-    this.zoom = null
-    this.selectedNodeId = null
-    this.selectedEdge = null
-    this.dragSourceNodeId = null
     this.editingNodeId = null
+  }
+
+// --- Drag & Drop Implementation ---
+
+/**
+ * Snap coordinates to grid
+ * @param {number} x - X coordinate
+ * @param {number} y - Y coordinate
+ * @returns {{ x: number, y: number }} Snapped coordinates
+ */
+_snapToGrid(x, y) {
+  if (!this.grid.enabled) {
+    return { x, y }
+  }
+
+  return {
+    x: Math.round(x / this.grid.size) * this.grid.size,
+    y: Math.round(y / this.grid.size) * this.grid.size
+  }
+}
+
+/**
+ * Node drag start handler
+ * @param {string} nodeId - Dragged node ID
+ * @param {Object} event - Drag event
+ */
+_onNodeDragStart(nodeId, event) {
+  // インライン編集中の場合はドラッグしない
+  if (this.editingNodeId) return
+
+  // 右クリックなどは無視
+  if (event.sourceEvent.button !== 0) return
+
+  this.drag.active = true
+  this.drag.nodeId = nodeId
+
+  // 現在のズームレベルを考慮して開始位置を記録
+  // event.x/y は既に変換後の座標だが、相対計算のために使用
+  this.drag.startX = event.x
+  this.drag.startY = event.y
+
+  // 選択されていないノードをドラッグした場合、そのノードを選択状態にする
+  // ただし、Ctrlキーが押されている場合は既存の選択を維持
+  if (!this.selectedNodeIds.has(nodeId) && !event.sourceEvent.ctrlKey) {
+    this.selectedNodeId = nodeId
+    this.selectedNodeIds.clear()
+    this.selectedNodeIds.add(nodeId)
+    this.render() //選択状態反映のために再描画
+  } else if (!this.selectedNodeIds.has(nodeId)) {
+    // Ctrlキーが押されている場合でも、未選択ノードなら選択に追加
+    this.selectedNodeIds.add(nodeId)
+    this.render()
+  }
+
+  // 複数選択ノードの相対位置を記録
+  this.drag.multiSelectPositions.clear()
+  const graph = this._calculateLayout(
+    this._buildGraphData().nodes,
+    this._buildGraphData().edges
+  )
+
+  this.selectedNodeIds.forEach(id => {
+    const nodeData = graph.node(id)
+    if (nodeData) {
+      this.drag.multiSelectPositions.set(id, {
+        initialX: nodeData.x,
+        initialY: nodeData.y
+      })
+    }
+  })
+
+  // ドラッグ中のカーソル
+  d3.select(document.body).style('cursor', 'move')
+}
+
+/**
+ * Node drag handler
+ * @param {Object} event - Drag event
+ * @param {string} draggedNodeId - ID of the node being dragged
+ */
+_onNodeDrag(event, draggedNodeId) {
+  if (!this.drag.active) return
+
+  // 移動量を計算
+  const dx = event.dx
+  const dy = event.dy
+
+  // 選択された全てのノードを移動
+  this.selectedNodeIds.forEach(nodeId => {
+    // データの更新はまだ行わず、DOM要素を直接操作してパフォーマンスを確保
+    const nodeGroup = this.g.select(`g.node[data-node-id="${nodeId}"]`)
+    if (nodeGroup.empty()) return
+
+    const initialPos = this.drag.multiSelectPositions.get(nodeId)
+    if (!initialPos) return
+
+    // 現在のドラッグオフセット
+    // event.x/y は開始時からの累積ではなく絶対座標に近い挙動をする場合があるため、
+    // シンプルに累積加算するか、初期位置からの差分を使用する
+    // ここではD3 v6+のevent.x/yを使用
+
+    // 相対移動を計算するためのオフセット更新
+    // 実際には d3.drag は dx/dy を提供するのでそれを使うのが安全
+    // ただし、グリッドスナップを適用する場合、現在位置を計算する必要がある
+
+    // グリッドスナップ適用（ドラッグ中のノード基準）
+    // 注: ここでは視覚的なフォードバックのみ。厳密なスナップはDragEndで行うか、または
+    // ここでスナップ座標を計算して適用する。
+
+    // 簡易的な移動（スナップなしでの滑らかな移動）
+    // スナップさせたい場合は、移動先の座標を計算してスナップさせる
+  })
+
+  // 今回はシンプルに、DOMのtransform属性を更新するアプローチをとる
+  // 再描画(render)は高コストなので避ける
+
+  // 累積移動量を追跡する必要があるため、少し複雑。
+  // 代わりに、各ノードのデータ(x,y)を一時的に更新して、部分的に描画更新を行うのが通常だが、
+  // ここではNode要素のtransformを直接書き換える
+
+  // D3のデータバインディングを使っているので、datum().x/y を更新して
+  // attr('transform')を再設定するのが良い
+
+  this.selectedNodeIds.forEach(nodeId => {
+    const nodeSelection = this.g.select(`g.node[data-node-id="${nodeId}"]`)
+    if (nodeSelection.empty()) return
+
+    const d = nodeSelection.datum()
+    // D3のノードデータ(graph.node(d))は参照できないため、直接操作用のデータを保持する必要があるかもしれないが、
+    // ここでは、DAGREの計算結果が入っているわけではない。
+    // data()でバインドされているのは node ID (string) だけ。
+
+    // 仕方ないので、初期位置Mapを使用
+    const initial = this.drag.multiSelectPositions.get(nodeId)
+
+    // ドラッグ開始時からの変位用
+    // event.x - event.subject.x は使えない（subjectがない）
+    // event.x : 現在のポインタX
+    // event.y : 現在のポインタY
+    // しかし、複数ノードの場合、個別の絶対座標は分からない。
+
+    // 解決策: ドラッグ開始時のポインタ位置(this.drag.startX/Y)との差分を使う
+    const deltaX = event.x - this.drag.startX
+    const deltaY = event.y - this.drag.startY
+
+    let newX = initial.initialX + deltaX
+    let newY = initial.initialY + deltaY
+
+    // グリッドスナップ（有効な場合）
+    if (this.grid.enabled) {
+      const snapped = this._snapToGrid(newX, newY)
+      newX = snapped.x
+      newY = snapped.y
+    }
+
+    // DOM更新
+    nodeSelection.attr('transform', `translate(${newX},${newY})`)
+
+    // 接続されたエッジの更新
+    this._updateEdgesForNode(nodeId, newX, newY)
+  })
+}
+
+/**
+ * Node drag end handler
+ * @param {string} draggedNodeId - ID of the node being dragged
+ */
+_onNodeDragEnd(draggedNodeId) {
+  if (!this.drag.active) return
+
+  this.drag.active = false
+  d3.select(document.body).style('cursor', 'default')
+
+  // データの更新
+  // 最終的な位置をモデルに保存
+  let changed = false
+
+  this.selectedNodeIds.forEach(nodeId => {
+    const nodeSelection = this.g.select(`g.node[data-node-id="${nodeId}"]`)
+    if (nodeSelection.empty()) return
+
+    // transformから現在の座標を取得
+    const transform = nodeSelection.attr('transform')
+    const match = /translate\(([^,]+),([^)]+)\)/.exec(transform)
+    if (match) {
+      const x = parseFloat(match[1])
+      const y = parseFloat(match[2])
+
+      if (this.appState.model && this.appState.model.nodes[nodeId]) {
+        // 位置データの更新
+        this.appState.model.nodes[nodeId].graphPosition = { x, y }
+        changed = true
+      }
+    }
+  })
+
+  this.drag.multiSelectPositions.clear()
+
+  if (changed) {
+    // モデル変更通知
+    if (this.appState.model) {
+      // AppStateのセッターをトリガーしてイベント発火
+      // ただし、オブジェクトの中身を変えただけでは検知されない可能性があるため、
+      // 明示的に emit するか、新しいオブジェクトとしてセットする必要がある。
+      // ここでは簡単に emit を利用したいが、AppStateの仕様上、 model = model で発火させる
+      this.appState.model = this.appState.model
+
+      // GUIエディタ同期
+      this._syncWithGuiEditor()
+
+      if (typeof window.setStatus === 'function') {
+        window.setStatus('ノード位置を更新しました', 'success')
+      }
+
+      // ミニマップを更新
+      this._updateMinimap()
+    }
+  }
+}
+
+/**
+ * Update edges connected to a moving node
+ * @param {string} nodeId - Node ID
+ * @param {number} x - New X coordinate
+ * @param {number} y - New Y coordinate
+ */
+_updateEdgesForNode(nodeId, x, y) {
+  // このノードに接続するエッジを探して更新
+  // 始点として
+  this.g.selectAll('g.edge').each((d, i, nodes) => {
+    const edgeG = d3.select(nodes[i])
+    // d は dagreの Edge オブジェクト {v, w, ...}
+
+    // 簡易的な更新: 直線にする
+    // Dagreの複雑なパス(points)を動的に再計算するのは困難なので、
+    // ドラッグ中は始点と終点を結ぶ直線などを描画する
+
+    // このエッジが対象ノードに関係あるか？
+    if (d.v === nodeId) {
+      // 始点が移動。終点の座標を知る必要がある
+      const targetNodeId = d.w
+      const targetNode = this.g.select(`g.node[data-node-id="${targetNodeId}"]`)
+      if (!targetNode.empty()) {
+        const tTransform = targetNode.attr('transform')
+        const tMatch = /translate\(([^,]+),([^)]+)\)/.exec(tTransform)
+        if (tMatch) {
+          const tx = parseFloat(tMatch[1])
+          const ty = parseFloat(tMatch[2])
+
+          edgeG.select('path').attr('d', `M ${x} ${y} L ${tx} ${ty}`)
+          edgeG.select('text').attr('x', (x + tx) / 2).attr('y', (y + ty) / 2 - 5)
+        }
+      }
+    } else if (d.w === nodeId) {
+      // 終点が移動。始点の座標を知る必要がある
+      const sourceNodeId = d.v
+      const sourceNode = this.g.select(`g.node[data-node-id="${sourceNodeId}"]`)
+      if (!sourceNode.empty()) {
+        const sTransform = sourceNode.attr('transform')
+        const sMatch = /translate\(([^,]+),([^)]+)\)/.exec(sTransform)
+        if (sMatch) {
+          const sx = parseFloat(sMatch[1])
+          const sy = parseFloat(sMatch[2])
+
+          edgeG.select('path').attr('d', `M ${sx} ${sy} L ${x} ${y}`)
+          edgeG.select('text').attr('x', (sx + x) / 2).attr('y', (sy + y) / 2 - 5)
+        }
+      }
+    }
+  })
+}
+if (this.contextMenu) {
+  this.contextMenu.remove()
+  this.contextMenu = null
+}
+
+// ミニマップを削除
+if (this.minimap.container) {
+  this.minimap.container.remove()
+  this.minimap.container = null
+  this.minimap.svg = null
+  this.minimap.g = null
+}
+
+// SVGをクリア
+if (this.svg) {
+  d3.select(this.container).selectAll('*').remove()
+  this.svg = null
+}
+
+// 状態をリセット
+this.container = null
+this.g = null
+this.zoom = null
+this.selectedNodeId = null
+this.selectedEdge = null
+this.dragSourceNodeId = null
+this.editingNodeId = null
   }
 }
