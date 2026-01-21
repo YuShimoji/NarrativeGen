@@ -106,6 +106,9 @@ GitHubAutoApprove: false
   - Summary: GUIエディタバッチ操作強化（正規表現キャプチャ、ハイライトプレビュー、履歴管理）。
 - **TASK_023**: docs/reports/REPORT_TASK_023_20260116.md
   - Summary: マルチエンディング可視化機能拡張（パス追跡、分析エンジン、統計パネル、エクスポート）。
+- **TASK_024**: docs/reports/REPORT_TASK_024_Proxy.md
+  - Summary: Phase 2 Graph View Drag & Drop実装完了。グリッドスナップ、複数選択移動、Undo/Redo対応。
+
 
 ## Outlook
 
