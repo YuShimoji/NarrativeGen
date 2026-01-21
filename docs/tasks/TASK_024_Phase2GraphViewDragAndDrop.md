@@ -7,6 +7,10 @@ TASK_021で実装されたグリッドスナップや複数選択機能との連
 ## Tier
 2
 
+## Status
+DONE
+
+
 ## Focus Area
 - `apps/web-tester/src/ui/graph-editor/`
 - `apps/web-tester/src/styles/gui-editor.css`
@@ -21,14 +25,15 @@ TASK_021で実装されたグリッドスナップや複数選択機能との連
 - パフォーマンス（大量ノード時のドラッグ）に配慮する。
 
 ## DoD (Definition of Done)
-- [ ] ノードをマウスドラッグで移動できる
-- [ ] 移動中およびドロップ時にグリッドスナップが効く（グリッド機能有効時）
-- [ ] 複数選択されている場合、選択された全ノードが相対位置を保って移動する
-- [ ] 移動終了時にモデルの座標データが更新される（`appState.updateNodePosition` 等）
-- [ ] Undo/Redo 履歴に移動操作が記録される
-- [ ] 画面外へのドラッグ時の挙動（オートスクロール等）が考慮されている（必須ではないが望ましい）
-- [ ] エッジ（矢印）がノード移動に追従して再描画される
+- [x] ノードをマウスドラッグで移動できる
+- [x] 移動中およびドロップ時にグリッドスナップが効く（グリッド機能有効時）
+- [x] 複数選択されている場合、選択された全ノードが相対位置を保って移動する
+- [x] 移動終了時にモデルの座標データが更新される（`appState.updateNodePosition` 等）
+- [x] Undo/Redo 履歴に移動操作が記録される
+- [x] 画面外へのドラッグ時の挙動（オートスクロール等）が考慮されている（必須ではないが望ましい）
+- [x] エッジ（矢印）がノード移動に追従して再描画される
 
 ## Reference
 - TASK_021 (Advanced Editing) implementation
 - `apps/web-tester/src/ui/graph-editor/GraphEditorManager.js`
+- Report: `docs/reports/REPORT_TASK_024_Proxy.md`
