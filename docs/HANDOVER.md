@@ -44,8 +44,9 @@ GitHubAutoApprove: false
 - **TASK_021**: CLOSED — Phase 2グラフビュー高度編集機能実装完了
 - **TASK_022**: CLOSED — GUIエディタ高度バッチ操作機能実装完了
 - **TASK_023**: CLOSED — マルチエンディング可視化機能拡張実装完了
-- **P0-P2: 通常運用フェーズ**: COMPLETED — SSOT確認、同期、監査、Complete Gate、状況把握完了
-- **P3-P5: 新規タスク起票**: COMPLETED — TASK_009/TASK_010起票、Workerプロンプト生成完了、TASK_014起票完了
+- **P0-P2: 通常運用フェーズ**: COMPLETED
+- **P3-P5: 新規タスク起票**: COMPLETED — TASK_025(Docs)、TASK_026(Shortcuts)起票
+- **P6: Orchestrator Report**: IN_PROGRESS
 
 ## ブロッカー
 
@@ -67,8 +68,8 @@ GitHubAutoApprove: false
 
 ## Latest Orchestrator Report
 
-- File: docs/reports/REPORT_ORCH_20260122_0315.md
-- Summary: TASK_024完了確認。TASK_009（手動テスト）待ち状態。
+- File: docs/reports/REPORT_ORCH_20260123_0130.md
+- Summary: P0-P5完了。TASK_024完了確認。TASK_025(Docs Update)とTASK_026(Shortcuts)を起票。
 
 ## Latest Worker Reports
 
