@@ -81,3 +81,5 @@
 - [pending] Phase 2グラフビュー高度編集機能実装 (ref: docs/tasks/TASK_021_Phase2GraphViewAdvancedEditing.md, Status: OPEN)
 - [pending] GUIエディタ高度バッチ操作機能実装 (ref: docs/tasks/TASK_022_GUIEditorAdvancedBatchOperations.md, Status: COMPLETED)
 - [pending] マルチエンディング可視化機能拡張実装 (ref: docs/tasks/TASK_023_MultiEndingVisualizationEnhanced.md, Status: OPEN)
+- [pending] Update Project Status Documents (ref: docs/tasks/TASK_025_UpdateProjectStatusDocs.md, Status: OPEN)
+- [pending] GUI Editor Advanced Shortcuts (ref: docs/tasks/TASK_026_GUIEditorAdvancedShortcuts.md, Status: OPEN)

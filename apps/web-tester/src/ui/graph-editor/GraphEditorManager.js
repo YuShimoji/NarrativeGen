@@ -220,6 +220,10 @@ export class GraphEditorManager {
         <div class="context-menu-item" data-action="add-node-choice">選択ノードを追加</div>
         <div class="context-menu-item" data-action="add-node-branch">分岐ノードを追加</div>
         <div class="context-menu-item" data-action="add-node-ending">終了ノードを追加</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="toggle-grid-snap">グリッドスナップ: ${this.grid.enabled ? 'ON' : 'OFF'}</div>
+        <div class="context-menu-item" data-action="toggle-grid-display">グリッド表示: ${this.grid.showGrid ? 'ON' : 'OFF'}</div>
+        <div class="context-menu-item" data-action="toggle-minimap">ミニマップ: ${this.minimap.enabled ? 'ON' : 'OFF'}</div>
       `
     }
 
@@ -295,6 +299,15 @@ export class GraphEditorManager {
       case 'add-node-ending':
         this._addNodeAtPosition('ending', event)
         break
+      case 'toggle-grid-snap':
+        this.toggleGridSnap()
+        break
+      case 'toggle-grid-display':
+        this.toggleGridDisplay()
+        break
+      case 'toggle-minimap':
+        this.toggleMinimap()
+        break
     }
   }
 
@@ -318,6 +331,7 @@ export class GraphEditorManager {
     // ズーム機能を設定
     this.zoom = d3.zoom()
       .scaleExtent([0.1, 4])
+      .filter((event) => !event.shiftKey && !event.button) // Shiftキー押下時はズーム/パンを無効化
       .on('zoom', (event) => {
         if (this.g) {
           this.g.attr('transform', event.transform)
@@ -327,6 +341,15 @@ export class GraphEditorManager {
       })
 
     this.svg.call(this.zoom)
+
+    // 範囲選択用のドラッグ動作を設定
+    const selectionDrag = d3.drag()
+      .filter((event) => event.shiftKey && !event.button) // Shift + 左クリックのみ有効
+      .on('start', (event) => this._onSelectionDragStart(event))
+      .on('drag', (event) => this._onSelectionDrag(event))
+      .on('end', (event) => this._onSelectionDragEnd(event))
+
+    this.svg.call(selectionDrag)
 
     // ズーム可能なコンテナグループを作成
     this.g = this.svg.append('g')
@@ -1379,6 +1402,31 @@ export class GraphEditorManager {
   }
 
   /**
+   * ミニマップ表示のON/OFFを切り替え
+   */
+  toggleMinimap() {
+    this.minimap.enabled = !this.minimap.enabled
+    if (this.minimap.enabled) {
+      if (!this.minimap.container) {
+        this._setupMinimap()
+      } else {
+        this.minimap.container.style.display = 'block'
+      }
+      this._updateMinimap()
+    } else {
+      if (this.minimap.container) {
+        this.minimap.container.style.display = 'none'
+      }
+    }
+    if (typeof window.setStatus === 'function') {
+      window.setStatus(
+        `ミニマップ: ${this.minimap.enabled ? 'ON' : 'OFF'}`,
+        this.minimap.enabled ? 'success' : 'info'
+      )
+    }
+  }
+
+  /**
    * ビューポート矩形を更新
    */
   _updateViewportRect(mainBounds = null, minimapScale = null) {
@@ -2232,6 +2280,124 @@ export class GraphEditorManager {
         }
       }
     })
+  }
+
+  /**
+   * 範囲選択の開始
+   */
+  _onSelectionDragStart(event) {
+    this.selection.isSelecting = true
+    this.selection.startPoint = { x: event.x, y: event.y } // SVG座標系での開始位置
+
+    // 選択矩形要素を追加
+    this.svg.append('rect')
+      .attr('class', 'selection-rect')
+      .attr('x', event.x)
+      .attr('y', event.y)
+      .attr('width', 0)
+      .attr('height', 0)
+      .attr('fill', 'rgba(59, 130, 246, 0.1)')
+      .attr('stroke', '#3b82f6')
+      .attr('stroke-width', 1)
+      .attr('stroke-dasharray', '4 2')
+  }
+
+  /**
+   * 範囲選択中のドラッグ
+   */
+  _onSelectionDrag(event) {
+    if (!this.selection.isSelecting) return
+
+    const start = this.selection.startPoint
+    const current = { x: event.x, y: event.y }
+
+    const x = Math.min(start.x, current.x)
+    const y = Math.min(start.y, current.y)
+    const width = Math.abs(current.x - start.x)
+    const height = Math.abs(current.y - start.y)
+
+    this.svg.select('.selection-rect')
+      .attr('x', x)
+      .attr('y', y)
+      .attr('width', width)
+      .attr('height', height)
+  }
+
+  /**
+   * 範囲選択の終了
+   */
+  _onSelectionDragEnd(event) {
+    if (!this.selection.isSelecting) return
+
+    this.selection.isSelecting = false
+    this.svg.select('.selection-rect').remove()
+
+    // 最終的な選択範囲を取得
+    const start = this.selection.startPoint
+    const current = { x: event.x, y: event.y }
+
+    const x = Math.min(start.x, current.x)
+    const y = Math.min(start.y, current.y)
+    const width = Math.abs(current.x - start.x)
+    const height = Math.abs(current.y - start.y)
+
+    // クリック（ドラッグ量が小さい）の場合は無視
+    if (width < 5 && height < 5) return
+
+    // 座標変換
+    const transform = d3.zoomTransform(this.svg.node())
+    const localRect = {
+      x: (x - transform.x) / transform.k,
+      y: (y - transform.y) / transform.k,
+      width: width / transform.k,
+      height: height / transform.k
+    }
+
+    // Ctrlキーが押されていなければ既存の選択をクリア
+    if (!event.sourceEvent.ctrlKey) {
+      this.selectedNodeIds.clear()
+      this.selectedNodeId = null
+    }
+
+    // 範囲内のノードを選択
+    if (this.appState.model && this.appState.model.nodes) {
+      const nodes = this.g.selectAll('.node')
+      nodes.each((d, i, ns) => {
+        const node = d3.select(ns[i])
+        const transformAttr = node.attr('transform')
+        const match = /translate\(([^,]+),([^)]+)\)/.exec(transformAttr)
+        if (match) {
+          const nodeX = parseFloat(match[1])
+          const nodeY = parseFloat(match[2])
+
+          // ノードのサイズ（簡易的に取得）
+          const rect = node.select('rect')
+          const nodeW = parseFloat(rect.attr('width'))
+          const nodeH = parseFloat(rect.attr('height'))
+
+          // ノードの中心座標ではなく、左上座標で判定
+          // renderの実装では rect x = -width/2, y = -height/2 なので、
+          // translate(nodeX, nodeY) はノードの中心
+          const nodeLeft = nodeX - nodeW / 2
+          const nodeTop = nodeY - nodeH / 2
+
+          // 交差判定
+          if (localRect.x < nodeLeft + nodeW &&
+            localRect.x + localRect.width > nodeLeft &&
+            localRect.y < nodeTop + nodeH &&
+            localRect.y + localRect.height > nodeTop) {
+
+            this.selectedNodeIds.add(d)
+          }
+        }
+      })
+    }
+
+    this.render()
+
+    if (typeof window.setStatus === 'function') {
+      window.setStatus(`${this.selectedNodeIds.size}個のノードを選択しました`, 'info')
+    }
   }
 
 }

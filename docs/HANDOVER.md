@@ -103,6 +103,8 @@ GitHubAutoApprove: false
   - Summary: Phase 2グラフビューのレスポンシブ対応完了。ウィンドウサイズ変更時に自動的にレイアウトを再計算。ResizeObserverとデバウンス処理（300ms）を実装。
 - **TASK_021**: docs/reports/REPORT_TASK_021_Phase2GraphViewAdvancedEditing.md
   - Summary: Phase 2グラフビュー高度編集機能実装完了（ミニマップ、複数選択、グリッドスナップ、インジケータ）。大規模編集効率向上。
+  - **Update (2026-01-23)**: docs/reports/REPORT_TASK_021_Phase2GraphViewAdvancedEditing_Update_20260123.md
+    - Summary: 英語レポートおよび実装詳細（Rect Selection, Context Menu Enhancements）の追加ドキュメント。
 - **TASK_022**: docs/reports/REPORT_TASK_022_GUIEditorAdvancedBatchOperations.md
   - Summary: GUIエディタバッチ操作強化（正規表現キャプチャ、ハイライトプレビュー、履歴管理）。
 - **TASK_023**: docs/reports/REPORT_TASK_023_20260116.md

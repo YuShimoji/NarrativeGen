@@ -10,6 +10,29 @@ KICKSTART_20260115T014800Z
 - TASK_025着手
 - TASK_026着手 (TASK_025完了後)
 
+### P1.75: Complete Gate（2026-01-23 Run 2）
+- [ ] docs/inbox確認: OK
+- [ ] docs/tasks確認
+- [ ] HANDOVER.md確認
+- [ ] todo-sync.js実行
+- [ ] git status
+- [ ] report-validator.js
+
+### P1.5: 巡回監査（2026-01-23 Run 2）
+- [x] orchestrator-audit.js実行
+
+### P1: Sync & Merge（2026-01-23 Run 2）
+- [x] git fetch origin実行
+- [x] docs/inbox確認: REPORT_PHASE2_GRAPH_ADVANCED.md -> reports/にアーカイブ
+- [x] レポート統合: TASK_021 UpdateとしてHANDOVERに反映
+- [x] MISSION_LOG更新
+
+### P0: SSOT確認（2026-01-23 Run 2）
+- [x] MISSION_LOG.md確認: 完了
+- [x] SSOT確認: docs/Windsurf_AI_Collab_Rules_latest.md 存在確認
+- [x] ensure-ssot.js実行: 完了
+- [x] HANDOVER.md GitHubAutoApprove確認: false設定済み
+
 ### P6: Orchestrator Report（2026-01-23 セッション開始）
 - [x] レポート作成: docs/reports/REPORT_ORCH_20260123_0130.md
 - [x] HANDOVER.md更新: 完了
