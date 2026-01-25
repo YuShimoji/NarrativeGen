@@ -12,13 +12,13 @@ export class KeyBindingManager {
   constructor() {
     /** @type {Object.<string, string>} 現在のキーバインド設定 */
     this.bindings = { ...DEFAULT_KEY_BINDINGS }
-    
+
     /** @type {Object.<string, Function>} アクションハンドラー */
     this.handlers = {}
-    
+
     /** @type {Function|null} ステータス表示関数 */
     this.setStatus = null
-    
+
     /** @type {Object} UI要素への参照 */
     this.uiElements = {
       inventoryKey: null,
@@ -29,7 +29,7 @@ export class KeyBindingManager {
       mermaidKey: null,
       keyBindingDisplay: null
     }
-    
+
     /** @type {boolean} 初期化済みフラグ */
     this.initialized = false
   }
@@ -47,11 +47,11 @@ export class KeyBindingManager {
     if (options.setStatus) {
       this.setStatus = options.setStatus
     }
-    
+
     if (options.handlers) {
       this.handlers = { ...options.handlers }
     }
-    
+
     if (options.uiElements) {
       Object.assign(this.uiElements, options.uiElements)
     }
@@ -63,13 +63,13 @@ export class KeyBindingManager {
     if (options.saveGuiBtn) {
       this.saveGuiBtn = options.saveGuiBtn
     }
-    
+
     // ストレージからキーバインドを読み込み
     this.loadFromStorage()
-    
+
     // グローバルキーイベントリスナーを設定
     this.setupGlobalKeyListener()
-    
+
     this.initialized = true
     Logger.info('KeyBindingManager initialized')
   }
@@ -96,6 +96,27 @@ export class KeyBindingManager {
    */
   setupGlobalKeyListener() {
     document.addEventListener('keydown', (e) => this.handleKeyDown(e))
+    document.addEventListener('keyup', (e) => this.handleKeyUp(e))
+  }
+
+  /**
+   * キーアップイベントを処理
+   * @param {KeyboardEvent} e - キーボードイベント
+   */
+  handleKeyUp(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      return
+    }
+
+    const key = e.key.toLowerCase()
+
+    // Space for Pan Mode (release)
+    if (key === ' ' || key === 'spacebar') {
+      const handler = this.handlers['panMode']
+      if (handler) {
+        handler(false) // active = false
+      }
+    }
   }
 
   /**
@@ -103,13 +124,58 @@ export class KeyBindingManager {
    * @param {KeyboardEvent} e - キーボードイベント
    */
   handleKeyDown(e) {
-    // 入力フィールド内では無視
+    const key = e.key.toLowerCase()
+
+    // Ctrl+F (Focus Search) - Global (works even in inputs)
+    if (e.ctrlKey && key === 'f') {
+      e.preventDefault()
+      const handler = this.handlers['focusSearch']
+      if (handler) {
+        handler()
+      }
+      return
+    }
+
+    // Input field check
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
       return
     }
 
-    const key = e.key.toLowerCase()
-    
+    // Ctrl+D (Duplicate)
+    if (e.ctrlKey && key === 'd') {
+      e.preventDefault()
+      const handler = this.handlers['duplicateNode']
+      if (handler) {
+        handler()
+      }
+      return
+    }
+
+    // Space for Pan Mode (press)
+    if ((key === ' ' || key === 'spacebar') && !e.repeat) {
+      const handler = this.handlers['panMode']
+      if (handler) {
+        handler(true) // active = true
+        e.preventDefault() // Prevent scrolling
+      }
+      return
+    }
+
+    // Delete / Backspace
+    if (key === 'delete' || key === 'backspace') {
+      // GraphEditorManager handles this directly via event listener on container,
+      // but we can also trigger it via handler if registered
+      if (this.handlers['deleteNode']) {
+        // Only prevent default if handler exists and does something
+        // But backspace performs "Back" navigation in some browsers, so usually good to prevent
+        // However, we rely on GraphEditorManager's own listener for now.
+        // If we want to centralize:
+        this.handlers['deleteNode']()
+        e.preventDefault()
+        return
+      }
+    }
+
     // Special handling for Ctrl+S (save) in GUI edit mode
     if (e.ctrlKey && key === 's' && this.guiEditMode && this.guiEditMode.style.display !== 'none') {
       e.preventDefault()
@@ -138,7 +204,7 @@ export class KeyBindingManager {
       }
       return
     }
-    
+
     // キーバインドに一致するアクションを検索
     for (const [action, boundKey] of Object.entries(this.bindings)) {
       if (key === boundKey.toLowerCase()) {
@@ -175,14 +241,14 @@ export class KeyBindingManager {
    */
   updateUI() {
     const { inventoryKey, debugKey, graphKey, storyKey, aiKey, mermaidKey, keyBindingDisplay } = this.uiElements
-    
+
     if (inventoryKey) inventoryKey.value = this.bindings.inventory
     if (debugKey) debugKey.value = this.bindings.debug
     if (graphKey) graphKey.value = this.bindings.graph
     if (storyKey) storyKey.value = this.bindings.story
     if (aiKey) aiKey.value = this.bindings.ai
     if (mermaidKey && this.bindings.mermaid) mermaidKey.value = this.bindings.mermaid
-    
+
     if (keyBindingDisplay) {
       keyBindingDisplay.textContent = this.getBindingInfo()
     }
@@ -194,7 +260,7 @@ export class KeyBindingManager {
    */
   getBindingsFromUI() {
     const { inventoryKey, debugKey, graphKey, storyKey, aiKey, mermaidKey } = this.uiElements
-    
+
     const newBindings = {
       inventory: inventoryKey?.value?.toLowerCase() || 'z',
       debug: debugKey?.value?.toLowerCase() || 'd',
@@ -203,7 +269,7 @@ export class KeyBindingManager {
       ai: aiKey?.value?.toLowerCase() || 'a',
       mermaid: mermaidKey?.value?.toLowerCase() || 'm'
     }
-    
+
     // 重複チェック
     const values = Object.values(newBindings)
     const uniqueValues = new Set(values)
@@ -213,7 +279,7 @@ export class KeyBindingManager {
       }
       return null
     }
-    
+
     return newBindings
   }
 
@@ -224,9 +290,9 @@ export class KeyBindingManager {
   save() {
     const newBindings = this.getBindingsFromUI()
     if (!newBindings) return false
-    
+
     Object.assign(this.bindings, newBindings)
-    
+
     try {
       localStorage.setItem(KEY_BINDINGS_STORAGE_KEY, JSON.stringify(this.bindings))
       if (this.setStatus) {
@@ -250,7 +316,7 @@ export class KeyBindingManager {
   reset() {
     Object.assign(this.bindings, DEFAULT_KEY_BINDINGS)
     this.updateUI()
-    
+
     try {
       localStorage.removeItem(KEY_BINDINGS_STORAGE_KEY)
       if (this.setStatus) {

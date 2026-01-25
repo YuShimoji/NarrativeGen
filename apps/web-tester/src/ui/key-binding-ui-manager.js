@@ -22,6 +22,8 @@ export class KeyBindingUIManager {
     this.setStatus = setStatusCallback
     this.mermaidPreviewManager = options.mermaidPreviewManager || null
     this.guiEditorManager = options.guiEditorManager || null
+    this.graphManager = options.graphManager || null
+    this.searchManager = options.searchManager || null
     this.updateMermaidCallback = options.updateMermaidCallback || null
   }
 
@@ -129,6 +131,42 @@ export class KeyBindingUIManager {
         if (this.guiEditorManager) {
           this.guiEditorManager.pasteNode()
           Logger.info('Node pasted')
+        }
+      },
+
+      'duplicateNode': () => {
+        if (this.graphManager && typeof this.graphManager.duplicateSelectedNodes === 'function') {
+          this.graphManager.duplicateSelectedNodes()
+          Logger.info('Node duplicated')
+        }
+      },
+
+      'focusSearch': () => {
+        if (this.searchManager && typeof this.searchManager.focusSearch === 'function') {
+          this.searchManager.focusSearch()
+          Logger.info('Search focused')
+        } else {
+          // Fallback if searchManager not provided or method missing
+          const searchInput = document.getElementById('nodeSearchInput')
+          if (searchInput) {
+            searchInput.focus()
+            searchInput.select()
+          }
+        }
+      },
+
+      'panMode': (active) => {
+        if (this.graphManager && typeof this.graphManager.setPanMode === 'function') {
+          this.graphManager.setPanMode(active)
+          Logger.info(`Pan mode: ${active}`)
+        }
+      },
+
+      'deleteNode': () => {
+        if (this.graphManager && typeof this.graphManager._deleteMultipleNodes === 'function') {
+          // Using internal method _deleteMultipleNodes for now
+          this.graphManager._deleteMultipleNodes()
+          Logger.info('Node deleted')
         }
       }
     }

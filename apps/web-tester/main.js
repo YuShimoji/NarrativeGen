@@ -14,7 +14,7 @@ try {
 
 // Force layout isolation from external styles (IDE preview, extensions, etc.)
 // This runs immediately to prevent layout shift
-;(function forceLayoutIsolation() {
+; (function forceLayoutIsolation() {
   const forceStyles = `
     html, body {
       margin: 0 !important;
@@ -48,13 +48,13 @@ try {
   styleEl.id = 'narrativegen-layout-isolation'
   styleEl.textContent = forceStyles
   document.head.appendChild(styleEl)
-  
+
   // Also apply inline styles as fallback
   const appContainer = document.querySelector('.app-container')
   if (appContainer) {
     appContainer.style.cssText = 'position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; max-width: 100vw !important; margin: 0 !important; padding: 0 !important; z-index: 9999 !important; display: flex !important; flex-direction: column !important; overflow: hidden;'
   }
-  
+
   const panel = document.querySelector('.panel')
   if (panel) {
     panel.style.cssText = 'width: 100% !important; max-width: none !important; margin: 0 !important; flex: 1; display: flex; flex-direction: column; min-height: 0;'
@@ -87,6 +87,7 @@ import { ReferenceManager } from './src/ui/reference.js'
 import { CsvManager } from './src/ui/csv.js'
 import { AiManager } from './src/ui/ai.js'
 import { LexiconManager } from './src/ui/lexicon.js'
+import { SearchManager } from './src/ui/SearchManager.js'
 import { MermaidPreviewManager } from './src/ui/mermaid-preview.js'
 import { validateNotEmpty, validateJson, validateFileExtension } from './src/utils/validation.js'
 import { downloadFile, readFileAsText, parseCsv } from './src/utils/file-utils.js'
@@ -123,30 +124,30 @@ import {
 // Utility function for resolving variables in text (browser-compatible)
 function resolveVariables(text, session, model) {
   if (!text || !session) return text
-  
+
   let resolved = text
-  
+
   // Replace flag variables: {flag:key}
   Object.entries(session.flags || {}).forEach(([key, value]) => {
     resolved = resolved.replace(new RegExp(`\\{flag:${key}\\}`, 'g'), value ? 'true' : 'false')
   })
-  
+
   // Replace resource variables: {resource:key}
   Object.entries(session.resources || {}).forEach(([key, value]) => {
     resolved = resolved.replace(new RegExp(`\\{resource:${key}\\}`, 'g'), String(value))
   })
-  
+
   // Replace variable variables: {variable:key}
   Object.entries(session.variables || {}).forEach(([key, value]) => {
     resolved = resolved.replace(new RegExp(`\\{variable:${key}\\}`, 'g'), String(value))
   })
-  
+
   // Replace node ID variable: {nodeId}
   resolved = resolved.replace(/\{nodeId\}/g, session.nodeId)
-  
+
   // Replace time variable: {time}
   resolved = resolved.replace(/\{time\}/g, String(session.time))
-  
+
   return resolved
 }
 
@@ -449,7 +450,7 @@ function showCsvPreview(file) {
     const lines = text.trim().split(/\r?\n/).slice(0, 11) // First 10 lines + header
     const table = document.createElement('table')
     table.className = 'csv-table'
-    
+
     lines.forEach((line, index) => {
       const row = document.createElement('tr')
       const cells = parseCsvLine(line, line.includes('\t') ? '\t' : ',')
@@ -460,7 +461,7 @@ function showCsvPreview(file) {
       })
       table.appendChild(row)
     })
-    
+
     if (lines.length >= 11) {
       const row = document.createElement('tr')
       const cell = document.createElement('td')
@@ -471,7 +472,7 @@ function showCsvPreview(file) {
       row.appendChild(cell)
       table.appendChild(row)
     }
-    
+
     csvPreviewContent.innerHTML = ''
     csvPreviewContent.appendChild(table)
     csvPreviewModal.classList.add('show')
@@ -655,12 +656,12 @@ async function generateNextNode() {
     const startTime = Date.now()
     const generatedText = await aiProviderInstance.generateNextNode(context)
     const duration = ((Date.now() - startTime) / 1000).toFixed(2)
-    
+
     aiOutput.textContent = `✅ 生成されたテキスト (${duration}秒):\n${generatedText}`
     Logger.info('AI node generated', { duration, provider: aiConfig.provider })
   } catch (error) {
     console.error('ノード生成エラー:', error)
-    const errorMsg = error.message.includes('API error') 
+    const errorMsg = error.message.includes('API error')
       ? `APIエラー: ${error.message}\nAPIキーを確認してください。`
       : `生成に失敗しました: ${error.message}`
     aiOutput.textContent = `❌ ${errorMsg}`
@@ -704,7 +705,7 @@ async function paraphraseCurrentTextUI() {
     Logger.info('AI paraphrase completed', { duration, provider: aiConfig.provider, variantCount: paraphrases.length })
   } catch (error) {
     console.error('言い換えエラー:', error)
-    const errorMsg = error.message.includes('API error') 
+    const errorMsg = error.message.includes('API error')
       ? `APIエラー: ${error.message}\nAPIキーを確認してください。`
       : `言い換えに失敗しました: ${error.message}`
     aiOutput.textContent = `❌ ${errorMsg}`
@@ -1345,21 +1346,21 @@ saveGuiBtn.addEventListener('click', () => {
 cancelGuiBtn.addEventListener('click', () => {
   // 元モデルを復元
   const restored = guiEditorManager.restoreOriginalModel()
-  
+
   if (restored) {
     // ドラフトもクリア
     localStorage.removeItem(DRAFT_MODEL_STORAGE_KEY)
-    
+
     // UIを更新
     if (guiEditorManager.nodeList) {
       guiEditorManager.renderNodeList()
     }
-    
+
     setStatus('編集をキャンセルし、元のモデルに戻しました', 'info')
   } else {
     setStatus('元のモデルが見つかりませんでした', 'warn')
   }
-  
+
   exitGuiEditMode()
   setControlsEnabled(true)
 })
@@ -1439,16 +1440,16 @@ function showVariableEditor() {
 
   const variables = currentSession.variables || {}
   const varKeys = Object.keys(variables)
-  
+
   let message = '変数を編集してください (key=value の形式で入力)\n\n現在の変数:\n'
   message += varKeys.length > 0 ? varKeys.map(key => `${key}=${variables[key]}`).join('\n') : 'なし'
   message += '\n\n新しい変数を追加または既存の変数を編集 (空行でスキップ):'
-  
+
   const input = prompt(message)
   if (input === null) return // Cancelled
-  
+
   const newVariables = { ...variables }
-  
+
   if (input.trim()) {
     const parts = input.split('=')
     if (parts.length === 2) {
@@ -1466,7 +1467,7 @@ function showVariableEditor() {
       return
     }
   }
-  
+
   // Update session
   const updatedSession = { ...currentSession, variables: newVariables }
   setCurrentSession(updatedSession)
@@ -1560,12 +1561,12 @@ const batchEditManager = {
   applyTextReplace() {
     const search = searchText.value.trim()
     const replace = replaceText.value.trim()
-    
+
     if (!search) {
       setStatus('検索テキストを入力してください', 'warn')
       return
     }
-    
+
     let replacedCount = 0
     for (const nodeId in _model.nodes) {
       const node = _model.nodes[nodeId]
@@ -1574,7 +1575,7 @@ const batchEditManager = {
         replacedCount++
       }
     }
-    
+
     if (replacedCount > 0) {
       this.refreshUI()
       setStatus(`${replacedCount}個のノードテキストを置換しました`, 'success')
@@ -1586,12 +1587,12 @@ const batchEditManager = {
   applyChoiceReplace() {
     const search = choiceSearchText.value.trim()
     const replace = choiceReplaceText.value.trim()
-    
+
     if (!search) {
       setStatus('検索テキストを入力してください', 'warn')
       return
     }
-    
+
     let replacedCount = 0
     for (const nodeId in _model.nodes) {
       const node = _model.nodes[nodeId]
@@ -1604,7 +1605,7 @@ const batchEditManager = {
         }
       }
     }
-    
+
     if (replacedCount > 0) {
       this.refreshUI()
       setStatus(`${replacedCount}個の選択肢テキストを置換しました`, 'success')
@@ -1616,17 +1617,17 @@ const batchEditManager = {
   applyTargetReplace() {
     const oldTarget = oldTargetText.value.trim()
     const newTarget = newTargetText.value.trim()
-    
+
     if (!oldTarget || !newTarget) {
       setStatus('変更元と変更先のノードIDを入力してください', 'warn')
       return
     }
-    
+
     if (!_model.nodes[newTarget]) {
       setStatus('変更先のノードが存在しません', 'warn')
       return
     }
-    
+
     let replacedCount = 0
     for (const nodeId in _model.nodes) {
       const node = _model.nodes[nodeId]
@@ -1639,7 +1640,7 @@ const batchEditManager = {
         }
       }
     }
-    
+
     if (replacedCount > 0) {
       this.refreshUI()
       setStatus(`${replacedCount}個のターゲットを変更しました`, 'success')
@@ -1750,7 +1751,7 @@ if (cancelQuickNodeBtn) {
 function openBatchChoiceModal() {
   const modal = document.getElementById('batchChoiceModal')
   const nodeSelect = document.getElementById('batchNodeSelect')
-  
+
   // Populate node list
   nodeSelect.innerHTML = '<option value="">ノードを選択...</option>'
   Object.keys(_model.nodes).forEach(nodeId => {
@@ -1759,7 +1760,7 @@ function openBatchChoiceModal() {
     option.textContent = `${nodeId} - ${_model.nodes[nodeId].text?.substring(0, 30) || '(テキストなし)'}`
     nodeSelect.appendChild(option)
   })
-  
+
   modal.style.display = 'flex'
   modal.classList.add('show')
 }
@@ -1822,9 +1823,9 @@ function updateSearchFilter() {
 
   const query = nodeSearchInput?.value || ''
   const filterType = nodeFilterSelect?.value || 'all'
-  
+
   const result = guiEditorManager.applySearchAndFilter(query, filterType)
-  
+
   if (result && searchResultCount) {
     if (query || filterType !== 'all') {
       if (result.visible === 0) {
@@ -2069,7 +2070,7 @@ function updateCustomTemplateOptions() {
     return
   }
 
-  customTemplateGroup.innerHTML = templates.map(template => 
+  customTemplateGroup.innerHTML = templates.map(template =>
     `<option value="${template.id}">${template.name}</option>`
   ).join('')
 }
@@ -2135,6 +2136,7 @@ const referenceManager = new ReferenceManager()
 const csvManager = new CsvManager(appState)
 const aiManager = new AiManager(appState)
 const lexiconManager = new LexiconManager()
+const searchManager = new SearchManager()
 const themeManager = new ThemeManager()
 const validationPanel = new ValidationPanel(appState)
 const lexiconUIManager = new LexiconUIManager()
@@ -2245,6 +2247,9 @@ aiManager.initialize(
 // Initialize lexicon manager
 lexiconManager.initialize()
 
+// Initialize search manager
+searchManager.initialize()
+
 // Keep engine runtime paraphrase lexicon in sync with designer lexicon
 const applyToRuntimeLexicon = (lexicon, options) => {
   try {
@@ -2269,6 +2274,8 @@ lexiconUIManager.initUI()
 keyBindingUIManager.initialize(keyBindingManager, appState, setStatus, {
   mermaidPreviewManager,
   guiEditorManager,
+  graphManager,
+  searchManager,
   updateMermaidCallback: updateMermaidDiagramIfVisible
 })
 
@@ -2378,9 +2385,9 @@ if (guiEditBtn) {
       setStatus('まずモデルを読み込んでください', 'warn')
       return
     }
-    
+
     const isCurrentlyEditing = guiEditMode.classList.contains('active')
-    
+
     if (isCurrentlyEditing) {
       // Exit GUI edit mode
       guiEditMode.classList.remove('active')
@@ -2395,7 +2402,7 @@ if (guiEditBtn) {
       // Enter GUI edit mode
       // 元モデルを保存（ロールバック用）
       guiEditorManager.saveOriginalModel()
-      
+
       guiEditMode.classList.add('active')
       guiEditMode.style.removeProperty('display')
       if (storyPanel) {

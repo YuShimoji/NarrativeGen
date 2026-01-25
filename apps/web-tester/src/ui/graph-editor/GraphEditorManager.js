@@ -693,7 +693,7 @@ export class GraphEditorManager {
 
     // ドラッグ動作を設定
     const dragBehavior = d3.drag()
-      .filter(event => !event.button) // 左クリックのみ
+      .filter((event) => !event.button && !this.isPanMode) // 左クリックのみ、かつPanModeでない場合
       .on('start', (event, d) => this._onNodeDragStart(d, event))
       .on('drag', (event, d) => this._onNodeDrag(event, d))
       .on('end', (event, d) => this._onNodeDragEnd(d))
@@ -808,8 +808,8 @@ export class GraphEditorManager {
    * @param {string} nodeId - クリックされたノードID
    */
   _onNodeClick(nodeId, event = null) {
-    // ドラッグ直後のクリックイベントは無視
-    if (this.drag.active) return
+    // Panモード時、またはドラッグ直後のクリックイベントは無視
+    if (this.drag.active || this.isPanMode) return
 
     // エッジ作成モードの場合
     if (this.dragSourceNodeId && this.dragSourceNodeId !== nodeId) {
@@ -1557,6 +1557,77 @@ export class GraphEditorManager {
     }
   }
 
+  /**
+   * 選択中のノードを複製
+   */
+  duplicateSelectedNodes() {
+    if (!this.appState.model) return
+
+    const nodesToDuplicate = []
+    if (this.selectedNodeIds.size > 0) {
+      this.selectedNodeIds.forEach(id => nodesToDuplicate.push(id))
+    } else if (this.selectedNodeId) {
+      nodesToDuplicate.push(this.selectedNodeId)
+    }
+
+    if (nodesToDuplicate.length === 0) return
+
+    // 選択をクリア
+    this._clearSelection()
+    const newSelectedIds = new Set()
+
+    nodesToDuplicate.forEach(originalId => {
+      const originalNode = this.appState.model.nodes[originalId]
+      if (!originalNode) return
+
+      const newNodeId = this._generateNodeId()
+      // Deep copy
+      const newNode = JSON.parse(JSON.stringify(originalNode))
+      newNode.id = newNodeId
+      newNode.text = (newNode.text || '') + ' (コピー)'
+
+      // Update custom position if exists, shift slightly
+      if (newNode.graphPosition) {
+        newNode.graphPosition.x = (newNode.graphPosition.x || 0) + 20
+        newNode.graphPosition.y = (newNode.graphPosition.y || 0) + 20
+      }
+
+      // Add to model
+      this.appState.model.nodes[newNodeId] = newNode
+      newSelectedIds.add(newNodeId)
+    })
+
+    // Select new nodes
+    this.selectedNodeIds = newSelectedIds
+    if (this.selectedNodeIds.size === 1) {
+      this.selectedNodeId = Array.from(this.selectedNodeIds)[0]
+      this.selectedNodeIds.clear()
+    }
+
+    this._syncWithGuiEditor()
+    this.render()
+
+    if (typeof window.setStatus === 'function') {
+      window.setStatus(`✅ ${nodesToDuplicate.length}個のノードを複製しました`, 'success')
+    }
+  }
+
+  /**
+   * Panモード（移動モード）の設定
+   * @param {boolean} active 
+   */
+  setPanMode(active) {
+    this.isPanMode = active
+    if (this.container) {
+      this.container.style.cursor = active ? 'grab' : 'default'
+    }
+    // Panモード切り替え時にドラッグ状態などが残っている場合はリセット
+    if (active) {
+      this._clearSelection()
+      this.render() // 再描画してドラッグ動作フィルタを適用
+    }
+  }
+
 
 
   /**
@@ -2286,6 +2357,7 @@ export class GraphEditorManager {
    * 範囲選択の開始
    */
   _onSelectionDragStart(event) {
+    if (this.isPanMode) return
     this.selection.isSelecting = true
     this.selection.startPoint = { x: event.x, y: event.y } // SVG座標系での開始位置
 
