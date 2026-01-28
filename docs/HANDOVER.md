@@ -46,7 +46,7 @@ GitHubAutoApprove: false
 - **TASK_023**: CLOSED — マルチエンディング可視化機能拡張実装完了
 - **P0-P2: 通常運用フェーズ**: COMPLETED
 - **P3-P5: 新規タスク起票**: COMPLETED — TASK_025(Docs)、TASK_026(Shortcuts)起票
-- **P6: Orchestrator Report**: IN_PROGRESS
+- **P6: Orchestrator Report**: COMPLETED (2026-01-26)
 
 ## ブロッカー
 
@@ -54,22 +54,19 @@ GitHubAutoApprove: false
 
 ## バックログ
 
-- TASK_007、TASK_008完了により、プロジェクト固有の検証・レポート設定が整備済み
-- TASK_009: 手動テスト実施中、検索・フィルタ機能のテストが実施できない状況はTASK_014で修正完了
-- TASK_010の推奨アクション（TASK_011, TASK_012）は完了
-- TASK_013: Phase 2グラフビュー実装完了。手動テスト実施待ち（サンプルモデルでの動作確認）
-- TASK_014: GUIエディタバグ修正完了。検索・フィルタ機能のテストが実施可能になった
-- TASK_015/TASK_016/TASK_017: 完了。未実装機能から優先度の高いものを選んでタスク化し、実装完了
-- TASK_018/TASK_019/TASK_020: 完了。進行中に見つかった課題をタスク化し、実装完了
+- TASK_007-024 完了（ただし Task 21, 23 はファイルステータス更新が必要）
+- TASK_025 (Docs), TASK_026 (Shortcuts) : Ready
+- TASK_028 (Export) : Ready
 
 ## Verification
 
-- `node .shared-workflows/scripts/sw-doctor.js --profile shared-orch-bootstrap --format text` → All Pass（警告のみ、必須項目は揃っている）
+- `node .shared-workflows/scripts/sw-doctor.js --profile shared-orch-bootstrap --format text` → All Pass
+- Project Completion Meter: 18% (File status lag detected)
 
 ## Latest Orchestrator Report
 
-- File: docs/reports/REPORT_ORCH_20260123_0330.md
-- Summary: P0-P6完了。TASK_021 Update反映。TASK_025/026実行準備完了。
+- File: docs/reports/REPORT_ORCH_20260126_2245.md
+- Summary: P1-P6完了。Export機能(Task 28)起票。スクリーンショット報告ルール追加。タスク状態不整合(Task 21, 23)を発見。
 
 ## Latest Worker Reports
 
@@ -111,6 +108,8 @@ GitHubAutoApprove: false
   - Summary: マルチエンディング可視化機能拡張（パス追跡、分析エンジン、統計パネル、エクスポート）。
 - **TASK_024**: docs/reports/REPORT_TASK_024_Proxy.md
   - Summary: Phase 2 Graph View Drag & Drop実装完了。グリッドスナップ、複数選択移動、Undo/Redo対応。
+- **TASK_027**: docs/reports/REPORT_TASK_027_MainJsRefactoring.md
+  - Summary: main.jsのリファクタリング完了（2422行→2006行、-17%）。`bootstrap.js`, `ui-bindings.js`, `session-controller.js` に分割し、責務を分離。`npm run check` 通過確認済み。
 
 
 ## Outlook

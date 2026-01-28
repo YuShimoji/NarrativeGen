@@ -10,6 +10,40 @@ KICKSTART_20260115T014800Z
 - TASK_025着手
 - TASK_026着手 (TASK_025完了後)
 
+### P5: Worker起動用プロンプト生成（2026-01-26 実行中）
+- [x] WORKER_PROMPT_TASK_027作成: docs/tasks/WORKER_PROMPT_TASK_027.md (Already Done)
+- [x] WORKER_PROMPT_TASK_028作成: docs/tasks/WORKER_PROMPT_TASK_028.md
+
+### P4: チケット発行（2026-01-26 実行完了）
+- [x] TASK_027作成: main.js Refactoring (Reflected as Done)
+- [x] TASK_028作成: Export Feature Extension
+
+### P3: 分割と戦略（2026-01-26 実行完了）
+- [x] タスク分類: TASK_027 (Tier 2 - main.js Refactoring), TASK_028 (Tier 2 - Export Extension)
+- [x] 並列化可能性判定: 独立しており並列可能（ただし TASK_027 は広範囲のため注意）
+- [x] Focus/Forbidden Area決定:
+  - TASK_027: Focus `main.js`, `src/` / Forbidden `src/ui/` (GUI logic)
+  - TASK_028: Focus `src/features/export/` / Forbidden `main.js`
+- [x] MISSION_LOG.md更新: 完了
+
+### P2: 状況把握（2026-01-26 実行完了）
+- [x] HANDOVER.md vs TASKファイル整合性確認: 不整合確認 (TASK_021, 023等 OPENのまま)
+- [x] report-validator.js実行: 失敗 (引数エラー) -> Skipped
+- [x] progress-meter.js実行: 完了 (18% - Task status delay detected)
+
+### P1.5: 巡回監査（2026-01-26 実行完了）
+- [x] orchestrator-audit.js実行: OK (Tasks: 22, Reports: 0)
+
+### P1: Sync & Merge（2026-01-26 実行完了）
+
+### P1: Sync & Merge（2026-01-26 実行完了）
+- [x] git submodule update: 完了
+- [x] git fetch origin: 完了
+- [x] docs/inbox確認: TASK_027レポート回収
+- [x] レポート統合: HANDOVER.mdへ統合完了
+- [x] ルール更新: Screenshot reporting rule追加
+- [x] MISSION_LOG更新: 完了
+
 ### P6: Orchestrator Report（2026-01-23 Run 2）
 - [ ] レポート作成
 - [ ] HANDOVER.md更新
