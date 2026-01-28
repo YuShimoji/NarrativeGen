@@ -1,65 +1,19 @@
-﻿// Handle potential IDE extension conflicts (e.g., migrationWizard.js errors)
-try {
-  // Check if we're in an IDE environment that might have conflicting scripts
-  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-    // Log IDE environment info for debugging (Logger will be available after initialization)
-    console.info('Web Tester loaded in IDE environment', {
-      userAgent: navigator.userAgent,
-      hasMigrationWizard: typeof window.migrationWizard !== 'undefined'
-    })
-  }
-} catch (error) {
-  console.warn('IDE environment check failed', { error: error.message })
-}
+﻿// Bootstrap environment immediately on load
+import { initializeEnvironment } from './src/bootstrap.js'
+initializeEnvironment()
 
-// Force layout isolation from external styles (IDE preview, extensions, etc.)
-// This runs immediately to prevent layout shift
-; (function forceLayoutIsolation() {
-  const forceStyles = `
-    html, body {
-      margin: 0 !important;
-      padding: 0 !important;
-      width: 100% !important;
-      height: 100% !important;
-      overflow: hidden !important;
-    }
-    .app-container {
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      max-width: 100vw !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      z-index: 9999 !important;
-      display: flex !important;
-      flex-direction: column !important;
-    }
-    .panel {
-      width: 100% !important;
-      max-width: none !important;
-      margin: 0 !important;
-    }
-  `
-  const styleEl = document.createElement('style')
-  styleEl.id = 'narrativegen-layout-isolation'
-  styleEl.textContent = forceStyles
-  document.head.appendChild(styleEl)
+// Import session controller utilities
+import {
+  resolveVariables,
+  loadModel,
+  applyModelParaphraseLexicon,
+  checkForDraftModel as checkDraft,
+  restoreDraftModel as restoreDraft,
+  ErrorBoundary
+} from './src/session-controller.js'
 
-  // Also apply inline styles as fallback
-  const appContainer = document.querySelector('.app-container')
-  if (appContainer) {
-    appContainer.style.cssText = 'position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; max-width: 100vw !important; margin: 0 !important; padding: 0 !important; z-index: 9999 !important; display: flex !important; flex-direction: column !important; overflow: hidden;'
-  }
-
-  const panel = document.querySelector('.panel')
-  if (panel) {
-    panel.style.cssText = 'width: 100% !important; max-width: none !important; margin: 0 !important; flex: 1; display: flex; flex-direction: column; min-height: 0;'
-  }
-})()
+// Import UI bindings
+import { getUIElements, getDefaultAIConfig } from './src/ui-bindings.js'
 
 // Import required functions from engine
 import {
@@ -120,89 +74,6 @@ import {
   ADVANCED_ENABLED_STORAGE_KEY,
   DRAFT_MODEL_STORAGE_KEY
 } from './src/config/constants.js'
-
-// Utility function for resolving variables in text (browser-compatible)
-function resolveVariables(text, session, model) {
-  if (!text || !session) return text
-
-  let resolved = text
-
-  // Replace flag variables: {flag:key}
-  Object.entries(session.flags || {}).forEach(([key, value]) => {
-    resolved = resolved.replace(new RegExp(`\\{flag:${key}\\}`, 'g'), value ? 'true' : 'false')
-  })
-
-  // Replace resource variables: {resource:key}
-  Object.entries(session.resources || {}).forEach(([key, value]) => {
-    resolved = resolved.replace(new RegExp(`\\{resource:${key}\\}`, 'g'), String(value))
-  })
-
-  // Replace variable variables: {variable:key}
-  Object.entries(session.variables || {}).forEach(([key, value]) => {
-    resolved = resolved.replace(new RegExp(`\\{variable:${key}\\}`, 'g'), String(value))
-  })
-
-  // Replace node ID variable: {nodeId}
-  resolved = resolved.replace(/\{nodeId\}/g, session.nodeId)
-
-  // Replace time variable: {time}
-  resolved = resolved.replace(/\{time\}/g, String(session.time))
-
-  return resolved
-}
-
-// Browser-compatible model loading (no fs module)
-async function loadModel(modelName) {
-  const url = `/models/examples/${modelName}.json`
-  const response = await fetch(url)
-  if (!response.ok) {
-    throw new Error(`Failed to load model: ${response.status} ${response.statusText}`)
-  }
-  return response.json()
-}
-
-function applyModelParaphraseLexicon(model) {
-  if (!model || !model.meta || !model.meta.paraphraseLexicon) return
-
-  const runtimeLexicon = model.meta.paraphraseLexicon
-
-  try {
-    setParaphraseLexicon(runtimeLexicon, { merge: true })
-  } catch (e) {
-    Logger.warn('Failed to apply model embedded paraphrase lexicon to engine', e)
-  }
-
-  try {
-    if (typeof lexiconManager !== 'undefined' && lexiconManager && typeof lexiconManager.applyRuntimeLexicon === 'function') {
-      lexiconManager.applyRuntimeLexicon(runtimeLexicon)
-    }
-  } catch (e) {
-    Logger.warn('Failed to apply model embedded paraphrase lexicon to UI lexicon manager', e)
-  }
-}
-
-// Error boundary for UI operations
-class ErrorBoundary {
-  static wrap(operation, fallbackMessage = '操作に失敗しました') {
-    return async (...args) => {
-      try {
-        Logger.info('Operation started', { operation: operation.name, args: args.length })
-        const result = await operation.apply(this, args)
-        Logger.info('Operation completed', { operation: operation.name })
-        return result
-      } catch (error) {
-        Logger.error('Operation failed', {
-          operation: operation.name,
-          error: error.message,
-          stack: error.stack,
-          args: args.length
-        })
-        setStatus(`${fallbackMessage}: ${error.message}`, 'error')
-        throw error
-      }
-    }
-  }
-}
 
 // Initialize AppState early to avoid TDZ errors
 const appState = new AppState()
