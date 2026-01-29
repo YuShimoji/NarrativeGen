@@ -142,6 +142,7 @@ export function getUIElements() {
         createQuickNodeBtn: document.getElementById('createQuickNodeBtn'),
         cancelQuickNodeBtn: document.getElementById('cancelQuickNodeBtn'),
         quickNodeBtn: document.getElementById('quickNodeBtn'),
+        exportBtn: document.getElementById('exportBtn'),
         batchChoiceBtn: document.getElementById('batchChoiceBtn'),
 
         // Batch choice elements

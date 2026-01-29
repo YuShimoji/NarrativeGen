@@ -66,6 +66,11 @@ import { ValidationPanel } from './src/ui/validation-panel.js'
 import { ModelValidator, ValidationSeverity } from './src/features/model-validator.js'
 import { LexiconUIManager } from './src/ui/lexicon-ui-manager.js'
 import { KeyBindingUIManager } from './src/ui/key-binding-ui-manager.js'
+import { ExportManager } from './src/features/export/ExportManager.js'
+import { TwineFormatter } from './src/features/export/formatters/TwineFormatter.js'
+import { InkFormatter } from './src/features/export/formatters/InkFormatter.js'
+import { CsvFormatter } from './src/features/export/formatters/CsvFormatter.js'
+import { ExportModal } from './src/ui/export-modal.js'
 import {
   SAVE_SLOTS,
   SAVE_KEY_PREFIX,
@@ -79,6 +84,11 @@ import {
 const appState = new AppState()
 let mermaidPreviewManager
 const keyBindingManager = new KeyBindingManager()
+const exportManager = new ExportManager()
+// Register formatters
+exportManager.registerFormatter('twine', new TwineFormatter())
+exportManager.registerFormatter('ink', new InkFormatter())
+exportManager.registerFormatter('csv', new CsvFormatter())
 
 const startBtn = document.getElementById('startBtn')
 const choicesContainer = document.getElementById('choices')
@@ -144,6 +154,11 @@ const nodeShape = document.getElementById('nodeShape')
 const fontSize = document.getElementById('fontSize')
 const saveGraphPreset = document.getElementById('saveGraphPreset')
 const loadGraphPreset = document.getElementById('loadGraphPreset')
+const exportBtn = document.getElementById('exportBtn')
+
+// Export Modal elements
+const exportModal = document.getElementById('exportModal')
+// ... other elements will be selected inside ExportModal class
 
 // Debug elements
 const flagsDisplay = document.getElementById('flagsDisplay')
@@ -1409,6 +1424,35 @@ function stopAutoSave() {
 // ============================================================================
 
 let currentParaphraseTarget = null
+
+const exportModalInstance = new ExportModal(exportManager)
+exportModalInstance.initialize(exportModal)
+
+// Export Button Handler
+if (exportBtn) {
+  exportBtn.addEventListener('click', () => {
+    if (!appState.model) {
+      setStatus('モデルを読み込んでください', 'warn')
+      return
+    }
+    const currentName = getCurrentModelName() || 'story'
+    // extension is added by manager, so just pass name
+    const filename = currentName.replace(/\.json$/i, '')
+    exportModalInstance.show(filename)
+  })
+}
+
+// Handle Export Action
+exportModalInstance.onExport = async (formatId, filename) => {
+  try {
+    setStatus(`${formatId}形式でエクスポート中...`)
+    await exportManager.export(formatId, appState.model, filename)
+    setStatus('エクスポート完了', 'success')
+  } catch (error) {
+    console.error(error)
+    setStatus(`エクスポート失敗: ${error.message}`, 'error')
+  }
+}
 
 // ============================================================================
 // Batch Edit Manager
