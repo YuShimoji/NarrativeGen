@@ -5,6 +5,7 @@ Tier: 2
 Branch: main
 Owner: Worker
 Created: 2026-01-23
+Issue: #70
 Report: docs/reports/REPORT_TASK_025_UpdateDocs.md
 
 ## Objective
