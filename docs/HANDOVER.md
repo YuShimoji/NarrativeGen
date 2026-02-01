@@ -110,6 +110,8 @@ GitHubAutoApprove: false
   - Summary: Phase 2 Graph View Drag & Drop実装完了。グリッドスナップ、複数選択移動、Undo/Redo対応。
 - **TASK_027**: docs/reports/REPORT_TASK_027_MainJsRefactoring.md
   - Summary: main.jsのリファクタリング完了（2422行→2006行、-17%）。`bootstrap.js`, `ui-bindings.js`, `session-controller.js` に分割し、責務を分離。`npm run check` 通過確認済み。
+- **TASK_028**: docs/reports/REPORT_TASK_028.md
+  - Summary: Export Feature Extension完了。Twine/Ink/CSV形式のエクスポートを実装し、UIに統合。ExportManager基盤を構築。
 
 
 ## Outlook
