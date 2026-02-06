@@ -85,6 +85,7 @@ const importCsvBtn = document.getElementById('importCsvBtn')
 const csvFileInput = document.getElementById('csvFileInput')
 const exportCsvBtn = document.getElementById('exportCsvBtn')
 const editBtn = document.getElementById('editBtn')
+const guiEditMode = document.getElementById('guiEditMode')
 const nodeList = document.getElementById('nodeList')
 const addNodeBtn = document.getElementById('addNodeBtn')
 const previewBtn = document.getElementById('previewBtn')
@@ -1394,50 +1395,4 @@ nodeList.addEventListener('click', (e) => {
     }
   }
 
-})
-
-// トップレベルのプレビュー/ダウンロード
-previewTopBtn.addEventListener('click', () => {
-  if (!getModel()) {
-    setStatus('まずモデルを読み込んでください', 'warn')
-    return
-  }
-  let current = getModel().startNode
-  let story = ''
-  const visited = new Set()
-  while (current && !visited.has(current)) {
-    visited.add(current)
-    const node = getModel().nodes[current]
-    if (node?.text) story += node.text + '\n\n'
-    if (node?.choices?.length === 1) current = node.choices[0].target
-    else break
-  }
-  alert('小説プレビュー:\n\n' + story)
-})
-
-downloadTopBtn.addEventListener('click', () => {
-  if (!getModel()) {
-    setStatus('まずモデルを読み込んでください', 'warn')
-    return
-  }
-  const json = JSON.stringify(getModel(), null, 2)
-  const blob = new Blob([json], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = currentModelName ? `${currentModelName}.json` : 'model.json'
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-})
-
-// Keyboard shortcuts
-document.addEventListener('keydown', (e) => {
-  if (e.ctrlKey && e.key === 's') {
-    e.preventDefault()
-    if (guiEditMode.style.display !== 'none') {
-      saveGuiBtn.click()
-    }
-  }
 })

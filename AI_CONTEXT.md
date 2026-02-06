@@ -2,7 +2,7 @@
 
 ## 基本情報
 
-- **最終更新**: 2026-02-06T13:45:00+09:00
+- **最終更新**: 2026-02-06T13:52:00+09:00
 - **更新者**: Cascade
 - **report_style**: standard
 - **mode**: implementation
@@ -13,26 +13,24 @@
 
 ## 現在のミッション
 
-- **タイトル**: shared-workflows 体系移行 + ドキュメント刷新
-- **Issue**: PR #72 (shared-workflows 導入), PR #73 (SSOT 整合 + チケット化)
+- **タイトル**: コードクリーンアップ + TASK_101 main.js 分割第2弾
 - **ブランチ**: open-ws/engine-skeleton-2025-09-02
-- **進捗**: Phase 0-2 完了 / Phase 3 進行中
+- **進捗**: クリーンアップ完了、TASK_101 続行可能
 
 ## 次の中断可能点
 
-- Phase 3 (AI_CONTEXT 刷新) 完了後
+- コミット・プッシュ後（クリーンアップ完了時点）
 
 ## 決定事項
 
 - shared-workflows を .shared-workflows/ にサブモジュールとして導入 (PR #72)
 - TASKS.md の8タスクを docs/tasks/TASK_101-108 チケットに変換 (PR #73)
-- docs/HANDOVER.md を shared-workflows 体系に準拠した形式に更新
 - SSOT: docs/Windsurf_AI_Collab_Rules_latest.md を単一参照先とする
-- GitHubAutoApprove: false（docs/HANDOVER.md に記載）
+- GitHubAutoApprove: false（HANDOVER.md に記載）
 
 ## リスク/懸念
 
-- main.js が 46KB と大きく、分割第2弾が未完了
+- main.js が 1241行（目標1000行未満）、分割第2弾の残作業あり
 - sdk-unity CI: Unity ライセンス secrets 未設定（ジョブはコメントアウト中）
 - TASKS.md と docs/tasks/ の二重管理状態（TASKS.md は参照リンクのみに移行予定）
 
@@ -40,7 +38,7 @@
 
 ### 短期（Next）
 
-- [ ] TASK_101: main.js 分割第2弾（nodes-panel.js / tabs.js）
+- [ ] TASK_101: main.js 分割第2弾（1241行→目標1000行未満）
 - [ ] TASK_103: CI Doctor 統合
 
 ### 中期（Later）
@@ -60,28 +58,29 @@
 ```
 NarrativeGen/
 ├── .shared-workflows/     # shared-workflows サブモジュール
-├── apps/web-tester/       # Vite ベース Web テスター (main.js 46KB)
-│   ├── handlers/          # story-handler, ai-handler, gui-editor 等
+├── apps/web-tester/       # Vite ベース Web テスター
+│   ├── main.js            # 1241行（初期化・配線・残存ロジック）
+│   ├── handlers/          # nodes-panel(281), tabs(97), gui-editor(522), story-handler, ai-handler
 │   └── utils/             # csv-parser, csv-exporter, logger, model-utils
 ├── packages/engine-ts/    # TypeScript コアエンジン (vitest, ajv)
 │   └── src/               # index, types, session-ops, game-session, inventory, entities
 ├── packages/sdk-unity/    # Unity SDK (C#, CI コメントアウト中)
 ├── models/                # JSON/CSV サンプルモデル + schema
 ├── docs/                  # HANDOVER, SSOT ルール, tasks/, inbox/
-└── .github/workflows/     # CI (engine-ts + web-tester)
+└── .github/workflows/     # CI (engine-ts + web-tester + doctor-bootstrap)
 ```
 
 ## 環境
 
 - Node.js 20+, npm workspaces
 - engine-ts: 18 tests passed, 6 models validated
-- web-tester: Vite build 成功 (18 modules)
-- CI: engine-ts + web-tester ジョブ通過
-- shared-workflows: sw-doctor bootstrap チェック通過
+- web-tester: Vite build 成功 (18 modules, 51.87KB)
+- CI: engine-ts + web-tester + doctor-bootstrap の3ジョブ体制
 
 ## 履歴
 
-- 2026-02-06 13:45: AI_CONTEXT.md を shared-workflows テンプレートに準拠して刷新
+- 2026-02-06 13:52: コードクリーンアップ（デッドコード除去、重複リスナー除去、guiEditMode宣言追加）、HANDOVER/AI_CONTEXT/TASK_101 更新
+- 2026-02-06 13:45: AI_CONTEXT.md を shared-workflows テンプレートに準拠して刷新 (PR #74)
 - 2026-02-06 13:35: TASK_101-108 チケット作成、docs/HANDOVER.md 更新 (PR #73)
 - 2026-02-06 13:10: shared-workflows サブモジュール導入、SSOT 配置 (PR #72)
 - 2025-12: GUI エディタリファクタリング (PR #63)
