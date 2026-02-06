@@ -1,0 +1,13 @@
+# REPORT_CONFIG.yml - shared-workflows doctor configuration
+# See: .shared-workflows/docs/CI_INTEGRATION.md
+
+project_name: NarrativeGen
+default_branch: open-ws/engine-skeleton-2025-09-02
+shared_workflows_path: .shared-workflows
+
+doctor:
+  default_profile: shared-orch-bootstrap
+  ci_profile: shared-orch-doctor
+
+github:
+  auto_approve: false
