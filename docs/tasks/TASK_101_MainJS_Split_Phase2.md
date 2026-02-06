@@ -1,5 +1,5 @@
 # Task: main.js 分割（第2弾）
-Status: OPEN
+Status: IN_PROGRESS
 Tier: 2
 Branch: feature/main-js-split-phase2
 Owner: Worker
