@@ -1,11 +1,12 @@
 # Task: モデル検証強化
 
-Status: OPEN
+Status: COMPLETED
 Tier: 2
 Branch: feature/model-validation
 Owner: Worker
 Created: 2026-02-06T13:35:00+09:00
-Report:
+Completed: 2026-02-06T13:45:00+09:00
+Report: docs/inbox/TASK_105_model_validation_report.md
 
 ## Objective
 
@@ -34,10 +35,10 @@ Report:
 
 ## DoD
 
-- [ ] ID重複検出が実装されている
-- [ ] 参照整合性チェック（存在しないターゲット検出）が強化されている
-- [ ] 循環参照検出が実装されている
-- [ ] エラーメッセージにノードID・行番号等の詳細が含まれる
-- [ ] 既存テスト + 新規テストが全て通過する
-- [ ] docs/inbox/ にレポートが作成されている
-- [ ] 本チケットの Report 欄にレポートパスが追記されている
+- [x] ID重複検出が実装されている
+- [x] 参照整合性チェック（存在しないターゲット検出）が強化されている
+- [x] 循環参照検出が実装されている
+- [x] エラーメッセージにノードID・行番号等の詳細が含まれる
+- [x] 既存テスト + 新規テストが全て通過する
+- [x] docs/inbox/ にレポートが作成されている
+- [x] 本チケットの Report 欄にレポートパスが追記されている

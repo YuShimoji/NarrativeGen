@@ -51,32 +51,168 @@ function isSessionState(value: unknown): value is SessionState {
   return true
 }
 
-function assertModelIntegrity(model: Model): void {
-  const issues: string[] = []
-  if (!model.nodes[model.startNode]) {
-    issues.push(`startNode '${model.startNode}' does not exist in nodes`)
-  }
-  for (const [nodeKey, node] of Object.entries(model.nodes)) {
-    if (node.id !== nodeKey) {
-      issues.push(`node key '${nodeKey}' must match node.id '${node.id}'`)
+interface ValidationIssue {
+  type: 'error' | 'warning'
+  category: 'duplicate_id' | 'missing_reference' | 'circular_reference' | 'integrity'
+  message: string
+  nodeId?: string
+  choiceId?: string
+  path?: string[]
+}
+
+function detectCircularReferences(model: Model, startNodeId: string): ValidationIssue[] {
+  const issues: ValidationIssue[] = []
+  const visiting = new Set<string>()
+  const visited = new Set<string>()
+
+  function visit(nodeId: string, path: string[]): void {
+    if (visiting.has(nodeId)) {
+      // Circular reference detected
+      const cycle = [...path, nodeId]
+      const cycleStart = cycle.indexOf(nodeId)
+      const cyclePath = cycle.slice(cycleStart)
+      issues.push({
+        type: 'error',
+        category: 'circular_reference',
+        message: `Circular reference detected: ${cyclePath.join(' → ')}`,
+        nodeId,
+        path: cyclePath,
+      })
+      return
     }
+
+    if (visited.has(nodeId)) {
+      return
+    }
+
+    visiting.add(nodeId)
+    const node = model.nodes[nodeId]
+    if (node) {
+      for (const choice of node.choices ?? []) {
+        if (choice.target) {
+          visit(choice.target, [...path, nodeId])
+        }
+        // Check goto effects
+        for (const effect of choice.effects ?? []) {
+          if (effect.type === 'goto' && effect.target) {
+            visit(effect.target, [...path, nodeId])
+          }
+        }
+      }
+    }
+    visiting.delete(nodeId)
+    visited.add(nodeId)
+  }
+
+  visit(startNodeId, [])
+  return issues
+}
+
+function assertModelIntegrity(model: Model): void {
+  const issues: ValidationIssue[] = []
+  
+  // Check for duplicate node IDs (node key vs node.id mismatch)
+  const nodeIds = new Set<string>()
+  for (const [nodeKey, node] of Object.entries(model.nodes)) {
+    if (nodeIds.has(node.id)) {
+      issues.push({
+        type: 'error',
+        category: 'duplicate_id',
+        message: `Duplicate node ID '${node.id}' found`,
+        nodeId: node.id,
+      })
+    }
+    nodeIds.add(node.id)
+    
+    if (node.id !== nodeKey) {
+      issues.push({
+        type: 'error',
+        category: 'integrity',
+        message: `Node key '${nodeKey}' must match node.id '${node.id}'`,
+        nodeId: nodeKey,
+      })
+    }
+  }
+
+  // Check startNode exists
+  if (!model.nodes[model.startNode]) {
+    issues.push({
+      type: 'error',
+      category: 'missing_reference',
+      message: `startNode '${model.startNode}' does not exist in nodes`,
+      nodeId: model.startNode,
+    })
+  }
+
+  // Check each node's choices
+  for (const [nodeKey, node] of Object.entries(model.nodes)) {
     const seenChoiceIds = new Set<string>()
+    
     for (const choice of node.choices ?? []) {
+      // Check for duplicate choice IDs within the same node
       if (seenChoiceIds.has(choice.id)) {
-        issues.push(`duplicate choice id '${choice.id}' in node '${nodeKey}'`)
+        issues.push({
+          type: 'error',
+          category: 'duplicate_id',
+          message: `Duplicate choice ID '${choice.id}' in node '${nodeKey}'`,
+          nodeId: nodeKey,
+          choiceId: choice.id,
+        })
       }
       seenChoiceIds.add(choice.id)
+
+      // Check choice target exists
       if (!choice.target) {
-        issues.push(`choice '${choice.id}' in node '${nodeKey}' is missing target`)
+        issues.push({
+          type: 'error',
+          category: 'missing_reference',
+          message: `Choice '${choice.id}' in node '${nodeKey}' is missing target`,
+          nodeId: nodeKey,
+          choiceId: choice.id,
+        })
         continue
       }
+      
       if (!model.nodes[choice.target]) {
-        issues.push(`choice '${choice.id}' in node '${nodeKey}' targets missing node '${choice.target}'`)
+        issues.push({
+          type: 'error',
+          category: 'missing_reference',
+          message: `Choice '${choice.id}' in node '${nodeKey}' targets non-existent node '${choice.target}'`,
+          nodeId: nodeKey,
+          choiceId: choice.id,
+        })
+      }
+
+      // Check goto effect targets
+      for (const effect of choice.effects ?? []) {
+        if (effect.type === 'goto' && effect.target && !model.nodes[effect.target]) {
+          issues.push({
+            type: 'error',
+            category: 'missing_reference',
+            message: `Choice '${choice.id}' in node '${nodeKey}' has goto effect targeting non-existent node '${effect.target}'`,
+            nodeId: nodeKey,
+            choiceId: choice.id,
+          })
+        }
       }
     }
   }
+
+  // Detect circular references starting from startNode
+  if (model.nodes[model.startNode]) {
+    const circularIssues = detectCircularReferences(model, model.startNode)
+    issues.push(...circularIssues)
+  }
+
+  // Throw error if any issues found
   if (issues.length > 0) {
-    throw new Error(`Model integrity check failed:\n${issues.join('\n')}`)
+    const errorMessages = issues.map((issue) => {
+      let msg = `[${issue.category.toUpperCase()}] ${issue.message}`
+      if (issue.nodeId) msg += ` (node: ${issue.nodeId})`
+      if (issue.choiceId) msg += ` (choice: ${issue.choiceId})`
+      return msg
+    })
+    throw new Error(`Model integrity check failed:\n${errorMessages.join('\n')}`)
   }
 }
 
