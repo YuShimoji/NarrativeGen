@@ -1,32 +1,30 @@
 # 作業申し送り
 
 ## 最終更新
-- **日時**: 2026-02-06T18:15:00+09:00
+- **日時**: 2026-02-12T13:55:00+09:00
 - **更新者**: Cascade
-- **ブランチ**: `open-ws/engine-skeleton-2025-09-02`（デフォルト、origin と同期済み）
+- **ブランチ**: `feature/main-js-split-phase2`（PR作成待ち）
 - **GitHubAutoApprove**: false
 
-## 直近の作業（2026-02-06）
+## 直近の作業（2026-02-12）
 
-### ✅ サブモジュール更新（本セッション）
-- **.shared-workflows**: 4ad0a0a → 464f572 (v1.0.0)
-  - サブモジュールを最新バージョンに更新
-  - v1.0.0 タグを検出・適用
+### ✅ TASK_101: main.js 分割第2弾（本セッション）
+- **main.js**: 1392行 → 825行（40.7%削減、目標1000行未満達成）
+- 5つの新規ハンドラーを抽出:
+  - `handlers/graph-handler.js` (~115行) — renderGraph, ズーム制御
+  - `handlers/debug-handler.js` (~105行) — renderDebugInfo
+  - `handlers/csv-import-handler.js` (~215行) — CSVインポート/プレビュー
+  - `handlers/ai-config.js` (~195行) — AI設定・生成・言い換え
+  - `handlers/split-view.js` (~90行) — 分割ビュートグル/リサイザー
+- **ビルド・テスト全グリーン**: engine-ts 18 tests, web-tester build 54.70KB
+- **Vite dev server 動作確認**: 全タブ正常（Story/Debug/Graph/NodeList/AI）
+- レポート: `docs/inbox/REPORT_TASK101_MainJS_Split_Phase2.md`
 
-### ✅ コードクリーンアップ
-- **nodes-panel.js**: デッドコード除去（415行→281行）
-  - `return` 文の後に漏れていた `setupNodeListEvents` 関数を削除
-  - 重複していた `renderNodeOverview` 定義（2つ目を残存）を統合
-- **main.js**: 重複イベントリスナー除去 + バグ修正（1444行→1241行）
-  - `previewTopBtn` / `downloadTopBtn` / `keydown` の重複登録を削除
-  - 未宣言だった `guiEditMode` の `getElementById` 宣言を追加
-- **ビルド・テスト全グリーン**: engine-ts 18 tests, 6 models, web-tester build 成功
-- **Vite dev server 動作確認**: サンプル実行、ノード一覧、タブ切り替え正常
-
-### ✅ 前セッション（PR #72-74）
+### ✅ 前セッション（PR #72-75）
 - PR #72: shared-workflows サブモジュール導入
-- PR #73: TASK_101-108 チケット作成、docs/HANDOVER.md 更新
-- PR #74: AI_CONTEXT.md 刷新（454→90行）、CI doctor-bootstrap ジョブ追加
+- PR #73: TASK_101-108 チケット作成
+- PR #74: AI_CONTEXT.md 刷新、CI doctor-bootstrap ジョブ追加
+- PR #75: コードクリーンアップ（nodes-panel/main.js デッドコード除去）
 
 ## 現在の状態
 
@@ -38,12 +36,17 @@
 ### apps/web-tester モジュール構成
 | ファイル | 行数 | 役割 |
 |---------|------|------|
-| main.js | 1241 | 初期化・配線・残存ロジック |
+| main.js | 825 | 初期化・配線・コアUI |
+| handlers/graph-handler.js | ~115 | グラフ描画・ズーム制御 |
+| handlers/debug-handler.js | ~105 | デバッグ情報描画 |
+| handlers/csv-import-handler.js | ~215 | CSVインポート/プレビュー |
+| handlers/ai-config.js | ~195 | AI設定・UI・操作 |
+| handlers/split-view.js | ~90 | 分割ビュートグル/リサイザー |
 | handlers/nodes-panel.js | 281 | ノード一覧・ジャンプ・ハイライト |
 | handlers/tabs.js | 97 | タブ切り替え |
 | handlers/gui-editor.js | 522 | GUI編集モード |
 | handlers/story-handler.js | — | ストーリー描画 |
-| handlers/ai-handler.js | — | AI生成・言い換え |
+| handlers/ai-handler.js | — | AI生成・言い換え（低レベル） |
 | utils/csv-parser.js | — | CSVパーサー |
 | utils/csv-exporter.js | — | CSVエクスポート |
 | utils/model-utils.js | — | モデルユーティリティ |
@@ -55,7 +58,7 @@
 
 | ID | タスク | ステータス | 優先度 |
 |----|--------|-----------|--------|
-| TASK_101 | main.js 分割第2弾（目標1000行未満） | IN_PROGRESS | 高 |
+| TASK_101 | main.js 分割第2弾（1392→825行） | DONE | 高 |
 | TASK_102 | ノード階層システム Phase 2 | OPEN | 高 |
 | TASK_103 | CI Doctor 統合 | OPEN | 中 |
 | TASK_104 | AI UX 改善 | OPEN | 中 |
@@ -68,9 +71,9 @@
 
 | 推奨度 | 選択肢 | 説明 |
 |--------|--------|------|
-| ★★★ | TASK_101 続行 | main.js からグラフ/デバッグ/CSV import/AI/split view を分離（~530行削減見込み） |
-| ★★☆ | TASK_102 | ノード階層 Phase 2（node_group 列対応） |
-| ★☆☆ | TASK_103 | CI doctor を required check に昇格 |
+| ★★★ | TASK_102 | ノード階層 Phase 2（node_group 列対応） |
+| ★★☆ | TASK_103 | CI doctor を required check に昇格 |
+| ★☆☆ | TASK_104 | AI UX 改善 |
 
 ## 再開手順
 1. `git fetch origin && git pull`

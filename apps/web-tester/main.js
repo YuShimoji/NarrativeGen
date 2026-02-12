@@ -1,12 +1,17 @@
 // Error handling and logging
-import { startSession, getAvailableChoices, applyChoice, chooseParaphrase, createAIProvider, GameSession } from '@narrativegen/engine-ts/dist/browser.js'
+import { startSession, getAvailableChoices, applyChoice, chooseParaphrase, GameSession } from '@narrativegen/engine-ts/dist/browser.js'
 import { initStory, appendStoryFromCurrentNode, renderStoryEnhanced } from './handlers/story-handler.js'
 import { exportModelToCsv } from './utils/csv-exporter.js'
 import { initNodesPanel } from './handlers/nodes-panel.js'
 import { initTabs } from './handlers/tabs.js'
 import { initGuiEditor } from './handlers/gui-editor.js'
-import { resolveVariables, validateModel } from './utils/model-utils.js'
-import { parseCsvLine, parseKeyValuePairs, parseConditions, parseEffects, serializeConditions, serializeEffects, serializeKeyValuePairs } from './utils/csv-parser.js'
+import { initGraphHandler } from './handlers/graph-handler.js'
+import { initDebugHandler } from './handlers/debug-handler.js'
+import { initCsvImportHandler } from './handlers/csv-import-handler.js'
+import { initAiConfig } from './handlers/ai-config.js'
+import { initSplitView } from './handlers/split-view.js'
+import { validateModel } from './utils/model-utils.js'
+import { parseConditions, parseEffects } from './utils/csv-parser.js'
 
 // Browser-compatible model loading (no fs module)
 async function loadModel(modelName) {
@@ -128,10 +133,6 @@ const storyJsonPanel = document.getElementById('storyJsonPanel')
 const storyJsonEditor = document.getElementById('storyJsonEditor')
 const applyStoryJsonBtn = document.getElementById('applyStoryJsonBtn')
 
-// Split view state
-let splitModeActive = false
-let storyResizerInitialized = false
-
 // Graph elements
 const graphSvg = document.getElementById('graphSvg')
 const zoomInBtn = document.getElementById('zoomInBtn')
@@ -180,15 +181,13 @@ function setSession(newSession) {
 // Inventory UI elements
 const inventoryDisplay = document.getElementById('inventoryDisplay')
 
-// AI configuration
-let aiConfig = {
-  provider: 'mock',
-  openai: {
-    apiKey: '',
-    model: 'gpt-3.5-turbo'
-  }
-}
-let aiProviderInstance = null
+// Forward declarations for handler functions (assigned during initialization)
+let renderGraph = () => {}
+let renderDebugInfo = () => {}
+let showCsvPreview = () => {}
+let hideCsvPreview = () => {}
+let importCsvFile = async () => {}
+let initAiProvider = async () => {}
 
 function renderState() {
   if (!session) {
@@ -234,436 +233,6 @@ function showErrors(errors) {
 
 function hideErrors() {
   errorPanel.classList.remove('show')
-}
-
-function showCsvPreview(file) {
-  csvFileName.textContent = file.name
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    const text = e.target.result
-    const lines = text.trim().split(/\r?\n/).slice(0, 11) // First 10 lines + header
-    const table = document.createElement('table')
-    table.className = 'csv-table'
-    
-    lines.forEach((line, index) => {
-      const row = document.createElement('tr')
-      const cells = parseCsvLine(line, line.includes('\t') ? '\t' : ',')
-      cells.forEach(cell => {
-        const cellEl = document.createElement(index === 0 ? 'th' : 'td')
-        cellEl.textContent = cell
-        row.appendChild(cellEl)
-      })
-      table.appendChild(row)
-    })
-    
-    if (lines.length >= 11) {
-      const row = document.createElement('tr')
-      const cell = document.createElement('td')
-      cell.colSpan = lines[0].split(line.includes('\t') ? '\t' : ',').length
-      cell.textContent = '... (以降省略)'
-      cell.style.textAlign = 'center'
-      cell.style.fontStyle = 'italic'
-      row.appendChild(cell)
-      table.appendChild(row)
-    }
-    
-    csvPreviewContent.innerHTML = ''
-    csvPreviewContent.appendChild(table)
-    csvPreviewModal.classList.add('show')
-  }
-  reader.readAsText(file)
-}
-
-function hideCsvPreview() {
-  csvPreviewModal.classList.remove('show')
-}
-
-function renderDebugInfo() {
-  const _model = getModel();
-  if (!session || !_model) {
-    flagsDisplay.innerHTML = '<p>セッションを開始してください</p>'
-    resourcesDisplay.innerHTML = ''
-    inventoryDisplay.innerHTML = ''
-    reachableNodes.innerHTML = '<p>モデルを読み込んでください</p>'
-    return
-  }
-
-  // Render flags
-  flagsDisplay.innerHTML = '<h4>フラグ</h4>'
-  if (session.state.flags && Object.keys(session.state.flags).length > 0) {
-    Object.entries(session.state.flags).forEach(([key, value]) => {
-      const div = document.createElement('div')
-      div.className = 'flag-item'
-      div.innerHTML = `<span>${key}</span><span>${value}</span>`
-      flagsDisplay.appendChild(div)
-    })
-  } else {
-    flagsDisplay.innerHTML += '<p>フラグなし</p>'
-  }
-
-  // Render resources
-  resourcesDisplay.innerHTML = '<h4>リソース</h4>'
-  if (session.state.resources && Object.keys(session.state.resources).length > 0) {
-    Object.entries(session.state.resources).forEach(([key, value]) => {
-      const div = document.createElement('div')
-      div.className = 'resource-item'
-      div.innerHTML = `<span>${key}</span><span>${value}</span>`
-      resourcesDisplay.appendChild(div)
-    })
-  } else {
-    resourcesDisplay.innerHTML += '<p>リソースなし</p>'
-  }
-
-  // Render inventory
-  inventoryDisplay.innerHTML = '<h4>インベントリ</h4>'
-  const inventory = session.listInventory()
-  if (inventory && inventory.length > 0) {
-    inventory.forEach((item) => {
-      const div = document.createElement('div')
-      div.className = 'resource-item'
-      div.innerHTML = `<span>${item.id}</span><span>${item.brand} - ${item.description}</span>`
-      inventoryDisplay.appendChild(div)
-    })
-  } else {
-    inventoryDisplay.innerHTML += '<p>アイテムなし</p>'
-  }
-
-  // Render reachability map
-  reachableNodes.innerHTML = '<h4>到達可能性</h4>'
-  const visited = new Set([session.state.nodeId])
-  const queue = [session.state.nodeId]
-  const reachable = new Set([session.state.nodeId])
-
-  // BFS to find all reachable nodes
-  while (queue.length > 0) {
-    const currentNodeId = queue.shift()
-    const node = _model.nodes[currentNodeId]
-    if (!node) continue
-
-    node.choices?.forEach(choice => {
-      if (!visited.has(choice.target)) {
-        visited.add(choice.target)
-        // Check if choice is available in current state
-        try {
-          const availableChoices = session.getAvailableChoices()
-          const isAvailable = availableChoices.some(c => c.id === choice.id)
-          if (isAvailable) {
-            queue.push(choice.target)
-            reachable.add(choice.target)
-          }
-        } catch (e) {
-          // If error, assume reachable for now
-          reachable.add(choice.target)
-        }
-      }
-    })
-  }
-
-  // Display all nodes with reachability status
-  Object.keys(_model.nodes).forEach(nodeId => {
-    const div = document.createElement('div')
-    div.className = reachable.has(nodeId) ? 'reachable-node' : 'unreachable-node'
-    div.textContent = `${nodeId}: ${reachable.has(nodeId) ? '到達可能' : '未到達'}`
-    reachableNodes.appendChild(div)
-  })
-}
-
-let graphScale = 1
-let graphTranslateX = 0
-let graphTranslateY = 0
-
-function renderGraph() {
-  const _model = getModel();
-  if (!graphSvg || !_model) {
-    graphSvg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#666">モデルを読み込んでください</text>'
-    return
-  }
-
-  const svg = graphSvg
-  svg.innerHTML = ''
-
-  const nodes = Object.values(_model.nodes)
-  const nodeMap = new Map()
-  nodes.forEach((node, i) => {
-    nodeMap.set(node.id, { ...node, x: 100 + (i % 5) * 150, y: 100 + Math.floor(i / 5) * 150 })
-  })
-
-  // Draw connections
-  nodes.forEach(node => {
-    const sourcePos = nodeMap.get(node.id)
-    node.choices?.forEach(choice => {
-      const targetPos = nodeMap.get(choice.target)
-      if (targetPos) {
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
-        line.setAttribute('x1', sourcePos.x)
-        line.setAttribute('y1', sourcePos.y)
-        line.setAttribute('x2', targetPos.x)
-        line.setAttribute('y2', targetPos.y)
-        line.setAttribute('stroke', '#999')
-        line.setAttribute('stroke-width', '2')
-        svg.appendChild(line)
-
-        // Arrow head
-        const dx = targetPos.x - sourcePos.x
-        const dy = targetPos.y - sourcePos.y
-        const angle = Math.atan2(dy, dx)
-        const arrowLength = 10
-        const arrowX = targetPos.x - arrowLength * Math.cos(angle)
-        const arrowY = targetPos.y - arrowLength * Math.sin(angle)
-
-        const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
-        arrow.setAttribute('points', `${targetPos.x},${targetPos.y} ${arrowX - 5 * Math.sin(angle)},${arrowY + 5 * Math.cos(angle)} ${arrowX + 5 * Math.sin(angle)},${arrowY - 5 * Math.cos(angle)}`)
-        arrow.setAttribute('fill', '#999')
-        svg.appendChild(arrow)
-      }
-    })
-  })
-
-  // Draw nodes
-  nodes.forEach(node => {
-    const pos = nodeMap.get(node.id)
-    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
-    const isCurrent = node.id === session?.state?.nodeId
-    const isHighlighted = highlightedNodes.has(node.id)
-    
-    circle.setAttribute('cx', pos.x)
-    circle.setAttribute('cy', pos.y)
-    circle.setAttribute('r', isHighlighted ? '35' : '30')
-    circle.setAttribute('fill', isCurrent ? '#4CAF50' : isHighlighted ? '#FF9800' : '#2196F3')
-    circle.setAttribute('stroke', isHighlighted ? '#FF9800' : '#fff')
-    circle.setAttribute('stroke-width', isHighlighted ? '4' : '2')
-    svg.appendChild(circle)
-
-    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-    text.setAttribute('x', pos.x)
-    text.setAttribute('y', pos.y + 5)
-    text.setAttribute('text-anchor', 'middle')
-    text.setAttribute('fill', isCurrent ? '#4CAF50' : isHighlighted ? '#FF9800' : '#fff')
-    text.setAttribute('font-size', '12')
-    text.setAttribute('font-weight', isHighlighted ? 'bold' : 'normal')
-    text.textContent = node.id
-    svg.appendChild(text)
-  })
-
-  // Apply transform
-  svg.style.transform = `translate(${graphTranslateX}px, ${graphTranslateY}px) scale(${graphScale})`
-}
-
-// Graph controls
-zoomInBtn?.addEventListener('click', () => {
-  graphScale *= 1.2
-  renderGraph()
-})
-
-zoomOutBtn?.addEventListener('click', () => {
-  graphScale /= 1.2
-  renderGraph()
-})
-
-resetViewBtn?.addEventListener('click', () => {
-  graphScale = 1
-  graphTranslateX = 0
-  graphTranslateY = 0
-  renderGraph()
-})
-
-// CSVファイルのインポート処理
-async function importCsvFile(file) {
-  try {
-    const text = await file.text()
-    const delim = file.name.endsWith('.tsv') || text.includes('\t') ? '\t' : ','
-    const rows = text.split(/\r?\n/).filter((l) => l.trim().length > 0)
-    if (rows.length === 0) throw new Error('空のファイルです')
-
-    const headers = rows[0].split(delim).map((h) => h.trim())
-    const idx = {
-      node_id: headers.indexOf('node_id'),
-      node_text: headers.indexOf('node_text'),
-      node_type: headers.indexOf('node_type'),
-      node_tags: headers.indexOf('node_tags'),
-      node_assets: headers.indexOf('node_assets'),
-      choice_id: headers.indexOf('choice_id'),
-      choice_text: headers.indexOf('choice_text'),
-      choice_target: headers.indexOf('choice_target'),
-      choice_conditions: headers.indexOf('choice_conditions'),
-      choice_effects: headers.indexOf('choice_effects'),
-      choice_outcome_type: headers.indexOf('choice_outcome_type'),
-      choice_outcome_value: headers.indexOf('choice_outcome_value'),
-      choice_metadata: headers.indexOf('choice_metadata'),
-      choice_variables: headers.indexOf('choice_variables'),
-      initial_flags: headers.indexOf('initial_flags'),
-      initial_resources: headers.indexOf('initial_resources'),
-      global_metadata: headers.indexOf('global_metadata'),
-    }
-
-    // Performance optimization: Process in chunks for large files
-    const totalRows = rows.length - 1 // Exclude header
-    const chunkSize = 100
-    const chunks = []
-
-    for (let i = 1; i < rows.length; i += chunkSize) {
-      chunks.push(rows.slice(i, i + chunkSize))
-    }
-
-    // 初期値の抽出（最初の行）
-    let initialFlags = {}
-    let initialResources = {}
-    if (rows.length > 1) {
-      const firstRow = parseCsvLine(rows[1], delim)
-      if (idx.initial_flags >= 0 && firstRow[idx.initial_flags]) {
-        initialFlags = parseKeyValuePairs(firstRow[idx.initial_flags], 'boolean')
-      }
-      if (idx.initial_resources >= 0 && firstRow[idx.initial_resources]) {
-        initialResources = parseKeyValuePairs(firstRow[idx.initial_resources], 'number')
-      }
-    }
-
-    const nodes = {}
-    const errors = []
-    let processedRows = 0
-
-    // Progress indicator
-    setStatus(`CSV読み込み中... (0/${totalRows})`)
-
-    // Process chunks with progress updates
-    for (const chunk of chunks) {
-      for (const row of chunk) {
-        const cells = parseCsvLine(row, delim)
-        const nid = (cells[idx.node_id] || '').trim()
-        if (!nid) continue
-
-        if (!nodes[nid]) {
-          nodes[nid] = {
-            id: nid,
-            text: '',
-            choices: [],
-            type: 'normal',
-            tags: [],
-            assets: {}
-          }
-        }
-
-        const node = nodes[nid]
-
-        const ntext = (cells[idx.node_text] || '').trim()
-        if (ntext) node.text = ntext
-
-        // Parse node metadata
-        if (idx.node_type >= 0 && cells[idx.node_type]) {
-          node.type = cells[idx.node_type].trim()
-        }
-
-        if (idx.node_tags >= 0 && cells[idx.node_tags]) {
-          node.tags = cells[idx.node_tags].split(';').map(t => t.trim()).filter(Boolean)
-        }
-
-        if (idx.node_assets >= 0 && cells[idx.node_assets]) {
-          node.assets = parseKeyValuePairs(cells[idx.node_assets])
-        }
-
-        const cid = (cells[idx.choice_id] || '').trim()
-        const ctext = (cells[idx.choice_text] || '').trim()
-        const ctgt = (cells[idx.choice_target] || '').trim()
-
-        if (ctgt || ctext || cid) {
-          const choice = {
-            id: cid || `c${nodes[nid].choices.length + 1}`,
-            text: ctext || '',
-            target: ctgt || nid,
-            metadata: {},
-            variables: {}
-          }
-
-          // Parse choice metadata
-          if (idx.choice_metadata >= 0 && cells[idx.choice_metadata]) {
-            choice.metadata = parseKeyValuePairs(cells[idx.choice_metadata])
-          }
-
-          // Parse choice variables
-          if (idx.choice_variables >= 0 && cells[idx.choice_variables]) {
-            choice.variables = parseKeyValuePairs(cells[idx.choice_variables])
-          }
-
-          // 条件のパース
-          if (idx.choice_conditions >= 0 && cells[idx.choice_conditions]) {
-            try {
-              choice.conditions = parseConditions(cells[idx.choice_conditions])
-            } catch (err) {
-              errors.push(`行${processedRows + 2}: 条件パースエラー: ${err.message}`)
-            }
-          }
-
-          // 効果のパース
-          if (idx.choice_effects >= 0 && cells[idx.choice_effects]) {
-            try {
-              choice.effects = parseEffects(cells[idx.choice_effects])
-            } catch (err) {
-              errors.push(`行${processedRows + 2}: 効果パースエラー: ${err.message}`)
-            }
-          }
-
-          // アウトカムのパース
-          if (idx.choice_outcome_type >= 0 && cells[idx.choice_outcome_type]) {
-            choice.outcome = {
-              type: cells[idx.choice_outcome_type].trim(),
-              value: idx.choice_outcome_value >= 0 ? cells[idx.choice_outcome_value]?.trim() : undefined
-            }
-          }
-
-          nodes[nid].choices.push(choice)
-        }
-
-        processedRows++
-
-        // Update progress every 100 rows
-        if (processedRows % 100 === 0) {
-          setStatus(`CSV読み込み中... (${processedRows}/${totalRows})`)
-          // Allow UI to update
-          await new Promise(resolve => setTimeout(resolve, 0))
-        }
-      }
-    }
-
-    // バリデーション
-    const validationErrors = validateModel(nodes)
-    errors.push(...validationErrors)
-
-    if (errors.length > 0) {
-      showErrors(errors)
-      setStatus(`CSV読み込みに失敗しました（${errors.length}件のエラー）`, 'warn')
-    } else {
-      hideErrors()
-      setStatus('CSV を読み込みました', 'success')
-    }
-
-    // グローバルメタデータのパース（最初の行）
-    let globalMetadata = {}
-    if (rows.length > 1 && idx.global_metadata >= 0) {
-      const firstRow = parseCsvLine(rows[1], delim)
-      if (firstRow[idx.global_metadata]) {
-        globalMetadata = parseKeyValuePairs(firstRow[idx.global_metadata])
-      }
-    }
-
-    const firstNode = Object.keys(nodes)[0]
-    setModel({
-      modelType: 'adventure-playthrough',
-      startNode: firstNode,
-      flags: initialFlags,
-      resources: initialResources,
-      nodes,
-      metadata: globalMetadata
-    })
-    setSession(new GameSession(getModel(), { entities }))
-    currentModelName = file.name
-    initStory(getSession(), getModel())
-    renderState()
-    renderChoices()
-    renderStoryEnhanced(storyView)
-  } catch (err) {
-    console.error(err)
-    setStatus(`CSV 読み込みに失敗: ${err?.message ?? err}`, 'warn')
-  }
 }
 
 function setControlsEnabled(enabled) {
@@ -756,109 +325,6 @@ const safeParaphrase = ErrorBoundary.wrap(async () => {
   await paraphraseCurrentText()
   Logger.info('Text paraphrased via AI')
 })
-
-async function initAiProvider() {
-  if (!aiProviderInstance || aiConfig.provider !== aiProvider.value) {
-    try {
-      if (aiProvider.value === 'openai') {
-        if (!aiConfig.openai.apiKey) {
-          aiOutput.textContent = 'OpenAI APIキーを設定してください'
-          return
-        }
-        aiProviderInstance = createAIProvider({
-          provider: 'openai',
-          openai: aiConfig.openai
-        })
-      } else {
-        aiProviderInstance = createAIProvider({ provider: 'mock' })
-      }
-      aiOutput.textContent = `${aiProvider.value}プロバイダーが初期化されました`
-    } catch (error) {
-      console.error('AIプロバイダー初期化エラー:', error)
-      aiOutput.textContent = `AIプロバイダーの初期化に失敗しました: ${error.message}`
-    }
-  }
-}
-
-async function generateNextNode() {
-  if (!aiProviderInstance || !session || !_model) {
-    aiOutput.textContent = '❌ モデルを読み込んでから実行してください'
-    return
-  }
-
-  // Disable buttons during generation
-  generateNextNodeBtn.disabled = true
-  paraphraseCurrentBtn.disabled = true
-  aiOutput.textContent = '⏳ 生成中...'
-
-  try {
-    const context = {
-      previousNodes: [], // 現在の実装では履歴を保持していない
-      currentNodeText: _model.nodes[session.state.nodeId]?.text || '',
-      choiceText: '続き'
-    }
-
-    const startTime = Date.now()
-    const generatedText = await aiProviderInstance.generateNextNode(context)
-    const duration = ((Date.now() - startTime) / 1000).toFixed(2)
-    
-    aiOutput.textContent = `✅ 生成されたテキスト (${duration}秒):\n${generatedText}`
-    Logger.info('AI node generated', { duration, provider: aiConfig.provider })
-  } catch (error) {
-    console.error('ノード生成エラー:', error)
-    const errorMsg = error.message.includes('API error') 
-      ? `APIエラー: ${error.message}\nAPIキーを確認してください。`
-      : `生成に失敗しました: ${error.message}`
-    aiOutput.textContent = `❌ ${errorMsg}`
-    Logger.error('AI generation failed', { error: error.message, provider: aiConfig.provider })
-  } finally {
-    // Re-enable buttons
-    generateNextNodeBtn.disabled = false
-    paraphraseCurrentBtn.disabled = false
-  }
-}
-
-async function paraphraseCurrentText() {
-  if (!aiProviderInstance || !session || !_model) {
-    aiOutput.textContent = '❌ モデルを読み込んでから実行してください'
-    return
-  }
-
-  const currentNode = _model.nodes[session.state.nodeId]
-  if (!currentNode?.text) {
-    aiOutput.textContent = '❌ 現在のノードにテキストがありません'
-    return
-  }
-
-  // Disable buttons during generation
-  generateNextNodeBtn.disabled = true
-  paraphraseCurrentBtn.disabled = true
-  aiOutput.textContent = '⏳ 言い換え中...'
-
-  try {
-    const startTime = Date.now()
-    const paraphrases = await aiProviderInstance.paraphrase(currentNode.text, {
-      variantCount: 3,
-      style: 'desu-masu',
-      tone: 'neutral'
-    })
-    const duration = ((Date.now() - startTime) / 1000).toFixed(2)
-
-    aiOutput.textContent = `✅ 言い換え結果 (${duration}秒):\n${paraphrases.map((p, i) => `${i + 1}. ${p}`).join('\n')}`
-    Logger.info('AI paraphrase completed', { duration, provider: aiConfig.provider, variantCount: paraphrases.length })
-  } catch (error) {
-    console.error('言い換えエラー:', error)
-    const errorMsg = error.message.includes('API error') 
-      ? `APIエラー: ${error.message}\nAPIキーを確認してください。`
-      : `言い換えに失敗しました: ${error.message}`
-    aiOutput.textContent = `❌ ${errorMsg}`
-    Logger.error('AI paraphrase failed', { error: error.message, provider: aiConfig.provider })
-  } finally {
-    // Re-enable buttons
-    generateNextNodeBtn.disabled = false
-    paraphraseCurrentBtn.disabled = false
-  }
-}
 
 function formatChoiceLabel(choice) {
   if (choice?.outcome) {
@@ -1036,84 +502,6 @@ dropZone.addEventListener('drop', async (e) => {
   }
 })
 
-// Load AI config from localStorage on startup
-const savedAiConfig = localStorage.getItem('narrativeGenAiConfig')
-if (savedAiConfig) {
-  try {
-    aiConfig = { ...aiConfig, ...JSON.parse(savedAiConfig) }
-    aiProvider.value = aiConfig.provider
-    if (aiConfig.provider === 'openai') {
-      openaiSettings.style.display = 'block'
-      openaiApiKey.value = aiConfig.openai.apiKey || ''
-      openaiModel.value = aiConfig.openai.model || 'gpt-3.5-turbo'
-    }
-  } catch (error) {
-    console.warn('Failed to load AI config from localStorage:', error)
-  }
-}
-
-// Split View Mode Toggle
-toggleSplitViewBtn.addEventListener('click', () => {
-  splitModeActive = !splitModeActive
-  
-  if (splitModeActive) {
-    // Enable split mode
-    toggleSplitViewBtn.classList.add('active')
-    toggleSplitViewBtn.textContent = '分割ビュー: ON'
-    storyMainContainer.classList.add('split-mode')
-    
-    // Update JSON editor with current model
-    storyJsonEditor.value = getModel() ? JSON.stringify(getModel(), null, 2) : '{}'
-    
-    // Initialize resizer (once)
-    initStoryResizer()
-    storyResizer.style.cursor = 'ew-resize'
-  } else {
-    // Disable split mode
-    toggleSplitViewBtn.classList.remove('active')
-    toggleSplitViewBtn.textContent = '分割ビュー'
-    storyMainContainer.classList.remove('split-mode')
-    storyResizer.style.cursor = 'default'
-  }
-})
-
-function initStoryResizer() {
-  if (storyResizerInitialized) return
-  
-  let isResizing = false
-  const leftPanel = storyMainContainer.querySelector('.story-left-panel')
-  
-  storyResizer.addEventListener('mousedown', (e) => {
-    isResizing = true
-    document.body.style.cursor = 'ew-resize'
-    document.body.style.userSelect = 'none'
-  })
-  
-  document.addEventListener('mousemove', (e) => {
-    if (!isResizing) return
-    
-    const containerRect = storyMainContainer.getBoundingClientRect()
-    const newLeftWidth = e.clientX - containerRect.left
-    const minWidth = 300
-    const maxWidth = containerRect.width - 300
-    
-    if (newLeftWidth >= minWidth && newLeftWidth <= maxWidth) {
-      const percentage = (newLeftWidth / containerRect.width * 100).toFixed(2)
-      leftPanel.style.flex = `0 0 ${percentage}%`
-    }
-  })
-  
-  document.addEventListener('mouseup', () => {
-    if (isResizing) {
-      isResizing = false
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-  })
-  
-  storyResizerInitialized = true
-}
-
 applyStoryJsonBtn.addEventListener('click', () => {
   try {
     const jsonText = storyJsonEditor.value.trim()
@@ -1157,35 +545,6 @@ applyStoryJsonBtn.addEventListener('click', () => {
     setStatus(`JSON適用に失敗しました: ${err?.message ?? err}`, 'warn')
   }
 })
-
-// AI settings event handlers
-aiProvider.addEventListener('change', () => {
-  if (aiProvider.value === 'openai') {
-    openaiSettings.style.display = 'block'
-  } else {
-    openaiSettings.style.display = 'none'
-  }
-  aiProviderInstance = null // Reset provider when changed
-})
-
-saveAiSettings.addEventListener('click', () => {
-  aiConfig.provider = aiProvider.value
-  if (aiProvider.value === 'openai') {
-    aiConfig.openai.apiKey = openaiApiKey.value
-    aiConfig.openai.model = openaiModel.value
-    if (!aiConfig.openai.apiKey) {
-      aiOutput.textContent = 'OpenAI APIキーを入力してください'
-      return
-    }
-  }
-  // Save to localStorage
-  localStorage.setItem('narrativeGenAiConfig', JSON.stringify(aiConfig))
-  aiOutput.textContent = 'AI設定を保存しました'
-  aiProviderInstance = null // Reset to use new config
-})
-
-generateNextNodeBtn.addEventListener('click', generateNextNode)
-paraphraseCurrentBtn.addEventListener('click', paraphraseCurrentText)
 
 nodeOverview.addEventListener('click', (e) => {
   const action = e.target.dataset.action
@@ -1296,7 +655,78 @@ document.addEventListener('keydown', (e) => {
   }
 })
 
-// Initialize handlers with dependency injection
+// Initialize extracted handlers with dependency injection
+const graphHandler = initGraphHandler({
+  getModel,
+  getSession,
+  graphSvg,
+  zoomInBtn,
+  zoomOutBtn,
+  resetViewBtn,
+  highlightedNodes,
+})
+renderGraph = graphHandler.renderGraph
+graphHandler.setupGraphControls()
+
+const debugHandler = initDebugHandler({
+  getModel,
+  getSession,
+  flagsDisplay,
+  resourcesDisplay,
+  inventoryDisplay,
+  reachableNodes,
+})
+renderDebugInfo = debugHandler.renderDebugInfo
+
+const csvImportHandler = initCsvImportHandler({
+  getModel,
+  setModel,
+  getSession,
+  setSession,
+  setStatus,
+  showErrors,
+  hideErrors,
+  renderState,
+  renderChoices,
+  initStory,
+  renderStoryEnhanced,
+  csvPreviewModal,
+  csvFileName,
+  csvPreviewContent,
+  storyView,
+})
+showCsvPreview = csvImportHandler.showCsvPreview
+hideCsvPreview = csvImportHandler.hideCsvPreview
+importCsvFile = csvImportHandler.importCsvFile
+
+const aiConfigHandler = initAiConfig({
+  getModel,
+  getSession,
+  setStatus,
+  aiProvider,
+  openaiSettings,
+  openaiApiKey,
+  openaiModel,
+  saveAiSettings,
+  generateNextNodeBtn,
+  paraphraseCurrentBtn,
+  aiOutput,
+  Logger,
+})
+initAiProvider = aiConfigHandler.initAiProvider
+aiConfigHandler.loadSavedConfig()
+aiConfigHandler.setupListeners()
+
+const splitViewHandler = initSplitView({
+  getModel,
+  toggleSplitViewBtn,
+  storyMainContainer,
+  storyResizer,
+  storyJsonEditor,
+})
+splitViewHandler.setupListeners()
+
+// Initialize existing handlers
 const nodesPanel = initNodesPanel({
   getModel,
   setModel,
@@ -1311,7 +741,6 @@ const nodesPanel = initNodesPanel({
   nodeOverview,
   nodeSearch,
   storyView
-  // guiEditor removed
 })
 
 // Setup node list events
