@@ -136,7 +136,29 @@ describe('Model Validation Enhancement', () => {
   })
 
   describe('Circular Reference Detection', () => {
-    it('should detect simple circular reference (A -> B -> A)', () => {
+    it('should allow circular references by default (backward compatibility)', () => {
+      const modelWithCircular = {
+        modelType: 'adventure-playthrough',
+        startNode: 'a',
+        nodes: {
+          a: {
+            id: 'a',
+            text: 'Node A',
+            choices: [{ id: 'c1', text: 'To B', target: 'b' }],
+          },
+          b: {
+            id: 'b',
+            text: 'Node B',
+            choices: [{ id: 'c2', text: 'Back to A', target: 'a' }],
+          },
+        },
+      }
+
+      // Should NOT throw by default
+      expect(() => loadModel(modelWithCircular)).not.toThrow()
+    })
+
+    it('should detect simple circular reference when explicitly disabled (A -> B -> A)', () => {
       const invalidModel = {
         modelType: 'adventure-playthrough',
         startNode: 'a',
@@ -154,10 +176,12 @@ describe('Model Validation Enhancement', () => {
         },
       }
 
-      expect(() => loadModel(invalidModel)).toThrow(/CIRCULAR_REFERENCE.*a → b → a/)
+      expect(() => loadModel(invalidModel, { allowCircularReferences: false })).toThrow(
+        /CIRCULAR_REFERENCE.*a → b → a/,
+      )
     })
 
-    it('should detect complex circular reference (A -> B -> C -> B)', () => {
+    it('should detect complex circular reference when disabled (A -> B -> C -> B)', () => {
       const invalidModel = {
         modelType: 'adventure-playthrough',
         startNode: 'a',
@@ -180,10 +204,12 @@ describe('Model Validation Enhancement', () => {
         },
       }
 
-      expect(() => loadModel(invalidModel)).toThrow(/CIRCULAR_REFERENCE.*b → c → b/)
+      expect(() => loadModel(invalidModel, { allowCircularReferences: false })).toThrow(
+        /CIRCULAR_REFERENCE.*b → c → b/,
+      )
     })
 
-    it('should detect self-referencing node', () => {
+    it('should detect self-referencing node when disabled', () => {
       const invalidModel = {
         modelType: 'adventure-playthrough',
         startNode: 'start',
@@ -196,10 +222,12 @@ describe('Model Validation Enhancement', () => {
         },
       }
 
-      expect(() => loadModel(invalidModel)).toThrow(/CIRCULAR_REFERENCE.*start → start/)
+      expect(() => loadModel(invalidModel, { allowCircularReferences: false })).toThrow(
+        /CIRCULAR_REFERENCE.*start → start/,
+      )
     })
 
-    it('should detect circular reference via goto effect', () => {
+    it('should detect circular reference via goto effect when disabled', () => {
       const invalidModel = {
         modelType: 'adventure-playthrough',
         startNode: 'a',
@@ -232,7 +260,9 @@ describe('Model Validation Enhancement', () => {
         },
       }
 
-      expect(() => loadModel(invalidModel)).toThrow(/CIRCULAR_REFERENCE/)
+      expect(() => loadModel(invalidModel, { allowCircularReferences: false })).toThrow(
+        /CIRCULAR_REFERENCE/,
+      )
     })
 
     it('should allow valid branching without circular references', () => {

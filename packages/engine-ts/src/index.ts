@@ -108,8 +108,9 @@ function detectCircularReferences(model: Model, startNodeId: string): Validation
   return issues
 }
 
-function assertModelIntegrity(model: Model): void {
+function assertModelIntegrity(model: Model, options?: LoadModelOptions): void {
   const issues: ValidationIssue[] = []
+  const allowCircular = options?.allowCircularReferences ?? true // Default: allow for backward compatibility
   
   // Check for duplicate node IDs (node key vs node.id mismatch)
   const nodeIds = new Set<string>()
@@ -198,8 +199,8 @@ function assertModelIntegrity(model: Model): void {
     }
   }
 
-  // Detect circular references starting from startNode
-  if (model.nodes[model.startNode]) {
+  // Detect circular references starting from startNode (if not allowed)
+  if (!allowCircular && model.nodes[model.startNode]) {
     const circularIssues = detectCircularReferences(model, model.startNode)
     issues.push(...circularIssues)
   }
@@ -228,7 +229,15 @@ function loadSchema(): JSONSchemaType<Model> {
   return JSON.parse(json) as JSONSchemaType<Model>
 }
 
-export function loadModel(modelData: unknown): Model {
+export interface LoadModelOptions {
+  /**
+   * If true, allows circular references in the model graph.
+   * Default: true (for backward compatibility with existing models)
+   */
+  allowCircularReferences?: boolean
+}
+
+export function loadModel(modelData: unknown, options?: LoadModelOptions): Model {
   const ajv = new Ajv({ allErrors: true, strict: false })
   const schema = loadSchema()
   const validate = ajv.compile<Model>(schema)
@@ -237,7 +246,7 @@ export function loadModel(modelData: unknown): Model {
     throw new Error(`Model validation failed:\n${err}`)
   }
   const model = modelData
-  assertModelIntegrity(model)
+  assertModelIntegrity(model, options)
   return model
 }
 
