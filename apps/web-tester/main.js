@@ -155,6 +155,7 @@ const saveAiSettings = document.getElementById('saveAiSettings')
 const generateNextNodeBtn = document.getElementById('generateNextNodeBtn')
 const paraphraseCurrentBtn = document.getElementById('paraphraseCurrentBtn')
 const aiOutput = document.getElementById('aiOutput')
+const aiHistoryList = document.getElementById('aiHistoryList')
 
 let session = null
 let currentModelName = null
@@ -703,6 +704,20 @@ const aiConfigHandler = initAiConfig({
   getModel,
   getSession,
   setStatus,
+  onAdopt: (nodeId, text) => {
+    const model = getModel()
+    if (!model || !model.nodes[nodeId]) {
+      setStatus(`\u30CE\u30FC\u30C9 ${nodeId} \u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093`, 'warn')
+      return
+    }
+    model.nodes[nodeId].text = text
+    setStatus(`\u30CE\u30FC\u30C9 ${nodeId} \u306E\u30C6\u30AD\u30B9\u30C8\u3092\u66F4\u65B0\u3057\u307E\u3057\u305F`, 'success')
+    renderState()
+    renderStoryEnhanced(storyView)
+    if (graphPanel.classList.contains('active')) {
+      renderGraph()
+    }
+  },
   aiProvider,
   openaiSettings,
   openaiApiKey,
@@ -711,6 +726,7 @@ const aiConfigHandler = initAiConfig({
   generateNextNodeBtn,
   paraphraseCurrentBtn,
   aiOutput,
+  aiHistoryList,
   Logger,
 })
 initAiProvider = aiConfigHandler.initAiProvider
