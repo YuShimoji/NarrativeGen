@@ -1,11 +1,11 @@
 # Task: main.js 分割（第2弾）
-Status: IN_PROGRESS
+Status: DONE
 Tier: 2
 Branch: feature/main-js-split-phase2
 Owner: Worker
 Created: 2026-02-06T13:35:00+09:00
-Updated: 2026-02-06T13:50:00+09:00
-Report: 
+Updated: 2026-02-12T13:55:00+09:00
+Report: docs/inbox/REPORT_TASK101_MainJS_Split_Phase2.md
 
 ## Objective
 - apps/web-tester/main.js（現在1241行）をさらに分離し、目標1000行未満に縮小する
@@ -38,10 +38,10 @@ Report:
 - [x] handlers/tabs.js が作成され、switchTab とタブイベントバインドが分離されている
 - [x] npm run build -w @narrativegen/web-tester が成功する
 - [x] Vite dev server で基本操作（ノード一覧表示、タブ切り替え、ジャンプ）が動作する
-- [ ] main.js が初期化と配線のみに縮小されている（目標: 1000行未満、現在: 1241行）
-- [ ] main.js から以下を分離: renderGraph/グラフ制御、renderDebugInfo、CSV import、AI関連、split view
-- [ ] docs/inbox/ にレポート（REPORT_...md）が作成されている
-- [ ] 本チケットの Report 欄にレポートパスが追記されている
+- [x] main.js が初期化と配線のみに縮小されている（目標: 1000行未満、結果: 825行）
+- [x] main.js から以下を分離: renderGraph/グラフ制御、renderDebugInfo、CSV import、AI関連、split view
+- [x] docs/inbox/ にレポート（REPORT_...md）が作成されている
+- [x] 本チケットの Report 欄にレポートパスが追記されている
 
 ## Notes
 - 残りの分離候補（main.js 内の大きな関数ブロック）:
