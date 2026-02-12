@@ -3,11 +3,23 @@
 
 import { createAIProvider } from '@narrativegen/engine-ts/dist/browser.js'
 
+// Externalized constants (no hardcoded magic values)
+const AI_CONFIG_DEFAULTS = {
+  provider: 'mock',
+  openai: { apiKey: '', model: 'gpt-3.5-turbo' },
+};
+const HISTORY_MAX_SIZE = 5;
+const PARAPHRASE_VARIANT_COUNT = 3;
+const PARAPHRASE_STYLE = 'desu-masu';
+const PARAPHRASE_TONE = 'neutral';
+const STORAGE_KEY_AI_CONFIG = 'narrativeGenAiConfig';
+
 export function initAiConfig(deps) {
   const {
     getModel,
     getSession,
     setStatus,
+    onAdopt,
     // DOM references
     aiProvider,
     openaiSettings,
@@ -17,21 +29,18 @@ export function initAiConfig(deps) {
     generateNextNodeBtn,
     paraphraseCurrentBtn,
     aiOutput,
+    aiHistoryList,
     Logger,
   } = deps;
 
-  let aiConfig = {
-    provider: 'mock',
-    openai: {
-      apiKey: '',
-      model: 'gpt-3.5-turbo'
-    }
-  };
+  let aiConfig = { ...AI_CONFIG_DEFAULTS, openai: { ...AI_CONFIG_DEFAULTS.openai } };
   let aiProviderInstance = null;
+  /** @type {Array<{id:string, type:string, text:string, nodeId:string, timestamp:number}>} */
+  let generationHistory = [];
 
   // Load AI config from localStorage on startup
   function loadSavedConfig() {
-    const savedAiConfig = localStorage.getItem('narrativeGenAiConfig');
+    const savedAiConfig = localStorage.getItem(STORAGE_KEY_AI_CONFIG);
     if (savedAiConfig) {
       try {
         aiConfig = { ...aiConfig, ...JSON.parse(savedAiConfig) };
@@ -39,7 +48,7 @@ export function initAiConfig(deps) {
         if (aiConfig.provider === 'openai') {
           openaiSettings.style.display = 'block';
           openaiApiKey.value = aiConfig.openai.apiKey || '';
-          openaiModel.value = aiConfig.openai.model || 'gpt-3.5-turbo';
+          openaiModel.value = aiConfig.openai.model || AI_CONFIG_DEFAULTS.openai.model;
         }
       } catch (error) {
         console.warn('Failed to load AI config from localStorage:', error);
@@ -94,7 +103,9 @@ export function initAiConfig(deps) {
       const generatedText = await aiProviderInstance.generateNextNode(context);
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
       
-      aiOutput.textContent = `✅ 生成されたテキスト (${duration}秒):\n${generatedText}`;
+      const nodeId = session.state.nodeId;
+      renderGenerationResult('generate', generatedText, duration, nodeId);
+      addToHistory('generate', generatedText, nodeId);
       Logger.info('AI node generated', { duration, provider: aiConfig.provider });
     } catch (error) {
       console.error('ノード生成エラー:', error);
@@ -132,13 +143,15 @@ export function initAiConfig(deps) {
     try {
       const startTime = Date.now();
       const paraphrases = await aiProviderInstance.paraphrase(currentNode.text, {
-        variantCount: 3,
-        style: 'desu-masu',
-        tone: 'neutral'
+        variantCount: PARAPHRASE_VARIANT_COUNT,
+        style: PARAPHRASE_STYLE,
+        tone: PARAPHRASE_TONE,
       });
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
-      aiOutput.textContent = `✅ 言い換え結果 (${duration}秒):\n${paraphrases.map((p, i) => `${i + 1}. ${p}`).join('\n')}`;
+      const nodeId = session.state.nodeId;
+      renderParaphraseResult(paraphrases, duration, nodeId);
+      paraphrases.forEach(p => addToHistory('paraphrase', p, nodeId));
       Logger.info('AI paraphrase completed', { duration, provider: aiConfig.provider, variantCount: paraphrases.length });
     } catch (error) {
       console.error('言い換えエラー:', error);
@@ -176,13 +189,124 @@ export function initAiConfig(deps) {
         }
       }
       // Save to localStorage
-      localStorage.setItem('narrativeGenAiConfig', JSON.stringify(aiConfig));
+      localStorage.setItem(STORAGE_KEY_AI_CONFIG, JSON.stringify(aiConfig));
       aiOutput.textContent = 'AI設定を保存しました';
       aiProviderInstance = null; // Reset to use new config
     });
 
     generateNextNodeBtn.addEventListener('click', generateNextNode);
     paraphraseCurrentBtn.addEventListener('click', paraphraseCurrentText);
+  }
+
+  // --- Result rendering with adopt buttons ---
+
+  function renderGenerationResult(type, text, duration, nodeId) {
+    aiOutput.innerHTML = '';
+    const header = document.createElement('div');
+    header.className = 'ai-result-header';
+    header.textContent = `\u2705 生成されたテキスト (${duration}秒)`;
+    aiOutput.appendChild(header);
+
+    const resultItem = createResultItem(text, nodeId);
+    aiOutput.appendChild(resultItem);
+  }
+
+  function renderParaphraseResult(paraphrases, duration, nodeId) {
+    aiOutput.innerHTML = '';
+    const header = document.createElement('div');
+    header.className = 'ai-result-header';
+    header.textContent = `\u2705 言い換え結果 (${duration}秒)`;
+    aiOutput.appendChild(header);
+
+    paraphrases.forEach((p, i) => {
+      const resultItem = createResultItem(p, nodeId, i + 1);
+      aiOutput.appendChild(resultItem);
+    });
+  }
+
+  function createResultItem(text, nodeId, index) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'ai-result-item';
+
+    const textEl = document.createElement('div');
+    textEl.className = 'ai-result-text';
+    textEl.textContent = index ? `${index}. ${text}` : text;
+    wrapper.appendChild(textEl);
+
+    const adoptBtn = document.createElement('button');
+    adoptBtn.className = 'ai-adopt-btn';
+    adoptBtn.textContent = '\u63A1\u7528';
+    adoptBtn.addEventListener('click', () => {
+      if (typeof onAdopt === 'function') {
+        onAdopt(nodeId, text);
+        adoptBtn.textContent = '\u63A1\u7528\u6E08\u307F';
+        adoptBtn.disabled = true;
+        Logger.info('AI result adopted', { nodeId, textLength: text.length });
+      }
+    });
+    wrapper.appendChild(adoptBtn);
+
+    return wrapper;
+  }
+
+  // --- History management ---
+
+  function addToHistory(type, text, nodeId) {
+    const entry = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      type,
+      text,
+      nodeId,
+      timestamp: Date.now(),
+    };
+    generationHistory.unshift(entry);
+    if (generationHistory.length > HISTORY_MAX_SIZE) {
+      generationHistory = generationHistory.slice(0, HISTORY_MAX_SIZE);
+    }
+    renderHistory();
+  }
+
+  function renderHistory() {
+    if (!aiHistoryList) return;
+    aiHistoryList.innerHTML = '';
+    if (generationHistory.length === 0) {
+      aiHistoryList.textContent = '\u5C65\u6B74\u306A\u3057';
+      return;
+    }
+    generationHistory.forEach(entry => {
+      const item = document.createElement('div');
+      item.className = 'ai-history-item';
+
+      const label = document.createElement('span');
+      label.className = 'ai-history-label';
+      label.textContent = entry.type === 'generate' ? '\u751F\u6210' : '\u8A00\u3044\u63DB\u3048';
+
+      const textEl = document.createElement('span');
+      textEl.className = 'ai-history-text';
+      const maxLen = 60;
+      textEl.textContent = entry.text.length > maxLen ? entry.text.slice(0, maxLen) + '...' : entry.text;
+      textEl.title = entry.text;
+
+      const adoptBtn = document.createElement('button');
+      adoptBtn.className = 'ai-adopt-btn ai-adopt-btn-sm';
+      adoptBtn.textContent = '\u63A1\u7528';
+      adoptBtn.addEventListener('click', () => {
+        if (typeof onAdopt === 'function') {
+          onAdopt(entry.nodeId, entry.text);
+          adoptBtn.textContent = '\u63A1\u7528\u6E08\u307F';
+          adoptBtn.disabled = true;
+        }
+      });
+
+      item.appendChild(label);
+      item.appendChild(textEl);
+      item.appendChild(adoptBtn);
+      aiHistoryList.appendChild(item);
+    });
+  }
+
+  function getHistory() {
+    return [...generationHistory];
   }
 
   // Public API
@@ -192,5 +316,6 @@ export function initAiConfig(deps) {
     generateNextNode,
     paraphraseCurrentText,
     setupListeners,
+    getHistory,
   };
 }
