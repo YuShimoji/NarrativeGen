@@ -6,7 +6,7 @@
 
 ## 参照リンク
 
-- PR: https://github.com/YuShimoji/NarrativeGen/pull/64 (merged)
+- PR: <https://github.com/YuShimoji/NarrativeGen/pull/64> (merged)
 
 ## 今回の決定事項
 
@@ -76,10 +76,28 @@
 
 ## タスク管理（短期/中期/長期）
 
-### 短期（Next）
+> **📋 詳細プラン**: `docs/plans/` フォルダを参照
 
-- [pending] Phase 2グラフビュー高度編集機能実装 (ref: docs/tasks/TASK_021_Phase2GraphViewAdvancedEditing.md, Status: OPEN)
-- [pending] GUIエディタ高度バッチ操作機能実装 (ref: docs/tasks/TASK_022_GUIEditorAdvancedBatchOperations.md, Status: COMPLETED)
-- [pending] マルチエンディング可視化機能拡張実装 (ref: docs/tasks/TASK_023_MultiEndingVisualizationEnhanced.md, Status: OPEN)
-- [x] Update Project Status Documents (ref: docs/tasks/TASK_025_UpdateProjectStatusDocs.md, Status: COMPLETED)
-- [pending] GUI Editor Advanced Shortcuts (ref: docs/tasks/TASK_026_GUIEditorAdvancedShortcuts.md, Status: OPEN)
+### 短期（1-2週間）
+
+- [pending] TASK_029: 高度ショートカット実装 (2-3日)
+- [pending] TASK_030: エクスポート検証・拡張 (1-2日)
+- [pending] TASK_031: 手動テスト実施 (2-3日)
+- [pending] TASK_032: Undo/Redo 完全確認 (1-2日)
+
+### 中期（1-2ヶ月）
+
+- [pending] TASK_033: Ollama 統合 (5-7日)
+- [pending] TASK_034: AI バッチ処理 (3-5日)
+- [pending] TASK_035: main.js リファクタリング (3-5日)
+- [pending] TASK_036: チャンクサイズ最適化 (2-3日)
+- [pending] TASK_037: 追加エクスポート形式 (5-7日)
+
+### 長期（3ヶ月以降）
+
+- [planned] TASK_038: バージョン管理統合 (7-10日)
+- [planned] TASK_039: 共有リンク機能 (3-5日)
+- [planned] TASK_040: アクセシビリティ改善 (5-7日)
+- [planned] TASK_041: レスポンシブデザイン (7-10日)
+- [planned] TASK_042: パフォーマンス最適化 (7-10日)
+- [planned] TASK_043: Unity Editor 拡張 (15-20日)

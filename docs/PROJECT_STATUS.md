@@ -1,6 +1,6 @@
 ﻿# NarrativeGen プロジェクトステータス
 
-**最終更新**: 2025-12-14
+**最終更新**: 2026-02-19
 
 ## 概要
 
@@ -100,6 +100,7 @@ NarrativeGen/
 | `docs/reference.md` | API リファレンス (SSOT) |
 | `docs/GUI_EDITOR_TEST_GUIDE.md` | 手動テストケース |
 | `docs/NEXT_PHASE_PROPOSAL.md` | Phase 2 設計提案 |
+| `docs/plans/README.md` | 現在の短中長期タスク計画の入口 |
 | `docs/architecture.md` | アーキテクチャ概要 |
 | `docs/troubleshooting.md` | トラブルシューティング |
 
