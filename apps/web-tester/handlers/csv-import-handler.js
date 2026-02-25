@@ -1,7 +1,7 @@
 // CSV Import Handler - manages CSV file import and preview
 // Extracted from main.js for better maintainability
 
-import { GameSession } from '@narrativegen/engine-ts/dist/browser.js'
+import { GameSession, resolveNodeId } from '@narrativegen/engine-ts/dist/browser.js'
 import { parseCsvLine, parseKeyValuePairs, parseConditions, parseEffects } from '../utils/csv-parser.js'
 import { validateModel } from '../utils/model-utils.js'
 
@@ -30,13 +30,14 @@ export function initCsvImportHandler(deps) {
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target.result;
+      const previewDelim = text.includes('\t') ? '\t' : ',';
       const lines = text.trim().split(/\r?\n/).slice(0, 11); // First 10 lines + header
       const table = document.createElement('table');
       table.className = 'csv-table';
-      
+
       lines.forEach((line, index) => {
         const row = document.createElement('tr');
-        const cells = parseCsvLine(line, line.includes('\t') ? '\t' : ',');
+        const cells = parseCsvLine(line, previewDelim);
         cells.forEach(cell => {
           const cellEl = document.createElement(index === 0 ? 'th' : 'td');
           cellEl.textContent = cell;
@@ -44,18 +45,18 @@ export function initCsvImportHandler(deps) {
         });
         table.appendChild(row);
       });
-      
+
       if (lines.length >= 11) {
         const row = document.createElement('tr');
         const cell = document.createElement('td');
-        cell.colSpan = lines[0].split(line.includes('\t') ? '\t' : ',').length;
+        cell.colSpan = parseCsvLine(lines[0], previewDelim).length;
         cell.textContent = '... (以降省略)';
         cell.style.textAlign = 'center';
         cell.style.fontStyle = 'italic';
         row.appendChild(cell);
         table.appendChild(row);
       }
-      
+
       csvPreviewContent.innerHTML = '';
       csvPreviewContent.appendChild(table);
       csvPreviewModal.classList.add('show');
@@ -76,6 +77,7 @@ export function initCsvImportHandler(deps) {
 
       const headers = rows[0].split(delim).map((h) => h.trim());
       const idx = {
+        node_group: headers.indexOf('node_group'),
         node_id: headers.indexOf('node_id'),
         node_text: headers.indexOf('node_text'),
         node_type: headers.indexOf('node_type'),
@@ -124,16 +126,29 @@ export function initCsvImportHandler(deps) {
       // Progress indicator
       setStatus(`CSV読み込み中... (0/${totalRows})`);
 
+      // 渡された row から canonicalId を計算するためのヘルパー
+      const getCanonicalId = (cells) => {
+        const group = idx.node_group >= 0 ? (cells[idx.node_group] || '').trim() : '';
+        const nid = (cells[idx.node_id] || '').trim();
+        if (!nid) return null;
+        return group ? `${group}/${nid}` : nid;
+      };
+
       // Process chunks with progress updates
       for (const chunk of chunks) {
         for (const row of chunk) {
           const cells = parseCsvLine(row, delim);
-          const nid = (cells[idx.node_id] || '').trim();
-          if (!nid) continue;
+          const canonicalId = getCanonicalId(cells);
+          if (!canonicalId) continue;
 
-          if (!nodes[nid]) {
-            nodes[nid] = {
-              id: nid,
+          const group = idx.node_group >= 0 ? (cells[idx.node_group] || '').trim() : '';
+          const localId = (cells[idx.node_id] || '').trim();
+
+          if (!nodes[canonicalId]) {
+            nodes[canonicalId] = {
+              id: canonicalId,
+              localId: localId,
+              group: group,
               text: '',
               choices: [],
               type: 'normal',
@@ -142,7 +157,7 @@ export function initCsvImportHandler(deps) {
             };
           }
 
-          const node = nodes[nid];
+          const node = nodes[canonicalId];
 
           const ntext = (cells[idx.node_text] || '').trim();
           if (ntext) node.text = ntext;
@@ -162,13 +177,17 @@ export function initCsvImportHandler(deps) {
 
           const cid = (cells[idx.choice_id] || '').trim();
           const ctext = (cells[idx.choice_text] || '').trim();
-          const ctgt = (cells[idx.choice_target] || '').trim();
+          const rawTarget = (cells[idx.choice_target] || '').trim();
 
-          if (ctgt || ctext || cid) {
+          // Resolve target ID based on hierarchy
+          const ctgt = rawTarget ? resolveNodeId(rawTarget, group) : canonicalId;
+          const normalizedTarget = ctgt || '__ROOT__';
+
+          if (ctext || cid || rawTarget) {
             const choice = {
-              id: cid || `c${nodes[nid].choices.length + 1}`,
+              id: cid || `c${node.choices.length + 1}`,
               text: ctext || '',
-              target: ctgt || nid,
+              target: normalizedTarget,
               metadata: {},
               variables: {}
             };
@@ -195,7 +214,14 @@ export function initCsvImportHandler(deps) {
             // 効果のパース
             if (idx.choice_effects >= 0 && cells[idx.choice_effects]) {
               try {
-                choice.effects = parseEffects(cells[idx.choice_effects]);
+                const effects = parseEffects(cells[idx.choice_effects]);
+                // goto 効果のターゲットも解決する
+                effects.forEach(e => {
+                  if (e.type === 'goto' && e.target) {
+                    e.target = resolveNodeId(e.target, group) || '__ROOT__';
+                  }
+                });
+                choice.effects = effects;
               } catch (err) {
                 errors.push(`行${processedRows + 2}: 効果パースエラー: ${err.message}`);
               }
@@ -209,7 +235,7 @@ export function initCsvImportHandler(deps) {
               };
             }
 
-            nodes[nid].choices.push(choice);
+            node.choices.push(choice);
           }
 
           processedRows++;
@@ -245,6 +271,19 @@ export function initCsvImportHandler(deps) {
       }
 
       const firstNode = Object.keys(nodes)[0];
+      const rootNode = Object.keys(nodes).find((id) => !id.includes('/')) || firstNode;
+      Object.values(nodes).forEach((node) => {
+        (node.choices || []).forEach((choice) => {
+          if (choice.target === '__ROOT__') {
+            choice.target = rootNode;
+          }
+          (choice.effects || []).forEach((effect) => {
+            if (effect.type === 'goto' && effect.target === '__ROOT__') {
+              effect.target = rootNode;
+            }
+          });
+        });
+      });
       setModel({
         modelType: 'adventure-playthrough',
         startNode: firstNode,

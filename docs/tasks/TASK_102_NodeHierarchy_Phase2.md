@@ -1,5 +1,5 @@
 # Task: ノード階層システム Phase 2
-Status: OPEN
+Status: COMPLETED
 Tier: 2
 Branch: feature/node-hierarchy-phase2
 Owner: Worker
@@ -30,8 +30,19 @@ Report:
 - 後方互換必須: node_group 列がないCSVも従来通り動作すること
 - データ外部化: テキスト・設定値・パラメータのハードコード禁止
 
+## Divergent Thinking (P2.5S)
+- **Slice Goal**: CSVパーサで `node_group` 列を読み込み、完全ID（`group.id`）で表示・ジャンプできる基本的なエンドツーエンドを実証する。
+- **Min Path**:
+  - `packages/engine-ts/src/types.ts` (Model/Node 型拡張)
+  - `packages/engine-ts/src/parser.ts` (node_group 解析)
+  - `apps/web-tester/utils/csv-parser.js` (UI側パーサ)
+  - `apps/web-tester/handlers/nodes-panel.js` (ノード一覧表示)
+- **Risk**: ID解決の競合（既存のフラットIDと新規階層IDの優先順位不整合）。
+- **Mitigation**: `resolveNodeId` の優先順位を「完全ID -> グループ内 -> グローバル」の順で定義する。
+- **Test Phase**: Slice (Build + Manual Verification + basic unit test in engine-ts)
+
 ## DoD
-- [ ] CSVパーサが node_group 列を認識し、Model に反映する
+- [ ] CSVパーサが `node_group` 列を認識し、Model に反映する
 - [ ] node_group なしのCSVが従来通り動作する（後方互換）
 - [ ] エクスポートに node_group 出力オプションがある
 - [ ] resolveNodeId 関数が実装されテストが通る

@@ -182,12 +182,12 @@ function setSession(newSession) {
 const inventoryDisplay = document.getElementById('inventoryDisplay')
 
 // Forward declarations for handler functions (assigned during initialization)
-let renderGraph = () => {}
-let renderDebugInfo = () => {}
-let showCsvPreview = () => {}
-let hideCsvPreview = () => {}
-let importCsvFile = async () => {}
-let initAiProvider = async () => {}
+let renderGraph = () => { }
+let renderDebugInfo = () => { }
+let showCsvPreview = () => { }
+let hideCsvPreview = () => { }
+let importCsvFile = async () => { }
+let initAiProvider = async () => { }
 
 function renderState() {
   if (!session) {
@@ -608,6 +608,26 @@ confirmImportBtn.addEventListener('click', async () => {
   hideCsvPreview()
   await importCsvFile(file)
 })
+
+importCsvBtn.addEventListener('click', () => {
+  csvFileInput.click()
+})
+
+csvFileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+  showCsvPreview(file)
+})
+
+exportCsvBtn.addEventListener('click', () => {
+  if (!_model) {
+    setStatus('エクスポートするモデルがありません', 'warn')
+    return
+  }
+  exportModelToCsv(_model, currentModelName)
+})
+
+cancelPreviewBtn.addEventListener('click', hideCsvPreview)
 
 // トップレベルのプレビュー/ダウンロード
 previewTopBtn.addEventListener('click', () => {

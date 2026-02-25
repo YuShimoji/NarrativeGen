@@ -14,6 +14,7 @@ import type {
   ResourceState,
   SessionState,
 } from './types'
+export * from './resolver.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -111,7 +112,7 @@ function detectCircularReferences(model: Model, startNodeId: string): Validation
 function assertModelIntegrity(model: Model, options?: LoadModelOptions): void {
   const issues: ValidationIssue[] = []
   const allowCircular = options?.allowCircularReferences ?? true // Default: allow for backward compatibility
-  
+
   // Check for duplicate node IDs (node key vs node.id mismatch)
   const nodeIds = new Set<string>()
   for (const [nodeKey, node] of Object.entries(model.nodes)) {
@@ -124,7 +125,7 @@ function assertModelIntegrity(model: Model, options?: LoadModelOptions): void {
       })
     }
     nodeIds.add(node.id)
-    
+
     if (node.id !== nodeKey) {
       issues.push({
         type: 'error',
@@ -148,7 +149,7 @@ function assertModelIntegrity(model: Model, options?: LoadModelOptions): void {
   // Check each node's choices
   for (const [nodeKey, node] of Object.entries(model.nodes)) {
     const seenChoiceIds = new Set<string>()
-    
+
     for (const choice of node.choices ?? []) {
       // Check for duplicate choice IDs within the same node
       if (seenChoiceIds.has(choice.id)) {
@@ -173,7 +174,7 @@ function assertModelIntegrity(model: Model, options?: LoadModelOptions): void {
         })
         continue
       }
-      
+
       if (!model.nodes[choice.target]) {
         issues.push({
           type: 'error',

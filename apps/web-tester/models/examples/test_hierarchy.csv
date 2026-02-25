@@ -1,0 +1,7 @@
+node_group,node_id,node_text,choice_id,choice_text,choice_target,choice_effects
+,start,Root Node,c1,Go to Ch1,ch1/start,
+ch1,start,Chapter 1 Start,c2,Go to Ch2,../ch2/start,
+ch1,next,Chapter 1 Next,c3,Back to Start,./start,
+ch2,start,Chapter 2 Start,c4,Go to Root,/,
+ch2,start,,c5,Sub Jump,sub/node,
+ch2/sub,node,Sub Node,c6,Jump to parent start,../start,goto:../../start

@@ -95,12 +95,15 @@ export function initNodesPanel(deps) {
     const nodes = _model.nodes;
     const nodeIds = Object.keys(nodes);
 
-    // Filter nodes based on search term
+    // Filter nodes based on search term (includes group and text)
     const filteredNodes = currentSearchTerm
-      ? nodeIds.filter(id =>
-          id.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
-          nodes[id].text?.toLowerCase().includes(currentSearchTerm.toLowerCase())
-        )
+      ? nodeIds.filter(id => {
+        const node = nodes[id];
+        const term = currentSearchTerm.toLowerCase();
+        return id.toLowerCase().includes(term) ||
+          (node.group && node.group.toLowerCase().includes(term)) ||
+          node.text?.toLowerCase().includes(term);
+      })
       : nodeIds;
 
     // Create node list HTML
@@ -108,13 +111,15 @@ export function initNodesPanel(deps) {
       const node = nodes[nodeId];
       const isCurrentNode = session?.state?.nodeId === nodeId;
       const choiceCount = node.choices?.length || 0;
+      const displayId = node.localId || nodeId;
+      const groupInfo = node.group ? `<span class="node-group">${node.group}/</span>` : '';
 
       return `
         <div class="node-item ${isCurrentNode ? 'current-node' : ''}"
              data-node-id="${nodeId}"
              onclick="window.jumpToNode('${nodeId}')">
           <div class="node-header">
-            <strong>${nodeId}</strong>
+            <strong>${groupInfo}${displayId}</strong>
             <span class="node-meta">${choiceCount} choices</span>
           </div>
           <div class="node-text">${node.text?.substring(0, 100) || 'No text'}${node.text?.length > 100 ? '...' : ''}</div>

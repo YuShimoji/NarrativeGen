@@ -12,7 +12,12 @@
     "build:all": "npm run build:engine && npm run build:tester",
     "dev:engine": "npm run build -w @narrativegen/engine-ts -- --watch",
     "dev:tester": "npm run dev -w @narrativegen/web-tester",
-    "clean": "pwsh -Command \"Get-ChildItem -Path . -Include node_modules,dist -Recurse -Directory | Remove-Item -Recurse -Force\"",
+    "verify:web:prep": "npm run build:engine && npm run build:tester",
+    "verify:web:dev": "npm run dev:tester",
+    "verify:web:csv": "node apps/web-tester/scripts/verify-hierarchy-import.mjs",
+    "verify:web:ci": "npm run verify:web:prep && npm run verify:web:csv",
+    "verify:web:quick": "npm run verify:web:prep && npm run verify:web:dev",
+    "clean": "powershell -Command \"Get-ChildItem -Path . -Include node_modules,dist -Recurse -Directory | Remove-Item -Recurse -Force\"",
     "fresh-install": "npm run clean && npm install && npm run build:all"
   }
 }

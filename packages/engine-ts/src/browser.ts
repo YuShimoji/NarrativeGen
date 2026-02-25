@@ -14,15 +14,16 @@ import type {
 } from './types'
 import { GameSession } from './game-session'
 export { chooseParaphrase, paraphraseJa } from './paraphrase'
-export { 
-  createAIProvider, 
-  MockAIProvider, 
-  type AIProvider, 
-  type AIConfig, 
-  type StoryContext, 
-  type ParaphraseOptions 
+export {
+  createAIProvider,
+  MockAIProvider,
+  type AIProvider,
+  type AIConfig,
+  type StoryContext,
+  type ParaphraseOptions
 } from './ai-provider'
 export { GameSession }
+export * from './resolver.js'
 
 function cmp(op: '>=' | '<=' | '>' | '<' | '==', a: number, b: number): boolean {
   switch (op) {

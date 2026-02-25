@@ -37,6 +37,8 @@ export interface NodeDef {
   id: string
   text?: string
   choices?: Choice[]
+  group?: string    // Optional group path (hierarchical)
+  localId?: string  // ID within the group
 }
 
 export interface Model {

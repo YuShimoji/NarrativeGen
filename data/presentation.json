@@ -1,0 +1,18 @@
+{
+  "language": "ja",
+  "response_format": {
+    "sections": [
+      "1) Status",
+      "2) Actions",
+      "3) Changed Files",
+      "4) Risks",
+      "5) Next Action"
+    ],
+    "require_five_sections": true
+  },
+  "status_labels": {
+    "done": "DONE",
+    "in_progress": "IN_PROGRESS",
+    "blocked": "BLOCKED"
+  }
+}
