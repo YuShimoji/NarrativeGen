@@ -145,6 +145,31 @@ export class GraphEditorManager {
   }
 
   /**
+   * コンテナのリサイズ監視を設定
+   */
+  _setupResizeObserver() {
+    if (!this.container || typeof ResizeObserver === 'undefined') return
+
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect()
+    }
+
+    this.resizeObserver = new ResizeObserver(() => {
+      if (this.resizeDebounceTimer) {
+        clearTimeout(this.resizeDebounceTimer)
+      }
+
+      this.resizeDebounceTimer = setTimeout(() => {
+        if (!this.container || !this.appState?.model) return
+        this.render()
+        this._updateMinimap()
+      }, this.resizeDebounceDelay)
+    })
+
+    this.resizeObserver.observe(this.container)
+  }
+
+  /**
    * 右クリックメニューを作成
    */
   _createContextMenu() {
@@ -1942,6 +1967,16 @@ export class GraphEditorManager {
    */
   destroy() {
     this.editingNodeId = null
+
+    if (this.resizeDebounceTimer) {
+      clearTimeout(this.resizeDebounceTimer)
+      this.resizeDebounceTimer = null
+    }
+
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect()
+      this.resizeObserver = null
+    }
 
     if (this.contextMenu) {
       this.contextMenu.remove()

@@ -2334,3 +2334,44 @@ if (guiEditBtn) {
 // Phase 2: GraphEditorManagerからアクセスできるようにグローバル変数を公開
 window.guiEditorManager = guiEditorManager
 window.switchTab = switchTab
+
+if (import.meta.env.DEV) {
+  window.__NARRATIVEGEN_DEVTOOLS__ = {
+    getState() {
+      const currentSession = getCurrentSession()
+      return {
+        hasModel: Boolean(appState.model),
+        currentModelName: getCurrentModelName(),
+        currentNodeId: currentSession?.nodeId ?? null,
+        nodeCount: appState.model ? Object.keys(appState.model.nodes || {}).length : 0,
+        graphHistoryDepth: graphManager.history.length,
+        graphRedoDepth: graphManager.redoStack.length,
+        mermaidVisible: Boolean(mermaidPreviewManager?.isVisible),
+      }
+    },
+    getExportFormats() {
+      return exportManager.getAvailableFormats()
+    },
+    renderGraph() {
+      graphManager.render()
+      return {
+        hasSvg: Boolean(graphSvg?.childElementCount),
+        childCount: graphSvg?.childElementCount ?? 0,
+      }
+    },
+    undoGraph() {
+      graphManager.undo()
+      return {
+        graphHistoryDepth: graphManager.history.length,
+        graphRedoDepth: graphManager.redoStack.length,
+      }
+    },
+    redoGraph() {
+      graphManager.redo()
+      return {
+        graphHistoryDepth: graphManager.history.length,
+        graphRedoDepth: graphManager.redoStack.length,
+      }
+    },
+  }
+}

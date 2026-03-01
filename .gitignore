@@ -32,3 +32,4 @@ ehthumbs.db
 
 # Project-specific ignores
 packages/sdk-unity/src/
+.serena/

@@ -1,5 +1,3 @@
-import mermaid from 'mermaid'
-
 // Mermaidプレビューモジュール
 export class MermaidPreviewManager {
   constructor() {
@@ -7,6 +5,9 @@ export class MermaidPreviewManager {
     this.mermaidContainer = null
     this.isVisible = false
     this.currentDiagramId = null
+    this.mermaid = null
+    this.mermaidLoadPromise = null
+    this.isMermaidInitialized = false
 
     // Zoom / pan / resize state
     this.zoomLevel = 1
@@ -247,7 +248,10 @@ export class MermaidPreviewManager {
   }
 
   // Mermaid初期化
-  initializeMermaid() {
+  async initializeMermaid() {
+    if (this.isMermaidInitialized) return
+
+    const mermaid = await this._getMermaid()
     const getColor = (varName, fallback) => {
       const value = getComputedStyle(document.documentElement).getPropertyValue(varName).trim()
       return value || fallback
@@ -277,6 +281,22 @@ export class MermaidPreviewManager {
         curve: 'basis'
       }
     })
+    this.isMermaidInitialized = true
+  }
+
+  async _getMermaid() {
+    if (this.mermaid) {
+      return this.mermaid
+    }
+
+    if (!this.mermaidLoadPromise) {
+      this.mermaidLoadPromise = import('mermaid').then((module) => {
+        this.mermaid = module.default
+        return this.mermaid
+      })
+    }
+
+    return this.mermaidLoadPromise
   }
 
   // 表示
@@ -285,6 +305,9 @@ export class MermaidPreviewManager {
     if (rightPane) {
       rightPane.style.display = 'flex'
       this.isVisible = true
+      this.initializeMermaid().catch((error) => {
+        console.error('Failed to initialize Mermaid preview:', error)
+      })
     }
   }
 
@@ -383,6 +406,7 @@ export class MermaidPreviewManager {
     if (!this.mermaidContainer || !this.isVisible) return
 
     try {
+      const mermaid = await this._getMermaid()
       const diagramCode = this.generateDiagram(model)
       this.mermaidContainer.innerHTML = ''
 

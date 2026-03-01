@@ -6,9 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && npm run copy:models",
-    "copy:models": "pwsh -Command \"Copy-Item -Path '../../models' -Destination 'dist/models' -Recurse -Force\"",
+    "copy:models": "node ./scripts/copy-models-to-dist.mjs",
     "preview": "vite preview",
-    "lint": "node -e \"console.log('web-tester: lint not configured (skipped)')\""
+    "lint": "node -e \"console.log('web-tester: lint not configured (skipped)')\"",
+    "test": "node ./scripts/verify-export-formatters.mjs"
   },
   "dependencies": {
     "@narrativegen/engine-ts": "file:../../packages/engine-ts",

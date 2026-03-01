@@ -7,7 +7,7 @@
 
 ## 基本情報
 
-- **最終更新**: 2026-01-05T02:00:00Z
+- **最終更新**: 2026-03-01T06:44:00Z
 - **更新者**: Orchestrator
 
 ## GitHubAutoApprove
@@ -16,7 +16,7 @@ GitHubAutoApprove: false
 
 ## 現在の目標
 
-- プロジェクト初期セットアップ完了（shared-workflows統合、運用ストレージ作成、参照固定化）
+- Phase 2/AI基盤完了後の再開発フェーズを安定化し、回帰確認と配布品質改善に移る
 
 ## 進捗
 
@@ -54,19 +54,25 @@ GitHubAutoApprove: false
 
 ## バックログ
 
-- TASK_007-024 完了（ただし Task 21, 23 はファイルステータス更新が必要）
-- TASK_025 (Docs), TASK_026 (Shortcuts) : Ready
-- TASK_028 (Export) : Ready
+- 手動回帰を置き換える自動 smoke の追加検討
+- Twine / Ink エクスポートの実運用検証
+- Undo/Redo 網羅確認
+- Mermaid chunk 警告の追加分割または許容範囲化
 
 ## Verification
 
 - `node .shared-workflows/scripts/sw-doctor.js --profile shared-orch-bootstrap --format text` → All Pass
 - Project Completion Meter: 18% (File status lag detected)
+- `git pull --ff-only` → Already up to date.
+- `git submodule update --init --recursive` → Completed
+- `npm run doctor` → 26/26 checks passed
+- `npm run test -w @narrativegen/web-tester` → Passed
+- `npm run check` → Passed
 
 ## Latest Orchestrator Report
 
-- File: docs/reports/REPORT_ORCH_20260126_2245.md
-- Summary: P1-P6完了。Export機能(Task 28)起票。スクリーンショット報告ルール追加。タスク状態不整合(Task 21, 23)を発見。
+- File: docs/reports/REPORT_ORCH_20260301_1544.md
+- Summary: リモート同期と再開発検証を完了。Export 自動検証と chunk 分割を追加し、短中長期ロードマップを更新。
 
 ## Latest Worker Reports
 
@@ -112,13 +118,15 @@ GitHubAutoApprove: false
   - Summary: main.jsのリファクタリング完了（2422行→2006行、-17%）。`bootstrap.js`, `ui-bindings.js`, `session-controller.js` に分割し、責務を分離。`npm run check` 通過確認済み。
 - **TASK_028**: docs/reports/REPORT_TASK_028.md
   - Summary: Export Feature Extension完了。Twine/Ink/CSV形式のエクスポートを実装し、UIに統合。ExportManager基盤を構築。
+- **TASK_031**: docs/reports/REPORT_TASK_031_AutoSmoke_20260301.md
+  - Summary: Playwright による自動 smoke を実施。`linear` 実行、Export モーダル、Graph 描画を確認。Graph Editor 初期化エラーも修正。
 
 
 ## Outlook
 
-- Short-term: セットアップ完了、Complete Gate確認
-- Mid-term: Orchestrator/Workerの自律動作環境確立
-- Long-term: 継続的な運用体制の確立
+- Short-term: 回帰テスト、Export 検証、Undo/Redo 確認で再開発の品質基準を揃える
+- Mid-term: Mermaid を含む chunk 最適化、レスポンシブ、アクセシビリティで配布品質を上げる
+- Long-term: 共有・履歴管理・Unity Editor 拡張で制作フロー全体を強化する
 
 ## Proposals
 
