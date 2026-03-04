@@ -4,24 +4,23 @@
 - P2: Status
 
 ## In-progress
-- CSV hierarchy import resolution fix
-- Automated verification flow for web tester (manual checks minimized)
-
-## Blockers
-- `prompts/orchestrator/modules/00_core.md` and phase modules are missing in repository
+- Debugging and fixing "unresponsive" CSV import button.
+- Verification of hierarchical ID resolution in browser environment.
 
 ## Decisions
-- Use `docs/windsurf_workflow/EVERY_SESSION.md` as fallback operation SSOT
-- Use `data/presentation.json` fixed 5-section response format
-- Prefer automated command checks (`verify:web:ci`) over manual browser checks
+- Replaced JS-based `click()` trigger with native `<label for="...">` for CSV import to improve reliability.
+- Ensured entity context is preserved during CSV imports.
+- Use automated CLI verification (`npm run verify:web:csv`) as the primary gate for logic changes.
+
+## Blockers
+- None (Orchestrator modules found in `.shared-workflows/`).
 
 ## Next Tasks
-1. Integrate `verify:web:ci` into task completion checklist
-2. Address optional Vite dynamic import warning (`browser.js` static + dynamic import mix)
-3. Move phase gate decision from P2 to P2.5 after one more stable run
+1. Confirm CSV import works for USER.
+2. If confirmed, move to Phase 3 (Strategy) to plan Phase 3 (Hierarchical UI management).
 
 ## Next Action
-- Run `npm run verify:web:ci` on each related change and record result in MISSION_LOG
+- Wait for user confirmation on the fix.
 
 ## Last Updated
-- 2026-02-25
+- 2026-03-03

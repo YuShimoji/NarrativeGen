@@ -159,6 +159,7 @@ const aiOutput = document.getElementById('aiOutput')
 let session = null
 let currentModelName = null
 let _model = null
+let _entities = null
 let storyLog = []
 
 // Model and session accessors
@@ -407,6 +408,7 @@ startBtn.addEventListener('click', async () => {
     ])
 
     setModel(model)
+    _entities = entities
     setSession(new GameSession(model, { entities }))
     currentModelName = sampleId
     setStatus(`サンプル ${sampleId} を実行中`, 'success')
@@ -441,6 +443,7 @@ fileInput.addEventListener('change', async (e) => {
     ])
 
     setModel(model)
+    _entities = entities
     setSession(new GameSession(model, { entities }))
     currentModelName = file.name
     setStatus(`ファイル ${file.name} を実行中`, 'success')
@@ -484,6 +487,7 @@ dropZone.addEventListener('drop', async (e) => {
 
     hideErrors()
     setModel(model)
+    _entities = entities
     setSession(new GameSession(model, { entities }))
     currentModelName = file.name
     setStatus(`ファイル ${file.name} を実行中`, 'success')
@@ -606,11 +610,7 @@ confirmImportBtn.addEventListener('click', async () => {
   const file = csvFileInput.files[0]
   if (!file) return
   hideCsvPreview()
-  await importCsvFile(file)
-})
-
-importCsvBtn.addEventListener('click', () => {
-  csvFileInput.click()
+  await importCsvFile(file, _entities)
 })
 
 csvFileInput.addEventListener('change', (e) => {
