@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "prebuild": "node -e \"const fs=require('fs');['dist','node_modules/.vite'].forEach(p=>{if(fs.existsSync(p))fs.rmSync(p,{recursive:true})})\"",
     "build": "vite build",
     "postbuild": "",
     "copy:models": "node copy-models.js",
