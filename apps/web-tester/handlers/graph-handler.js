@@ -33,6 +33,14 @@ export function initGraphHandler(deps) {
       nodeMap.set(node.id, { ...node, x: 100 + (i % 5) * 150, y: 100 + Math.floor(i / 5) * 150 });
     });
 
+    // Get CSS variables for colors
+    const styles = getComputedStyle(document.documentElement);
+    const edgeColor = styles.getPropertyValue('--color-graph-edge').trim();
+    const currentColor = styles.getPropertyValue('--color-graph-node-current').trim();
+    const highlightColor = styles.getPropertyValue('--color-graph-node-highlight').trim();
+    const normalColor = styles.getPropertyValue('--color-graph-node-normal').trim();
+    const graphTextColor = styles.getPropertyValue('--color-graph-text').trim();
+
     // Draw connections
     nodes.forEach(node => {
       const sourcePos = nodeMap.get(node.id);
@@ -44,7 +52,7 @@ export function initGraphHandler(deps) {
           line.setAttribute('y1', sourcePos.y);
           line.setAttribute('x2', targetPos.x);
           line.setAttribute('y2', targetPos.y);
-          line.setAttribute('stroke', '#999');
+          line.setAttribute('stroke', edgeColor);
           line.setAttribute('stroke-width', '2');
           svg.appendChild(line);
 
@@ -58,7 +66,7 @@ export function initGraphHandler(deps) {
 
           const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
           arrow.setAttribute('points', `${targetPos.x},${targetPos.y} ${arrowX - 5 * Math.sin(angle)},${arrowY + 5 * Math.cos(angle)} ${arrowX + 5 * Math.sin(angle)},${arrowY - 5 * Math.cos(angle)}`);
-          arrow.setAttribute('fill', '#999');
+          arrow.setAttribute('fill', edgeColor);
           svg.appendChild(arrow);
         }
       });
@@ -70,12 +78,16 @@ export function initGraphHandler(deps) {
       const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       const isCurrent = node.id === session?.state?.nodeId;
       const isHighlighted = highlightedNodes.has(node.id);
-      
+
       circle.setAttribute('cx', pos.x);
       circle.setAttribute('cy', pos.y);
       circle.setAttribute('r', isHighlighted ? '35' : '30');
-      circle.setAttribute('fill', isCurrent ? '#4CAF50' : isHighlighted ? '#FF9800' : '#2196F3');
-      circle.setAttribute('stroke', isHighlighted ? '#FF9800' : '#fff');
+      circle.setAttribute('fill',
+        isCurrent ? currentColor :
+        isHighlighted ? highlightColor :
+        normalColor
+      );
+      circle.setAttribute('stroke', isHighlighted ? highlightColor : graphTextColor);
       circle.setAttribute('stroke-width', isHighlighted ? '4' : '2');
       svg.appendChild(circle);
 
@@ -83,7 +95,7 @@ export function initGraphHandler(deps) {
       text.setAttribute('x', pos.x);
       text.setAttribute('y', pos.y + 5);
       text.setAttribute('text-anchor', 'middle');
-      text.setAttribute('fill', isCurrent ? '#4CAF50' : isHighlighted ? '#FF9800' : '#fff');
+      text.setAttribute('fill', graphTextColor);
       text.setAttribute('font-size', '12');
       text.setAttribute('font-weight', isHighlighted ? 'bold' : 'normal');
       text.textContent = node.id;

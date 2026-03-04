@@ -9,12 +9,16 @@
     "postbuild": "",
     "copy:models": "node copy-models.js",
     "dev": "vite",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "@narrativegen/engine-ts": "file:../../packages/engine-ts"
   },
   "devDependencies": {
-    "vite": "^5.4.9"
+    "vite": "^5.4.9",
+    "@playwright/test": "^1.42.0"
   }
 }
