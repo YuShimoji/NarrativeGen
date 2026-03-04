@@ -28,6 +28,7 @@ export function initAiConfig(deps) {
     }
   };
   let aiProviderInstance = null;
+  let generationHistory = []; // Store last 5 generations
 
   // Load AI config from localStorage on startup
   function loadSavedConfig() {
@@ -74,14 +75,14 @@ export function initAiConfig(deps) {
     const session = getSession();
     const _model = getModel();
     if (!aiProviderInstance || !session || !_model) {
-      aiOutput.textContent = '❌ モデルを読み込んでから実行してください';
+      aiOutput.innerHTML = '<div style="color: #dc2626;">❌ モデルを読み込んでから実行してください</div>';
       return;
     }
 
     // Disable buttons during generation
     generateNextNodeBtn.disabled = true;
     paraphraseCurrentBtn.disabled = true;
-    aiOutput.textContent = '⏳ 生成中...';
+    aiOutput.innerHTML = '<div style="color: #6366f1;">⏳ 生成中...</div>';
 
     try {
       const context = {
@@ -93,15 +94,26 @@ export function initAiConfig(deps) {
       const startTime = Date.now();
       const generatedText = await aiProviderInstance.generateNextNode(context);
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-      
-      aiOutput.textContent = `✅ 生成されたテキスト (${duration}秒):\n${generatedText}`;
+
+      // Add to history
+      const historyItem = {
+        type: 'generate',
+        text: generatedText,
+        timestamp: new Date().toISOString(),
+        duration,
+        provider: aiConfig.provider
+      };
+      generationHistory.unshift(historyItem);
+      if (generationHistory.length > 5) generationHistory.pop();
+
+      renderHistory();
       Logger.info('AI node generated', { duration, provider: aiConfig.provider });
     } catch (error) {
       console.error('ノード生成エラー:', error);
-      const errorMsg = error.message.includes('API error') 
+      const errorMsg = error.message.includes('API error')
         ? `APIエラー: ${error.message}\nAPIキーを確認してください。`
         : `生成に失敗しました: ${error.message}`;
-      aiOutput.textContent = `❌ ${errorMsg}`;
+      aiOutput.innerHTML = `<div style="color: #dc2626; padding: 1rem; background: #fee2e2; border-radius: 4px;">❌ ${errorMsg}</div>`;
       Logger.error('AI generation failed', { error: error.message, provider: aiConfig.provider });
     } finally {
       // Re-enable buttons
@@ -114,20 +126,20 @@ export function initAiConfig(deps) {
     const session = getSession();
     const _model = getModel();
     if (!aiProviderInstance || !session || !_model) {
-      aiOutput.textContent = '❌ モデルを読み込んでから実行してください';
+      aiOutput.innerHTML = '<div style="color: #dc2626;">❌ モデルを読み込んでから実行してください</div>';
       return;
     }
 
     const currentNode = _model.nodes[session.state.nodeId];
     if (!currentNode?.text) {
-      aiOutput.textContent = '❌ 現在のノードにテキストがありません';
+      aiOutput.innerHTML = '<div style="color: #dc2626;">❌ 現在のノードにテキストがありません</div>';
       return;
     }
 
     // Disable buttons during generation
     generateNextNodeBtn.disabled = true;
     paraphraseCurrentBtn.disabled = true;
-    aiOutput.textContent = '⏳ 言い換え中...';
+    aiOutput.innerHTML = '<div style="color: #6366f1;">⏳ 言い換え中...</div>';
 
     try {
       const startTime = Date.now();
@@ -138,19 +150,121 @@ export function initAiConfig(deps) {
       });
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
-      aiOutput.textContent = `✅ 言い換え結果 (${duration}秒):\n${paraphrases.map((p, i) => `${i + 1}. ${p}`).join('\n')}`;
+      // Add each variant to history
+      paraphrases.forEach((text, i) => {
+        const historyItem = {
+          type: 'paraphrase',
+          text,
+          originalText: currentNode.text,
+          timestamp: new Date().toISOString(),
+          duration,
+          provider: aiConfig.provider,
+          variantIndex: i + 1
+        };
+        generationHistory.unshift(historyItem);
+      });
+      if (generationHistory.length > 5) generationHistory.splice(5);
+
+      renderHistory();
       Logger.info('AI paraphrase completed', { duration, provider: aiConfig.provider, variantCount: paraphrases.length });
     } catch (error) {
       console.error('言い換えエラー:', error);
-      const errorMsg = error.message.includes('API error') 
+      const errorMsg = error.message.includes('API error')
         ? `APIエラー: ${error.message}\nAPIキーを確認してください。`
         : `言い換えに失敗しました: ${error.message}`;
-      aiOutput.textContent = `❌ ${errorMsg}`;
+      aiOutput.innerHTML = `<div style="color: #dc2626; padding: 1rem; background: #fee2e2; border-radius: 4px;">❌ ${errorMsg}</div>`;
       Logger.error('AI paraphrase failed', { error: error.message, provider: aiConfig.provider });
     } finally {
       // Re-enable buttons
       generateNextNodeBtn.disabled = false;
       paraphraseCurrentBtn.disabled = false;
+    }
+  }
+
+  function renderHistory() {
+    if (generationHistory.length === 0) {
+      aiOutput.innerHTML = '<p style="color: #9ca3af;">生成履歴なし</p>';
+      return;
+    }
+
+    aiOutput.innerHTML = '<h4 style="margin-top: 0;">生成履歴（直近5件）</h4>';
+
+    generationHistory.forEach((item, index) => {
+      const card = document.createElement('div');
+      card.style.cssText = 'background: white; border: 2px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem;';
+
+      const header = document.createElement('div');
+      header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;';
+
+      const typeLabel = document.createElement('span');
+      typeLabel.style.cssText = 'font-size: 0.875rem; color: #6366f1; font-weight: 600;';
+      typeLabel.textContent = item.type === 'generate' ? '🤖 生成' : '🔄 言い換え';
+      if (item.variantIndex) typeLabel.textContent += ` (${item.variantIndex})`;
+
+      const timestamp = document.createElement('span');
+      timestamp.style.cssText = 'font-size: 0.75rem; color: #9ca3af;';
+      const date = new Date(item.timestamp);
+      timestamp.textContent = `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')} (${item.duration}s)`;
+
+      header.appendChild(typeLabel);
+      header.appendChild(timestamp);
+
+      const textContent = document.createElement('div');
+      textContent.style.cssText = 'color: #1f2937; margin-bottom: 0.75rem; line-height: 1.5;';
+      textContent.textContent = item.text;
+
+      const adoptBtn = document.createElement('button');
+      adoptBtn.textContent = '✓ 採用';
+      adoptBtn.style.cssText = 'padding: 0.5rem 1rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.875rem;';
+      adoptBtn.onclick = () => adoptText(item.text, index);
+
+      card.appendChild(header);
+      card.appendChild(textContent);
+      card.appendChild(adoptBtn);
+      aiOutput.appendChild(card);
+    });
+  }
+
+  function adoptText(text, historyIndex) {
+    const session = getSession();
+    const _model = getModel();
+
+    if (!session || !_model) {
+      setStatus('モデルを読み込んでから実行してください', 'warn');
+      return;
+    }
+
+    const currentNodeId = session.state.nodeId;
+    const currentNode = _model.nodes[currentNodeId];
+
+    if (!currentNode) {
+      setStatus('現在のノードが見つかりません', 'error');
+      return;
+    }
+
+    // Update node text
+    currentNode.text = text;
+
+    // Re-render the story view
+    const storyView = document.getElementById('storyView');
+    if (storyView) {
+      storyView.textContent = text;
+    }
+
+    setStatus(`ノード「${currentNodeId}」のテキストを更新しました`, 'success');
+    Logger.info('AI text adopted', { nodeId: currentNodeId, historyIndex, textLength: text.length });
+
+    // Visual feedback on the adopted item
+    const cards = aiOutput.querySelectorAll('div[style*="background: white"]');
+    if (cards[historyIndex]) {
+      cards[historyIndex].style.borderColor = '#10b981';
+      cards[historyIndex].style.background = '#ecfdf5';
+      const btn = cards[historyIndex].querySelector('button');
+      if (btn) {
+        btn.textContent = '✓ 採用済み';
+        btn.disabled = true;
+        btn.style.background = '#9ca3af';
+      }
     }
   }
 
