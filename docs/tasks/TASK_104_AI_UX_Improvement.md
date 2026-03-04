@@ -1,10 +1,11 @@
 # Task: AI UX 改善（採用ボタン）
-Status: OPEN
+Status: ✅ DONE
 Tier: 2
-Branch: feature/ai-ux-improvement
+Branch: feature/ai-ux-improvement (merged to feature/main-js-split-phase2)
 Owner: Worker
 Created: 2026-02-06T13:35:00+09:00
-Report: 
+Completed: 2026-03-04
+Report: docs/inbox/REPORT_TASK104_AI_UX_Improvement.md 
 
 ## Objective
 - AI 生成/言い換え結果に「採用」ボタンを実装し、結果をノードに反映できるようにする
@@ -28,12 +29,12 @@ Report:
 - データ外部化: テキスト・設定値・パラメータのハードコード禁止
 
 ## DoD
-- [ ] 生成結果に「採用」ボタンが表示される
-- [ ] 「採用」ボタン押下でノードテキストが更新される
-- [ ] 生成履歴の簡易保持（直近5件程度）
-- [ ] npm run build -w @narrativegen/web-tester が成功する
-- [ ] docs/inbox/ にレポート（REPORT_...md）が作成されている
-- [ ] 本チケットの Report 欄にレポートパスが追記されている
+- [x] 生成結果に「採用」ボタンが表示される
+- [x] 「採用」ボタン押下でノードテキストが更新される
+- [x] 生成履歴の簡易保持（直近5件程度）
+- [x] npm run build -w @narrativegen/web-tester が成功する
+- [x] docs/inbox/ にレポート（REPORT_...md）が作成されている
+- [x] 本チケットの Report 欄にレポートパスが追記されている
 
 ## Notes
 - バッチ生成インターフェースは別タスク（TASK_108）
