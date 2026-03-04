@@ -1,6 +1,7 @@
 // Error handling and logging
 import { startSession, getAvailableChoices, applyChoice, chooseParaphrase, GameSession } from '@narrativegen/engine-ts/dist/browser.js'
-import { initStory, appendStoryFromCurrentNode, renderStoryEnhanced } from './handlers/story-handler.js'
+import { initStory, appendStoryFromCurrentNode, renderStoryEnhanced, getStoryLog, setStoryLog, clearStoryLog } from './handlers/story-handler.js'
+import { initSaveLoadHandler } from './handlers/save-load-handler.js'
 import { exportModelToCsv } from './utils/csv-exporter.js'
 import { initNodesPanel } from './handlers/nodes-panel.js'
 import { initTabs } from './handlers/tabs.js'
@@ -12,6 +13,7 @@ import { initAiConfig } from './handlers/ai-config.js'
 import { initSplitView } from './handlers/split-view.js'
 import { validateModel } from './utils/model-utils.js'
 import { parseConditions, parseEffects } from './utils/csv-parser.js'
+import { themeManager } from './utils/theme-manager.js'
 
 // Browser-compatible model loading (no fs module)
 async function loadModel(modelName) {
@@ -106,6 +108,17 @@ const csvPreviewContent = document.getElementById('csvPreviewContent')
 const confirmImportBtn = document.getElementById('confirmImportBtn')
 const cancelPreviewBtn = document.getElementById('cancelPreviewBtn')
 
+// Save/Load elements
+const saveBtn = document.getElementById('saveBtn')
+const loadBtn = document.getElementById('loadBtn')
+const clearSaveBtn = document.getElementById('clearSaveBtn')
+const autoSaveToggle = document.getElementById('autoSaveToggle')
+const autoSaveIndicator = document.getElementById('autoSaveIndicator')
+const resumeModal = document.getElementById('resumeModal')
+const resumeInfo = document.getElementById('resumeInfo')
+const resumeBtn = document.getElementById('resumeBtn')
+const newSessionBtn = document.getElementById('newSessionBtn')
+
 // Tab elements
 const storyTab = document.getElementById('storyTab')
 const debugTab = document.getElementById('debugTab')
@@ -141,6 +154,9 @@ const resetViewBtn = document.getElementById('resetViewBtn')
 
 let highlightedNodes = new Set()
 
+// Initialize theme on load
+themeManager.init()
+
 // Debug elements
 const flagsDisplay = document.getElementById('flagsDisplay')
 const resourcesDisplay = document.getElementById('resourcesDisplay')
@@ -155,6 +171,9 @@ const saveAiSettings = document.getElementById('saveAiSettings')
 const generateNextNodeBtn = document.getElementById('generateNextNodeBtn')
 const paraphraseCurrentBtn = document.getElementById('paraphraseCurrentBtn')
 const aiOutput = document.getElementById('aiOutput')
+
+// Theme elements
+const themeToggleBtn = document.getElementById('themeToggleBtn')
 
 let session = null
 let currentModelName = null
@@ -283,6 +302,11 @@ function renderChoices() {
       renderState()
       renderChoices()
       renderStoryEnhanced(storyView)
+
+      // Trigger auto-save after choice application
+      if (saveLoadHandler) {
+        saveLoadHandler.scheduleAutoSave()
+      }
     })
     list.appendChild(button)
   })
@@ -665,6 +689,14 @@ downloadTopBtn.addEventListener('click', () => {
   URL.revokeObjectURL(url)
 })
 
+// Theme toggle button
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener('click', () => {
+    const newTheme = themeManager.toggle()
+    Logger.info('Theme toggled', { theme: newTheme })
+  })
+}
+
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
   if (e.ctrlKey && e.key === 's') {
@@ -792,6 +824,38 @@ const tabs = initTabs({
 // Initialize tabs
 tabs.initialize()
 
+// Initialize Save/Load handler first (needed by guiEditor)
+const saveLoadHandler = initSaveLoadHandler({
+  getModel,
+  setModel,
+  getSession,
+  setSession,
+  setStatus,
+  getStoryLog,
+  setStoryLog,
+  clearStoryLog,
+  // DOM references
+  saveBtn,
+  loadBtn,
+  clearSaveBtn,
+  autoSaveToggle,
+  autoSaveIndicator,
+  resumeModal,
+  resumeInfo,
+  resumeBtn,
+  newSessionBtn,
+  Logger,
+  // Render functions
+  renderState,
+  renderChoices,
+  initStory,
+  renderStoryEnhanced,
+  storyView,
+  // Dynamic accessors
+  currentModelName: () => currentModelName,
+  entities: () => _entities
+})
+
 const guiEditor = initGuiEditor({
   getModel,
   setModel,
@@ -803,6 +867,7 @@ const guiEditor = initGuiEditor({
   renderChoices,
   initStory,
   renderStoryEnhanced,
+  saveLoadHandler, // Add saveLoadHandler to guiEditor deps
   // DOM references
   guiEditMode,
   guiEditor: nodeList,
@@ -844,4 +909,11 @@ nodeList.addEventListener('click', (e) => {
     }
   }
 
+})
+
+// Check for saved session on page load
+window.addEventListener('DOMContentLoaded', () => {
+  if (saveLoadHandler) {
+    saveLoadHandler.checkForSavedSession()
+  }
 })

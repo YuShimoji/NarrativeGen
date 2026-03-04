@@ -13,6 +13,7 @@ export function initGuiEditor(deps) {
     renderChoices,
     initStory,
     renderStoryEnhanced,
+    saveLoadHandler, // For auto-save after edit
     // DOM references
     guiEditMode,
     guiEditor,
@@ -87,6 +88,11 @@ export function initGuiEditor(deps) {
       setControlsEnabled(true);
 
       setStatus('GUI編集を保存しました', 'success');
+
+      // Trigger auto-save for model changes
+      if (saveLoadHandler) {
+        saveLoadHandler.scheduleAutoSave();
+      }
     } catch (err) {
       console.error('GUI save error:', err);
       setStatus(`GUI保存に失敗しました: ${err?.message ?? err}`, 'warn');

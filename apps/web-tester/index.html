@@ -12,6 +12,14 @@
 
 <body>
   <div class="panel">
+    <!-- Theme Toggle Button -->
+    <div class="theme-toggle-container">
+      <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="テーマ切り替え">
+        <span class="theme-icon" data-theme="light">☀️</span>
+        <span class="theme-icon" data-theme="dark">🌙</span>
+      </button>
+    </div>
+
     <h1>NarrativeGen Web Tester</h1>
     <p>GameSession の挙動をブラウザで簡易確認できます。ブラウザで静的にホストしてください。</p>
 
@@ -27,6 +35,17 @@
         <div style="margin-top: 1rem;">
           <button id="confirmImportBtn">インポート実行</button>
           <button id="cancelPreviewBtn">キャンセル</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="resumeModal" class="modal">
+      <div class="modal-content">
+        <h3>保存されたセッションが見つかりました</h3>
+        <div id="resumeInfo" class="resume-info"></div>
+        <div style="margin-top: 1rem;">
+          <button id="resumeBtn" class="primary-btn">再開する</button>
+          <button id="newSessionBtn" class="secondary-btn">新規セッション</button>
         </div>
       </div>
     </div>
@@ -85,6 +104,19 @@
           </div>
 
           <p id="statusText" class="status-text info">サンプル未実行</p>
+
+          <div class="save-load-controls">
+            <button id="saveBtn" class="save-btn" title="現在の進行状況を保存">💾 保存</button>
+            <button id="loadBtn" class="load-btn" title="保存した進行状況を読み込み">📂 読み込み</button>
+            <button id="clearSaveBtn" class="clear-save-btn" title="保存データを削除">🗑️ セーブ削除</button>
+            <label class="auto-save-toggle">
+              <input type="checkbox" id="autoSaveToggle">
+              <span>自動保存</span>
+            </label>
+            <span id="autoSaveIndicator" class="auto-save-indicator" style="display: none;">
+              ✓ 自動保存済み
+            </span>
+          </div>
 
           <div id="choices"></div>
 
@@ -164,8 +196,7 @@
           <h3>AI支援機能</h3>
           <button id="generateNextNodeBtn">次のノードを生成</button>
           <button id="paraphraseCurrentBtn">現在のテキストを言い換え</button>
-          <div id="aiOutput"
-            style="margin-top: 1rem; padding: 1rem; background: #f9fafb; border-radius: 4px; min-height: 100px;"></div>
+          <div id="aiOutput"></div>
         </div>
       </div>
 

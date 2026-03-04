@@ -90,6 +90,14 @@ export function getStoryLog() {
   return storyLog
 }
 
+export function setStoryLog(log) {
+  storyLog = [...log]
+}
+
+export function clearStoryLog() {
+  storyLog = []
+}
+
 // Enhanced story rendering with proper text formatting
 export function renderStoryEnhanced(storyView) {
   if (!storyView) return
