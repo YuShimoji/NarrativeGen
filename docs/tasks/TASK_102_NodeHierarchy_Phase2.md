@@ -1,10 +1,11 @@
 # Task: ノード階層システム Phase 2
-Status: COMPLETED
+Status: ✅ DONE
 Tier: 2
 Branch: feature/node-hierarchy-phase2
 Owner: Worker
 Created: 2026-02-06T13:35:00+09:00
-Report: 
+Completed: 2026-03-04
+Report: docs/inbox/REPORT_TASK102_NodeHierarchy_Phase2.md 
 
 ## Objective
 - CSVパーサに node_group 列を追加し、ノードをフォルダ構造で管理できるようにする（後方互換を維持）
@@ -42,13 +43,13 @@ Report:
 - **Test Phase**: Slice (Build + Manual Verification + basic unit test in engine-ts)
 
 ## DoD
-- [ ] CSVパーサが `node_group` 列を認識し、Model に反映する
-- [ ] node_group なしのCSVが従来通り動作する（後方互換）
-- [ ] エクスポートに node_group 出力オプションがある
-- [ ] resolveNodeId 関数が実装されテストが通る
-- [ ] 既存テスト（18件）が全て通過する
-- [ ] docs/inbox/ にレポート（REPORT_...md）が作成されている
-- [ ] 本チケットの Report 欄にレポートパスが追記されている
+- [x] CSVパーサが `node_group` 列を認識し、Model に反映する
+- [x] node_group なしのCSVが従来通り動作する（後方互換）
+- [x] エクスポートに node_group 出力オプションがある
+- [x] resolveNodeId 関数が実装されテストが通る
+- [x] 既存テスト（18件）が全て通過する → 59テストに拡張し、全通過
+- [x] docs/inbox/ にレポート（REPORT_...md）が作成されている
+- [x] 本チケットの Report 欄にレポートパスが追記されている
 
 ## Notes
 - 参照解決は従来の nodes フラットマップも利用可能にする
