@@ -30,6 +30,10 @@ ehthumbs.db
 *.swp
 *.tmp
 
+# Playwright
+playwright-report/
+test-results/
+
 # Project-specific ignores
 packages/sdk-unity/src/
 .serena/
