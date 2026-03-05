@@ -1624,3 +1624,97 @@ button.secondary:hover {
   margin: 0 0.25rem;
   color: var(--color-text-muted);
 }
+
+/* Hierarchy Tree Styles */
+.hierarchy-tree {
+  font-family: inherit;
+  line-height: 1.8;
+}
+
+.hierarchy-group {
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.hierarchy-group:hover {
+  background: var(--color-surface);
+}
+
+.hierarchy-node {
+  padding: 4px 8px 4px 20px;
+  border-left: 2px solid var(--color-border);
+  margin-left: 20px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.hierarchy-node:hover {
+  background: var(--color-surface);
+}
+
+.hierarchy-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--color-primary-500);
+  font-size: 14px;
+}
+
+.hierarchy-expand-btn {
+  cursor: pointer;
+  padding: 2px 6px;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  transition: color 0.2s;
+  width: 20px;
+  text-align: center;
+}
+
+.hierarchy-expand-btn:hover {
+  color: var(--color-text);
+}
+
+.hierarchy-group-name {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.node-count {
+  color: var(--color-text-muted);
+  font-size: 0.9em;
+}
+
+.hierarchy-node-name {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.hierarchy-node-text {
+  color: var(--color-text-muted);
+  font-size: 0.9em;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Current node highlight */
+.hierarchy-node.current-node {
+  background: var(--color-primary-100);
+  border-left-color: var(--color-primary-500);
+  border-left-width: 3px;
+}
