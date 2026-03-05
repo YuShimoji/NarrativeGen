@@ -316,4 +316,27 @@ export class AiManager {
 
     return { valid: true }
   }
+
+  /**
+   * Get AI provider configuration for external use
+   * @returns {Object} AI provider config with apiKey
+   */
+  getProviderConfig() {
+    if (this.aiConfig.provider === 'openai' && this.aiConfig.openai?.apiKey) {
+      return {
+        provider: 'openai',
+        apiKey: this.aiConfig.openai.apiKey,
+        model: this.aiConfig.openai.model
+      };
+    }
+    return null;
+  }
+
+  /**
+   * Get current AI provider instance
+   * @returns {Object|null} AI provider instance
+   */
+  getProvider() {
+    return this.aiProvider;
+  }
 }

@@ -28,6 +28,13 @@ import {
 
 import { escapeHtml, clearContent } from '../src/utils/html-utils.js';
 
+// Import advanced search utilities
+import { searchInGroup, rankSearchResults, applyFilters, sortNodes } from '../utils/search-utils.js';
+import { SearchHistory } from '../utils/search-history.js';
+import { SynonymDictionary } from '../utils/synonym-dict.js';
+import { SemanticSearch } from '../utils/semantic-search.js';
+import { HybridSearch } from '../utils/hybrid-search.js';
+
 /**
  * Initialize Nodes Panel handler with dependency injection
  *
@@ -93,6 +100,23 @@ export function initNodesPanel(deps) {
   let lastHighlightedNode = null;
   let currentViewMode = 'grid'; // 'grid', 'tree', 'list'
 
+  // Advanced search instances
+  let searchHistory = new SearchHistory(20);
+  let synonymDict = new SynonymDictionary();
+  let semanticSearch = null; // Will be initialized with AI provider
+  let hybridSearch = null;
+
+  // Search options
+  let searchOptions = {
+    useSemanticSearch: false,
+    useSynonyms: true,
+    semanticWeight: 0.5,
+    minSemanticScore: 0.7,
+    currentGroupPath: 'all',
+    hideVisited: false,
+    sortBy: 'relevance' // 'relevance', 'hierarchy', 'alpha'
+  };
+
   /**
    * Clear all node highlights from the overview
    *
@@ -106,6 +130,33 @@ export function initNodesPanel(deps) {
       node.style.backgroundColor = '';
     });
     lastHighlightedNode = null;
+  }
+
+  /**
+   * Initialize semantic search with AI provider
+   *
+   * @param {Object} aiProvider - AI provider with apiKey
+   * @returns {Promise<void>}
+   * @private
+   */
+  async function initializeSemanticSearch(aiProvider) {
+    try {
+      semanticSearch = new SemanticSearch(aiProvider);
+      const isAvailable = await semanticSearch.initialize();
+
+      if (isAvailable) {
+        hybridSearch = new HybridSearch(semanticSearch, synonymDict);
+        searchOptions.useSemanticSearch = true;
+        console.info('Semantic search initialized successfully');
+      } else {
+        hybridSearch = new HybridSearch(semanticSearch, synonymDict);
+        searchOptions.useSemanticSearch = false;
+        console.info('Semantic search unavailable, using keyword/synonym only');
+      }
+    } catch (error) {
+      console.warn('Failed to initialize semantic search:', error);
+      searchOptions.useSemanticSearch = false;
+    }
   }
 
   /**
@@ -643,15 +694,14 @@ export function initNodesPanel(deps) {
   }
 
   /**
-   * Render node overview with search and filtering
+   * Render node overview with advanced search and filtering
    *
-   * Displays all nodes with filter capability. Shows node ID, group,
-   * choice count, and preview text. Supports searching by ID, group,
-   * or text content.
+   * Displays all nodes with advanced filter capability. Shows node ID, group,
+   * choice count, and preview text. Supports keyword, synonym, and semantic search.
    *
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  function renderNodeOverview() {
+  async function renderNodeOverview() {
     const _model = getModel();
     const session = getSession();
     if (!_model || !nodeOverview) return;
@@ -671,18 +721,55 @@ export function initNodesPanel(deps) {
     const nodes = _model.nodes;
     const nodeIds = Object.keys(nodes);
 
-    // Filter nodes based on search term (includes group and text)
-    const filteredNodes = currentSearchTerm
-      ? nodeIds.filter(id => {
-        const node = nodes[id];
-        const term = currentSearchTerm.toLowerCase();
-        return id.toLowerCase().includes(term) ||
-          (node.group && node.group.toLowerCase().includes(term)) ||
-          node.text?.toLowerCase().includes(term);
-      })
-      : nodeIds;
+    // Convert to node array for advanced search
+    const nodeArray = nodeIds.map(id => ({
+      id,
+      localId: nodes[id].localId,
+      text: nodes[id].text,
+      group: nodes[id].group,
+      choices: nodes[id].choices
+    }));
 
-    // Create node list HTML
+    // Advanced search if term exists
+    let filteredNodes = nodeIds;
+    let searchResults = [];
+
+    if (currentSearchTerm && currentSearchTerm.trim()) {
+      try {
+        // Add to search history
+        searchHistory.add(currentSearchTerm);
+
+        // Use hybrid search if available, otherwise fallback
+        if (hybridSearch) {
+          searchResults = await hybridSearch.search(currentSearchTerm, nodeArray, {
+            groupPath: searchOptions.currentGroupPath,
+            useSemanticSearch: searchOptions.useSemanticSearch && semanticSearch?.enabled,
+            useSynonyms: searchOptions.useSynonyms,
+            semanticWeight: searchOptions.semanticWeight,
+            minSemanticScore: searchOptions.minSemanticScore
+          });
+
+          filteredNodes = searchResults.map(node => node.id);
+        } else {
+          // Fallback to basic search
+          const basicResults = searchInGroup(currentSearchTerm, nodeArray, searchOptions.currentGroupPath);
+          const ranked = rankSearchResults(currentSearchTerm, basicResults.matches);
+          filteredNodes = ranked.map(node => node.id);
+        }
+      } catch (error) {
+        console.error('Search error:', error);
+        // Fallback to basic filter
+        filteredNodes = nodeIds.filter(id => {
+          const node = nodes[id];
+          const term = currentSearchTerm.toLowerCase();
+          return id.toLowerCase().includes(term) ||
+            (node.group && node.group.toLowerCase().includes(term)) ||
+            node.text?.toLowerCase().includes(term);
+        });
+      }
+    }
+
+    // Create node list HTML with search scores
     const nodeListHtml = filteredNodes.map(nodeId => {
       const node = nodes[nodeId];
       const isCurrentNode = session?.state?.nodeId === nodeId;
@@ -690,13 +777,29 @@ export function initNodesPanel(deps) {
       const displayId = node.localId || nodeId;
       const groupInfo = node.group ? `<span class="node-group" style="color: var(--color-text-muted); font-size: 11px;">${escapeHtml(node.group)}/</span>` : '';
 
+      // Get search scores if available
+      const searchResult = searchResults.find(r => r.id === nodeId);
+      let scoreInfo = '';
+      if (searchResult && currentSearchTerm) {
+        const scores = [];
+        if (searchResult.keywordScore > 0) {
+          scores.push(`K: ${searchResult.keywordScore.toFixed(0)}`);
+        }
+        if (searchResult.semanticScore > 0) {
+          scores.push(`S: ${searchResult.semanticScore.toFixed(0)}`);
+        }
+        if (scores.length > 0) {
+          scoreInfo = `<span class="search-scores" style="color: var(--color-primary); font-size: 10px; margin-left: 8px;">[${scores.join(' ')}]</span>`;
+        }
+      }
+
       return `
         <div class="node-item ${isCurrentNode ? 'current-node' : ''}"
              data-node-id="${nodeId}"
              style="padding: 8px 12px; margin-bottom: 4px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-sm); cursor: pointer;"
              onclick="window.jumpToNode('${nodeId}')">
           <div class="node-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <strong>${groupInfo}${escapeHtml(displayId)}</strong>
+            <strong>${groupInfo}${escapeHtml(displayId)}${scoreInfo}</strong>
             <span class="node-meta" style="color: var(--color-text-muted); font-size: 11px;">${choiceCount} choices</span>
           </div>
           <div class="node-text" style="color: var(--color-text-muted); font-size: 12px; margin-bottom: 4px;">${escapeHtml(node.text?.substring(0, 100) || 'No text')}${node.text?.length > 100 ? '...' : ''}</div>
@@ -714,6 +817,11 @@ export function initNodesPanel(deps) {
       </div>
     ` : '';
 
+    // Get search suggestions
+    const suggestions = currentSearchTerm
+      ? searchHistory.getSuggestions(currentSearchTerm, 5)
+      : [];
+
     nodeOverview.innerHTML = `
       <div class="node-overview-header" style="padding: 12px 16px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 8px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -729,12 +837,39 @@ export function initNodesPanel(deps) {
             </label>
           </div>
         </div>
-        <div class="search-container" style="width: 100%;">
+        <div class="search-container" style="width: 100%; position: relative;">
           <input type="text"
                  id="nodeSearch"
-                 placeholder="Search nodes..."
+                 placeholder="Search nodes (supports synonyms ${semanticSearch?.enabled ? '& semantic search' : ''})..."
                  value="${escapeHtml(currentSearchTerm)}"
                  style="width: 100%;">
+          ${suggestions.length > 0 ? `
+            <div id="searchSuggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: var(--color-surface); border: 1px solid var(--color-border); border-top: none; z-index: 100; max-height: 150px; overflow-y: auto;">
+              ${suggestions.map(s => `
+                <div class="suggestion-item" data-suggestion="${escapeHtml(s)}" style="padding: 6px 12px; cursor: pointer; font-size: 12px;">
+                  ${escapeHtml(s)}
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+        <div class="search-options" style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 11px;">
+          <label style="display: flex; align-items: center; gap: 4px;">
+            <input type="checkbox" id="useSynonyms" ${searchOptions.useSynonyms ? 'checked' : ''}>
+            同義語検索
+          </label>
+          ${semanticSearch?.enabled ? `
+            <label style="display: flex; align-items: center; gap: 4px;">
+              <input type="checkbox" id="useSemanticSearch" ${searchOptions.useSemanticSearch ? 'checked' : ''}>
+              セマンティック検索
+            </label>
+          ` : ''}
+          <button id="showAdvancedOptions" class="btn-small" style="font-size: 10px; padding: 2px 6px;">
+            詳細オプション
+          </button>
+          <button id="clearSearchHistory" class="btn-small" style="font-size: 10px; padding: 2px 6px;">
+            履歴クリア
+          </button>
         </div>
       </div>
       <div class="node-list" style="padding: 8px; overflow: auto; flex: 1;">
@@ -761,12 +896,77 @@ export function initNodesPanel(deps) {
       });
     }
 
-    // Setup search event listener
+    // Setup search event listener with debounce for semantic search
     const searchInput = nodeOverview.querySelector('#nodeSearch');
     if (searchInput) {
+      let searchTimeout;
       searchInput.addEventListener('input', (e) => {
         currentSearchTerm = e.target.value;
+
+        // Clear previous timeout
+        if (searchTimeout) clearTimeout(searchTimeout);
+
+        // Debounce for semantic search (expensive operation)
+        if (searchOptions.useSemanticSearch && currentSearchTerm.length > 2) {
+          searchTimeout = setTimeout(() => {
+            renderNodeOverview();
+          }, 500);
+        } else {
+          // Instant search for keyword/synonym
+          renderNodeOverview();
+        }
+      });
+
+      // Enter key to force immediate search
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          if (searchTimeout) clearTimeout(searchTimeout);
+          renderNodeOverview();
+        }
+      });
+    }
+
+    // Setup search suggestions click
+    const suggestionItems = nodeOverview.querySelectorAll('.suggestion-item');
+    suggestionItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const suggestion = item.dataset.suggestion;
+        currentSearchTerm = suggestion;
         renderNodeOverview();
+      });
+    });
+
+    // Setup search options
+    const useSynonymsCheckbox = nodeOverview.querySelector('#useSynonyms');
+    if (useSynonymsCheckbox) {
+      useSynonymsCheckbox.addEventListener('change', (e) => {
+        searchOptions.useSynonyms = e.target.checked;
+        if (currentSearchTerm) renderNodeOverview();
+      });
+    }
+
+    const useSemanticCheckbox = nodeOverview.querySelector('#useSemanticSearch');
+    if (useSemanticCheckbox) {
+      useSemanticCheckbox.addEventListener('change', (e) => {
+        searchOptions.useSemanticSearch = e.target.checked;
+        if (currentSearchTerm) renderNodeOverview();
+      });
+    }
+
+    // Clear search history button
+    const clearHistoryBtn = nodeOverview.querySelector('#clearSearchHistory');
+    if (clearHistoryBtn) {
+      clearHistoryBtn.addEventListener('click', () => {
+        searchHistory.clear();
+        setStatus('検索履歴をクリアしました', 'success');
+      });
+    }
+
+    // Advanced options button (placeholder for future)
+    const advancedBtn = nodeOverview.querySelector('#showAdvancedOptions');
+    if (advancedBtn) {
+      advancedBtn.addEventListener('click', () => {
+        setStatus('高度なオプションは次回のアップデートで実装予定です', 'info');
       });
     }
 
@@ -953,6 +1153,12 @@ export function initNodesPanel(deps) {
     renderChoicesForNode,
     setupNodeListEvents,
     clearHighlights,
-    setGuiEditor: (editor) => { guiEditor = editor; }
+    setGuiEditor: (editor) => { guiEditor = editor; },
+    initializeSemanticSearch,
+    getSearchStats: () => ({
+      historySize: searchHistory.size(),
+      semanticEnabled: semanticSearch?.enabled || false,
+      cachedEmbeddings: semanticSearch?.cache?.size() || 0
+    })
   };
 }

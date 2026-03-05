@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced Search Demo - Phase 2C-Enhanced</title>
+  <link rel="stylesheet" href="../src/styles/main.css">
+  <link rel="stylesheet" href="../src/styles/hierarchy.css">
+  <style>
+    body {
+      padding: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .demo-container {
+      display: flex;
+      gap: 20px;
+      height: 700px;
+    }
+
+    .left-panel {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: var(--color-background);
+    }
+
+    .right-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .info-box {
+      padding: 16px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+    }
+
+    .info-box h3 {
+      font-size: 14px;
+      margin: 0 0 12px 0;
+    }
+
+    .info-box p {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin: 0 0 8px 0;
+    }
+
+    .node-overview-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .controls {
+      padding: 16px;
+      background: var(--color-surface-light);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .demo-header {
+      padding: 16px;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .demo-header h1 {
+      font-size: 18px;
+      margin: 0 0 8px 0;
+    }
+
+    .demo-header p {
+      color: var(--color-text-muted);
+      font-size: 12px;
+      margin: 0;
+    }
+
+    .search-examples {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .search-example {
+      padding: 8px 12px;
+      background: var(--color-surface-light);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.2s;
+    }
+
+    .search-example:hover {
+      background: var(--color-hover);
+    }
+
+    .search-example strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .search-example small {
+      color: var(--color-text-muted);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat-item {
+      padding: 8px;
+      background: var(--color-surface-light);
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+    }
+
+    .stat-value {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--color-primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-header">
+    <h1>高度な検索デモ - Phase 2C-Enhanced</h1>
+    <p>キーワード検索、同義語展開、セマンティック検索を統合したハイブリッド検索システム</p>
+  </div>
+
+  <div class="controls">
+    <button id="loadSampleBtn" class="primary">サンプルモデル読み込み</button>
+    <button id="initSemanticBtn" class="secondary">セマンティック検索を初期化</button>
+    <button id="showStatsBtn">統計情報表示</button>
+    <button id="clearBtn">クリア</button>
+  </div>
+
+  <div class="demo-container">
+    <div class="left-panel">
+      <div id="nodeOverview" class="node-overview-container"></div>
+    </div>
+
+    <div class="right-panel">
+      <div class="info-box">
+        <h3>検索例</h3>
+        <div class="search-examples" id="searchExamples"></div>
+      </div>
+
+      <div class="info-box">
+        <h3>検索統計</h3>
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-item">
+            <div>検索履歴</div>
+            <div class="stat-value" id="historyCount">0</div>
+          </div>
+          <div class="stat-item">
+            <div>セマンティック</div>
+            <div class="stat-value" id="semanticStatus">無効</div>
+          </div>
+          <div class="stat-item">
+            <div>キャッシュ</div>
+            <div class="stat-value" id="cacheCount">0</div>
+          </div>
+          <div class="stat-item">
+            <div>同義語</div>
+            <div class="stat-value" id="synonymCount">有効</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <h3>機能説明</h3>
+        <p><strong>同義語検索:</strong> 「battle」で「fight」「combat」「戦闘」も検索</p>
+        <p><strong>セマンティック検索:</strong> 意味的に類似したノードを検索（AI必須）</p>
+        <p><strong>ハイブリッド検索:</strong> キーワードとセマンティックを組み合わせた最適な検索</p>
+        <p><strong>検索履歴:</strong> 過去の検索を記憶してオートコンプリート</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initNodesPanel } from '../handlers/nodes-panel.js';
+
+    // Mock dependencies
+    let mockModel = null;
+    let mockSession = {
+      state: {
+        nodeId: 'story/chapter1/dragon_battle'
+      }
+    };
+
+    // Sample model with diverse content for search testing
+    const sampleModel = {
+      nodes: {
+        'story/chapter1/dragon_battle': {
+          id: 'story/chapter1/dragon_battle',
+          localId: 'dragon_battle',
+          group: 'story/chapter1',
+          text: '巨大な竜が現れた。激しい戦いが始まる。',
+          choices: [
+            { id: 'attack', text: '攻撃する', target: 'story/chapter1/combat_start' },
+            { id: 'defend', text: '防御する', target: 'story/chapter1/defensive_stance' }
+          ]
+        },
+        'story/chapter1/combat_start': {
+          id: 'story/chapter1/combat_start',
+          localId: 'combat_start',
+          group: 'story/chapter1',
+          text: '戦闘が開始された。剣を構えて突進する。',
+          choices: []
+        },
+        'story/chapter1/defensive_stance': {
+          id: 'story/chapter1/defensive_stance',
+          localId: 'defensive_stance',
+          group: 'story/chapter1',
+          text: '盾を構えて防御の姿勢を取る。',
+          choices: []
+        },
+        'story/chapter1/village_arrival': {
+          id: 'story/chapter1/village_arrival',
+          localId: 'village_arrival',
+          group: 'story/chapter1',
+          text: '小さな村に到着した。村人たちが出迎えてくれる。',
+          choices: []
+        },
+        'story/chapter2/hero_quest': {
+          id: 'story/chapter2/hero_quest',
+          localId: 'hero_quest',
+          group: 'story/chapter2',
+          text: '勇者として新たなクエストを受ける。',
+          choices: []
+        },
+        'story/chapter2/treasure_hunt': {
+          id: 'story/chapter2/treasure_hunt',
+          localId: 'treasure_hunt',
+          group: 'story/chapter2',
+          text: '伝説の宝物を探す冒険が始まる。',
+          choices: []
+        },
+        'story/chapter2/ancient_dragon': {
+          id: 'story/chapter2/ancient_dragon',
+          localId: 'ancient_dragon',
+          group: 'story/chapter2',
+          text: '古龍との遭遇。戦うか、交渉するか。',
+          choices: []
+        },
+        'battle_scenes/epic_fight': {
+          id: 'battle_scenes/epic_fight',
+          localId: 'epic_fight',
+          group: 'battle_scenes',
+          text: 'Epic battle between warriors and monsters.',
+          choices: []
+        },
+        'battle_scenes/duel': {
+          id: 'battle_scenes/duel',
+          localId: 'duel',
+          group: 'battle_scenes',
+          text: 'A fierce duel between two skilled fighters.',
+          choices: []
+        },
+        'towns/market': {
+          id: 'towns/market',
+          localId: 'market',
+          group: 'towns',
+          text: '賑やかな町の市場。様々な商品が並ぶ。',
+          choices: []
+        },
+        'towns/inn': {
+          id: 'towns/inn',
+          localId: 'inn',
+          group: 'towns',
+          text: '街の宿屋で休息を取る。',
+          choices: []
+        }
+      }
+    };
+
+    // Search examples
+    const searchExamples = [
+      { term: 'battle', desc: 'キーワード検索' },
+      { term: 'dragon', desc: '英語キーワード' },
+      { term: '竜', desc: '日本語キーワード' },
+      { term: '戦闘', desc: '同義語展開テスト' },
+      { term: 'village', desc: '同義語: town, 村' },
+      { term: 'hero', desc: '同義語: 勇者, warrior' },
+      { term: 'treasure', desc: '同義語: 宝物, item' }
+    ];
+
+    // Initialize nodes panel
+    const nodesPanel = initNodesPanel({
+      getModel: () => mockModel,
+      setModel: (m) => { mockModel = m; },
+      getSession: () => mockSession,
+      setSession: (s) => { mockSession = s; },
+      setStatus: (msg, type) => {
+        console.log(`[${type || 'info'}] ${msg}`);
+        alert(`${msg}`);
+      },
+      renderGraph: () => {},
+      renderState: () => {},
+      renderChoices: () => {},
+      initStory: () => {},
+      renderStoryEnhanced: () => {},
+      nodeOverview: document.getElementById('nodeOverview'),
+      nodeSearch: null,
+      storyView: null
+    });
+
+    // Expose jumpToNode globally
+    window.jumpToNode = nodesPanel.jumpToNode;
+
+    // Load sample model
+    document.getElementById('loadSampleBtn').addEventListener('click', () => {
+      mockModel = sampleModel;
+      nodesPanel.renderNodeOverview();
+      updateStats();
+    });
+
+    // Initialize semantic search (mock - requires real API key)
+    document.getElementById('initSemanticBtn').addEventListener('click', async () => {
+      const apiKey = prompt('OpenAI API Keyを入力してください (テスト用):');
+      if (apiKey) {
+        try {
+          await nodesPanel.initializeSemanticSearch({
+            apiKey: apiKey,
+            model: 'gpt-3.5-turbo'
+          });
+          alert('セマンティック検索を初期化しました');
+          updateStats();
+        } catch (error) {
+          alert(`初期化エラー: ${error.message}`);
+        }
+      }
+    });
+
+    // Show stats
+    document.getElementById('showStatsBtn').addEventListener('click', () => {
+      updateStats();
+    });
+
+    // Clear
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      mockModel = null;
+      document.getElementById('nodeOverview').innerHTML = '<p style="padding: 20px; text-align: center; color: var(--color-text-muted);">モデルが読み込まれていません</p>';
+    });
+
+    // Render search examples
+    const examplesContainer = document.getElementById('searchExamples');
+    searchExamples.forEach(example => {
+      const div = document.createElement('div');
+      div.className = 'search-example';
+      div.innerHTML = `
+        <strong>${example.term}</strong>
+        <small>${example.desc}</small>
+      `;
+      div.addEventListener('click', () => {
+        const searchInput = document.querySelector('#nodeSearch');
+        if (searchInput) {
+          searchInput.value = example.term;
+          searchInput.dispatchEvent(new Event('input'));
+        }
+      });
+      examplesContainer.appendChild(div);
+    });
+
+    // Update stats display
+    function updateStats() {
+      const stats = nodesPanel.getSearchStats();
+      document.getElementById('historyCount').textContent = stats.historySize;
+      document.getElementById('semanticStatus').textContent = stats.semanticEnabled ? '有効' : '無効';
+      document.getElementById('cacheCount').textContent = stats.cachedEmbeddings;
+      document.getElementById('synonymCount').textContent = '有効';
+    }
+
+    // Auto-load on start
+    setTimeout(() => {
+      document.getElementById('loadSampleBtn').click();
+    }, 100);
+  </script>
+</body>
+</html>
