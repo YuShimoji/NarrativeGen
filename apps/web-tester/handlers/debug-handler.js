@@ -1,8 +1,39 @@
-// Debug Handler - manages debug info rendering (flags, resources, inventory, reachability)
-// Extracted from main.js for better maintainability
+/**
+ * Debug Handler - Displays game state debug information
+ *
+ * Renders real-time game state information including flags, resources,
+ * inventory items, and node reachability analysis. Uses BFS to compute
+ * reachable nodes from current position based on available choices.
+ *
+ * @module handlers/debug-handler
+ */
 
 import { escapeHtml, clearContent } from '../src/utils/html-utils.js'
 
+/**
+ * Initialize Debug handler with dependency injection
+ *
+ * Sets up debug information rendering for game state inspection.
+ *
+ * @param {Object} deps - Dependencies object
+ * @param {Function} deps.getModel - Get current narrative model
+ * @param {Function} deps.getSession - Get current game session
+ * @param {HTMLElement} deps.flagsDisplay - Flags display container
+ * @param {HTMLElement} deps.resourcesDisplay - Resources display container
+ * @param {HTMLElement} deps.inventoryDisplay - Inventory display container
+ * @param {HTMLElement} deps.reachableNodes - Reachable nodes display container
+ * @returns {Object} Handler public API
+ * @returns {Function} returns.renderDebugInfo - Render all debug information
+ *
+ * @example
+ * const handler = initDebugHandler({
+ *   getModel: () => model,
+ *   getSession: () => session,
+ *   flagsDisplay: document.getElementById('flags'),
+ *   // ... other dependencies
+ * });
+ * handler.renderDebugInfo();
+ */
 export function initDebugHandler(deps) {
   const {
     getModel,
@@ -13,6 +44,16 @@ export function initDebugHandler(deps) {
     reachableNodes,
   } = deps;
 
+  /**
+   * Render all game state debug information
+   *
+   * Displays current flags, resources, inventory, and reachable nodes.
+   * Uses BFS algorithm to compute reachable nodes from current position
+   * based on available choices. Shows session not loaded message if
+   * session or model is missing.
+   *
+   * @returns {void}
+   */
   function renderDebugInfo() {
     const _model = getModel();
     const session = getSession();

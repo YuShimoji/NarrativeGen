@@ -1,6 +1,54 @@
-// Node Panel Handler - manages node overview, jumping, and highlighting
-// Extracted from main.js for better maintainability
+/**
+ * Nodes Panel Handler - Manages node overview, search, and navigation
+ *
+ * Provides node listing, searching, jumping to nodes, and highlighting.
+ * Supports node deletion and choice management in edit mode. Integrates
+ * with GUI editor for model updates during editing.
+ *
+ * @module handlers/nodes-panel
+ */
 
+/**
+ * Initialize Nodes Panel handler with dependency injection
+ *
+ * Sets up node overview rendering with search/filter, node jumping,
+ * and highlighting capabilities. Optionally integrates with GUI editor
+ * for edit mode operations.
+ *
+ * @param {Object} deps - Dependencies object
+ * @param {Function} deps.getModel - Get current narrative model
+ * @param {Function} deps.setModel - Update narrative model
+ * @param {Function} deps.getSession - Get current game session
+ * @param {Function} deps.setSession - Update game session
+ * @param {Function} deps.setStatus - Display status message
+ * @param {Function} deps.renderGraph - Render narrative graph
+ * @param {Function} deps.renderState - Re-render game state display
+ * @param {Function} deps.renderChoices - Re-render choice buttons
+ * @param {Function} deps.initStory - Initialize story log
+ * @param {Function} deps.renderStoryEnhanced - Render formatted story
+ * @param {HTMLElement} deps.nodeOverview - Node overview container
+ * @param {HTMLInputElement} deps.nodeSearch - Node search input (optional)
+ * @param {HTMLElement} deps.storyView - Story view element
+ * @returns {Object} Handler public API
+ * @returns {Function} returns.renderNodeOverview - Render searchable node list
+ * @returns {Function} returns.renderNodeList - Render editable node list (edit mode)
+ * @returns {Function} returns.highlightNode - Highlight specific node
+ * @returns {Function} returns.jumpToNode - Jump to and load node
+ * @returns {Function} returns.renderChoicesForNode - Render node's choices
+ * @returns {Function} returns.setupNodeListEvents - Setup edit mode event handlers
+ * @returns {Function} returns.clearHighlights - Clear node highlights
+ * @returns {Function} returns.setGuiEditor - Set GUI editor reference for edit mode
+ *
+ * @example
+ * const handler = initNodesPanel({
+ *   getModel: () => model,
+ *   setModel: (m) => model = m,
+ *   nodeOverview: document.getElementById('node-list'),
+ *   // ... other dependencies
+ * });
+ * handler.renderNodeOverview();
+ * handler.jumpToNode('node-id');
+ */
 export function initNodesPanel(deps) {
   const {
     getModel,
@@ -24,7 +72,12 @@ export function initNodesPanel(deps) {
   let currentSearchTerm = '';
   let lastHighlightedNode = null;
 
-  // Clear any existing highlights
+  /**
+   * Clear all node highlights from the overview
+   *
+   * @returns {void}
+   * @private
+   */
   function clearHighlights() {
     const allNodes = nodeOverview.querySelectorAll('.node-item');
     allNodes.forEach(node => {
@@ -34,7 +87,14 @@ export function initNodesPanel(deps) {
     lastHighlightedNode = null;
   }
 
-  // Highlight a specific node in the overview
+  /**
+   * Highlight a specific node in the overview
+   *
+   * Applies highlight styling to the node element and scrolls into view.
+   *
+   * @param {string} nodeId - Node ID to highlight
+   * @returns {void}
+   */
   function highlightNode(nodeId) {
     clearHighlights();
 
@@ -47,7 +107,16 @@ export function initNodesPanel(deps) {
     }
   }
 
-  // Jump to a specific node
+  /**
+   * Jump to and load a specific node
+   *
+   * Updates session state to the target node, re-renders game state,
+   * choices, story, and graph. Shows error messages if node not found
+   * or if model/session missing.
+   *
+   * @param {string} nodeId - Node ID to jump to
+   * @returns {void}
+   */
   function jumpToNode(nodeId) {
     const _model = getModel();
     const session = getSession();
@@ -86,7 +155,15 @@ export function initNodesPanel(deps) {
     }
   }
 
-  // Render node overview with search and filtering
+  /**
+   * Render node overview with search and filtering
+   *
+   * Displays all nodes with filter capability. Shows node ID, group,
+   * choice count, and preview text. Supports searching by ID, group,
+   * or text content.
+   *
+   * @returns {void}
+   */
   function renderNodeOverview() {
     const _model = getModel();
     const session = getSession();
@@ -168,7 +245,15 @@ export function initNodesPanel(deps) {
     }
   }
 
-  // Render choices for a specific node (used in node details)
+  /**
+   * Render choices for a specific node
+   *
+   * Returns HTML string of choices for the given node ID.
+   * Used in node details views.
+   *
+   * @param {string} nodeId - Node ID to get choices for
+   * @returns {string} HTML string of choice items
+   */
   function renderChoicesForNode(nodeId) {
     const _model = getModel();
     if (!_model) return;
@@ -184,7 +269,15 @@ export function initNodesPanel(deps) {
     `).join('');
   }
 
-  // Render the complete node list
+  /**
+   * Render complete node list for edit mode
+   *
+   * Displays all nodes with full editing capabilities including
+   * inline text editing, choice management, and deletion buttons.
+   * Used in GUI editor mode.
+   *
+   * @returns {void}
+   */
   function renderNodeList() {
     const _model = getModel();
     const session = getSession();
@@ -234,7 +327,16 @@ export function initNodesPanel(deps) {
     }
   }
 
-  // Setup node list event handlers
+  /**
+   * Setup event handlers for node list edit mode operations
+   *
+   * Attaches listeners for node/choice deletion, addition, editing,
+   * and paraphrasing operations. Integrates with GUI editor for
+   * model updates.
+   *
+   * @param {HTMLElement} nodeList - Node list container element
+   * @returns {void}
+   */
   function setupNodeListEvents(nodeList) {
     // 言い換えイベント（非AI）
     nodeList.addEventListener('click', (e) => {

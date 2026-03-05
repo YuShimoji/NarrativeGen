@@ -1,9 +1,54 @@
-// AI Config Handler - manages AI provider configuration, settings UI, and AI operations
-// Extracted from main.js for better maintainability
+/**
+ * AI Config Handler - Manages AI provider configuration, settings, and AI-assisted content generation
+ *
+ * Provides AI-powered node generation and text paraphrasing with multiple provider support
+ * (OpenAI, mock). Maintains generation history, persists settings to localStorage, and
+ * integrates with the narrative model for AI-assisted storytelling.
+ *
+ * @module handlers/ai-config
+ */
 
 import { createAIProvider } from '@narrativegen/engine-ts/dist/browser.js'
 import { escapeHtml, clearContent } from '../src/utils/html-utils.js'
 
+/**
+ * Initialize AI Config handler with dependency injection
+ *
+ * Sets up AI provider configuration, event listeners for settings changes,
+ * and AI operation handlers (node generation, paraphrasing). Restores saved
+ * configuration from localStorage on startup.
+ *
+ * @param {Object} deps - Dependencies object
+ * @param {Function} deps.getModel - Get current narrative model
+ * @param {Function} deps.getSession - Get current game session
+ * @param {Function} deps.setStatus - Display status message
+ * @param {HTMLSelectElement} deps.aiProvider - AI provider selector
+ * @param {HTMLElement} deps.openaiSettings - OpenAI settings container
+ * @param {HTMLInputElement} deps.openaiApiKey - OpenAI API key input
+ * @param {HTMLSelectElement} deps.openaiModel - OpenAI model selector
+ * @param {HTMLButtonElement} deps.saveAiSettings - Save settings button
+ * @param {HTMLButtonElement} deps.generateNextNodeBtn - Generate node button
+ * @param {HTMLButtonElement} deps.paraphraseCurrentBtn - Paraphrase button
+ * @param {HTMLElement} deps.aiOutput - AI output display area
+ * @param {Object} deps.Logger - Logger instance
+ * @returns {Object} Handler public API
+ * @returns {Function} returns.loadSavedConfig - Load AI config from localStorage
+ * @returns {Function} returns.initAiProvider - Initialize the AI provider instance
+ * @returns {Function} returns.generateNextNode - Generate next narrative node
+ * @returns {Function} returns.paraphraseCurrentText - Paraphrase current node text
+ * @returns {Function} returns.setupListeners - Setup event listeners for AI operations
+ *
+ * @example
+ * const handler = initAiConfig({
+ *   getModel: () => model,
+ *   getSession: () => session,
+ *   setStatus: (msg, type) => showStatus(msg, type),
+ *   aiProvider: document.getElementById('ai-provider'),
+ *   // ... other dependencies
+ * });
+ * handler.loadSavedConfig();
+ * handler.setupListeners();
+ */
 export function initAiConfig(deps) {
   const {
     getModel,
@@ -31,7 +76,16 @@ export function initAiConfig(deps) {
   let aiProviderInstance = null;
   let generationHistory = []; // Store last 5 generations
 
-  // Load AI config from localStorage on startup
+  /**
+   * Load AI configuration from localStorage
+   *
+   * Retrieves saved AI provider settings and credentials from localStorage,
+   * applying them to the UI. Handles JSON parsing and shows warnings if
+   * stored config is malformed.
+   *
+   * @returns {void}
+   * @private
+   */
   function loadSavedConfig() {
     const savedAiConfig = localStorage.getItem('narrativeGenAiConfig');
     if (savedAiConfig) {
@@ -49,6 +103,17 @@ export function initAiConfig(deps) {
     }
   }
 
+  /**
+   * Initialize or reinitialize the AI provider instance
+   *
+   * Creates an AI provider instance based on current configuration.
+   * Supports mock and OpenAI providers. Validates API key for OpenAI
+   * and provides user feedback if initialization fails.
+   *
+   * @async
+   * @returns {void}
+   * @private
+   */
   async function initAiProviderFn() {
     if (!aiProviderInstance || aiConfig.provider !== aiProvider.value) {
       try {
@@ -72,6 +137,18 @@ export function initAiConfig(deps) {
     }
   }
 
+  /**
+   * Generate the next narrative node using AI
+   *
+   * Uses the configured AI provider to generate continuation text based on
+   * current game context. Displays loading indicator, handles errors with
+   * user-friendly messages, and adds successful generations to history.
+   * Temporarily disables buttons during generation.
+   *
+   * @async
+   * @returns {void}
+   * @private
+   */
   async function generateNextNode() {
     const session = getSession();
     const _model = getModel();
@@ -135,6 +212,17 @@ export function initAiConfig(deps) {
     }
   }
 
+  /**
+   * Generate paraphrases of the current node's text
+   *
+   * Uses the configured AI provider to generate multiple paraphrase variants
+   * of the current node text. Supports style and tone customization. Adds all
+   * variants to generation history for user selection.
+   *
+   * @async
+   * @returns {void}
+   * @private
+   */
   async function paraphraseCurrentText() {
     const session = getSession();
     const _model = getModel();
@@ -210,6 +298,16 @@ export function initAiConfig(deps) {
     }
   }
 
+  /**
+   * Render the AI generation history UI
+   *
+   * Displays the most recent AI generations and paraphrases with
+   * adoption buttons and timing information. Shows empty state if
+   * no generations have been made.
+   *
+   * @returns {void}
+   * @private
+   */
   function renderHistory() {
     clearContent(aiOutput);
 
@@ -262,6 +360,17 @@ export function initAiConfig(deps) {
     });
   }
 
+  /**
+   * Adopt AI-generated text into the current node
+   *
+   * Updates the current node's text with the selected AI-generated content.
+   * Re-renders the story view and provides visual feedback on the adopted item.
+   *
+   * @param {string} text - The AI-generated text to adopt
+   * @param {number} historyIndex - Index in the generation history
+   * @returns {void}
+   * @private
+   */
   function adoptText(text, historyIndex) {
     const session = getSession();
     const _model = getModel();
@@ -305,6 +414,15 @@ export function initAiConfig(deps) {
     }
   }
 
+  /**
+   * Setup event listeners for AI configuration and operations
+   *
+   * Attaches handlers for provider selection, settings save, and
+   * AI operation buttons (generate and paraphrase).
+   *
+   * @returns {void}
+   * @private
+   */
   function setupListeners() {
     // AI settings event handlers
     aiProvider.addEventListener('change', () => {

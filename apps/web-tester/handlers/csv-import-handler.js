@@ -1,10 +1,53 @@
-// CSV Import Handler - manages CSV file import and preview
-// Extracted from main.js for better maintainability
+/**
+ * CSV Import Handler - Manages CSV/TSV file import with preview and validation
+ *
+ * Handles narrative model import from CSV/TSV files with comprehensive parsing
+ * of nodes, choices, conditions, effects, and metadata. Supports progress updates
+ * for large files, validation, and preview display before committing changes.
+ *
+ * @module handlers/csv-import-handler
+ */
 
 import { GameSession, resolveNodeId } from '@narrativegen/engine-ts/dist/browser.js'
 import { parseCsvLine, parseKeyValuePairs, parseConditions, parseEffects } from '../utils/csv-parser.js'
 import { validateModel } from '../utils/model-utils.js'
 
+/**
+ * Initialize CSV Import handler with dependency injection
+ *
+ * Sets up CSV import functionality with preview modal, file parsing,
+ * validation, and session initialization from imported data.
+ *
+ * @param {Object} deps - Dependencies object
+ * @param {Function} deps.getModel - Get current narrative model
+ * @param {Function} deps.setModel - Update narrative model
+ * @param {Function} deps.getSession - Get current game session
+ * @param {Function} deps.setSession - Update game session
+ * @param {Function} deps.setStatus - Display status message
+ * @param {Function} deps.showErrors - Display validation errors
+ * @param {Function} deps.hideErrors - Clear error display
+ * @param {Function} deps.renderState - Re-render game state display
+ * @param {Function} deps.renderChoices - Re-render choice buttons
+ * @param {Function} deps.initStory - Initialize story log
+ * @param {Function} deps.renderStoryEnhanced - Render formatted story
+ * @param {HTMLElement} deps.csvPreviewModal - CSV preview modal element
+ * @param {HTMLElement} deps.csvFileName - File name display element
+ * @param {HTMLElement} deps.csvPreviewContent - Preview content container
+ * @param {HTMLElement} deps.storyView - Story view element
+ * @returns {Object} Handler public API
+ * @returns {Function} returns.showCsvPreview - Display CSV preview modal
+ * @returns {Function} returns.hideCsvPreview - Close CSV preview modal
+ * @returns {Function} returns.importCsvFile - Parse and import CSV file
+ *
+ * @example
+ * const handler = initCsvImportHandler({
+ *   getModel: () => model,
+ *   setModel: (m) => model = m,
+ *   csvPreviewModal: document.getElementById('csv-modal'),
+ *   // ... other dependencies
+ * });
+ * handler.showCsvPreview(file);
+ */
 export function initCsvImportHandler(deps) {
   const {
     getModel,
@@ -25,6 +68,16 @@ export function initCsvImportHandler(deps) {
     storyView,
   } = deps;
 
+  /**
+   * Display CSV file preview in modal
+   *
+   * Reads the first 10 data rows from the CSV file and displays them
+   * in a table format for user preview before import.
+   *
+   * @param {File} file - CSV file to preview
+   * @returns {void}
+   * @private
+   */
   function showCsvPreview(file) {
     csvFileName.textContent = file.name;
     const reader = new FileReader();
@@ -64,10 +117,32 @@ export function initCsvImportHandler(deps) {
     reader.readAsText(file);
   }
 
+  /**
+   * Close CSV preview modal
+   *
+   * @returns {void}
+   * @private
+   */
   function hideCsvPreview() {
     csvPreviewModal.classList.remove('show');
   }
 
+  /**
+   * Parse and import CSV file into narrative model
+   *
+   * Processes CSV file with comprehensive parsing of node hierarchy, choices,
+   * conditions, effects, and metadata. Validates model, shows progress updates
+   * for large files, and initializes session with imported data.
+   *
+   * Supports CSV and TSV formats with auto-detection. Handles node groups
+   * and resolves cross-group references.
+   *
+   * @async
+   * @param {File} file - CSV/TSV file to import
+   * @param {Array} entities - Entity definitions for inventory support
+   * @returns {Promise<string|null>} File name on success, null on failure
+   * @private
+   */
   async function importCsvFile(file, entities) {
     try {
       const text = await file.text();
