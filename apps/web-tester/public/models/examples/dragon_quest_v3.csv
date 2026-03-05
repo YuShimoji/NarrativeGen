@@ -1,0 +1,19 @@
+node_id,node_text,node_type,node_tags,node_assets,choice_id,choice_text,choice_target,choice_conditions,choice_effects,choice_outcome_type,choice_outcome_value,choice_metadata,choice_variables,initial_flags,initial_resources,global_metadata
+village,"あなたは{health}HPの冒険者です。{gold}ゴールドを持っています。",normal,"town;start",background=forest.jpg,image=adventurer.png,helpVillager,村人に助けを求める,villagerQuest,,setFlag:helpedVillager=true,,,,hasSword=false;hasKey=false,health=100;gold=50,title="Dragon Quest";version=3.0;author="AI Assistant"
+village,"あなたは{health}HPの冒険者です。{gold}ゴールドを持っています。",normal,"town;start",background=forest.jpg,image=adventurer.png,buySword,剣を買う (50ゴールド),swordShop,resource:gold>=50,setFlag:hasSword=true;addResource:gold=-50,,,,hasSword=false;hasKey=false,health=100;gold=50,title="Dragon Quest";version=3.0;author="AI Assistant"
+village,"あなたは{health}HPの冒険者です。{gold}ゴールドを持っています。",normal,"town;start",background=forest.jpg,image=adventurer.png,exploreForest,森を探検する,forestEncounter,,randomEffect:addResource:health=-10|addResource:health=-20,,,,hasSword=false;hasKey=false,health=100;gold=50,title="Dragon Quest";version=3.0;author="AI Assistant"
+villagerQuest,"村人「ドラゴンが山に住み着いて困っています。倒してくれませんか？」",normal,"quest;npc",portrait=villager.png,acceptQuest,クエストを受ける,mountain,,setFlag:acceptedQuest=true,,,,,
+villagerQuest,"村人「ドラゴンが山に住み着いて困っています。倒してくれませんか？」",normal,"quest;npc",portrait=villager.png,declineQuest,断る,village,,,,,,
+swordShop,"武器屋「良い剣がありますよ。50ゴールドです。」",normal,"shop;npc",portrait=merchant.png,buySwordShop,剣を買う,swordShopResult,resource:gold>=50,setFlag:hasSword=true;addResource:gold=-50,,,,,
+swordShop,"武器屋「良い剣がありますよ。50ゴールドです。」",normal,"shop;npc",portrait=merchant.png,leaveShop,買わない,village,,,,,,
+swordShopResult,"剣を手に入れました！攻撃力が上がりました。",normal,"shop;success",,continue,次へ,village,,,,,,
+forestEncounter,"森の中で狼に襲われました！",normal,"combat;danger",background=dark_forest.jpg,bgm=combat.mp3,fightWolf,戦う,wolfFight,,,,,,
+forestEncounter,"森の中で狼に襲われました！",normal,"combat;danger",background=dark_forest.jpg,bgm=combat.mp3,runAway,逃げる,village,,addResource:health=-15,,,,,
+wolfFight,"あなたは狼と戦いました。",normal,"combat;result",,winFight,勝つ,village,flag:hasSword=true,setFlag:defeatedWolf=true;addResource:health=-10,,,,,
+wolfFight,"あなたは狼と戦いました。",normal,"combat;result",,loseFight,負ける,village,,addResource:health=-30,,,,,
+mountain,"山頂に到着しました。巨大なドラゴンがいます！",normal,"boss;danger",background=mountain.jpg,bgm=boss_battle.mp3,fightDragon,ドラゴンと戦う,dragonFight,resource:health>30;flag:hasSword=true,conditionalEffect:flag:hasSword=true?setFlag:dragonSlain=true,,,,,
+mountain,"山頂に到着しました。巨大なドラゴンがいます！",normal,"boss;danger",background=mountain.jpg,bgm=boss_battle.mp3,retreat,下がる,village,,,,,,
+dragonFight,"激しい戦いの末...",normal,"boss;result",,defeatDragon,ドラゴンを倒す,victoryEnding,,setFlag:dragonSlain=true;addResource:health=-40;multiplyResource:gold=2,,,,,
+dragonFight,"激しい戦いの末...",normal,"boss;result",,dragonWins,ドラゴンに負ける,defeatEnding,,addResource:health=-100,,,,,
+victoryEnding,"英雄として村に迎えられました。ドラゴンを倒したのです！\n\n【GOOD ENDING】",ending,"victory;final",background=victory.jpg,bgm=victory.mp3,,,,,,,
+defeatEnding,"ドラゴンに敗北しました。村は脅威にさらされています。\n\n【BAD ENDING】",ending,"defeat;final",background=defeat.jpg,bgm=defeat.mp3,,,,,,,

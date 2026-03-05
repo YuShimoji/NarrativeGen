@@ -1,14 +1,9 @@
-# Windsurf AI 協調開発ルール (v1.1)
+﻿# Windsurf AI 協調開発ルール (v1.1)
 
-> [!WARNING]
-> **⚠️ 重要: 本ファイルはレガシー（非推奨）です。使用しないでください。**
-> 
-> **最新のルールおよび唯一のエントリポイント**: [Windsurf_AI_Collab_Rules_latest.md](./Windsurf_AI_Collab_Rules_latest.md)
-> 
-> - 本ファイル（v1.1）は **参考資料としてのみ** 保持されています
-> - 新しいプロジェクトや既存プロジェクトの更新時は、必ず `latest.md` を参照してください
-> - 以降のアップデートは `latest.md` に対してのみ行われます
-> - 本ファイルへの変更は行わないでください
+> [!CAUTION]
+> **本ファイルはレガシー（非推奨）です。**
+> 最新のルールおよびエントリポイントは [Windsurf_AI_Collab_Rules_latest.md](./Windsurf_AI_Collab_Rules_latest.md) を参照してください。
+> 以降のアップデートは `latest.md` に対してのみ行われます.
 
 ## 0. 起動シーケンス（プロジェクト抽象化)
 

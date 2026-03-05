@@ -1,16 +1,12 @@
-# Windsurf AI 協調開発ルール (v2.0)
+﻿# Windsurf AI 協調開発ルール (v2.0)
 
-> [!WARNING]
-> **⚠️ 重要: 本ファイルはレガシー（非推奨）です。使用しないでください。**
-> 
-> **最新のルールおよび唯一のエントリポイント**: [Windsurf_AI_Collab_Rules_latest.md](./Windsurf_AI_Collab_Rules_latest.md)
-> 
-> - 本ファイル（v2.0）は **参考資料としてのみ** 保持されています
-> - 新しいプロジェクトや既存プロジェクトの更新時は、必ず `latest.md` を参照してください
-> - 以降のアップデートは `latest.md` に対してのみ行われます
-> - 本ファイルへの変更は行わないでください
-> 
-> **現在の規範（SSOT）**: 常に `docs/Windsurf_AI_Collab_Rules_latest.md` を参照してください。
+> [!CAUTION]
+> **本ファイルはレガシー（非推奨）です。**
+> 最新のルールおよびエントリポイントは [Windsurf_AI_Collab_Rules_latest.md](./Windsurf_AI_Collab_Rules_latest.md) を参照してください。
+> 以降のアップデートは `latest.md` に対してのみ行われます.
+
+> **注意**: 本ドキュメントは **旧版の参考資料** です。  
+> 現在の規範（SSOT）は常に `docs/Windsurf_AI_Collab_Rules_latest.md` を参照してください。
 
 - ✅ **実行フローの完全明確化**: 各ステップで「自動実行 or 待機」を明示
 - ✅ **クリーンアップの義務化**: PR作成前の必須チェックリストを追加

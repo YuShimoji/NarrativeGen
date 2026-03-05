@@ -1,67 +1,57 @@
 {
-  "modelType": "adventure-playthrough",
-  "startNode": "intro",
-  "flags": {
-    "learnedChoices": false,
-    "learnedResources": false
-  },
-  "resources": {
-    "knowledge": 0,
-    "energy": 100
-  },
   "nodes": {
-    "intro": {
-      "id": "intro",
-      "text": "ようこそNarrativeGenへ！これは基本機能を学ぶためのチュートリアルです。\n\nあなたは新しい学習者です。選択肢を選んで物語を進めましょう。",
+    "start": {
+      "text": "物語の始まりです。あなたは森の入り口にいます。",
       "choices": [
-        { "id": "learnChoices", "text": "選択肢について学ぶ", "target": "choicesLesson" },
-        { "id": "learnResources", "text": "リソースについて学ぶ", "target": "resourcesLesson" },
-        { "id": "skipTutorial", "text": "チュートリアルをスキップ", "target": "graduation" }
+        {
+          "text": "森の中に入る",
+          "target": "forest_path"
+        },
+        {
+          "text": "引き返す",
+          "target": "town_return"
+        }
       ]
     },
-    "choicesLesson": {
-      "id": "choicesLesson",
-      "text": "選択肢とは：\n物語を進めるための重要な決断です。選択肢を選ぶことでストーリーが分岐します。\n\nこの選択肢を選ぶと、フラグが設定されます。",
+    "forest_path": {
+      "text": "森の小道を進むと、古い小屋が見つかりました。",
       "choices": [
-        { "id": "understandChoices", "text": "選択肢を理解した", "target": "backToIntro", "effects": [{ "type": "setFlag", "key": "learnedChoices", "value": true }] },
-        { "id": "confused", "text": "よくわからない", "target": "choicesHelp" }
+        {
+          "text": "小屋に入る",
+          "target": "cabin_inside"
+        },
+        {
+          "text": "通り過ぎる",
+          "target": "forest_deeper"
+        }
       ]
     },
-    "choicesHelp": {
-      "id": "choicesHelp",
-      "text": "選択肢の例：\n・「ドアを開ける」\n・「鍵を探す」\n・「待つ」\n\n各選択肢は異なる結果をもたらします。",
+    "cabin_inside": {
+      "text": "小屋の中には宝箱がありました！",
       "choices": [
-        { "id": "nowUnderstand", "text": "今わかった", "target": "backToIntro", "effects": [{ "type": "setFlag", "key": "learnedChoices", "value": true }] }
+        {
+          "text": "宝箱を開ける",
+          "target": "treasure_found"
+        }
       ]
     },
-    "resourcesLesson": {
-      "id": "resourcesLesson",
-      "text": "リソースとは：\nゲーム内の数値データです。体力、ゴールド、経験値などが該当します。\n\nリソースは選択肢の条件になったり、変化したりします。",
+    "treasure_found": {
+      "text": "宝箱の中には金貨が詰まっていました。おめでとうございます！",
+      "choices": []
+    },
+    "forest_deeper": {
+      "text": "森の奥深くまで進むと、突然の嵐に遭遇しました。",
       "choices": [
-        { "id": "understandResources", "text": "リソースを理解した", "target": "backToIntro", "effects": [{ "type": "setFlag", "key": "learnedResources", "value": true }, { "type": "addResource", "key": "knowledge", "delta": 10 }] },
-        { "id": "resourceExample", "text": "例を見せて", "target": "resourceExample" }
+        {
+          "text": "小屋に戻る",
+          "target": "cabin_inside"
+        }
       ]
     },
-    "resourceExample": {
-      "id": "resourceExample",
-      "text": "リソースの例：\n現在のエネルギー: {{energy}}\n知識: {{knowledge}}\n\nこの選択肢を選ぶとエネルギーが減ります。",
-      "choices": [
-        { "id": "loseEnergy", "text": "エネルギーを消費する", "target": "backToIntro", "effects": [{ "type": "addResource", "key": "energy", "delta": -20 }, { "type": "addResource", "key": "knowledge", "delta": 5 }] },
-        { "id": "keepEnergy", "text": "エネルギーを温存", "target": "backToIntro" }
-      ]
-    },
-    "backToIntro": {
-      "id": "backToIntro",
-      "text": "チュートリアルに戻ります。",
-      "choices": [
-        { "id": "continueTutorial", "text": "続ける", "target": "intro" },
-        { "id": "finishTutorial", "text": "終了する", "target": "graduation" }
-      ]
-    },
-    "graduation": {
-      "id": "graduation",
-      "text": "チュートリアル完了！\n\n学習内容:\n・選択肢: {{learnedChoices}}\n・リソース: {{learnedResources}}\n・最終知識: {{knowledge}}\n・残りエネルギー: {{energy}}\n\nこれで基本機能をマスターしました！",
+    "town_return": {
+      "text": "町に戻ってきました。冒険は終わりました。",
       "choices": []
     }
-  }
+  },
+  "startNode": "start"
 }

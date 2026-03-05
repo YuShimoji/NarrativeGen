@@ -1,0 +1,87 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "village",
+  "flags": {
+    "hasSword": false,
+    "helpedVillager": false,
+    "defeatedDragon": false
+  },
+  "resources": {
+    "health": 100,
+    "gold": 50
+  },
+  "nodes": {
+    "village": {
+      "id": "village",
+      "text": "あなたは小さな村に到着しました。村人たちが困っているようです。",
+      "choices": [
+        { "id": "talkToVillager", "text": "村人に話しかける", "target": "villagerQuest" },
+        { "id": "goToShop", "text": "武器屋に行く", "target": "shop" },
+        { "id": "exploreForest", "text": "森を探検する", "target": "forest" }
+      ]
+    },
+    "villagerQuest": {
+      "id": "villagerQuest",
+      "text": "村人「ドラゴンが山に住み着いて困っています。倒してくれませんか？」",
+      "choices": [
+        { "id": "acceptQuest", "text": "クエストを受ける", "target": "mountain", "effects": [{ "type": "setFlag", "key": "helpedVillager", "value": true }] },
+        { "id": "declineQuest", "text": "断る", "target": "village" }
+      ]
+    },
+    "shop": {
+      "id": "shop",
+      "text": "武器屋の店主「良い剣がありますよ。50ゴールドです。」",
+      "choices": [
+        { "id": "buySword", "text": "剣を買う", "target": "village", "conditions": [{ "type": "resource", "key": "gold", "op": ">=", "value": 50 }], "effects": [{ "type": "setFlag", "key": "hasSword", "value": true }, { "type": "addResource", "key": "gold", "delta": -50 }] },
+        { "id": "noBuy", "text": "買わない", "target": "village" }
+      ]
+    },
+    "forest": {
+      "id": "forest",
+      "text": "森の中で狼に襲われました！",
+      "choices": [
+        { "id": "fightWolf", "text": "戦う", "target": "fightWolfResult" },
+        { "id": "runAway", "text": "逃げる", "target": "village", "effects": [{ "type": "addResource", "key": "health", "delta": -20 }] }
+      ]
+    },
+    "fightWolfResult": {
+      "id": "fightWolfResult",
+      "text": "あなたは狼と戦いました。",
+      "choices": [
+        { "id": "winFight", "text": "勝つ", "target": "village", "conditions": [{ "type": "flag", "key": "hasSword", "value": true }], "effects": [{ "type": "addResource", "key": "health", "delta": -10 }] },
+        { "id": "loseFight", "text": "負ける", "target": "village", "effects": [{ "type": "addResource", "key": "health", "delta": -50 }] }
+      ]
+    },
+    "mountain": {
+      "id": "mountain",
+      "text": "山頂に到着しました。巨大なドラゴンがいます！",
+      "choices": [
+        { "id": "fightDragon", "text": "ドラゴンと戦う", "target": "dragonFight", "conditions": [{ "type": "resource", "key": "health", "op": ">", "value": 30 }] },
+        { "id": "retreat", "text": "引き返す", "target": "village" }
+      ]
+    },
+    "dragonFight": {
+      "id": "dragonFight",
+      "text": "激しい戦いの末...",
+      "choices": [
+        { "id": "defeatDragon", "text": "ドラゴンを倒す", "target": "victoryEnding", "conditions": [{ "type": "flag", "key": "hasSword", "value": true }, { "type": "resource", "key": "health", "op": ">", "value": 50 }], "effects": [{ "type": "setFlag", "key": "defeatedDragon", "value": true }, { "type": "addResource", "key": "health", "delta": -40 }] },
+        { "id": "dragonWins", "text": "ドラゴンに負ける", "target": "defeatEnding", "effects": [{ "type": "addResource", "key": "health", "delta": -100 }] }
+      ]
+    },
+    "victoryEnding": {
+      "id": "victoryEnding",
+      "text": "英雄として村に迎えられました。ドラゴンを倒し、村を救ったのです！\n\n【GOOD ENDING】",
+      "choices": []
+    },
+    "defeatEnding": {
+      "id": "defeatEnding",
+      "text": "ドラゴンに敗北しました。村はドラゴンの脅威にさらされています。\n\n【BAD ENDING】",
+      "choices": []
+    },
+    "neutralEnding": {
+      "id": "neutralEnding",
+      "text": "あなたは村を後にしました。冒険はまだ続くかもしれません。\n\n【NEUTRAL ENDING】",
+      "choices": []
+    }
+  }
+}

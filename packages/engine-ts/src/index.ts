@@ -3,7 +3,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import Ajv from 'ajv'
-import type { JSONSchemaType } from 'ajv'
+import type { AnySchema } from 'ajv'
 
 import type {
   Choice,
@@ -13,8 +13,8 @@ import type {
   Model,
   ResourceState,
   SessionState,
+  VariableState,
 } from './types'
-export * from './resolver.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -32,7 +32,7 @@ function isResourceStateRecord(value: unknown): value is ResourceState {
   return Object.values(value).every((entry) => typeof entry === 'number' && Number.isFinite(entry))
 }
 
-function isVariableStateRecord(value: unknown): value is Record<string, string> {
+function isVariableStateRecord(value: unknown): value is VariableState {
   if (!isRecord(value)) return false
   return Object.values(value).every((entry) => typeof entry === 'string')
 }
@@ -52,173 +52,36 @@ function isSessionState(value: unknown): value is SessionState {
   return true
 }
 
-interface ValidationIssue {
-  type: 'error' | 'warning'
-  category: 'duplicate_id' | 'missing_reference' | 'circular_reference' | 'integrity'
-  message: string
-  nodeId?: string
-  choiceId?: string
-  path?: string[]
-}
-
-function detectCircularReferences(model: Model, startNodeId: string): ValidationIssue[] {
-  const issues: ValidationIssue[] = []
-  const visiting = new Set<string>()
-  const visited = new Set<string>()
-
-  function visit(nodeId: string, path: string[]): void {
-    if (visiting.has(nodeId)) {
-      // Circular reference detected
-      const cycle = [...path, nodeId]
-      const cycleStart = cycle.indexOf(nodeId)
-      const cyclePath = cycle.slice(cycleStart)
-      issues.push({
-        type: 'error',
-        category: 'circular_reference',
-        message: `Circular reference detected: ${cyclePath.join(' → ')}`,
-        nodeId,
-        path: cyclePath,
-      })
-      return
-    }
-
-    if (visited.has(nodeId)) {
-      return
-    }
-
-    visiting.add(nodeId)
-    const node = model.nodes[nodeId]
-    if (node) {
-      for (const choice of node.choices ?? []) {
-        if (choice.target) {
-          visit(choice.target, [...path, nodeId])
-        }
-        // Check goto effects
-        for (const effect of choice.effects ?? []) {
-          if (effect.type === 'goto' && effect.target) {
-            visit(effect.target, [...path, nodeId])
-          }
-        }
-      }
-    }
-    visiting.delete(nodeId)
-    visited.add(nodeId)
-  }
-
-  visit(startNodeId, [])
-  return issues
-}
-
-function assertModelIntegrity(model: Model, options?: LoadModelOptions): void {
-  const issues: ValidationIssue[] = []
-  const allowCircular = options?.allowCircularReferences ?? true // Default: allow for backward compatibility
-
-  // Check for duplicate node IDs (node key vs node.id mismatch)
-  const nodeIds = new Set<string>()
-  for (const [nodeKey, node] of Object.entries(model.nodes)) {
-    if (nodeIds.has(node.id)) {
-      issues.push({
-        type: 'error',
-        category: 'duplicate_id',
-        message: `Duplicate node ID '${node.id}' found`,
-        nodeId: node.id,
-      })
-    }
-    nodeIds.add(node.id)
-
-    if (node.id !== nodeKey) {
-      issues.push({
-        type: 'error',
-        category: 'integrity',
-        message: `Node key '${nodeKey}' must match node.id '${node.id}'`,
-        nodeId: nodeKey,
-      })
-    }
-  }
-
-  // Check startNode exists
+function assertModelIntegrity(model: Model): void {
+  const issues: string[] = []
   if (!model.nodes[model.startNode]) {
-    issues.push({
-      type: 'error',
-      category: 'missing_reference',
-      message: `startNode '${model.startNode}' does not exist in nodes`,
-      nodeId: model.startNode,
-    })
+    issues.push(`startNode '${model.startNode}' does not exist in nodes`)
   }
-
-  // Check each node's choices
   for (const [nodeKey, node] of Object.entries(model.nodes)) {
+    if (node.id !== nodeKey) {
+      issues.push(`node key '${nodeKey}' must match node.id '${node.id}'`)
+    }
     const seenChoiceIds = new Set<string>()
-
     for (const choice of node.choices ?? []) {
-      // Check for duplicate choice IDs within the same node
       if (seenChoiceIds.has(choice.id)) {
-        issues.push({
-          type: 'error',
-          category: 'duplicate_id',
-          message: `Duplicate choice ID '${choice.id}' in node '${nodeKey}'`,
-          nodeId: nodeKey,
-          choiceId: choice.id,
-        })
+        issues.push(`duplicate choice id '${choice.id}' in node '${nodeKey}'`)
       }
       seenChoiceIds.add(choice.id)
-
-      // Check choice target exists
       if (!choice.target) {
-        issues.push({
-          type: 'error',
-          category: 'missing_reference',
-          message: `Choice '${choice.id}' in node '${nodeKey}' is missing target`,
-          nodeId: nodeKey,
-          choiceId: choice.id,
-        })
+        issues.push(`choice '${choice.id}' in node '${nodeKey}' is missing target`)
         continue
       }
-
       if (!model.nodes[choice.target]) {
-        issues.push({
-          type: 'error',
-          category: 'missing_reference',
-          message: `Choice '${choice.id}' in node '${nodeKey}' targets non-existent node '${choice.target}'`,
-          nodeId: nodeKey,
-          choiceId: choice.id,
-        })
-      }
-
-      // Check goto effect targets
-      for (const effect of choice.effects ?? []) {
-        if (effect.type === 'goto' && effect.target && !model.nodes[effect.target]) {
-          issues.push({
-            type: 'error',
-            category: 'missing_reference',
-            message: `Choice '${choice.id}' in node '${nodeKey}' has goto effect targeting non-existent node '${effect.target}'`,
-            nodeId: nodeKey,
-            choiceId: choice.id,
-          })
-        }
+        issues.push(`choice '${choice.id}' in node '${nodeKey}' targets missing node '${choice.target}'`)
       }
     }
   }
-
-  // Detect circular references starting from startNode (if not allowed)
-  if (!allowCircular && model.nodes[model.startNode]) {
-    const circularIssues = detectCircularReferences(model, model.startNode)
-    issues.push(...circularIssues)
-  }
-
-  // Throw error if any issues found
   if (issues.length > 0) {
-    const errorMessages = issues.map((issue) => {
-      let msg = `[${issue.category.toUpperCase()}] ${issue.message}`
-      if (issue.nodeId) msg += ` (node: ${issue.nodeId})`
-      if (issue.choiceId) msg += ` (choice: ${issue.choiceId})`
-      return msg
-    })
-    throw new Error(`Model integrity check failed:\n${errorMessages.join('\n')}`)
+    throw new Error(`Model integrity check failed:\n${issues.join('\n')}`)
   }
 }
 
-function loadSchema(): JSONSchemaType<Model> {
+function loadSchema(): unknown {
   const schemaPath = path.resolve(
     __dirname,
     '../../..',
@@ -227,27 +90,19 @@ function loadSchema(): JSONSchemaType<Model> {
     'playthrough.schema.json',
   )
   const json = fs.readFileSync(schemaPath, 'utf-8')
-  return JSON.parse(json) as JSONSchemaType<Model>
+  return JSON.parse(json)
 }
 
-export interface LoadModelOptions {
-  /**
-   * If true, allows circular references in the model graph.
-   * Default: true (for backward compatibility with existing models)
-   */
-  allowCircularReferences?: boolean
-}
-
-export function loadModel(modelData: unknown, options?: LoadModelOptions): Model {
-  const ajv = new Ajv({ allErrors: true, strict: false })
-  const schema = loadSchema()
-  const validate = ajv.compile<Model>(schema)
+export function loadModel(modelData: unknown): Model {
+  const ajv = new Ajv({ allErrors: true })
+  const schema = loadSchema() as AnySchema
+  const validate = ajv.compile(schema)
   if (!validate(modelData)) {
     const err = ajv.errorsText(validate.errors ?? [], { separator: '\n' })
     throw new Error(`Model validation failed:\n${err}`)
   }
-  const model = modelData
-  assertModelIntegrity(model, options)
+  const model = modelData as Model
+  assertModelIntegrity(model)
   return model
 }
 
@@ -256,7 +111,7 @@ export function startSession(model: Model, initial?: Partial<SessionState>): Ses
     nodeId: initial?.nodeId ?? model.startNode,
     flags: { ...(model.flags ?? {}), ...(initial?.flags ?? {}) },
     resources: { ...(model.resources ?? {}), ...(initial?.resources ?? {}) },
-    variables: { ...(initial?.variables ?? {}) },
+    variables: initial?.variables ?? {},
     time: initial?.time ?? 0,
   }
 }
@@ -280,7 +135,7 @@ function evalCondition(
   cond: Condition,
   flags: FlagState,
   resources: ResourceState,
-  variables: Record<string, string>,
+  variables: VariableState,
   time: number,
 ): boolean {
   if (cond.type === 'flag') {
@@ -308,16 +163,7 @@ function evalCondition(
         return false
     }
   }
-  if (cond.type === 'and') {
-    return cond.conditions.every((c) => evalCondition(c, flags, resources, variables, time))
-  }
-  if (cond.type === 'or') {
-    return cond.conditions.some((c) => evalCondition(c, flags, resources, variables, time))
-  }
-  if (cond.type === 'not') {
-    return !evalCondition(cond.condition, flags, resources, variables, time)
-  }
-  return false
+  return true
 }
 
 function applyEffect(effect: Effect, session: SessionState): SessionState {
@@ -326,13 +172,7 @@ function applyEffect(effect: Effect, session: SessionState): SessionState {
   }
   if (effect.type === 'addResource') {
     const cur = session.resources[effect.key] ?? 0
-    const delta = 'delta' in effect ? effect.delta : effect.value
-    if (!Number.isFinite(delta)) return session
-    return { ...session, resources: { ...session.resources, [effect.key]: cur + delta } }
-  }
-  if (effect.type === 'setResource') {
-    if (!Number.isFinite(effect.value)) return session
-    return { ...session, resources: { ...session.resources, [effect.key]: effect.value } }
+    return { ...session, resources: { ...session.resources, [effect.key]: cur + effect.delta } }
   }
   if (effect.type === 'setVariable') {
     return { ...session, variables: { ...session.variables, [effect.key]: effect.value } }
@@ -382,15 +222,8 @@ export function serialize(session: SessionState): string {
 
 export function deserialize(payload: string): SessionState {
   const parsed: unknown = JSON.parse(payload)
-  if (!isRecord(parsed)) {
+  if (!isSessionState(parsed)) {
     throw new Error('Invalid session payload')
   }
-  const normalized: Record<string, unknown> = { ...parsed }
-  if (!('variables' in normalized)) {
-    normalized.variables = {}
-  }
-  if (!isSessionState(normalized)) {
-    throw new Error('Invalid session payload')
-  }
-  return normalized
+  return parsed
 }

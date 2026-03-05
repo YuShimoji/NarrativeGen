@@ -11,19 +11,17 @@ import type {
   Model,
   ResourceState,
   SessionState,
+  VariableState,
 } from './types'
-import { GameSession } from './game-session'
-export { chooseParaphrase, paraphraseJa } from './paraphrase'
+export { chooseParaphrase, paraphraseJa, getParaphraseLexicon, setParaphraseLexicon } from './paraphrase.js'
 export {
   createAIProvider,
   MockAIProvider,
   type AIProvider,
   type AIConfig,
   type StoryContext,
-  type ParaphraseOptions
-} from './ai-provider'
-export { GameSession }
-export * from './resolver.js'
+  type ParaphraseOptions,
+} from './ai-provider.js'
 
 function cmp(op: '>=' | '<=' | '>' | '<' | '==', a: number, b: number): boolean {
   switch (op) {
@@ -44,7 +42,7 @@ function evalCondition(
   cond: Condition,
   flags: FlagState,
   resources: ResourceState,
-  variables: Record<string, string>,
+  variables: VariableState,
   time: number,
 ): boolean {
   if (cond.type === 'flag') {
@@ -53,18 +51,6 @@ function evalCondition(
   if (cond.type === 'resource') {
     const v = resources[cond.key] ?? 0
     return cmp(cond.op, v, cond.value)
-  }
-  if (cond.type === 'timeWindow') {
-    return time >= cond.start && time <= cond.end
-  }
-  if (cond.type === 'and') {
-    return cond.conditions.every((c) => evalCondition(c, flags, resources, variables, time))
-  }
-  if (cond.type === 'or') {
-    return cond.conditions.some((c) => evalCondition(c, flags, resources, variables, time))
-  }
-  if (cond.type === 'not') {
-    return !evalCondition(cond.condition, flags, resources, variables, time)
   }
   if (cond.type === 'variable') {
     const v = variables[cond.key] ?? ''
@@ -81,7 +67,19 @@ function evalCondition(
         return false
     }
   }
-  return false
+  if (cond.type === 'timeWindow') {
+    return time >= cond.start && time <= cond.end
+  }
+  if (cond.type === 'and') {
+    return cond.conditions.every(c => evalCondition(c, flags, resources, variables, time))
+  }
+  if (cond.type === 'or') {
+    return cond.conditions.some(c => evalCondition(c, flags, resources, variables, time))
+  }
+  if (cond.type === 'not') {
+    return !evalCondition(cond.condition, flags, resources, variables, time)
+  }
+  return true
 }
 
 function applyEffect(effect: Effect, session: SessionState): SessionState {
@@ -90,13 +88,7 @@ function applyEffect(effect: Effect, session: SessionState): SessionState {
   }
   if (effect.type === 'addResource') {
     const cur = session.resources[effect.key] ?? 0
-    const delta = 'delta' in effect ? effect.delta : effect.value
-    if (!Number.isFinite(delta)) return session
-    return { ...session, resources: { ...session.resources, [effect.key]: cur + delta } }
-  }
-  if (effect.type === 'setResource') {
-    if (!Number.isFinite(effect.value)) return session
-    return { ...session, resources: { ...session.resources, [effect.key]: effect.value } }
+    return { ...session, resources: { ...session.resources, [effect.key]: cur + effect.delta } }
   }
   if (effect.type === 'setVariable') {
     return { ...session, variables: { ...session.variables, [effect.key]: effect.value } }
@@ -112,7 +104,7 @@ export function startSession(model: Model, initial?: Partial<SessionState>): Ses
     nodeId: initial?.nodeId ?? model.startNode,
     flags: { ...(model.flags ?? {}), ...(initial?.flags ?? {}) },
     resources: { ...(model.resources ?? {}), ...(initial?.resources ?? {}) },
-    variables: { ...(initial?.variables ?? {}) },
+    variables: initial?.variables ?? {},
     time: initial?.time ?? 0,
   }
 }
@@ -150,4 +142,4 @@ export function applyChoice(session: SessionState, model: Model, choiceId: strin
   return next
 }
 
-export type { Choice, Condition, Effect, FlagState, Model, NodeDef, ResourceState, SessionState } from './types'
+export type { Choice, Condition, Effect, FlagState, Model, NodeDef, ResourceState, SessionState, VariableState } from './types'
