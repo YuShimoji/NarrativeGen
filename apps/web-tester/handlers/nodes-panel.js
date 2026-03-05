@@ -8,6 +8,26 @@
  * @module handlers/nodes-panel
  */
 
+// Import hierarchy utilities
+import {
+  buildHierarchyTree,
+  getAllGroups,
+  getGroupChildren,
+  getChildGroups,
+  getParentGroup,
+  getGroupDisplayName
+} from '../utils/hierarchy-utils.js';
+
+import {
+  getExpansionState,
+  setExpansionState,
+  expandAll,
+  collapseAll,
+  restoreExpansionState
+} from '../src/ui/hierarchy-state.js';
+
+import { escapeHtml, clearContent } from '../src/utils/html-utils.js';
+
 /**
  * Initialize Nodes Panel handler with dependency injection
  *
@@ -71,6 +91,7 @@ export function initNodesPanel(deps) {
 
   let currentSearchTerm = '';
   let lastHighlightedNode = null;
+  let currentViewMode = 'grid'; // 'grid', 'tree', 'list'
 
   /**
    * Clear all node highlights from the overview
@@ -85,6 +106,472 @@ export function initNodesPanel(deps) {
       node.style.backgroundColor = '';
     });
     lastHighlightedNode = null;
+  }
+
+  /**
+   * Render a single node in the tree view
+   *
+   * @param {Object} node - Node object
+   * @param {number} depth - Nesting depth level
+   * @returns {HTMLElement} Node element
+   * @private
+   */
+  function renderTreeNode(node, depth) {
+    const session = getSession();
+    const nodeDiv = document.createElement('div');
+    nodeDiv.className = 'hierarchy-node';
+    nodeDiv.style.paddingLeft = `${depth * 20 + 20}px`;
+    nodeDiv.dataset.nodeId = node.id;
+
+    // Highlight current node
+    if (session?.state?.nodeId === node.id) {
+      nodeDiv.classList.add('current-node');
+      nodeDiv.style.backgroundColor = '#e3f2fd';
+    }
+
+    // File icon
+    const icon = document.createElement('span');
+    icon.className = 'hierarchy-icon';
+    icon.textContent = '📄';
+    icon.style.marginRight = '6px';
+    nodeDiv.appendChild(icon);
+
+    // Node name
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'hierarchy-node-name';
+    nameSpan.textContent = escapeHtml(node.localId || node.id);
+    nameSpan.style.fontWeight = '500';
+    nameSpan.style.marginRight = '8px';
+    nodeDiv.appendChild(nameSpan);
+
+    // Node text preview
+    if (node.text) {
+      const textSpan = document.createElement('span');
+      textSpan.className = 'hierarchy-node-text';
+      textSpan.textContent = escapeHtml(node.text.substring(0, 40));
+      textSpan.style.color = 'var(--color-text-muted)';
+      textSpan.style.fontSize = '11px';
+      textSpan.style.marginRight = '8px';
+      nodeDiv.appendChild(textSpan);
+    }
+
+    // Jump button
+    const jumpBtn = document.createElement('button');
+    jumpBtn.className = 'btn-small jump-btn';
+    jumpBtn.textContent = 'Jump';
+    jumpBtn.style.marginLeft = 'auto';
+    jumpBtn.onclick = (e) => {
+      e.stopPropagation();
+      jumpToNode(node.id);
+    };
+    nodeDiv.appendChild(jumpBtn);
+
+    // Make node clickable
+    nodeDiv.style.cursor = 'pointer';
+    nodeDiv.style.display = 'flex';
+    nodeDiv.style.alignItems = 'center';
+    nodeDiv.style.padding = '4px 8px';
+    nodeDiv.style.borderRadius = 'var(--radius-sm)';
+    nodeDiv.style.marginBottom = '2px';
+
+    nodeDiv.addEventListener('mouseenter', () => {
+      if (session?.state?.nodeId !== node.id) {
+        nodeDiv.style.backgroundColor = 'var(--color-hover)';
+      }
+    });
+
+    nodeDiv.addEventListener('mouseleave', () => {
+      if (session?.state?.nodeId !== node.id) {
+        nodeDiv.style.backgroundColor = '';
+      }
+    });
+
+    nodeDiv.addEventListener('click', (e) => {
+      if (e.target === nodeDiv || e.target === nameSpan || e.target === textSpan || e.target === icon) {
+        jumpToNode(node.id);
+      }
+    });
+
+    return nodeDiv;
+  }
+
+  /**
+   * Render a group in the tree view with children
+   *
+   * @param {string} groupPath - Group path to render
+   * @param {Array} nodes - All nodes array
+   * @param {number} depth - Nesting depth level
+   * @returns {HTMLElement} Group container element
+   * @private
+   */
+  function renderTreeGroup(groupPath, nodes, depth) {
+    const children = getGroupChildren(nodes, groupPath);
+    const allGroups = getAllGroups(nodes);
+    const childGroups = getChildGroups(allGroups, groupPath);
+    const isExpanded = getExpansionState(groupPath);
+
+    // Create container for entire group
+    const container = document.createElement('div');
+    container.className = 'hierarchy-group-container';
+    container.dataset.group = groupPath;
+
+    // Create group header
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'hierarchy-group';
+    groupDiv.style.paddingLeft = `${depth * 20}px`;
+    groupDiv.style.display = 'flex';
+    groupDiv.style.alignItems = 'center';
+    groupDiv.style.padding = '4px 8px';
+    groupDiv.style.borderRadius = 'var(--radius-sm)';
+    groupDiv.style.cursor = 'pointer';
+    groupDiv.style.marginBottom = '2px';
+    groupDiv.dataset.group = groupPath;
+
+    // Add expand button if has children
+    if (childGroups.length > 0 || children.length > 0) {
+      const expandBtn = document.createElement('button');
+      expandBtn.className = 'hierarchy-expand-btn';
+      expandBtn.textContent = isExpanded ? '▼' : '▶';
+      expandBtn.style.background = 'none';
+      expandBtn.style.border = 'none';
+      expandBtn.style.color = 'var(--color-text-muted)';
+      expandBtn.style.cursor = 'pointer';
+      expandBtn.style.fontSize = '10px';
+      expandBtn.style.width = '16px';
+      expandBtn.style.height = '16px';
+      expandBtn.style.display = 'flex';
+      expandBtn.style.alignItems = 'center';
+      expandBtn.style.justifyContent = 'center';
+      expandBtn.style.marginRight = '4px';
+      expandBtn.dataset.group = groupPath;
+      groupDiv.appendChild(expandBtn);
+    } else {
+      // Spacer for alignment
+      const spacer = document.createElement('span');
+      spacer.style.width = '16px';
+      spacer.style.marginRight = '4px';
+      groupDiv.appendChild(spacer);
+    }
+
+    // Add folder icon
+    const icon = document.createElement('span');
+    icon.className = 'hierarchy-icon';
+    icon.textContent = '📁';
+    icon.style.marginRight = '6px';
+    groupDiv.appendChild(icon);
+
+    // Add group name
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'hierarchy-group-name';
+    nameSpan.textContent = getGroupDisplayName(groupPath);
+    nameSpan.style.fontWeight = '600';
+    nameSpan.style.marginRight = '8px';
+    groupDiv.appendChild(nameSpan);
+
+    // Add count
+    const countSpan = document.createElement('span');
+    countSpan.className = 'node-count';
+    countSpan.textContent = `(${children.length})`;
+    countSpan.style.color = 'var(--color-text-muted)';
+    countSpan.style.fontSize = '11px';
+    groupDiv.appendChild(countSpan);
+
+    // Hover effect
+    groupDiv.addEventListener('mouseenter', () => {
+      groupDiv.style.backgroundColor = 'var(--color-hover)';
+    });
+
+    groupDiv.addEventListener('mouseleave', () => {
+      groupDiv.style.backgroundColor = '';
+    });
+
+    container.appendChild(groupDiv);
+
+    // Render children if expanded
+    if (isExpanded) {
+      const childrenContainer = document.createElement('div');
+      childrenContainer.className = 'hierarchy-children';
+
+      // Render child groups first
+      childGroups.forEach(childPath => {
+        childrenContainer.appendChild(renderTreeGroup(childPath, nodes, depth + 1));
+      });
+
+      // Render nodes
+      children.forEach(node => {
+        childrenContainer.appendChild(renderTreeNode(node, depth + 1));
+      });
+
+      container.appendChild(childrenContainer);
+    }
+
+    return container;
+  }
+
+  /**
+   * Render node tree view with hierarchy
+   *
+   * Displays nodes in a hierarchical tree structure with groups,
+   * expand/collapse functionality, and proper indentation.
+   *
+   * @returns {void}
+   */
+  function renderNodeTreeView() {
+    const _model = getModel();
+    const session = getSession();
+    if (!_model?.nodes || !nodeOverview) return;
+
+    const nodes = Object.values(_model.nodes);
+    const allGroups = getAllGroups(nodes);
+
+    // Clear container
+    clearContent(nodeOverview);
+
+    // Create header with controls
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'node-overview-header';
+    headerDiv.style.padding = '12px 16px';
+    headerDiv.style.background = 'var(--color-surface)';
+    headerDiv.style.borderBottom = '1px solid var(--color-border)';
+    headerDiv.style.display = 'flex';
+    headerDiv.style.flexDirection = 'column';
+    headerDiv.style.gap = '8px';
+
+    // Title and view controls
+    const titleRow = document.createElement('div');
+    titleRow.style.display = 'flex';
+    titleRow.style.justifyContent = 'space-between';
+    titleRow.style.alignItems = 'center';
+
+    const title = document.createElement('h3');
+    title.textContent = `Node Overview (${nodes.length} nodes)`;
+    title.style.margin = '0';
+    title.style.fontSize = '13px';
+    titleRow.appendChild(title);
+
+    // View mode controls
+    const viewControls = document.createElement('div');
+    viewControls.className = 'view-mode-controls';
+    viewControls.style.display = 'flex';
+    viewControls.style.gap = '8px';
+    viewControls.style.alignItems = 'center';
+
+    // View mode selector
+    const viewLabel = document.createElement('label');
+    viewLabel.textContent = 'View: ';
+    viewLabel.style.fontSize = '12px';
+    viewLabel.style.marginRight = '4px';
+
+    const viewSelect = document.createElement('select');
+    viewSelect.id = 'viewModeSelect';
+    viewSelect.style.fontSize = '12px';
+    viewSelect.innerHTML = `
+      <option value="tree">Tree View</option>
+      <option value="grid">Grid View</option>
+      <option value="list">List View</option>
+    `;
+    viewSelect.value = currentViewMode;
+
+    viewLabel.appendChild(viewSelect);
+    viewControls.appendChild(viewLabel);
+
+    // Expand/Collapse buttons (only show in tree mode)
+    if (currentViewMode === 'tree') {
+      const expandBtn = document.createElement('button');
+      expandBtn.id = 'expandAllBtn';
+      expandBtn.textContent = 'Expand All';
+      expandBtn.className = 'btn-small';
+      expandBtn.style.fontSize = '11px';
+      viewControls.appendChild(expandBtn);
+
+      const collapseBtn = document.createElement('button');
+      collapseBtn.id = 'collapseAllBtn';
+      collapseBtn.textContent = 'Collapse All';
+      collapseBtn.className = 'btn-small';
+      collapseBtn.style.fontSize = '11px';
+      viewControls.appendChild(collapseBtn);
+    }
+
+    titleRow.appendChild(viewControls);
+    headerDiv.appendChild(titleRow);
+
+    // Search input
+    const searchContainer = document.createElement('div');
+    searchContainer.className = 'search-container';
+    searchContainer.style.width = '100%';
+
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.id = 'nodeSearch';
+    searchInput.placeholder = 'Search nodes...';
+    searchInput.value = currentSearchTerm;
+    searchInput.style.width = '100%';
+
+    searchContainer.appendChild(searchInput);
+    headerDiv.appendChild(searchContainer);
+
+    nodeOverview.appendChild(headerDiv);
+
+    // Create tree container
+    const treeContainer = document.createElement('div');
+    treeContainer.className = 'hierarchy-tree';
+    treeContainer.style.padding = '8px';
+    treeContainer.style.overflow = 'auto';
+    treeContainer.style.flex = '1';
+
+    // Get root groups (groups with no parent)
+    const rootGroups = allGroups.filter(groupPath => !getParentGroup(groupPath));
+
+    // Render root level groups
+    rootGroups.forEach(groupPath => {
+      treeContainer.appendChild(renderTreeGroup(groupPath, nodes, 0));
+    });
+
+    // Render ungrouped nodes
+    const ungrouped = nodes.filter(n => !n.group);
+    ungrouped.forEach(node => {
+      treeContainer.appendChild(renderTreeNode(node, 0));
+    });
+
+    nodeOverview.appendChild(treeContainer);
+
+    // Setup event listeners
+    setupTreeViewEventListeners(searchInput, viewSelect);
+
+    // Highlight current node if exists
+    if (session?.state?.nodeId) {
+      highlightNode(session.state.nodeId);
+    }
+  }
+
+  /**
+   * Setup event listeners for tree view
+   *
+   * @param {HTMLInputElement} searchInput - Search input element
+   * @param {HTMLSelectElement} viewSelect - View mode select element
+   * @private
+   */
+  function setupTreeViewEventListeners(searchInput, viewSelect) {
+    // Search handler
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        currentSearchTerm = e.target.value;
+        handleTreeSearch(currentSearchTerm);
+      });
+    }
+
+    // View mode change handler
+    if (viewSelect) {
+      viewSelect.addEventListener('change', (e) => {
+        currentViewMode = e.target.value;
+        localStorage.setItem('ng_node_view_mode', currentViewMode);
+
+        if (currentViewMode === 'tree') {
+          renderNodeTreeView();
+        } else if (currentViewMode === 'grid') {
+          renderNodeOverview();
+        } else if (currentViewMode === 'list') {
+          renderNodeList();
+        }
+      });
+    }
+
+    // Expand/Collapse All buttons
+    const expandAllBtn = document.getElementById('expandAllBtn');
+    const collapseAllBtn = document.getElementById('collapseAllBtn');
+
+    if (expandAllBtn) {
+      expandAllBtn.addEventListener('click', () => {
+        const _model = getModel();
+        if (!_model?.nodes) return;
+        const groups = getAllGroups(Object.values(_model.nodes));
+        expandAll(groups);
+        renderNodeTreeView();
+      });
+    }
+
+    if (collapseAllBtn) {
+      collapseAllBtn.addEventListener('click', () => {
+        const _model = getModel();
+        if (!_model?.nodes) return;
+        const groups = getAllGroups(Object.values(_model.nodes));
+        collapseAll(groups);
+        renderNodeTreeView();
+      });
+    }
+
+    // Expand/Collapse button click handler (event delegation)
+    nodeOverview.addEventListener('click', (e) => {
+      if (e.target.classList.contains('hierarchy-expand-btn')) {
+        const groupPath = e.target.dataset.group;
+        const currentState = getExpansionState(groupPath);
+        setExpansionState(groupPath, !currentState);
+
+        // Re-render tree view
+        if (currentViewMode === 'tree') {
+          renderNodeTreeView();
+        }
+      }
+    });
+  }
+
+  /**
+   * Handle search in tree view
+   *
+   * Auto-expands groups that contain matching nodes
+   *
+   * @param {string} searchTerm - Search term
+   * @private
+   */
+  function handleTreeSearch(searchTerm) {
+    const _model = getModel();
+    if (!_model?.nodes) return;
+
+    if (!searchTerm) {
+      renderNodeTreeView();
+      return;
+    }
+
+    const nodes = Object.values(_model.nodes);
+    const term = searchTerm.toLowerCase();
+
+    // Find matching nodes
+    const matchingNodes = nodes.filter(node =>
+      node.id.toLowerCase().includes(term) ||
+      (node.localId && node.localId.toLowerCase().includes(term)) ||
+      (node.text && node.text.toLowerCase().includes(term)) ||
+      (node.group && node.group.toLowerCase().includes(term))
+    );
+
+    // Collect groups to expand
+    const matchingGroups = new Set();
+    matchingNodes.forEach(node => {
+      if (node.group) {
+        matchingGroups.add(node.group);
+        // Also expand parent groups
+        let parent = getParentGroup(node.group);
+        while (parent) {
+          matchingGroups.add(parent);
+          parent = getParentGroup(parent);
+        }
+      }
+    });
+
+    // Expand matching groups
+    matchingGroups.forEach(group => {
+      setExpansionState(group, true);
+    });
+
+    // Re-render tree
+    renderNodeTreeView();
+
+    // Highlight matching nodes
+    matchingNodes.forEach(node => {
+      const nodeEl = nodeOverview.querySelector(`[data-node-id="${node.id}"]`);
+      if (nodeEl) {
+        nodeEl.style.background = 'rgba(251, 191, 36, 0.3)';
+      }
+    });
   }
 
   /**
@@ -169,6 +656,18 @@ export function initNodesPanel(deps) {
     const session = getSession();
     if (!_model || !nodeOverview) return;
 
+    // Restore view mode from localStorage
+    const savedMode = localStorage.getItem('ng_node_view_mode');
+    if (savedMode && savedMode !== currentViewMode) {
+      currentViewMode = savedMode;
+    }
+
+    // If tree mode is active, render tree view instead
+    if (currentViewMode === 'tree') {
+      renderNodeTreeView();
+      return;
+    }
+
     const nodes = _model.nodes;
     const nodeIds = Object.keys(nodes);
 
@@ -189,46 +688,78 @@ export function initNodesPanel(deps) {
       const isCurrentNode = session?.state?.nodeId === nodeId;
       const choiceCount = node.choices?.length || 0;
       const displayId = node.localId || nodeId;
-      const groupInfo = node.group ? `<span class="node-group">${node.group}/</span>` : '';
+      const groupInfo = node.group ? `<span class="node-group" style="color: var(--color-text-muted); font-size: 11px;">${escapeHtml(node.group)}/</span>` : '';
 
       return `
         <div class="node-item ${isCurrentNode ? 'current-node' : ''}"
              data-node-id="${nodeId}"
+             style="padding: 8px 12px; margin-bottom: 4px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-sm); cursor: pointer;"
              onclick="window.jumpToNode('${nodeId}')">
-          <div class="node-header">
-            <strong>${groupInfo}${displayId}</strong>
-            <span class="node-meta">${choiceCount} choices</span>
+          <div class="node-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <strong>${groupInfo}${escapeHtml(displayId)}</strong>
+            <span class="node-meta" style="color: var(--color-text-muted); font-size: 11px;">${choiceCount} choices</span>
           </div>
-          <div class="node-text">${node.text?.substring(0, 100) || 'No text'}${node.text?.length > 100 ? '...' : ''}</div>
+          <div class="node-text" style="color: var(--color-text-muted); font-size: 12px; margin-bottom: 4px;">${escapeHtml(node.text?.substring(0, 100) || 'No text')}${node.text?.length > 100 ? '...' : ''}</div>
           <div class="node-actions">
             <button onclick="event.stopPropagation(); window.jumpToNode('${nodeId}')"
-                    class="jump-btn">Jump</button>
+                    class="jump-btn btn-small">Jump</button>
           </div>
         </div>
       `;
     }).join('');
 
     const emptyState = filteredNodes.length === 0 ? `
-      <div class="empty-state">
-        ${currentSearchTerm ? `「${currentSearchTerm}」に一致するノードが見つかりません` : 'ノードがありません'}
+      <div class="empty-state" style="padding: 20px; text-align: center; color: var(--color-text-muted);">
+        ${currentSearchTerm ? `「${escapeHtml(currentSearchTerm)}」に一致するノードが見つかりません` : 'ノードがありません'}
       </div>
     ` : '';
 
     nodeOverview.innerHTML = `
-      <div class="node-overview-header">
-        <h3>Node Overview (${filteredNodes.length}/${nodeIds.length})</h3>
-        <div class="search-container">
+      <div class="node-overview-header" style="padding: 12px 16px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="margin: 0; font-size: 13px;">Node Overview (${filteredNodes.length}/${nodeIds.length})</h3>
+          <div class="view-mode-controls" style="display: flex; gap: 8px; align-items: center;">
+            <label style="fontSize: 12px;">
+              View:
+              <select id="viewModeSelect" style="font-size: 12px; margin-left: 4px;">
+                <option value="tree">Tree View</option>
+                <option value="grid">Grid View</option>
+                <option value="list">List View</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="search-container" style="width: 100%;">
           <input type="text"
                  id="nodeSearch"
                  placeholder="Search nodes..."
-                 value="${currentSearchTerm}">
+                 value="${escapeHtml(currentSearchTerm)}"
+                 style="width: 100%;">
         </div>
       </div>
-      <div class="node-list">
+      <div class="node-list" style="padding: 8px; overflow: auto; flex: 1;">
         ${nodeListHtml}
         ${emptyState}
       </div>
     `;
+
+    // Setup view mode select
+    const viewModeSelect = nodeOverview.querySelector('#viewModeSelect');
+    if (viewModeSelect) {
+      viewModeSelect.value = currentViewMode;
+      viewModeSelect.addEventListener('change', (e) => {
+        currentViewMode = e.target.value;
+        localStorage.setItem('ng_node_view_mode', currentViewMode);
+
+        if (currentViewMode === 'tree') {
+          renderNodeTreeView();
+        } else if (currentViewMode === 'grid') {
+          renderNodeOverview();
+        } else if (currentViewMode === 'list') {
+          renderNodeList();
+        }
+      });
+    }
 
     // Setup search event listener
     const searchInput = nodeOverview.querySelector('#nodeSearch');
@@ -415,6 +946,7 @@ export function initNodesPanel(deps) {
   // Public API
   return {
     renderNodeOverview,
+    renderNodeTreeView,
     renderNodeList,
     highlightNode,
     jumpToNode,
