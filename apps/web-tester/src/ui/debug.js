@@ -5,6 +5,7 @@
 
 import { getCurrentSession } from '../core/session.js'
 import { getAvailableChoices } from '../../../../packages/engine-ts/dist/browser.js'
+import { escapeHtml, clearContent } from '../utils/html-utils.js'
 
 export class DebugManager {
   constructor(appState) {
@@ -26,13 +27,19 @@ export class DebugManager {
     const currentSession = getCurrentSession()
     if (!currentSession || !this.appState.model) {
       if (this.flagsDisplay) {
-        this.flagsDisplay.innerHTML = '<p>セッションを開始してください</p>'
+        clearContent(this.flagsDisplay)
+        const p1 = document.createElement('p')
+        p1.textContent = 'セッションを開始してください'
+        this.flagsDisplay.appendChild(p1)
       }
       if (this.resourcesDisplay) {
-        this.resourcesDisplay.innerHTML = ''
+        clearContent(this.resourcesDisplay)
       }
       if (this.reachableNodes) {
-        this.reachableNodes.innerHTML = '<p>モデルを読み込んでください</p>'
+        clearContent(this.reachableNodes)
+        const p2 = document.createElement('p')
+        p2.textContent = 'モデルを読み込んでください'
+        this.reachableNodes.appendChild(p2)
       }
       return
     }
@@ -45,39 +52,64 @@ export class DebugManager {
   renderFlags(currentSession) {
     if (!this.flagsDisplay) return
 
-    this.flagsDisplay.innerHTML = '<h4>フラグ</h4>'
+    clearContent(this.flagsDisplay)
+    const h4 = document.createElement('h4')
+    h4.textContent = 'フラグ'
+    this.flagsDisplay.appendChild(h4)
+
     if (currentSession.flags && Object.keys(currentSession.flags).length > 0) {
       Object.entries(currentSession.flags).forEach(([key, value]) => {
         const div = document.createElement('div')
         div.className = 'flag-item'
-        div.innerHTML = `<span>${key}</span><span>${value}</span>`
+        const keySpan = document.createElement('span')
+        keySpan.textContent = escapeHtml(key)
+        const valueSpan = document.createElement('span')
+        valueSpan.textContent = escapeHtml(String(value))
+        div.appendChild(keySpan)
+        div.appendChild(valueSpan)
         this.flagsDisplay.appendChild(div)
       })
     } else {
-      this.flagsDisplay.innerHTML += '<p>フラグなし</p>'
+      const p = document.createElement('p')
+      p.textContent = 'フラグなし'
+      this.flagsDisplay.appendChild(p)
     }
   }
 
   renderVariables(currentSession) {
     if (!this.variablesDisplay) return
 
-    this.variablesDisplay.innerHTML = '<h4>変数</h4>'
+    clearContent(this.variablesDisplay)
+    const h4 = document.createElement('h4')
+    h4.textContent = '変数'
+    this.variablesDisplay.appendChild(h4)
+
     if (currentSession.variables && Object.keys(currentSession.variables).length > 0) {
       Object.entries(currentSession.variables).forEach(([key, value]) => {
         const div = document.createElement('div')
         div.className = 'variable-item'
-        div.innerHTML = `<span>${key}</span><span>${value}</span>`
+        const keySpan = document.createElement('span')
+        keySpan.textContent = escapeHtml(key)
+        const valueSpan = document.createElement('span')
+        valueSpan.textContent = escapeHtml(String(value))
+        div.appendChild(keySpan)
+        div.appendChild(valueSpan)
         this.variablesDisplay.appendChild(div)
       })
     } else {
-      this.variablesDisplay.innerHTML += '<p>変数なし</p>'
+      const p = document.createElement('p')
+      p.textContent = '変数なし'
+      this.variablesDisplay.appendChild(p)
     }
   }
 
   renderReachability(currentSession) {
     if (!this.reachableNodes) return
 
-    this.reachableNodes.innerHTML = '<h4>到達可能性</h4>'
+    clearContent(this.reachableNodes)
+    const h4 = document.createElement('h4')
+    h4.textContent = '到達可能性'
+    this.reachableNodes.appendChild(h4)
     const visited = new Set([currentSession.nodeId])
     const queue = [currentSession.nodeId]
     const reachable = new Set([currentSession.nodeId])

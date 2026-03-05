@@ -1,13 +1,68 @@
-// save-load-handler.js - Save/Load functionality UI handler
-// Manages session persistence, auto-save, and resume functionality
+/**
+ * Save/Load handler - Manages session persistence and auto-save functionality
+ *
+ * Provides comprehensive save/load operations with auto-save capability,
+ * session resumption, and storage quota management. Uses dependency injection
+ * for flexible integration with the main application state.
+ *
+ * @module handlers/save-load-handler
+ */
 
 import { StorageManager } from '../utils/storage-utils.js'
 import { GameSession } from '@narrativegen/engine-ts/dist/browser.js'
 
 /**
  * Initialize Save/Load handler with dependency injection
- * @param {Object} deps - Dependencies
- * @returns {Object} Public API
+ *
+ * Sets up event listeners for save, load, and auto-save operations.
+ * Manages session state persistence and recovery with change detection
+ * to optimize storage operations.
+ *
+ * @param {Object} deps - Dependencies object
+ * @param {Function} deps.getModel - Function to retrieve current model
+ * @param {Function} deps.setModel - Function to update model
+ * @param {Function} deps.getSession - Function to retrieve current session
+ * @param {Function} deps.setSession - Function to update session
+ * @param {Function} deps.setStatus - Function to display status messages
+ * @param {Function} deps.getStoryLog - Function to retrieve story entries
+ * @param {Function} deps.setStoryLog - Function to update story entries
+ * @param {Function} deps.clearStoryLog - Function to clear story entries
+ * @param {HTMLElement} deps.saveBtn - Save button element
+ * @param {HTMLElement} deps.loadBtn - Load button element
+ * @param {HTMLElement} deps.clearSaveBtn - Clear saves button element
+ * @param {HTMLInputElement} deps.autoSaveToggle - Auto-save checkbox
+ * @param {HTMLElement} deps.autoSaveIndicator - Auto-save status indicator
+ * @param {HTMLElement} deps.resumeModal - Resume modal dialog
+ * @param {HTMLElement} deps.resumeInfo - Resume info display area
+ * @param {HTMLElement} deps.resumeBtn - Resume button
+ * @param {HTMLElement} deps.newSessionBtn - New session button
+ * @param {Object} deps.Logger - Logger instance
+ * @param {Function} deps.renderState - Function to render current state
+ * @param {Function} deps.renderChoices - Function to render choices
+ * @param {Function} deps.initStory - Function to initialize story
+ * @param {Function} deps.renderStoryEnhanced - Function to render formatted story
+ * @param {HTMLElement} deps.storyView - Story view element
+ * @param {Function} deps.currentModelName - Function to get current model name
+ * @param {Function} deps.entities - Function to get entity list
+ * @returns {Object} Handler public API
+ * @returns {Function} returns.scheduleAutoSave - Schedule auto-save operation
+ * @returns {Function} returns.manualSave - Perform manual save
+ * @returns {Function} returns.manualLoad - Perform manual load
+ * @returns {Function} returns.clearSave - Clear saved data
+ * @returns {Function} returns.checkForSavedSession - Check for saved session on load
+ * @returns {Function} returns.restoreSession - Restore session from saved data
+ *
+ * @example
+ * const handler = initSaveLoadHandler({
+ *   getModel: () => model,
+ *   setModel: (m) => model = m,
+ *   getSession: () => session,
+ *   setSession: (s) => session = s,
+ *   setStatus: (msg, type) => showStatus(msg, type),
+ *   saveBtn: document.getElementById('save-btn'),
+ *   // ... other dependencies
+ * });
+ * handler.scheduleAutoSave();
  */
 export function initSaveLoadHandler(deps) {
   const {
@@ -46,8 +101,13 @@ export function initSaveLoadHandler(deps) {
 
   /**
    * Calculate hash of session state for change detection
-   * @param {GameSession} session
-   * @returns {string} Hash
+   *
+   * Creates a deterministic hash of critical session state to detect
+   * changes and optimize auto-save operations.
+   *
+   * @param {GameSession} session - Session to hash
+   * @returns {string} JSON string hash of session state
+   * @private
    */
   function getSessionHash(session) {
     if (!session) return ''
@@ -63,6 +123,12 @@ export function initSaveLoadHandler(deps) {
 
   /**
    * Show auto-save indicator briefly
+   *
+   * Displays the auto-save indicator for 2 seconds to provide
+   * visual feedback to the user.
+   *
+   * @returns {void}
+   * @private
    */
   function showAutoSaveIndicator() {
     if (!autoSaveIndicator) return
@@ -76,6 +142,12 @@ export function initSaveLoadHandler(deps) {
 
   /**
    * Perform auto-save operation
+   *
+   * Saves session, model, and story log if state has changed since
+   * last save. Includes error handling and logging.
+   *
+   * @returns {void}
+   * @private
    */
   function performAutoSave() {
     try {
@@ -121,6 +193,12 @@ export function initSaveLoadHandler(deps) {
 
   /**
    * Schedule auto-save with debouncing
+   *
+   * Schedules an auto-save operation after 500ms, clearing any
+   * previous timeout. Respects auto-save enabled setting.
+   *
+   * @returns {void}
+   * @public
    */
   function scheduleAutoSave() {
     if (!StorageManager.isAutoSaveEnabled()) {
@@ -141,6 +219,12 @@ export function initSaveLoadHandler(deps) {
 
   /**
    * Manual save operation
+   *
+   * Explicitly saves the current session, model, and story log.
+   * Displays user-facing status messages on success or failure.
+   *
+   * @returns {void}
+   * @public
    */
   function manualSave() {
     try {
@@ -179,6 +263,12 @@ export function initSaveLoadHandler(deps) {
 
   /**
    * Manual load operation
+   *
+   * Loads a saved session if one exists. Requires current model
+   * to be loaded. Delegates to restoreSession for actual loading.
+   *
+   * @returns {void}
+   * @public
    */
   function manualLoad() {
     try {
@@ -202,6 +292,12 @@ export function initSaveLoadHandler(deps) {
 
   /**
    * Clear saved data
+   *
+   * Deletes all saved session data after user confirmation.
+   * Resets the save hash to allow fresh saves.
+   *
+   * @returns {void}
+   * @public
    */
   function clearSave() {
     try {
@@ -231,6 +327,12 @@ export function initSaveLoadHandler(deps) {
 
   /**
    * Toggle auto-save preference
+   *
+   * Toggles auto-save enabled state in storage and updates UI accordingly.
+   * Immediately performs save when enabling auto-save.
+   *
+   * @returns {void}
+   * @private
    */
   function toggleAutoSave() {
     const enabled = autoSaveToggle.checked
@@ -252,7 +354,14 @@ export function initSaveLoadHandler(deps) {
 
   /**
    * Restore session from saved data
-   * @param {Model} model - Current model
+   *
+   * Loads saved session state, reconstructs GameSession with entities,
+   * restores inventory, updates all UI components. Handles model name
+   * mismatches with user confirmation.
+   *
+   * @param {Model} model - Current model instance
+   * @returns {void}
+   * @public
    */
   function restoreSession(model) {
     try {
@@ -329,6 +438,12 @@ export function initSaveLoadHandler(deps) {
 
   /**
    * Show resume modal with saved session info
+   *
+   * Displays modal dialog with saved session metadata including
+   * model name and save timestamp, allowing user to resume or start new.
+   *
+   * @returns {void}
+   * @private
    */
   function showResumeModal() {
     try {
@@ -372,6 +487,11 @@ export function initSaveLoadHandler(deps) {
 
   /**
    * Hide resume modal
+   *
+   * Closes the resume session modal dialog.
+   *
+   * @returns {void}
+   * @private
    */
   function hideResumeModal() {
     if (resumeModal) {
@@ -381,6 +501,11 @@ export function initSaveLoadHandler(deps) {
 
   /**
    * Handle resume button click
+   *
+   * Closes modal and restores the saved session after validation.
+   *
+   * @returns {void}
+   * @private
    */
   function handleResume() {
     hideResumeModal()
@@ -397,6 +522,11 @@ export function initSaveLoadHandler(deps) {
 
   /**
    * Handle new session button click
+   *
+   * Closes modal and starts a fresh session, keeping existing saved data.
+   *
+   * @returns {void}
+   * @private
    */
   function handleNewSession() {
     hideResumeModal()
@@ -408,6 +538,12 @@ export function initSaveLoadHandler(deps) {
 
   /**
    * Check for saved session on page load
+   *
+   * Displays resume modal if saved session exists, allowing user
+   * to choose between resuming or starting fresh.
+   *
+   * @returns {void}
+   * @public
    */
   function checkForSavedSession() {
     if (StorageManager.hasSavedSession()) {

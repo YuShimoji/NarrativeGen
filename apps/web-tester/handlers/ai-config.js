@@ -2,6 +2,7 @@
 // Extracted from main.js for better maintainability
 
 import { createAIProvider } from '@narrativegen/engine-ts/dist/browser.js'
+import { escapeHtml, clearContent } from '../src/utils/html-utils.js'
 
 export function initAiConfig(deps) {
   const {
@@ -75,14 +76,22 @@ export function initAiConfig(deps) {
     const session = getSession();
     const _model = getModel();
     if (!aiProviderInstance || !session || !_model) {
-      aiOutput.innerHTML = '<div style="color: #dc2626;">❌ モデルを読み込んでから実行してください</div>';
+      clearContent(aiOutput);
+      const div = document.createElement('div');
+      div.style.color = '#dc2626';
+      div.textContent = '❌ モデルを読み込んでから実行してください';
+      aiOutput.appendChild(div);
       return;
     }
 
     // Disable buttons during generation
     generateNextNodeBtn.disabled = true;
     paraphraseCurrentBtn.disabled = true;
-    aiOutput.innerHTML = '<div style="color: #6366f1;">⏳ 生成中...</div>';
+    clearContent(aiOutput);
+    const loadingDiv = document.createElement('div');
+    loadingDiv.style.color = '#6366f1';
+    loadingDiv.textContent = '⏳ 生成中...';
+    aiOutput.appendChild(loadingDiv);
 
     try {
       const context = {
@@ -113,7 +122,11 @@ export function initAiConfig(deps) {
       const errorMsg = error.message.includes('API error')
         ? `APIエラー: ${error.message}\nAPIキーを確認してください。`
         : `生成に失敗しました: ${error.message}`;
-      aiOutput.innerHTML = `<div style="color: #dc2626; padding: 1rem; background: #fee2e2; border-radius: 4px;">❌ ${errorMsg}</div>`;
+      clearContent(aiOutput);
+      const errorDiv = document.createElement('div');
+      errorDiv.style.cssText = 'color: #dc2626; padding: 1rem; background: #fee2e2; border-radius: 4px;';
+      errorDiv.textContent = `❌ ${escapeHtml(errorMsg)}`;
+      aiOutput.appendChild(errorDiv);
       Logger.error('AI generation failed', { error: error.message, provider: aiConfig.provider });
     } finally {
       // Re-enable buttons
@@ -126,20 +139,32 @@ export function initAiConfig(deps) {
     const session = getSession();
     const _model = getModel();
     if (!aiProviderInstance || !session || !_model) {
-      aiOutput.innerHTML = '<div style="color: #dc2626;">❌ モデルを読み込んでから実行してください</div>';
+      clearContent(aiOutput);
+      const div = document.createElement('div');
+      div.style.color = '#dc2626';
+      div.textContent = '❌ モデルを読み込んでから実行してください';
+      aiOutput.appendChild(div);
       return;
     }
 
     const currentNode = _model.nodes[session.state.nodeId];
     if (!currentNode?.text) {
-      aiOutput.innerHTML = '<div style="color: #dc2626;">❌ 現在のノードにテキストがありません</div>';
+      clearContent(aiOutput);
+      const div = document.createElement('div');
+      div.style.color = '#dc2626';
+      div.textContent = '❌ 現在のノードにテキストがありません';
+      aiOutput.appendChild(div);
       return;
     }
 
     // Disable buttons during generation
     generateNextNodeBtn.disabled = true;
     paraphraseCurrentBtn.disabled = true;
-    aiOutput.innerHTML = '<div style="color: #6366f1;">⏳ 言い換え中...</div>';
+    clearContent(aiOutput);
+    const loadingDiv = document.createElement('div');
+    loadingDiv.style.color = '#6366f1';
+    loadingDiv.textContent = '⏳ 言い換え中...';
+    aiOutput.appendChild(loadingDiv);
 
     try {
       const startTime = Date.now();
@@ -172,7 +197,11 @@ export function initAiConfig(deps) {
       const errorMsg = error.message.includes('API error')
         ? `APIエラー: ${error.message}\nAPIキーを確認してください。`
         : `言い換えに失敗しました: ${error.message}`;
-      aiOutput.innerHTML = `<div style="color: #dc2626; padding: 1rem; background: #fee2e2; border-radius: 4px;">❌ ${errorMsg}</div>`;
+      clearContent(aiOutput);
+      const errorDiv = document.createElement('div');
+      errorDiv.style.cssText = 'color: #dc2626; padding: 1rem; background: #fee2e2; border-radius: 4px;';
+      errorDiv.textContent = `❌ ${escapeHtml(errorMsg)}`;
+      aiOutput.appendChild(errorDiv);
       Logger.error('AI paraphrase failed', { error: error.message, provider: aiConfig.provider });
     } finally {
       // Re-enable buttons
@@ -182,12 +211,20 @@ export function initAiConfig(deps) {
   }
 
   function renderHistory() {
+    clearContent(aiOutput);
+
     if (generationHistory.length === 0) {
-      aiOutput.innerHTML = '<p style="color: #9ca3af;">生成履歴なし</p>';
+      const p = document.createElement('p');
+      p.style.color = '#9ca3af';
+      p.textContent = '生成履歴なし';
+      aiOutput.appendChild(p);
       return;
     }
 
-    aiOutput.innerHTML = '<h4 style="margin-top: 0;">生成履歴（直近5件）</h4>';
+    const h4 = document.createElement('h4');
+    h4.style.marginTop = '0';
+    h4.textContent = '生成履歴（直近5件）';
+    aiOutput.appendChild(h4);
 
     generationHistory.forEach((item, index) => {
       const card = document.createElement('div');
@@ -211,7 +248,7 @@ export function initAiConfig(deps) {
 
       const textContent = document.createElement('div');
       textContent.style.cssText = 'color: #1f2937; margin-bottom: 0.75rem; line-height: 1.5;';
-      textContent.textContent = item.text;
+      textContent.textContent = escapeHtml(item.text);
 
       const adoptBtn = document.createElement('button');
       adoptBtn.textContent = '✓ 採用';

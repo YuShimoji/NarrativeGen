@@ -1,6 +1,8 @@
 // Debug Handler - manages debug info rendering (flags, resources, inventory, reachability)
 // Extracted from main.js for better maintainability
 
+import { escapeHtml, clearContent } from '../src/utils/html-utils.js'
+
 export function initDebugHandler(deps) {
   const {
     getModel,
@@ -15,55 +17,99 @@ export function initDebugHandler(deps) {
     const _model = getModel();
     const session = getSession();
     if (!session || !_model) {
-      flagsDisplay.innerHTML = '<p>セッションを開始してください</p>';
-      resourcesDisplay.innerHTML = '';
-      inventoryDisplay.innerHTML = '';
-      reachableNodes.innerHTML = '<p>モデルを読み込んでください</p>';
+      clearContent(flagsDisplay);
+      const p1 = document.createElement('p');
+      p1.textContent = 'セッションを開始してください';
+      flagsDisplay.appendChild(p1);
+
+      clearContent(resourcesDisplay);
+      clearContent(inventoryDisplay);
+
+      clearContent(reachableNodes);
+      const p2 = document.createElement('p');
+      p2.textContent = 'モデルを読み込んでください';
+      reachableNodes.appendChild(p2);
       return;
     }
 
     // Render flags
-    flagsDisplay.innerHTML = '<h4>フラグ</h4>';
+    clearContent(flagsDisplay);
+    const h4Flags = document.createElement('h4');
+    h4Flags.textContent = 'フラグ';
+    flagsDisplay.appendChild(h4Flags);
+
     if (session.state.flags && Object.keys(session.state.flags).length > 0) {
       Object.entries(session.state.flags).forEach(([key, value]) => {
         const div = document.createElement('div');
         div.className = 'flag-item';
-        div.innerHTML = `<span>${key}</span><span>${value}</span>`;
+        const keySpan = document.createElement('span');
+        keySpan.textContent = escapeHtml(key);
+        const valueSpan = document.createElement('span');
+        valueSpan.textContent = escapeHtml(String(value));
+        div.appendChild(keySpan);
+        div.appendChild(valueSpan);
         flagsDisplay.appendChild(div);
       });
     } else {
-      flagsDisplay.innerHTML += '<p>フラグなし</p>';
+      const pFlags = document.createElement('p');
+      pFlags.textContent = 'フラグなし';
+      flagsDisplay.appendChild(pFlags);
     }
 
     // Render resources
-    resourcesDisplay.innerHTML = '<h4>リソース</h4>';
+    clearContent(resourcesDisplay);
+    const h4Resources = document.createElement('h4');
+    h4Resources.textContent = 'リソース';
+    resourcesDisplay.appendChild(h4Resources);
+
     if (session.state.resources && Object.keys(session.state.resources).length > 0) {
       Object.entries(session.state.resources).forEach(([key, value]) => {
         const div = document.createElement('div');
         div.className = 'resource-item';
-        div.innerHTML = `<span>${key}</span><span>${value}</span>`;
+        const keySpan = document.createElement('span');
+        keySpan.textContent = escapeHtml(key);
+        const valueSpan = document.createElement('span');
+        valueSpan.textContent = escapeHtml(String(value));
+        div.appendChild(keySpan);
+        div.appendChild(valueSpan);
         resourcesDisplay.appendChild(div);
       });
     } else {
-      resourcesDisplay.innerHTML += '<p>リソースなし</p>';
+      const pResources = document.createElement('p');
+      pResources.textContent = 'リソースなし';
+      resourcesDisplay.appendChild(pResources);
     }
 
     // Render inventory
-    inventoryDisplay.innerHTML = '<h4>インベントリ</h4>';
+    clearContent(inventoryDisplay);
+    const h4Inventory = document.createElement('h4');
+    h4Inventory.textContent = 'インベントリ';
+    inventoryDisplay.appendChild(h4Inventory);
+
     const inventory = session.listInventory();
     if (inventory && inventory.length > 0) {
       inventory.forEach((item) => {
         const div = document.createElement('div');
         div.className = 'resource-item';
-        div.innerHTML = `<span>${item.id}</span><span>${item.brand} - ${item.description}</span>`;
+        const idSpan = document.createElement('span');
+        idSpan.textContent = escapeHtml(item.id);
+        const infoSpan = document.createElement('span');
+        infoSpan.textContent = `${escapeHtml(item.brand)} - ${escapeHtml(item.description)}`;
+        div.appendChild(idSpan);
+        div.appendChild(infoSpan);
         inventoryDisplay.appendChild(div);
       });
     } else {
-      inventoryDisplay.innerHTML += '<p>アイテムなし</p>';
+      const pInventory = document.createElement('p');
+      pInventory.textContent = 'アイテムなし';
+      inventoryDisplay.appendChild(pInventory);
     }
 
     // Render reachability map
-    reachableNodes.innerHTML = '<h4>到達可能性</h4>';
+    clearContent(reachableNodes);
+    const h4Reachable = document.createElement('h4');
+    h4Reachable.textContent = '到達可能性';
+    reachableNodes.appendChild(h4Reachable);
     const visited = new Set([session.state.nodeId]);
     const queue = [session.state.nodeId];
     const reachable = new Set([session.state.nodeId]);

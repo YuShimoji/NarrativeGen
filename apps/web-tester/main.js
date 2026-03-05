@@ -46,6 +46,7 @@ import { MermaidPreviewManager } from './src/ui/mermaid-preview.js'
 import { validateNotEmpty, validateJson, validateFileExtension } from './src/utils/validation.js'
 import { downloadFile, readFileAsText, parseCsv } from './src/utils/file-utils.js'
 import { getStorageItem, setStorageItem, removeStorageItem } from './src/utils/storage.js'
+import { escapeHtml, clearContent } from './src/utils/html-utils.js'
 import Logger from './src/core/logger.js'
 import {
   getCurrentSession,
@@ -279,7 +280,19 @@ function setStatus(message, type = 'info') {
       break
   }
 
-  statusText.innerHTML = `<svg class="icon icon-sm"><use href="#${iconId}"></use></svg>${message}`
+  // Clear previous content
+  clearContent(statusText)
+
+  // Create SVG icon element
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svg.setAttribute('class', 'icon icon-sm')
+  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use')
+  use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${iconId}`)
+  svg.appendChild(use)
+
+  // Add icon and text
+  statusText.appendChild(svg)
+  statusText.appendChild(document.createTextNode(message))
 }
 
 if (typeof window !== 'undefined') {
@@ -312,7 +325,7 @@ function showErrors(errors) {
     return
   }
 
-  errorList.innerHTML = ''
+  clearContent(errorList)
   errors.forEach(error => {
     const li = document.createElement('li')
     li.textContent = error
@@ -359,7 +372,7 @@ function showCsvPreview(file) {
       table.appendChild(row)
     }
 
-    csvPreviewContent.innerHTML = ''
+    clearContent(csvPreviewContent)
     csvPreviewContent.appendChild(table)
     csvPreviewModal.classList.add('show')
   }
@@ -401,7 +414,7 @@ function setControlsEnabled(enabled) {
 }
 
 function renderChoices() {
-  choicesContainer.innerHTML = ''
+  clearContent(choicesContainer)
 
   const currentSession = getCurrentSession()
   if (!currentSession) {
@@ -988,17 +1001,50 @@ function renderNodeList() {
   for (const [nodeId, node] of Object.entries(appState.model.nodes)) {
     const nodeDiv = document.createElement('div')
     nodeDiv.className = 'node-editor'
-    nodeDiv.innerHTML = `
-      <h3>ノード: ${nodeId}</h3>
-      <label>テキスト: <input type="text" value="${(node.text || '').replace(/"/g, '&quot;')}" data-node-id="${nodeId}" data-field="text"></label>
-      <h4>選択肢</h4>
-      <div class="choices-editor" data-node-id="${nodeId}"></div>
-      <button class="add-choice-btn" data-node-id="${nodeId}">選択肢を追加</button>
-      <button class="delete-node-btn" data-node-id="${nodeId}">ノードを削除</button>
-    `
+
+    // Create h3
+    const h3 = document.createElement('h3')
+    h3.textContent = `ノード: ${nodeId}`
+    nodeDiv.appendChild(h3)
+
+    // Create label with input
+    const label = document.createElement('label')
+    label.textContent = 'テキスト: '
+    const input = document.createElement('input')
+    input.type = 'text'
+    input.value = node.text || ''
+    input.dataset.nodeId = nodeId
+    input.dataset.field = 'text'
+    label.appendChild(input)
+    nodeDiv.appendChild(label)
+
+    // Create h4
+    const h4 = document.createElement('h4')
+    h4.textContent = '選択肢'
+    nodeDiv.appendChild(h4)
+
+    // Create choices editor
+    const choicesEditor = document.createElement('div')
+    choicesEditor.className = 'choices-editor'
+    choicesEditor.dataset.nodeId = nodeId
+    nodeDiv.appendChild(choicesEditor)
+
+    // Create buttons
+    const addChoiceBtn = document.createElement('button')
+    addChoiceBtn.className = 'add-choice-btn'
+    addChoiceBtn.dataset.nodeId = nodeId
+    addChoiceBtn.textContent = '選択肢を追加'
+    nodeDiv.appendChild(addChoiceBtn)
+
+    const deleteNodeBtn = document.createElement('button')
+    deleteNodeBtn.className = 'delete-node-btn'
+    deleteNodeBtn.dataset.nodeId = nodeId
+    deleteNodeBtn.textContent = 'ノードを削除'
+    nodeDiv.appendChild(deleteNodeBtn)
+
     fragment.appendChild(nodeDiv)
   }
-  nodeList.innerHTML = ''
+  clearContent(nodeList)
   nodeList.appendChild(fragment)
 
   // Render choices after DOM is updated
@@ -1016,7 +1062,10 @@ function renderChoicesForNode(nodeId) {
   }
 
   if (!node.choices || node.choices.length === 0) {
-    choicesDiv.innerHTML = '<p>選択肢なし</p>'
+    clearContent(choicesDiv)
+    const p = document.createElement('p')
+    p.textContent = '選択肢なし'
+    choicesDiv.appendChild(p)
     return
   }
 
@@ -1024,15 +1073,50 @@ function renderChoicesForNode(nodeId) {
   node.choices.forEach((choice, index) => {
     const choiceDiv = document.createElement('div')
     choiceDiv.className = 'choice-editor'
-    choiceDiv.innerHTML = `
-      <label>テキスト: <input type="text" value="${(choice.text || '').replace(/"/g, '&quot;')}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="text"></label>
-      <label>ターゲット: <input type="text" value="${choice.target || ''}" data-node-id="${nodeId}" data-choice-index="${index}" data-field="target"></label>
-      <button class="paraphrase-btn" data-node-id="${nodeId}" data-choice-index="${index}">言い換え</button>
-      <button class="delete-choice-btn" data-node-id="${nodeId}" data-choice-index="${index}">削除</button>
-    `
+
+    // Text label
+    const textLabel = document.createElement('label')
+    textLabel.textContent = 'テキスト: '
+    const textInput = document.createElement('input')
+    textInput.type = 'text'
+    textInput.value = choice.text || ''
+    textInput.dataset.nodeId = nodeId
+    textInput.dataset.choiceIndex = index
+    textInput.dataset.field = 'text'
+    textLabel.appendChild(textInput)
+    choiceDiv.appendChild(textLabel)
+
+    // Target label
+    const targetLabel = document.createElement('label')
+    targetLabel.textContent = 'ターゲット: '
+    const targetInput = document.createElement('input')
+    targetInput.type = 'text'
+    targetInput.value = choice.target || ''
+    targetInput.dataset.nodeId = nodeId
+    targetInput.dataset.choiceIndex = index
+    targetInput.dataset.field = 'target'
+    targetLabel.appendChild(targetInput)
+    choiceDiv.appendChild(targetLabel)
+
+    // Paraphrase button
+    const paraphraseBtn = document.createElement('button')
+    paraphraseBtn.className = 'paraphrase-btn'
+    paraphraseBtn.dataset.nodeId = nodeId
+    paraphraseBtn.dataset.choiceIndex = index
+    paraphraseBtn.textContent = '言い換え'
+    choiceDiv.appendChild(paraphraseBtn)
+
+    // Delete button
+    const deleteBtn = document.createElement('button')
+    deleteBtn.className = 'delete-choice-btn'
+    deleteBtn.dataset.nodeId = nodeId
+    deleteBtn.dataset.choiceIndex = index
+    deleteBtn.textContent = '削除'
+    choiceDiv.appendChild(deleteBtn)
+
     fragment.appendChild(choiceDiv)
   })
-  choicesDiv.innerHTML = ''
+  clearContent(choicesDiv)
   choicesDiv.appendChild(fragment)
 }
 
@@ -1668,7 +1752,12 @@ function openBatchChoiceModal() {
   const nodeSelect = document.getElementById('batchNodeSelect')
 
   // Populate node list
-  nodeSelect.innerHTML = '<option value="">ノードを選択...</option>'
+  clearContent(nodeSelect)
+  const defaultOption = document.createElement('option')
+  defaultOption.value = ''
+  defaultOption.textContent = 'ノードを選択...'
+  nodeSelect.appendChild(defaultOption)
+
   Object.keys(_model.nodes).forEach(nodeId => {
     const option = document.createElement('option')
     option.value = nodeId
@@ -1798,27 +1887,56 @@ function renderSnippetList() {
 
   const snippets = guiEditorManager.getSnippets()
 
+  clearContent(snippetList)
+
   if (snippets.length === 0) {
-    snippetList.innerHTML = `
-      <p class="snippet-empty" style="color: var(--color-text-muted); text-align: center; padding: 2rem;">
-        スニペットがありません
-      </p>
-    `
+    const p = document.createElement('p')
+    p.className = 'snippet-empty'
+    p.style.cssText = 'color: var(--color-text-muted); text-align: center; padding: 2rem;'
+    p.textContent = 'スニペットがありません'
+    snippetList.appendChild(p)
     return
   }
 
-  snippetList.innerHTML = snippets.map(snippet => `
-    <div class="snippet-item" data-snippet-id="${snippet.id}">
-      <div class="snippet-info">
-        <div class="snippet-name">${snippet.name}</div>
-        <div class="snippet-meta">作成: ${new Date(snippet.createdAt).toLocaleDateString('ja-JP')}</div>
-      </div>
-      <div class="snippet-actions-group">
-        <button class="insert-snippet-btn primary" data-snippet-id="${snippet.id}">挿入</button>
-        <button class="delete-snippet-btn" data-snippet-id="${snippet.id}">削除</button>
-      </div>
-    </div>
-  `).join('')
+  const fragment = document.createDocumentFragment()
+  snippets.forEach(snippet => {
+    const div = document.createElement('div')
+    div.className = 'snippet-item'
+    div.dataset.snippetId = snippet.id
+
+    const info = document.createElement('div')
+    info.className = 'snippet-info'
+
+    const name = document.createElement('div')
+    name.className = 'snippet-name'
+    name.textContent = snippet.name
+    info.appendChild(name)
+
+    const meta = document.createElement('div')
+    meta.className = 'snippet-meta'
+    meta.textContent = `作成: ${new Date(snippet.createdAt).toLocaleDateString('ja-JP')}`
+    info.appendChild(meta)
+    div.appendChild(info)
+
+    const actionsGroup = document.createElement('div')
+    actionsGroup.className = 'snippet-actions-group'
+
+    const insertBtn = document.createElement('button')
+    insertBtn.className = 'insert-snippet-btn primary'
+    insertBtn.dataset.snippetId = snippet.id
+    insertBtn.textContent = '挿入'
+    actionsGroup.appendChild(insertBtn)
+
+    const deleteBtn = document.createElement('button')
+    deleteBtn.className = 'delete-snippet-btn'
+    deleteBtn.dataset.snippetId = snippet.id
+    deleteBtn.textContent = '削除'
+    actionsGroup.appendChild(deleteBtn)
+
+    div.appendChild(actionsGroup)
+    fragment.appendChild(div)
+  })
+  snippetList.appendChild(fragment)
 
   // Add event listeners for insert and delete buttons
   snippetList.querySelectorAll('.insert-snippet-btn').forEach(btn => {
@@ -1940,26 +2058,50 @@ function renderCustomTemplateList() {
 
   const templates = guiEditorManager.getCustomTemplates()
 
+  clearContent(customTemplateList)
+
   if (templates.length === 0) {
-    customTemplateList.innerHTML = `
-      <p class="template-empty" style="color: var(--color-text-muted); text-align: center; padding: 2rem;">
-        カスタムテンプレートがありません
-      </p>
-    `
+    const p = document.createElement('p')
+    p.className = 'template-empty'
+    p.style.cssText = 'color: var(--color-text-muted); text-align: center; padding: 2rem;'
+    p.textContent = 'カスタムテンプレートがありません'
+    customTemplateList.appendChild(p)
     return
   }
 
-  customTemplateList.innerHTML = templates.map(template => `
-    <div class="snippet-item" data-template-id="${template.id}">
-      <div class="snippet-info">
-        <div class="snippet-name">${template.name}</div>
-        <div class="snippet-meta">作成: ${new Date(template.createdAt).toLocaleDateString('ja-JP')}</div>
-      </div>
-      <div class="snippet-actions-group">
-        <button class="delete-template-btn" data-template-id="${template.id}">削除</button>
-      </div>
-    </div>
-  `).join('')
+  const fragment = document.createDocumentFragment()
+  templates.forEach(template => {
+    const div = document.createElement('div')
+    div.className = 'snippet-item'
+    div.dataset.templateId = template.id
+
+    const info = document.createElement('div')
+    info.className = 'snippet-info'
+
+    const name = document.createElement('div')
+    name.className = 'snippet-name'
+    name.textContent = template.name
+    info.appendChild(name)
+
+    const meta = document.createElement('div')
+    meta.className = 'snippet-meta'
+    meta.textContent = `作成: ${new Date(template.createdAt).toLocaleDateString('ja-JP')}`
+    info.appendChild(meta)
+    div.appendChild(info)
+
+    const actionsGroup = document.createElement('div')
+    actionsGroup.className = 'snippet-actions-group'
+
+    const deleteBtn = document.createElement('button')
+    deleteBtn.className = 'delete-template-btn'
+    deleteBtn.dataset.templateId = template.id
+    deleteBtn.textContent = '削除'
+    actionsGroup.appendChild(deleteBtn)
+
+    div.appendChild(actionsGroup)
+    fragment.appendChild(div)
+  })
+  customTemplateList.appendChild(fragment)
 
   // Add delete event listeners
   customTemplateList.querySelectorAll('.delete-template-btn').forEach(btn => {
@@ -1980,14 +2122,22 @@ function updateCustomTemplateOptions() {
 
   const templates = guiEditorManager.getCustomTemplates()
 
+  clearContent(customTemplateGroup)
+
   if (templates.length === 0) {
-    customTemplateGroup.innerHTML = '<option disabled>カスタムテンプレートなし</option>'
+    const option = document.createElement('option')
+    option.disabled = true
+    option.textContent = 'カスタムテンプレートなし'
+    customTemplateGroup.appendChild(option)
     return
   }
 
-  customTemplateGroup.innerHTML = templates.map(template =>
-    `<option value="${template.id}">${template.name}</option>`
-  ).join('')
+  templates.forEach(template => {
+    const option = document.createElement('option')
+    option.value = template.id
+    option.textContent = template.name
+    customTemplateGroup.appendChild(option)
+  })
 }
 
 // Open template manager modal
