@@ -1,87 +1,172 @@
 # 作業申し送り
 
 ## 最終更新
-- **日時**: 2026-02-12T13:55:00+09:00
-- **更新者**: Cascade
-- **ブランチ**: `feature/main-js-split-phase2`（PR作成待ち）
-- **GitHubAutoApprove**: false
 
-## 直近の作業（2026-02-12）
+- **日時**: 2026-03-06
+- **ブランチ**: `feature/main-js-split-phase2`
+- **PR**: #80（オープン中）
+- **ベースブランチ**: `open-ws/engine-skeleton-2025-09-02`
 
-### ✅ TASK_101: main.js 分割第2弾（本セッション）
-- **main.js**: 1392行 → 825行（40.7%削減、目標1000行未満達成）
-- 5つの新規ハンドラーを抽出:
-  - `handlers/graph-handler.js` (~115行) — renderGraph, ズーム制御
-  - `handlers/debug-handler.js` (~105行) — renderDebugInfo
-  - `handlers/csv-import-handler.js` (~215行) — CSVインポート/プレビュー
-  - `handlers/ai-config.js` (~195行) — AI設定・生成・言い換え
-  - `handlers/split-view.js` (~90行) — 分割ビュートグル/リサイザー
-- **ビルド・テスト全グリーン**: engine-ts 18 tests, web-tester build 54.70KB
-- **Vite dev server 動作確認**: 全タブ正常（Story/Debug/Graph/NodeList/AI）
-- レポート: `docs/inbox/REPORT_TASK101_MainJS_Split_Phase2.md`
+## プロジェクト概要
 
-### ✅ 前セッション（PR #72-75）
-- PR #72: shared-workflows サブモジュール導入
-- PR #73: TASK_101-108 チケット作成
-- PR #74: AI_CONTEXT.md 刷新、CI doctor-bootstrap ジョブ追加
-- PR #75: コードクリーンアップ（nodes-panel/main.js デッドコード除去）
+ナラティブ生成システム。ノード・選択肢ベースのストーリーモデルをJSON形式で定義し、TypeScriptエンジンで実行、Web UIでプレビュー・編集する。
+
+### ワークスペース構成
+
+```text
+NarrativeGen/
+  packages/engine-ts/    # ストーリーエンジン (TypeScript, Vitest)
+  apps/web-tester/       # Web UI (Vite, Playwright E2E)
+  models/                # サンプルモデル + JSONスキーマ
+```
+
+### エンジンの公開API (`@narrativegen/engine-ts`)
+
+| エクスポート | 用途 |
+| ----------- | ---- |
+| `loadModel(data)` | JSONモデル読み込み+スキーマ/整合性検証 |
+| `startSession(model)` | セッション開始 → SessionState |
+| `getAvailableChoices(session, model)` | 現在ノードの選択可能な選択肢（条件評価済み） |
+| `applyChoice(session, model, choiceId)` | 選択肢適用 → 新SessionState |
+| `serialize(session)` / `deserialize(payload)` | セッション永続化 |
+| `registry` | 推論レジストリ（カスタム条件/エフェクト登録） |
+| `buildDependencyGraph(model)` | 前方連鎖用の依存グラフ構築 |
+| `applyChoiceWithForwardChaining(...)` | 選択肢適用+影響分析 |
+| `findPathToGoal(model, start, goal)` | 静的パス探索（BFS） |
+| `findReachableNodes(model, session)` | 条件評価付き到達可能ノード探索 |
+| `getSupportedConditions()` / `getSupportedEffects()` | 登録済み型の列挙 |
+
+### 組み込み条件/エフェクト型
+
+**条件**: `flag`, `resource`, `variable`, `timeWindow`, `and`, `or`, `not`
+**エフェクト**: `setFlag`, `addResource`, `setVariable`, `goto`
+
+詳細は `packages/engine-ts/src/inference/README.md` を参照。
+
+## 直近の作業（2026-03-06）
+
+### アーキテクチャリデザイン（3フェーズ完了）
+
+#### Phase 1: 推論レジストリ基盤
+
+- プラグインレジストリパターンで条件評価・エフェクト適用を拡張可能に
+- `packages/engine-ts/src/inference/` に registry, conditions, effects を構築
+
+#### Phase 2: グラフエディタ実用化
+
+- `GraphEditorManager.js` からDagreLayoutEngine, ContextMenuManagerを分離
+- レイアウト設定改善（nodesep: 80, ranksep: 120, edgesep: 40）
+
+#### Phase 3: 推論機能実装
+
+- 前方連鎖: `buildDependencyGraph`, `applyChoiceWithForwardChaining`
+- 後方連鎖: `findPathToGoal`, `findReachableNodes`
+- Capability Discovery: `getSupportedConditions`, `getSupportedEffects`
+
+### UI改善
+
+- ミニマップDOM配置バグ修正（SVG内のdiv → graph-container配下に移動）
+- カラーパレットを「モダンクラシカル」に変更（落ち着いたトーン）
+- E2Eテスト: theme-toggle 11件をskipマーク（UIと未接続のため）
+
+### ドキュメント整理（108件 → 23件アクティブ）
+
+- レガシードキュメント85件を `docs/archive/` 配下に分類移動
+- `.shared-workflows` submodule 参照解除（190ファイル）
+- `.cursor/` ディレクトリ削除
+- 推論システムの仕様書を新規作成 (`inference/README.md`)
+- TECHNICAL_DEBT.md, WORKFLOW_STATE_SSOT.md を現状に更新
 
 ## 現在の状態
 
-### CI
-- **engine-ts**: build / lint / test / validate:models — 全グリーン
-- **web-tester**: build — グリーン（18 modules, 51.87KB gzip 17.42KB）
-- **doctor-bootstrap**: continue-on-error で通過
+### CI・テスト
 
-### apps/web-tester モジュール構成
-| ファイル | 行数 | 役割 |
-|---------|------|------|
-| main.js | 825 | 初期化・配線・コアUI |
-| handlers/graph-handler.js | ~115 | グラフ描画・ズーム制御 |
-| handlers/debug-handler.js | ~105 | デバッグ情報描画 |
-| handlers/csv-import-handler.js | ~215 | CSVインポート/プレビュー |
-| handlers/ai-config.js | ~195 | AI設定・UI・操作 |
-| handlers/split-view.js | ~90 | 分割ビュートグル/リサイザー |
-| handlers/nodes-panel.js | 281 | ノード一覧・ジャンプ・ハイライト |
-| handlers/tabs.js | 97 | タブ切り替え |
-| handlers/gui-editor.js | 522 | GUI編集モード |
-| handlers/story-handler.js | — | ストーリー描画 |
-| handlers/ai-handler.js | — | AI生成・言い換え（低レベル） |
-| utils/csv-parser.js | — | CSVパーサー |
-| utils/csv-exporter.js | — | CSVエクスポート |
-| utils/model-utils.js | — | モデルユーティリティ |
-| utils/logger.js | — | ログ・エラーバウンダリ |
+- **engine-ts**: 73テスト全合格（10ファイル）
+- **web-tester**: Viteビルド成功
+- **E2E**: 24 passed, 36 skipped
 
-## タスク台帳
+### 主要モジュール構成
 
-詳細は `docs/tasks/TASK_101-108` を参照。
+#### packages/engine-ts/src/
 
-| ID | タスク | ステータス | 優先度 |
-|----|--------|-----------|--------|
-| TASK_101 | main.js 分割第2弾（1392→825行） | DONE | 高 |
-| TASK_102 | ノード階層システム Phase 2 | OPEN | 高 |
-| TASK_103 | CI Doctor 統合 | OPEN | 中 |
-| TASK_104 | AI UX 改善 | OPEN | 中 |
-| TASK_105 | モデル検証強化 | OPEN | 中 |
-| TASK_106 | パフォーマンス最適化 | OPEN | 低 |
-| TASK_107 | セーブ/ロード機能 | OPEN | 低 |
-| TASK_108 | バッチ AI 処理 | OPEN | 低 |
+| モジュール | 役割 |
+| --------- | ---- |
+| index.ts | Node.js向けエントリ（fs使用、スキーマ読み込み） |
+| browser.ts | ブラウザ向けエントリ（fs不使用） |
+| types.ts | Model, SessionState, Condition, Effect 等の型定義 |
+| session-ops.ts | startSession, getAvailableChoices, applyChoice |
+| resolver.ts | ノードID解決（相対/絶対パス、グループ走査） |
+| inference/ | 推論システム（詳細は `inference/README.md`） |
 
-## 次回作業の推奨
+#### apps/web-tester/src/
 
-| 推奨度 | 選択肢 | 説明 |
-|--------|--------|------|
-| ★★★ | TASK_102 | ノード階層 Phase 2（node_group 列対応） |
-| ★★☆ | TASK_103 | CI doctor を required check に昇格 |
-| ★☆☆ | TASK_104 | AI UX 改善 |
+| モジュール | 役割 |
+| --------- | ---- |
+| main.js | アプリケーションエントリ（約2200行、分割進行中） |
+| core/state.js | グローバルアプリ状態管理 |
+| core/session.js | エンジンSessionStateラッパー |
+| ui/graph-editor/GraphEditorManager.js | D3.js + Dagre.jsグラフ可視化・編集 |
+| ui/graph-editor/layout/DagreLayoutEngine.js | Dagreレイアウト計算 |
+| ui/graph-editor/interaction/ContextMenuManager.js | 右クリックメニュー |
+| ui/SearchManager.js | キーワード+セマンティック検索 |
+| ui/theme.js | パレット選択・テーマ適用 |
+| config/palettes.js | カラーパレット定義（モダンクラシカル等） |
+| features/export/ | CSV, Ink, Twine エクスポーター |
+| features/model-validator.js | モデル検証（重複ID, 参照欠落, 循環検出） |
+
+### アクティブドキュメント一覧（docs/）
+
+| ドキュメント | 内容 |
+| ----------- | ---- |
+| WORKFLOW_STATE_SSOT.md | ミッション・Done条件・選別規則 |
+| TECHNICAL_DEBT.md | 技術的負債と改善タスク |
+| architecture.md | システムアーキテクチャ概要 |
+| reference.md | エンジン仕様リファレンス（v1.1提案含む） |
+| ai-features.md | AI機能仕様（言い換え/生成） |
+| hierarchy-api-reference.md | ノード階層APIリファレンス |
+| node-hierarchy-design.md | ノード階層設計メモ |
+| spreadsheet-format.md | CSV/TSVフォーマット v2.0仕様 |
+| OpenSpec.md / OpenSpec-WebTester.md | Web Tester UX仕様 |
+| Mermaid_Preview_Spec.md | Mermaidプレビュー仕様 |
+| NarrativeGen_Reference_Wiki.md | Web Testerリファレンスwiki |
+| GUI_EDITOR_TEST_GUIDE.md | GUIエディタ手動テストガイド |
+| QUICK_START_PHASE2.md | Phase2クイックスタート |
+| MIGRATION_NOTES.md | Phase 2A-C移行ガイド |
+| troubleshooting.md | トラブルシューティング |
+| troubleshooting-narrgen-doctor.md | doctorエラー復旧手順 |
+| WEB_TESTER_BROWSER_VERIFICATION.md | ブラウザ検証手順 |
+| governance/branch-protection.md | ブランチ保護ルール |
+
+### オープンタスク（docs/tasks/）
+
+| タスク | 概要 |
+| ------ | ---- |
+| TASK_103 | CI Doctor統合 |
+| TASK_106 | パフォーマンス最適化（100+ノード対応） |
+| TASK_107 | セーブ/ロード機能（localStorage） |
+| TASK_108 | バッチAI処理 |
 
 ## 再開手順
-1. `git fetch origin && git pull`
-2. `npm ci`
-3. `npm run build --workspace=packages/engine-ts`
-4. `npm test --workspace=packages/engine-ts`
-5. `npm run build --workspace=apps/web-tester`
-6. `npm run dev --workspace=apps/web-tester` → `http://localhost:5173/`
+
+```bash
+git fetch origin && git pull
+npm ci
+npm run build --workspace=packages/engine-ts
+npm test --workspace=packages/engine-ts
+npm run build --workspace=apps/web-tester
+npm run dev --workspace=apps/web-tester
+# → http://localhost:5173/
+```
+
+## 既知の課題
+
+- main.js が約2200行（分割進行中、機能上は問題なし）
+- E2E 36件がskip（theme-toggle 11件はUI未接続、他は優先度判断待ち）
+- ビルド時チャンクサイズ警告（641KB + 442KB、機能に影響なし）
+- index.htmlにインラインCSS約1600行が残存（外部CSSが優先、機能に影響なし）
 
 ---
-**SSOT 参照**: docs/Windsurf_AI_Collab_Rules_latest.md
+
+SSOT: `docs/WORKFLOW_STATE_SSOT.md`
+技術的負債: `docs/TECHNICAL_DEBT.md`
+推論システム仕様: `packages/engine-ts/src/inference/README.md`

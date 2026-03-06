@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hierarchy Tree View Demo - Phase 2B</title>
+  <link rel="stylesheet" href="../src/styles/main.css">
+  <link rel="stylesheet" href="../src/styles/hierarchy.css">
+  <style>
+    body {
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .demo-container {
+      display: flex;
+      flex-direction: column;
+      height: 600px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: var(--color-background);
+    }
+
+    .demo-header {
+      padding: 16px;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .demo-header h1 {
+      font-size: 18px;
+      margin: 0 0 8px 0;
+    }
+
+    .demo-header p {
+      color: var(--color-text-muted);
+      font-size: 12px;
+      margin: 0;
+    }
+
+    .node-overview-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .controls {
+      padding: 16px;
+      background: var(--color-surface-light);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-header">
+    <h1>📊 Node Hierarchy Tree View Demo - Phase 2B</h1>
+    <p>Interactive tree view with expand/collapse, search, and navigation features</p>
+  </div>
+
+  <div class="controls">
+    <button id="loadSampleBtn" class="primary">Load Sample Hierarchical Model</button>
+    <button id="loadFlatBtn" class="secondary">Load Flat Model</button>
+    <button id="clearBtn">Clear</button>
+  </div>
+
+  <div class="demo-container">
+    <div id="nodeOverview" class="node-overview-container"></div>
+  </div>
+
+  <script type="module">
+    import { initNodesPanel } from '../handlers/nodes-panel.js';
+
+    // Mock dependencies
+    let mockModel = null;
+    let mockSession = {
+      state: {
+        nodeId: 'chapter1/scene1/node1'
+      }
+    };
+
+    // Sample hierarchical model
+    const sampleHierarchicalModel = {
+      nodes: {
+        'chapter1/scene1/node1': {
+          id: 'chapter1/scene1/node1',
+          localId: 'node1',
+          group: 'chapter1/scene1',
+          text: 'You wake up in a mysterious forest. The morning mist swirls around ancient trees.',
+          choices: [
+            { id: 'look_around', text: 'Look around', target: 'chapter1/scene1/node2' },
+            { id: 'call_out', text: 'Call out', target: 'chapter1/scene1/node3' }
+          ]
+        },
+        'chapter1/scene1/node2': {
+          id: 'chapter1/scene1/node2',
+          localId: 'node2',
+          group: 'chapter1/scene1',
+          text: 'You scan your surroundings. A narrow path leads deeper into the woods.',
+          choices: [
+            { id: 'follow_path', text: 'Follow the path', target: 'chapter1/scene2/node1' }
+          ]
+        },
+        'chapter1/scene1/node3': {
+          id: 'chapter1/scene1/node3',
+          localId: 'node3',
+          group: 'chapter1/scene1',
+          text: 'Your voice echoes through the trees. A distant response catches your attention.',
+          choices: [
+            { id: 'investigate', text: 'Investigate the sound', target: 'chapter1/scene2/node2' }
+          ]
+        },
+        'chapter1/scene2/node1': {
+          id: 'chapter1/scene2/node1',
+          localId: 'node1',
+          group: 'chapter1/scene2',
+          text: 'The path leads to a clearing with a small cottage.',
+          choices: [
+            { id: 'approach', text: 'Approach the cottage', target: 'chapter2/intro/node1' }
+          ]
+        },
+        'chapter1/scene2/node2': {
+          id: 'chapter1/scene2/node2',
+          localId: 'node2',
+          group: 'chapter1/scene2',
+          text: 'Following the sound, you discover a wounded traveler.',
+          choices: [
+            { id: 'help', text: 'Help them', target: 'chapter2/intro/node2' }
+          ]
+        },
+        'chapter2/intro/node1': {
+          id: 'chapter2/intro/node1',
+          localId: 'node1',
+          group: 'chapter2/intro',
+          text: 'You knock on the cottage door. An elderly woman answers.',
+          choices: [
+            { id: 'greet', text: 'Greet her', target: 'chapter2/dialog/node1' }
+          ]
+        },
+        'chapter2/intro/node2': {
+          id: 'chapter2/intro/node2',
+          localId: 'node2',
+          group: 'chapter2/intro',
+          text: 'The traveler thanks you and offers guidance.',
+          choices: [
+            { id: 'accept', text: 'Accept guidance', target: 'chapter2/dialog/node2' }
+          ]
+        },
+        'chapter2/dialog/node1': {
+          id: 'chapter2/dialog/node1',
+          localId: 'node1',
+          group: 'chapter2/dialog',
+          text: 'The woman tells you about the forest\'s secrets.',
+          choices: []
+        },
+        'chapter2/dialog/node2': {
+          id: 'chapter2/dialog/node2',
+          localId: 'node2',
+          group: 'chapter2/dialog',
+          text: 'The traveler reveals the path to safety.',
+          choices: []
+        },
+        'endings/good': {
+          id: 'endings/good',
+          localId: 'good',
+          group: 'endings',
+          text: 'You find your way home safely. The adventure becomes a cherished memory.',
+          choices: []
+        },
+        'endings/bad': {
+          id: 'endings/bad',
+          localId: 'bad',
+          group: 'endings',
+          text: 'Lost in the forest, you realize you may never escape.',
+          choices: []
+        },
+        'tutorial': {
+          id: 'tutorial',
+          localId: 'tutorial',
+          group: null,
+          text: 'Welcome to the game! This is an ungrouped tutorial node.',
+          choices: [
+            { id: 'start', text: 'Start Adventure', target: 'chapter1/scene1/node1' }
+          ]
+        }
+      }
+    };
+
+    // Flat model without groups
+    const flatModel = {
+      nodes: {
+        'start': {
+          id: 'start',
+          text: 'Beginning of the story',
+          choices: [
+            { id: 'c1', text: 'Continue', target: 'middle' }
+          ]
+        },
+        'middle': {
+          id: 'middle',
+          text: 'Middle of the story',
+          choices: [
+            { id: 'c1', text: 'Go left', target: 'end1' },
+            { id: 'c2', text: 'Go right', target: 'end2' }
+          ]
+        },
+        'end1': {
+          id: 'end1',
+          text: 'Ending 1',
+          choices: []
+        },
+        'end2': {
+          id: 'end2',
+          text: 'Ending 2',
+          choices: []
+        }
+      }
+    };
+
+    // Initialize nodes panel
+    const nodesPanel = initNodesPanel({
+      getModel: () => mockModel,
+      setModel: (m) => { mockModel = m; },
+      getSession: () => mockSession,
+      setSession: (s) => { mockSession = s; },
+      setStatus: (msg, type) => {
+        console.log(`[${type}] ${msg}`);
+      },
+      renderGraph: () => {
+        console.log('Graph render triggered');
+      },
+      renderState: () => {
+        console.log('State render triggered');
+      },
+      renderChoices: () => {
+        console.log('Choices render triggered');
+      },
+      initStory: () => {
+        console.log('Story init triggered');
+      },
+      renderStoryEnhanced: () => {
+        console.log('Story render triggered');
+      },
+      nodeOverview: document.getElementById('nodeOverview'),
+      storyView: document.createElement('div')
+    });
+
+    // Event handlers
+    document.getElementById('loadSampleBtn').addEventListener('click', () => {
+      mockModel = sampleHierarchicalModel;
+      nodesPanel.renderNodeOverview();
+      console.log('Loaded hierarchical model with', Object.keys(mockModel.nodes).length, 'nodes');
+    });
+
+    document.getElementById('loadFlatBtn').addEventListener('click', () => {
+      mockModel = flatModel;
+      nodesPanel.renderNodeOverview();
+      console.log('Loaded flat model with', Object.keys(mockModel.nodes).length, 'nodes');
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      mockModel = null;
+      document.getElementById('nodeOverview').innerHTML = '<div style="padding: 40px; text-align: center; color: var(--color-text-muted);">No model loaded. Click "Load Sample Hierarchical Model" to start.</div>';
+    });
+
+    // Expose jumpToNode for onclick handlers
+    window.jumpToNode = (nodeId) => {
+      nodesPanel.jumpToNode(nodeId);
+    };
+
+    // Initial message
+    document.getElementById('nodeOverview').innerHTML = '<div style="padding: 40px; text-align: center; color: var(--color-text-muted);">Click "Load Sample Hierarchical Model" to see the tree view in action!</div>';
+  </script>
+</body>
+</html>

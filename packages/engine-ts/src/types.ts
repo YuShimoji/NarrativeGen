@@ -14,8 +14,6 @@ export type Condition =
 export type Effect =
   | { type: 'setFlag'; key: string; value: boolean }
   | { type: 'addResource'; key: string; delta: number }
-  | { type: 'addResource'; key: string; value: number }
-  | { type: 'setResource'; key: string; value: number }
   | { type: 'setVariable'; key: string; value: string }
   | { type: 'goto'; target: string }
 

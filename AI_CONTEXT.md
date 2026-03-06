@@ -38,8 +38,13 @@
 
 ### 短期（Next）
 
-- [ ] TASK_101: main.js 分割第2弾（1241行→目標1000行未満）
-- [ ] TASK_103: CI Doctor 統合
+- [pending] ノード階層システム Phase 2 (ref: docs/tasks/TASK_102_NodeHierarchy_Phase2.md, Status: OPEN)
+- [pending] CI Doctor 統合 (ref: docs/tasks/TASK_103_CI_Doctor_Integration.md, Status: OPEN)
+- [pending] AI UX 改善（採用ボタン） (ref: docs/tasks/TASK_104_AI_UX_Improvement.md, Status: OPEN)
+- [pending] モデル検証強化 (ref: docs/tasks/TASK_105_ModelValidation.md, Status: COMPLETED)
+- [pending] パフォーマンス最適化 (ref: docs/tasks/TASK_106_Performance.md, Status: OPEN)
+- [pending] セーブ/ロード機能 (ref: docs/tasks/TASK_107_SaveLoad.md, Status: OPEN)
+- [pending] バッチ AI 処理 (ref: docs/tasks/TASK_108_BatchAI.md, Status: OPEN)
 
 ### 中期（Later）
 

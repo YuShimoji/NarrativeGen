@@ -7,7 +7,7 @@ export function exportModelToCsv(model, currentModelName = 'model') {
   }
 
   const header = [
-    'node_id', 'node_text', 'node_type', 'node_tags', 'node_assets',
+    'node_group', 'node_id', 'node_text', 'node_type', 'node_tags', 'node_assets',
     'choice_id', 'choice_text', 'choice_target',
     'choice_conditions', 'choice_effects', 'choice_outcome_type', 'choice_outcome_value',
     'choice_metadata', 'choice_variables',
@@ -22,13 +22,15 @@ export function exportModelToCsv(model, currentModelName = 'model') {
     const globalMetadata = firstRow && model.metadata ? serializeKeyValuePairs(model.metadata) : ''
     firstRow = false
 
+    const nodeGroup = node.group || ''
+    const localId = node.localId || nid // fallback to nid if localId not set (legacy)
     const nodeType = node.type || 'normal'
     const nodeTags = node.tags ? node.tags.join(';') : ''
     const nodeAssets = node.assets ? serializeKeyValuePairs(node.assets) : ''
 
     if (!node.choices || node.choices.length === 0) {
       rows.push([
-        nid, escapeCsv(node.text ?? ''), nodeType, escapeCsv(nodeTags), escapeCsv(nodeAssets),
+        escapeCsv(nodeGroup), escapeCsv(localId), escapeCsv(node.text ?? ''), nodeType, escapeCsv(nodeTags), escapeCsv(nodeAssets),
         '', '', '',
         '', '', '', '',
         '', '',
@@ -46,7 +48,7 @@ export function exportModelToCsv(model, currentModelName = 'model') {
       const choiceVariables = ch.variables ? serializeKeyValuePairs(ch.variables) : ''
 
       rows.push([
-        nid, escapeCsv(node.text ?? ''), nodeType, escapeCsv(nodeTags), escapeCsv(nodeAssets),
+        escapeCsv(nodeGroup), escapeCsv(localId), escapeCsv(node.text ?? ''), nodeType, escapeCsv(nodeTags), escapeCsv(nodeAssets),
         ch.id ?? '', escapeCsv(ch.text ?? ''), ch.target ?? '',
         escapeCsv(conditions), escapeCsv(effects), outcomeType, outcomeValue,
         escapeCsv(choiceMetadata), escapeCsv(choiceVariables),

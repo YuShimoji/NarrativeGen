@@ -14,7 +14,8 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm ci
+        working-directory: packages/engine-ts
+        run: npm install
       - name: Build
         working-directory: packages/engine-ts
         run: npm run build
@@ -26,44 +27,33 @@ jobs:
         run: npm test -- --reporter=dot
       - name: Validate models
         working-directory: packages/engine-ts
-        run: npm run validate:models
+        run: node dist/tools/validate-models.js
   web-tester:
     runs-on: ubuntu-latest
-    needs: engine-ts
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm ci
-      - name: Build engine
-        run: npm run build:engine
+        working-directory: apps/web-tester
+        run: npm install
       - name: Build
         working-directory: apps/web-tester
         run: npm run build
-  doctor-bootstrap:
+  sdk-unity:
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
-          submodules: recursive
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Run sw-doctor bootstrap check
-        run: node .shared-workflows/scripts/sw-doctor.js --profile shared-orch-bootstrap --format text
-  # sdk-unity:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-dotnet@v3
-  #     - name: Restore dependencies
-  #       working-directory: packages/sdk-unity
-  #       run: dotnet restore
-  #     - name: Build SDK-Unity
-  #       working-directory: packages/sdk-unity
-  #       run: dotnet build --configuration Release --no-restore
-  #     - name: Test SDK-Unity
-  #       run: dotnet test packages/tests/ --configuration Release --no-build
+          dotnet-version: 8.0.x
+      - name: Restore dependencies
+        working-directory: packages/tests/NarrativeGen.Tests
+        run: dotnet restore
+      - name: Build
+        working-directory: packages/tests/NarrativeGen.Tests
+        run: dotnet build --configuration Release --no-restore
+      - name: Test
+        working-directory: packages/tests/NarrativeGen.Tests
+        run: dotnet test --configuration Release --no-build --verbosity normal

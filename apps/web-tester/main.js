@@ -1,80 +1,95 @@
-// Error handling and logging
-import { startSession, getAvailableChoices, applyChoice, chooseParaphrase, GameSession } from '@narrativegen/engine-ts/dist/browser.js'
-import { initStory, appendStoryFromCurrentNode, renderStoryEnhanced } from './handlers/story-handler.js'
-import { exportModelToCsv } from './utils/csv-exporter.js'
-import { initNodesPanel } from './handlers/nodes-panel.js'
-import { initTabs } from './handlers/tabs.js'
-import { initGuiEditor } from './handlers/gui-editor.js'
-import { initGraphHandler } from './handlers/graph-handler.js'
-import { initDebugHandler } from './handlers/debug-handler.js'
-import { initCsvImportHandler } from './handlers/csv-import-handler.js'
-import { initAiConfig } from './handlers/ai-config.js'
-import { initSplitView } from './handlers/split-view.js'
-import { validateModel } from './utils/model-utils.js'
-import { parseConditions, parseEffects } from './utils/csv-parser.js'
+﻿// Bootstrap environment immediately on load
+import { initializeEnvironment } from './src/bootstrap.js'
+initializeEnvironment()
 
-// Browser-compatible model loading (no fs module)
-async function loadModel(modelName) {
-  const url = `./models/examples/${modelName}.json`
-  const response = await fetch(url)
-  if (!response.ok) {
-    throw new Error(`Failed to load model: ${response.status} ${response.statusText}`)
-  }
-  return response.json()
-}
-class Logger {
-  static log(level, message, data = {}) {
-    const timestamp = new Date().toISOString()
-    const logEntry = {
-      timestamp,
-      level,
-      message,
-      ...data,
-      userAgent: navigator.userAgent,
-      url: window.location.href
-    }
+// Import session controller utilities
+import {
+  resolveVariables,
+  loadModel,
+  applyModelParaphraseLexicon,
+  checkForDraftModel as checkDraft,
+  restoreDraftModel as restoreDraft,
+  ErrorBoundary
+} from './src/session-controller.js'
 
-    console[level === 'error' ? 'error' : 'log'](`[${timestamp}] ${level.toUpperCase()}: ${message}`, data)
+// Import UI bindings
+import { getUIElements, getDefaultAIConfig } from './src/ui-bindings.js'
 
-    // Store in sessionStorage for debugging
-    try {
-      const logs = JSON.parse(sessionStorage.getItem('narrativeGenLogs') || '[]')
-      logs.push(logEntry)
-      // Keep only last 100 entries
-      if (logs.length > 100) logs.shift()
-      sessionStorage.setItem('narrativeGenLogs', JSON.stringify(logs))
-    } catch (error) {
-      console.warn('Failed to store log:', error)
-    }
-  }
+// Import required functions from engine
+import {
+  createAIProvider,
+  startSession,
+  getAvailableChoices,
+  applyChoice,
+  chooseParaphrase,
+  paraphraseJa,
+  getParaphraseLexicon,
+  setParaphraseLexicon,
+} from '../../packages/engine-ts/dist/browser.js'
 
-  static info(message, data) { this.log('info', message, data) }
-  static warn(message, data) { this.log('warn', message, data) }
-  static error(message, data) { this.log('error', message, data) }
-}
+// Import local modules
+import { ThemeManager, setupThemeEventListeners } from './src/ui/theme.js'
+import { AppState } from './src/core/state.js'
+import { DOMManager } from './src/ui/dom.js'
+import { EventManager } from './src/ui/events.js'
+import { StoryManager } from './src/ui/story.js'
+import { GraphManager } from './src/ui/graph.js'
+import { GraphEditorManager } from './src/ui/graph-editor/GraphEditorManager.js'
+import { DebugManager } from './src/ui/debug.js'
+import { GuiEditorManager } from './src/ui/gui-editor.js'
+import { ReferenceManager } from './src/ui/reference.js'
+import { CsvManager } from './src/ui/csv.js'
+import { AiManager } from './src/ui/ai.js'
+import { LexiconManager } from './src/ui/lexicon.js'
+import { SearchManager } from './src/ui/SearchManager.js'
+import { MermaidPreviewManager } from './src/ui/mermaid-preview.js'
+import { validateNotEmpty, validateJson, validateFileExtension } from './src/utils/validation.js'
+import { downloadFile, readFileAsText, parseCsv } from './src/utils/file-utils.js'
+import { getStorageItem, setStorageItem, removeStorageItem } from './src/utils/storage.js'
+import { escapeHtml, clearContent } from './src/utils/html-utils.js'
+import Logger from './src/core/logger.js'
+import {
+  getCurrentSession,
+  getCurrentModelName,
+  setCurrentSession,
+  setCurrentModelName,
+  clearSession,
+  startNewSession,
+  isSessionActive,
+  validateSession,
+  saveSessionToStorage,
+  loadSessionFromStorage,
+  clearSessionFromStorage
+} from './src/core/session.js'
+import { KeyBindingManager } from './src/ui/keybinding-manager.js'
+import { SaveManager } from './src/features/save-manager.js'
+import { ValidationPanel } from './src/ui/validation-panel.js'
+import { ModelValidator, ValidationSeverity } from './src/features/model-validator.js'
+import { LexiconUIManager } from './src/ui/lexicon-ui-manager.js'
+import { KeyBindingUIManager } from './src/ui/key-binding-ui-manager.js'
+import { ExportManager } from './src/features/export/ExportManager.js'
+import { TwineFormatter } from './src/features/export/formatters/TwineFormatter.js'
+import { InkFormatter } from './src/features/export/formatters/InkFormatter.js'
+import { CsvFormatter } from './src/features/export/formatters/CsvFormatter.js'
+import { ExportModal } from './src/ui/export-modal.js'
+import {
+  SAVE_SLOTS,
+  SAVE_KEY_PREFIX,
+  AUTOSAVE_KEY,
+  NODE_TEMPLATES,
+  ADVANCED_ENABLED_STORAGE_KEY,
+  DRAFT_MODEL_STORAGE_KEY
+} from './src/config/constants.js'
 
-// Error boundary for UI operations
-class ErrorBoundary {
-  static wrap(operation, fallbackMessage = '操作に失敗しました') {
-    return async (...args) => {
-      try {
-        Logger.info('Operation started', { operation: operation.name, args: args.length })
-        const result = await operation.apply(this, args)
-        Logger.info('Operation completed', { operation: operation.name })
-        return result
-      } catch (error) {
-        Logger.error('Operation failed', {
-          operation: operation.name,
-          error: error.message,
-          stack: error.stack,
-          args: args.length
-        })
-        setStatus(`${fallbackMessage}: ${error.message}`, 'error')
-        throw error
-      }
-    }
-  }
-}
+// Initialize AppState early to avoid TDZ errors
+const appState = new AppState()
+let mermaidPreviewManager
+const keyBindingManager = new KeyBindingManager()
+const exportManager = new ExportManager()
+// Register formatters
+exportManager.registerFormatter('twine', new TwineFormatter())
+exportManager.registerFormatter('ink', new InkFormatter())
+exportManager.registerFormatter('csv', new CsvFormatter())
 
 const startBtn = document.getElementById('startBtn')
 const choicesContainer = document.getElementById('choices')
@@ -89,14 +104,20 @@ const downloadTopBtn = document.getElementById('downloadTopBtn')
 const importCsvBtn = document.getElementById('importCsvBtn')
 const csvFileInput = document.getElementById('csvFileInput')
 const exportCsvBtn = document.getElementById('exportCsvBtn')
-const editBtn = document.getElementById('editBtn')
 const guiEditMode = document.getElementById('guiEditMode')
+const guiEditBtn = document.getElementById('editBtn')
 const nodeList = document.getElementById('nodeList')
 const addNodeBtn = document.getElementById('addNodeBtn')
 const previewBtn = document.getElementById('previewBtn')
 const downloadBtn = document.getElementById('downloadBtn')
 const saveGuiBtn = document.getElementById('saveGuiBtn')
 const cancelGuiBtn = document.getElementById('cancelGuiBtn')
+
+// Search and Filter elements
+const nodeSearchInput = document.getElementById('nodeSearchInput')
+const clearSearchBtn = document.getElementById('clearSearchBtn')
+const nodeFilterSelect = document.getElementById('nodeFilterSelect')
+const searchResultCount = document.getElementById('searchResultCount')
 const storyView = document.getElementById('storyView')
 const errorPanel = document.getElementById('errorPanel')
 const errorList = document.getElementById('errorList')
@@ -106,104 +127,131 @@ const csvPreviewContent = document.getElementById('csvPreviewContent')
 const confirmImportBtn = document.getElementById('confirmImportBtn')
 const cancelPreviewBtn = document.getElementById('cancelPreviewBtn')
 
+// Story preview modal elements
+const storyPreviewModal = document.getElementById('storyPreviewModal')
+const storyPreviewContent = document.getElementById('storyPreviewContent')
+const closePreviewBtn = document.getElementById('closePreviewBtn')
+const storyContent = document.getElementById('storyContent')
+const toggleSidebarBtn = document.getElementById('toggleSidebarBtn')
+
 // Tab elements
 const storyTab = document.getElementById('storyTab')
-const debugTab = document.getElementById('debugTab')
 const graphTab = document.getElementById('graphTab')
-const aiTab = document.getElementById('aiTab')
+const debugTab = document.getElementById('debugTab')
+const referenceTab = document.getElementById('referenceTab')
 const storyPanel = document.getElementById('storyPanel')
-const debugPanel = document.getElementById('debugPanel')
 const graphPanel = document.getElementById('graphPanel')
-const aiPanel = document.getElementById('aiPanel')
-
-// Additional tab elements
-const nodeListTab = document.getElementById('nodeListTab')
-const nodeListPanel = document.getElementById('nodeListPanel')
-
-// Node list elements
-const nodeSearch = document.getElementById('nodeSearch')
-const refreshNodeList = document.getElementById('refreshNodeList')
-const nodeOverview = document.getElementById('nodeOverview')
-
-// Split view elements (story panel inline split view)
-const toggleSplitViewBtn = document.getElementById('toggleSplitViewBtn')
-const storyMainContainer = document.getElementById('storyMainContainer')
-const storyResizer = document.getElementById('storyResizer')
-const storyJsonPanel = document.getElementById('storyJsonPanel')
-const storyJsonEditor = document.getElementById('storyJsonEditor')
-const applyStoryJsonBtn = document.getElementById('applyStoryJsonBtn')
+const debugPanel = document.getElementById('debugPanel')
+const referencePanel = document.getElementById('referencePanel')
 
 // Graph elements
 const graphSvg = document.getElementById('graphSvg')
-const zoomInBtn = document.getElementById('zoomInBtn')
-const zoomOutBtn = document.getElementById('zoomOutBtn')
-const resetViewBtn = document.getElementById('resetViewBtn')
+const fitGraphBtn = document.getElementById('fitGraphBtn')
+const resetGraphBtn = document.getElementById('resetGraphBtn')
+const showConditions = document.getElementById('showConditions')
+const graphSettingsBtn = document.getElementById('graphSettingsBtn')
+const graphSettings = document.getElementById('graphSettings')
+const nodeShape = document.getElementById('nodeShape')
+const fontSize = document.getElementById('fontSize')
+const saveGraphPreset = document.getElementById('saveGraphPreset')
+const loadGraphPreset = document.getElementById('loadGraphPreset')
+const exportBtn = document.getElementById('exportBtn')
 
-let highlightedNodes = new Set()
+// Export Modal elements
+const exportModal = document.getElementById('exportModal')
+// ... other elements will be selected inside ExportModal class
 
 // Debug elements
 const flagsDisplay = document.getElementById('flagsDisplay')
 const resourcesDisplay = document.getElementById('resourcesDisplay')
+const variablesDisplay = document.getElementById('variablesDisplay')
+const editVariablesBtn = document.getElementById('editVariablesBtn')
 const reachableNodes = document.getElementById('reachableNodes')
+const saveLoadSection = document.getElementById('saveLoadSection')
+const saveSlots = document.getElementById('saveSlots')
+const refreshSavesBtn = document.getElementById('refreshSavesBtn')
 
 // AI elements
+const advancedTab = document.getElementById('advancedTab')
+const advancedPanel = document.getElementById('advancedPanel')
+const enableAdvancedFeatures = document.getElementById('enableAdvancedFeatures')
 const aiProvider = document.getElementById('aiProvider')
 const openaiSettings = document.getElementById('openaiSettings')
 const openaiApiKey = document.getElementById('openaiApiKey')
 const openaiModel = document.getElementById('openaiModel')
+const ollamaSettings = document.getElementById('ollamaSettings')
+const ollamaUrl = document.getElementById('ollamaUrl')
+const ollamaModel = document.getElementById('ollamaModel')
 const saveAiSettings = document.getElementById('saveAiSettings')
 const generateNextNodeBtn = document.getElementById('generateNextNodeBtn')
 const paraphraseCurrentBtn = document.getElementById('paraphraseCurrentBtn')
 const aiOutput = document.getElementById('aiOutput')
 
-let session = null
-let currentModelName = null
-let _model = null
-let storyLog = []
+// Designer lexicon UI elements
+const lexiconLoadBtn = document.getElementById('lexiconLoadBtn')
+const lexiconMergeBtn = document.getElementById('lexiconMergeBtn')
+const lexiconReplaceBtn = document.getElementById('lexiconReplaceBtn')
+const lexiconExportBtn = document.getElementById('lexiconExportBtn')
+const lexiconImportBtn = document.getElementById('lexiconImportBtn')
+const lexiconFileInput = document.getElementById('lexiconFileInput')
+const lexiconTextarea = document.getElementById('lexiconTextarea')
 
-// Model and session accessors
-function getModel() {
-  return _model
+// Key binding elements
+const keyBindingDisplay = document.getElementById('keyBindingDisplay')
+const inventoryKey = document.getElementById('inventoryKey')
+const debugKey = document.getElementById('debugKey')
+const graphKey = document.getElementById('graphKey')
+const storyKey = document.getElementById('storyKey')
+const aiKey = document.getElementById('aiKey')
+const mermaidKey = document.getElementById('mermaidKey')
+const saveKeyBindings = document.getElementById('saveKeyBindings')
+const resetKeyBindings = document.getElementById('resetKeyBindings')
+
+// AI configuration
+let aiConfig = {
+  provider: 'mock',
+  openai: {
+    apiKey: '',
+    model: 'gpt-3.5-turbo'
+  },
+  ollama: {
+    url: 'http://localhost:11434',
+    model: 'llama2'
+  }
 }
+let aiProviderInstance = null
 
-function setModel(newModel) {
-  _model = newModel
-}
-
-function getSession() {
-  return session
-}
-
-function setSession(newSession) {
-  session = newSession
-}
-
-// Inventory UI elements
-const inventoryDisplay = document.getElementById('inventoryDisplay')
-
-// Forward declarations for handler functions (assigned during initialization)
-let renderGraph = () => {}
-let renderDebugInfo = () => {}
-let showCsvPreview = () => {}
-let hideCsvPreview = () => {}
-let importCsvFile = async () => {}
-let initAiProvider = async () => {}
+// Batch edit elements
+const batchEditBtn = document.getElementById('batchEditBtn')
+const batchEditModal = document.getElementById('batchEditModal')
+const searchText = document.getElementById('searchText')
+const replaceText = document.getElementById('replaceText')
+const applyTextReplaceBtn = document.getElementById('applyTextReplaceBtn')
+const choiceSearchText = document.getElementById('choiceSearchText')
+const choiceReplaceText = document.getElementById('choiceReplaceText')
+const applyChoiceReplaceBtn = document.getElementById('applyChoiceReplaceBtn')
+const oldTargetText = document.getElementById('oldTargetText')
+const newTargetText = document.getElementById('newTargetText')
+const applyTargetReplaceBtn = document.getElementById('applyTargetReplaceBtn')
+const closeBatchEditBtn = document.getElementById('closeBatchEditBtn')
 
 function renderState() {
-  if (!session) {
-    stateView.textContent = JSON.stringify({ status: 'サンプル未実行' }, null, 2)
+  const currentSession = getCurrentSession()
+  if (!currentSession) {
+    stateView.textContent = JSON.stringify({ status: 'サンプル未実行' })
     return
   }
 
-  const snapshot = session.state
+  const snapshot = currentSession
   const view = {
-    model: currentModelName,
+    model: getCurrentModelName(),
     nodeId: snapshot.nodeId,
     time: snapshot.time,
     flags: snapshot.flags,
     resources: snapshot.resources,
+    variables: snapshot.variables,
   }
-  stateView.textContent = JSON.stringify(view, null, 2)
+  stateView.textContent = JSON.stringify(view)
 
   // Update debug info if debug tab is active
   if (debugPanel.classList.contains('active')) {
@@ -212,8 +260,63 @@ function renderState() {
 }
 
 function setStatus(message, type = 'info') {
-  statusText.textContent = message
-  statusText.className = `status-text ${type}`
+  if (!statusText) return
+
+  statusText.dataset.type = type
+
+  let iconId
+  switch (type) {
+    case 'success':
+      iconId = 'icon-status-success'
+      break
+    case 'error':
+      iconId = 'icon-status-error'
+      break
+    case 'warn':
+      iconId = 'icon-status-warn'
+      break
+    default:
+      iconId = 'icon-status-info'
+      break
+  }
+
+  // Clear previous content
+  clearContent(statusText)
+
+  // Create SVG icon element
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svg.setAttribute('class', 'icon icon-sm')
+  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use')
+  use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${iconId}`)
+  svg.appendChild(use)
+
+  // Add icon and text
+  statusText.appendChild(svg)
+  statusText.appendChild(document.createTextNode(message))
+}
+
+if (typeof window !== 'undefined') {
+  window.setStatus = setStatus
+}
+
+// Debug info rendering (delegates to debugManager when available)
+function renderDebugInfo() {
+  if (typeof debugManager !== 'undefined' && debugManager) {
+    debugManager.render()
+  }
+}
+
+function validateModel(nodesOrModel) {
+  try {
+    const model = nodesOrModel?.nodes ? nodesOrModel : { nodes: nodesOrModel }
+    const validator = new ModelValidator()
+    const issues = validator.validate(model)
+    return issues
+      .filter((i) => i.severity === ValidationSeverity.ERROR)
+      .map((i) => `${i.nodeId ? `[${i.nodeId}] ` : ''}${i.message}`)
+  } catch (err) {
+    return [err?.message ?? String(err)]
+  }
 }
 
 function showErrors(errors) {
@@ -222,7 +325,7 @@ function showErrors(errors) {
     return
   }
 
-  errorList.innerHTML = ''
+  clearContent(errorList)
   errors.forEach(error => {
     const li = document.createElement('li')
     li.textContent = error
@@ -234,6 +337,72 @@ function showErrors(errors) {
 function hideErrors() {
   errorPanel.classList.remove('show')
 }
+// =============================================================================
+// Save/Load System (via SaveManager)
+// ============================================================================
+
+function showCsvPreview(file) {
+  csvFileName.textContent = file.name
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const text = e.target.result
+    const lines = text.trim().split(/\r?\n/).slice(0, 11) // First 10 lines + header
+    const table = document.createElement('table')
+    table.className = 'csv-table'
+
+    lines.forEach((line, index) => {
+      const row = document.createElement('tr')
+      const cells = parseCsvLine(line, line.includes('\t') ? '\t' : ',')
+      cells.forEach(cell => {
+        const cellEl = document.createElement(index === 0 ? 'th' : 'td')
+        cellEl.textContent = cell
+        row.appendChild(cellEl)
+      })
+      table.appendChild(row)
+    })
+
+    if (lines.length >= 11) {
+      const row = document.createElement('tr')
+      const cell = document.createElement('td')
+      cell.colSpan = lines[0].split(line.includes('\t') ? '\t' : ',').length
+      cell.textContent = '... (以降省略)'
+      cell.style.textAlign = 'center'
+      cell.style.fontStyle = 'italic'
+      row.appendChild(cell)
+      table.appendChild(row)
+    }
+
+    clearContent(csvPreviewContent)
+    csvPreviewContent.appendChild(table)
+    csvPreviewModal.classList.add('show')
+  }
+  reader.readAsText(file)
+}
+
+function hideCsvPreview() {
+  csvPreviewModal.classList.remove('show')
+}
+
+function getConditionText(conditions) {
+  if (!conditions || conditions.length === 0) return ''
+  return conditions.map(cond => {
+    if (cond.type === 'flag') return `flag:${cond.key}=${cond.value}`
+    if (cond.type === 'resource') return `res:${cond.key}${cond.op}${cond.value}`
+    if (cond.type === 'variable') return `var:${cond.key}${cond.op}${cond.value}`
+    if (cond.type === 'timeWindow') return `time:${cond.start}-${cond.end}`
+    if (cond.type === 'and') return `AND(${serializeConditions(cond.conditions)})`
+    if (cond.type === 'or') return `OR(${serializeConditions(cond.conditions)})`
+    if (cond.type === 'not') return `NOT(${serializeConditions([cond.condition])})`
+    return cond.type
+  }).join(', ')
+}
+
+// Update Mermaid diagram when visible and model is available
+function updateMermaidDiagramIfVisible() {
+  if (!mermaidPreviewManager || !mermaidPreviewManager.isVisible) return
+  if (!appState?.model) return
+  mermaidPreviewManager.updateDiagram(appState.model)
+}
 
 function setControlsEnabled(enabled) {
   startBtn.disabled = !enabled
@@ -241,20 +410,21 @@ function setControlsEnabled(enabled) {
   uploadBtn.disabled = !enabled
   dropZone.style.pointerEvents = enabled ? 'auto' : 'none'
   dropZone.style.opacity = enabled ? '1' : '0.5'
-  if (editBtn) editBtn.disabled = !enabled
+  guiEditBtn.disabled = !enabled
 }
 
 function renderChoices() {
-  choicesContainer.innerHTML = ''
+  clearContent(choicesContainer)
 
-  if (!session) {
+  const currentSession = getCurrentSession()
+  if (!currentSession) {
     const info = document.createElement('p')
     info.textContent = 'セッションを開始すると選択肢が表示されます'
     choicesContainer.appendChild(info)
     return
   }
 
-  const choices = session.getAvailableChoices()
+  const choices = getAvailableChoices(currentSession, appState.model)
   if (!choices || choices.length === 0) {
     const empty = document.createElement('p')
     empty.textContent = '利用可能な選択肢はありません'
@@ -272,16 +442,19 @@ function renderChoices() {
     button.textContent = formatChoiceLabel(choice)
     button.addEventListener('click', () => {
       try {
-        session.applyChoice(choice.id)
-        setStatus(`選択肢「${choice.text}」を適用しました`, 'success')
-        appendStoryFromCurrentNode(session, _model)
+        const currentSession = getCurrentSession()
+        if (currentSession) {
+          setCurrentSession(applyChoice(currentSession, appState.model, choice.id))
+          setStatus(`選択肢「${choice.text}」を適用しました`, 'success')
+          appendStoryFromCurrentNode()
+        }
       } catch (err) {
         console.error(err)
         setStatus(`選択肢の適用に失敗しました: ${err?.message ?? err}`, 'warn')
       }
       renderState()
       renderChoices()
-      renderStoryEnhanced(storyView)
+      renderStory()
     })
     list.appendChild(button)
   })
@@ -292,23 +465,29 @@ function renderChoices() {
 // Apply error boundaries to critical operations
 const safeStartSession = ErrorBoundary.wrap(async (modelName) => {
   const model = await loadModel(modelName)
-  session = startSession(model)
-  currentModelName = modelName
+  applyModelParaphraseLexicon(model)
+  appState.model = model
+  startNewSession(appState.model)
+  setCurrentModelName(modelName)
   initStory()
   renderState()
   renderChoices()
-  renderStoryEnhanced(storyView)
+  renderStory()
+  updateMermaidDiagramIfVisible()
   Logger.info('Session started', { modelName, nodeCount: Object.keys(model.nodes).length })
 })
 
 const safeApplyChoice = ErrorBoundary.wrap(async (choiceId) => {
-  if (!session || !_model) throw new Error('セッションが開始されていません')
-  session = applyChoice(session, _model, choiceId)
-  appendStoryFromCurrentNode(session, _model)
+  const currentSession = getCurrentSession()
+  if (!currentSession || !appState.model) throw new Error('セッションが開始されていません')
+  const nextSession = applyChoice(currentSession, appState.model, choiceId)
+  setCurrentSession(nextSession)
+  appendStoryFromCurrentNode()
   renderState()
   renderChoices()
-  renderStoryEnhanced(storyView)
-  Logger.info('Choice applied', { choiceId, newNodeId: session.nodeId })
+  renderStory()
+  updateMermaidDiagramIfVisible()
+  Logger.info('Choice applied', { choiceId, newNodeId: nextSession.nodeId })
 })
 
 const safeImportCsv = ErrorBoundary.wrap(async (file) => {
@@ -325,6 +504,117 @@ const safeParaphrase = ErrorBoundary.wrap(async () => {
   await paraphraseCurrentText()
   Logger.info('Text paraphrased via AI')
 })
+
+async function initAiProvider() {
+  if (!aiProviderInstance || aiConfig.provider !== aiProvider.value) {
+    try {
+      if (aiProvider.value === 'openai') {
+        if (!aiConfig.openai.apiKey) {
+          aiOutput.textContent = 'OpenAI APIキーを設定してください'
+          return
+        }
+        aiProviderInstance = createAIProvider({
+          provider: 'openai',
+          openai: aiConfig.openai
+        })
+      } else if (aiProvider.value === 'ollama') {
+        aiProviderInstance = createAIProvider({
+          provider: 'ollama',
+          ollama: aiConfig.ollama
+        })
+      } else {
+        aiProviderInstance = createAIProvider({ provider: 'mock' })
+      }
+      aiOutput.textContent = `${aiProvider.value}プロバイダーが初期化されました`
+    } catch (error) {
+      console.error('AIプロバイダー初期化エラー:', error)
+      aiOutput.textContent = `AIプロバイダーの初期化に失敗しました: ${error.message}`
+    }
+  }
+}
+
+async function generateNextNode() {
+  const currentSession = getCurrentSession()
+  if (!aiProviderInstance || !currentSession || !appState.model) {
+    aiOutput.textContent = '❌ モデルを読み込んでから実行してください'
+    return
+  }
+
+  // Disable buttons during generation
+  generateNextNodeBtn.disabled = true
+  paraphraseCurrentBtn.disabled = true
+  aiOutput.textContent = '⏳ 生成中...'
+
+  try {
+    const context = {
+      previousNodes: [], // 現在の実装では履歴を保持していない
+      currentNodeText: appState.model.nodes[currentSession.nodeId]?.text || '',
+      choiceText: '続き'
+    }
+
+    const startTime = Date.now()
+    const generatedText = await aiProviderInstance.generateNextNode(context)
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2)
+
+    aiOutput.textContent = `✅ 生成されたテキスト (${duration}秒):\n${generatedText}`
+    Logger.info('AI node generated', { duration, provider: aiConfig.provider })
+  } catch (error) {
+    console.error('ノード生成エラー:', error)
+    const errorMsg = error.message.includes('API error')
+      ? `APIエラー: ${error.message}\nAPIキーを確認してください。`
+      : `生成に失敗しました: ${error.message}`
+    aiOutput.textContent = `❌ ${errorMsg}`
+    Logger.error('AI generation failed', { error: error.message, provider: aiConfig.provider })
+  } finally {
+    // Re-enable buttons
+    generateNextNodeBtn.disabled = false
+    paraphraseCurrentBtn.disabled = false
+  }
+}
+
+async function paraphraseCurrentTextUI() {
+  const currentSession = getCurrentSession()
+  if (!aiProviderInstance || !currentSession || !appState.model) {
+    aiOutput.textContent = '❌ モデルを読み込んでから実行してください'
+    return
+  }
+
+  const currentNode = appState.model.nodes[currentSession.nodeId]
+  if (!currentNode?.text) {
+    aiOutput.textContent = '❌ 現在のノードにテキストがありません'
+    return
+  }
+
+  // Disable buttons during generation
+  generateNextNodeBtn.disabled = true
+  paraphraseCurrentBtn.disabled = true
+  aiOutput.textContent = '⏳ 言い換え中...'
+
+  try {
+    const startTime = Date.now()
+    const paraphrases = await aiProviderInstance.paraphrase(currentNode.text, {
+      variantCount: 3,
+      // Prefer plain style here; designer lexicon defines phrasing
+      style: 'plain',
+      tone: 'neutral'
+    })
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2)
+
+    aiOutput.textContent = `✅ 言い換え結果 (${duration}秒):\n${paraphrases.map((p, i) => `${i + 1}. ${p}`).join('\n')}`
+    Logger.info('AI paraphrase completed', { duration, provider: aiConfig.provider, variantCount: paraphrases.length })
+  } catch (error) {
+    console.error('言い換えエラー:', error)
+    const errorMsg = error.message.includes('API error')
+      ? `APIエラー: ${error.message}\nAPIキーを確認してください。`
+      : `言い換えに失敗しました: ${error.message}`
+    aiOutput.textContent = `❌ ${errorMsg}`
+    Logger.error('AI paraphrase failed', { error: error.message, provider: aiConfig.provider })
+  } finally {
+    // Re-enable buttons
+    generateNextNodeBtn.disabled = false
+    paraphraseCurrentBtn.disabled = false
+  }
+}
 
 function formatChoiceLabel(choice) {
   if (choice?.outcome) {
@@ -350,8 +640,7 @@ async function loadCustomModel(file) {
 }
 
 async function loadSampleModel(sampleId) {
-  // Use fetch with relative path for local models directory
-  const url = `./models/examples/${sampleId}.json`
+  const url = `/models/examples/${sampleId}.json`
   const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`モデルの読み込みに失敗しました (${response.status})`)
@@ -360,8 +649,7 @@ async function loadSampleModel(sampleId) {
 }
 
 async function loadEntitiesCatalog() {
-  // Use fetch with relative path for local models directory
-  const url = './models/entities/Entities.csv'
+  const url = '/models/entities/Entities.csv'
   const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`Entities.csv の読み込みに失敗しました (${response.status})`)
@@ -406,21 +694,24 @@ startBtn.addEventListener('click', async () => {
       loadEntitiesCatalog(),
     ])
 
-    setModel(model)
-    setSession(new GameSession(model, { entities }))
-    currentModelName = sampleId
+    applyModelParaphraseLexicon(model)
+    appState.model = model
+    startNewSession(appState.model)
+    setCurrentModelName(sampleId)
     setStatus(`サンプル ${sampleId} を実行中`, 'success')
-    initStory(getSession(), getModel())
+    initStory()
+    startAutoSave() // Start auto-save when session begins
   } catch (err) {
     console.error(err)
-    session = null
-    currentModelName = null
+    clearSession()
+    stopAutoSave() // Stop auto-save when session ends
     setStatus(`サンプルの初期化に失敗しました: ${err?.message ?? err}`, 'warn')
   } finally {
     setControlsEnabled(true)
     renderState()
     renderChoices()
-    renderStoryEnhanced(storyView)
+    renderStory()
+    updateMermaidDiagramIfVisible()
   }
 })
 
@@ -440,21 +731,28 @@ fileInput.addEventListener('change', async (e) => {
       loadEntitiesCatalog(),
     ])
 
-    setModel(model)
-    setSession(new GameSession(model, { entities }))
-    currentModelName = file.name
+    applyModelParaphraseLexicon(model)
+    appState.model = model
+    startNewSession(appState.model)
+    setCurrentModelName(file.name)
     setStatus(`ファイル ${file.name} を実行中`, 'success')
+    initStory()
   } catch (err) {
     console.error(err)
-    session = null
-    currentModelName = null
+    clearSession()
+    stopAutoSave() // Stop auto-save when session ends
     setStatus(`ファイルの初期化に失敗しました: ${err?.message ?? err}`, 'warn')
   } finally {
     setControlsEnabled(true)
     renderState()
     renderChoices()
-    renderStoryEnhanced(storyView)
+    updateMermaidDiagramIfVisible()
   }
+})
+
+dropZone.addEventListener('dragover', (e) => {
+  e.preventDefault()
+  dropZone.style.backgroundColor = '#e0e0e0'
 })
 
 dropZone.addEventListener('drop', async (e) => {
@@ -483,97 +781,361 @@ dropZone.addEventListener('drop', async (e) => {
     }
 
     hideErrors()
-    setModel(model)
-    setSession(new GameSession(model, { entities }))
-    currentModelName = file.name
+    applyModelParaphraseLexicon(model)
+    appState.model = model
+    startNewSession(appState.model)
+    setCurrentModelName(file.name)
     setStatus(`ファイル ${file.name} を実行中`, 'success')
-    initStory(getSession(), getModel())
+    initStory()
+    startAutoSave() // Start auto-save when session begins
   } catch (err) {
     console.error(err)
     showErrors([err?.message ?? err])
-    session = null
-    currentModelName = null
+    clearSession()
+    stopAutoSave() // Stop auto-save when session ends
     setStatus(`ファイルの初期化に失敗しました: ${err?.message ?? err}`, 'warn')
   } finally {
     setControlsEnabled(true)
     renderState()
     renderChoices()
-    renderStoryEnhanced(storyView)
+    renderStory()
+    updateMermaidDiagramIfVisible()
   }
 })
 
-applyStoryJsonBtn.addEventListener('click', () => {
+// Load advanced features setting
+const advancedEnabled = localStorage.getItem(ADVANCED_ENABLED_STORAGE_KEY) === 'true'
+if (enableAdvancedFeatures) {
+  enableAdvancedFeatures.checked = advancedEnabled
+  if (advancedEnabled) {
+    advancedTab.style.display = 'inline-block'
+  }
+  // Trigger change event to set up UI
+  enableAdvancedFeatures.dispatchEvent(new Event('change'))
+}
+
+// Tab event listeners
+function exitGuiEditMode() {
+  if (!guiEditMode) return
+
+  const isActive = guiEditMode.classList.contains('active') || guiEditMode.style.display !== 'none'
+  if (!isActive) return
+
+  guiEditMode.classList.remove('active')
+  guiEditMode.style.display = 'none'
+
+  if (storyPanel) {
+    storyPanel.classList.add('active')
+  }
+
+  if (guiEditBtn) {
+    guiEditBtn.textContent = '編集'
+    guiEditBtn.innerHTML = '<svg class="icon icon-sm"><use href="#icon-edit"></use></svg>編集'
+  }
+}
+
+function switchTab(tabName) {
+  // タブ切り替え時は必ず GUI 編集モードを終了する
+  exitGuiEditMode()
+
+  // Hide all panels
+  storyPanel.classList.remove('active')
+  graphPanel.classList.remove('active')
+  debugPanel.classList.remove('active')
+  advancedPanel.classList.remove('active')
+  if (referencePanel) referencePanel.classList.remove('active')
+
+  // Remove active class from all tabs
+  storyTab.classList.remove('active')
+  graphTab.classList.remove('active')
+  debugTab.classList.remove('active')
+  advancedTab.classList.remove('active')
+  if (referenceTab) referenceTab.classList.remove('active')
+
+  // Show selected panel and activate tab
+  if (tabName === 'story') {
+    storyPanel.classList.add('active')
+    storyTab.classList.add('active')
+  } else if (tabName === 'graph') {
+    graphPanel.classList.add('active')
+    graphTab.classList.add('active')
+    graphManager.render()
+  } else if (tabName === 'debug') {
+    debugPanel.classList.add('active')
+    debugTab.classList.add('active')
+    debugManager.render()
+  } else if (tabName === 'reference') {
+    if (referencePanel) referencePanel.classList.add('active')
+    if (referenceTab) referenceTab.classList.add('active')
+    referenceManager.render()
+  } else if (tabName === 'advanced') {
+    advancedPanel.classList.add('active')
+    advancedTab.classList.add('active')
+    // Initialize key binding system
+    keyBindingManager.updateUI()
+  }
+}
+
+storyTab.addEventListener('click', () => switchTab('story'))
+graphTab.addEventListener('click', () => switchTab('graph'))
+debugTab.addEventListener('click', () => switchTab('debug'))
+if (referenceTab) referenceTab.addEventListener('click', () => switchTab('reference'))
+advancedTab.addEventListener('click', () => switchTab('advanced'))
+
+// Advanced features toggle
+if (enableAdvancedFeatures) {
+  enableAdvancedFeatures.addEventListener('change', (e) => {
+    const enabled = e.target.checked
+    const aiSettings = document.getElementById('aiSettings')
+    const keyBindingSettings = document.getElementById('keyBindingSettings')
+    const aiActions = document.getElementById('aiActions')
+    const lexiconEditor = document.getElementById('lexiconEditor')
+
+    if (enabled) {
+      aiSettings.style.display = 'block'
+      keyBindingSettings.style.display = 'block'
+      aiActions.style.display = 'block'
+      lexiconEditor.style.display = 'block'
+    } else {
+      aiSettings.style.display = 'none'
+      keyBindingSettings.style.display = 'none'
+      aiActions.style.display = 'none'
+      lexiconEditor.style.display = 'none'
+    }
+
+    // Save preference
+    localStorage.setItem(ADVANCED_ENABLED_STORAGE_KEY, enabled.toString())
+  })
+}
+
+function initAIProviderInstance() {
+  if (!aiProviderInstance) {
+    aiProviderInstance = createAIProvider(aiConfig)
+  }
+}
+
+async function generateNextNodeUI() {
+  if (!aiProviderInstance) {
+    initAIProviderInstance()
+  }
+
+  const currentSession = getCurrentSession()
+  if (!currentSession || !appState.model) {
+    setStatus('まずモデルを読み込んでセッションを開始してください', 'warn')
+    return
+  }
+
+  const currentNode = appState.model.nodes[currentSession.nodeId]
+  if (!currentNode) {
+    setStatus('現在のノードが見つかりません', 'error')
+    return
+  }
+
+  // Disable button during generation
+  generateNextNodeBtn.disabled = true
+  generateNextNodeBtn.textContent = '生成中...'
+
   try {
-    const jsonText = storyJsonEditor.value.trim()
-    if (!jsonText) {
-      setStatus('JSONが空です', 'warn')
-      return
+    setStatus('AIで次のノードを生成中...', 'info')
+
+    // Prepare context for AI generation
+    const context = {
+      previousNodes: appState.storyLog.slice(-3).map(text => ({ id: 'previous', text })), // Last 3 story entries
+      currentNodeText: currentNode.text,
+      choiceText: '次のシーンへ進む' // Default choice text
     }
 
-    const newModel = JSON.parse(jsonText)
+    const generatedText = await aiProviderInstance.generateNextNode(context)
 
-    // Basic validation
-    if (!newModel.nodes || typeof newModel.nodes !== 'object') {
-      throw new Error('有効なnodesオブジェクトが必要です')
+    // Create new node with AI-generated content
+    const newNodeId = `ai_generated_${Date.now()}`
+    const newChoiceId = `c_ai_${Date.now()}`
+
+    // Add AI-generated node to model
+    appState.model.nodes[newNodeId] = {
+      id: newNodeId,
+      text: generatedText,
+      choices: [
+        {
+          id: newChoiceId,
+          text: '続ける',
+          target: newNodeId // Loop back to self for now (can be edited later)
+        }
+      ]
     }
 
-    // Validate model structure
-    const validationErrors = validateModel(newModel.nodes)
-    if (validationErrors.length > 0) {
-      showErrors(validationErrors)
-      setStatus(`JSONにエラーがあります: ${validationErrors.length}件`, 'warn')
-      return
+    // Update current node's choice to point to new node
+    const currentChoices = currentNode.choices || []
+    if (currentChoices.length > 0) {
+      // Update the first choice to point to AI-generated node
+      currentChoices[0].target = newNodeId
+    } else {
+      // Add new choice if none exist
+      currentNode.choices = [{
+        id: newChoiceId,
+        text: 'AI生成シーンへ',
+        target: newNodeId
+      }]
     }
 
-    hideErrors()
-    setModel(newModel)
-    setSession(startSession(getModel()))
-    currentModelName = 'json-edited'
-    setStatus('JSONを適用しました', 'success')
+    setStatus(`AIで新しいノードを生成しました: ${newNodeId}`, 'success')
+    aiOutput.textContent = `生成されたテキスト:\n${generatedText}`
 
-    // Update all views
-    renderState()
-    renderChoices()
-    initStory(getSession(), getModel())
-    renderStoryEnhanced(storyView)
+    // Optionally update graph if visible
     if (graphPanel.classList.contains('active')) {
-      renderGraph()
+      graphManager.render()
     }
-  } catch (err) {
-    console.error('JSON parse error:', err)
-    showErrors([err?.message ?? 'JSONパースエラー'])
-    setStatus(`JSON適用に失敗しました: ${err?.message ?? err}`, 'warn')
-  }
-})
 
-nodeOverview.addEventListener('click', (e) => {
-  const action = e.target.dataset.action
-  if (action === 'switch-tab') {
-    const tab = e.target.dataset.tab
-    const nodeId = e.target.dataset.nodeId
-    switchTab(tab)
-    if (tab === 'graph') {
-      renderGraph()
-      if (nodesPanel && nodesPanel.highlightNode) {
-        nodesPanel.highlightNode(nodeId)
-      } else if (window.highlightNode) {
-        window.highlightNode(nodeId)
-      }
-    } else if (tab === 'story') {
-      jumpToNode(nodeId)
-    }
-    guiEditor.renderNodeList()
+  } catch (error) {
+    console.error('AI generation error:', error)
+    setStatus(`AI生成に失敗しました: ${error.message}`, 'error')
+    aiOutput.textContent = `エラー: ${error.message}`
+  } finally {
+    generateNextNodeBtn.disabled = false
+    generateNextNodeBtn.textContent = '次のノードを生成'
+  }
+}
+
+function renderNodeList() {
+  const fragment = document.createDocumentFragment()
+  for (const [nodeId, node] of Object.entries(appState.model.nodes)) {
+    const nodeDiv = document.createElement('div')
+    nodeDiv.className = 'node-editor'
+
+    // Create h3
+    const h3 = document.createElement('h3')
+    h3.textContent = `ノード: ${nodeId}`
+    nodeDiv.appendChild(h3)
+
+    // Create label with input
+    const label = document.createElement('label')
+    label.textContent = 'テキスト: '
+    const input = document.createElement('input')
+    input.type = 'text'
+    input.value = node.text || ''
+    input.dataset.nodeId = nodeId
+    input.dataset.field = 'text'
+    label.appendChild(input)
+    nodeDiv.appendChild(label)
+
+    // Create h4
+    const h4 = document.createElement('h4')
+    h4.textContent = '選択肢'
+    nodeDiv.appendChild(h4)
+
+    // Create choices editor
+    const choicesEditor = document.createElement('div')
+    choicesEditor.className = 'choices-editor'
+    choicesEditor.dataset.nodeId = nodeId
+    nodeDiv.appendChild(choicesEditor)
+
+    // Create buttons
+    const addChoiceBtn = document.createElement('button')
+    addChoiceBtn.className = 'add-choice-btn'
+    addChoiceBtn.dataset.nodeId = nodeId
+    addChoiceBtn.textContent = '選択肢を追加'
+    nodeDiv.appendChild(addChoiceBtn)
+
+    const deleteNodeBtn = document.createElement('button')
+    deleteNodeBtn.className = 'delete-node-btn'
+    deleteNodeBtn.dataset.nodeId = nodeId
+    deleteNodeBtn.textContent = 'ノードを削除'
+    nodeDiv.appendChild(deleteNodeBtn)
+
+    fragment.appendChild(nodeDiv)
+  }
+  clearContent(nodeList)
+  nodeList.appendChild(fragment)
+
+  // Render choices after DOM is updated
+  for (const [nodeId] of Object.entries(appState.model.nodes)) {
+    renderChoicesForNode(nodeId)
+  }
+}
+
+function renderChoicesForNode(nodeId) {
+  const node = appState.model.nodes[nodeId]
+  const choicesDiv = nodeList.querySelector(`.choices-editor[data-node-id="${nodeId}"]`)
+  if (!choicesDiv) {
+    console.warn(`Choices editor not found for node ${nodeId}`)
+    return
+  }
+
+  if (!node.choices || node.choices.length === 0) {
+    clearContent(choicesDiv)
+    const p = document.createElement('p')
+    p.textContent = '選択肢なし'
+    choicesDiv.appendChild(p)
+    return
+  }
+
+  const fragment = document.createDocumentFragment()
+  node.choices.forEach((choice, index) => {
+    const choiceDiv = document.createElement('div')
+    choiceDiv.className = 'choice-editor'
+
+    // Text label
+    const textLabel = document.createElement('label')
+    textLabel.textContent = 'テキスト: '
+    const textInput = document.createElement('input')
+    textInput.type = 'text'
+    textInput.value = choice.text || ''
+    textInput.dataset.nodeId = nodeId
+    textInput.dataset.choiceIndex = index
+    textInput.dataset.field = 'text'
+    textLabel.appendChild(textInput)
+    choiceDiv.appendChild(textLabel)
+
+    // Target label
+    const targetLabel = document.createElement('label')
+    targetLabel.textContent = 'ターゲット: '
+    const targetInput = document.createElement('input')
+    targetInput.type = 'text'
+    targetInput.value = choice.target || ''
+    targetInput.dataset.nodeId = nodeId
+    targetInput.dataset.choiceIndex = index
+    targetInput.dataset.field = 'target'
+    targetLabel.appendChild(targetInput)
+    choiceDiv.appendChild(targetLabel)
+
+    // Paraphrase button
+    const paraphraseBtn = document.createElement('button')
+    paraphraseBtn.className = 'paraphrase-btn'
+    paraphraseBtn.dataset.nodeId = nodeId
+    paraphraseBtn.dataset.choiceIndex = index
+    paraphraseBtn.textContent = '言い換え'
+    choiceDiv.appendChild(paraphraseBtn)
+
+    // Delete button
+    const deleteBtn = document.createElement('button')
+    deleteBtn.className = 'delete-choice-btn'
+    deleteBtn.dataset.nodeId = nodeId
+    deleteBtn.dataset.choiceIndex = index
+    deleteBtn.textContent = '削除'
+    choiceDiv.appendChild(deleteBtn)
+
+    fragment.appendChild(choiceDiv)
+  })
+  clearContent(choicesDiv)
+  choicesDiv.appendChild(fragment)
+}
+
+addNodeBtn.addEventListener('click', () => {
+  const nodeId = prompt('新しいノードIDを入力してください:')
+  if (nodeId && !appState.model.nodes[nodeId]) {
+    appState.model.nodes[nodeId] = { id: nodeId, text: '新しいノード', choices: [] }
+    renderNodeList()
   }
 })
 
 previewBtn.addEventListener('click', () => {
-  if (!getModel()) return
-  let current = getModel().startNode
+  if (!appState.model) return
+  let current = appState.model.startNode
   let story = ''
   const visited = new Set()
   while (current && !visited.has(current)) {
     visited.add(current)
-    const node = getModel().nodes[current]
+    const node = appState.model.nodes[current]
     if (node?.text) story += node.text + '\n\n'
     if (node?.choices?.length === 1) {
       current = node.choices[0].target
@@ -584,231 +1146,209 @@ previewBtn.addEventListener('click', () => {
   alert('小説プレビュー:\n\n' + story)
 })
 
-downloadBtn.addEventListener('click', () => {
-  if (!getModel()) return
-  const json = JSON.stringify(getModel(), null, 2)
+function buildExportModel() {
+  if (!appState.model) return null
+
+  const exportModel = {
+    ...appState.model,
+    nodes: appState.model.nodes,
+    meta: appState.model.meta ? { ...appState.model.meta } : {}
+  }
+
+  try {
+    const runtimeLexicon = getParaphraseLexicon()
+    if (runtimeLexicon && typeof runtimeLexicon === 'object' && Object.keys(runtimeLexicon).length > 0) {
+      exportModel.meta.paraphraseLexicon = runtimeLexicon
+    }
+  } catch (e) {
+    Logger.warn('Failed to embed paraphrase lexicon into exported model', e)
+  }
+
+  if (exportModel.meta && Object.keys(exportModel.meta).length === 0) {
+    delete exportModel.meta
+  }
+
+  return exportModel
+}
+
+function downloadExportModel(filename) {
+  const exportModel = buildExportModel()
+  if (!exportModel) return
+  const json = JSON.stringify(exportModel, null, 2)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'model.json'
+  a.download = filename
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
+}
+
+downloadBtn.addEventListener('click', () => {
+  if (!appState.model) return
+  downloadExportModel('model.json')
 })
 
 // Story log helpers
-// Note: initStory, appendStoryFromCurrentNode, renderStory are now imported from story-handler.js
+function initStory() {
+  appState.storyLog = []
+  appendStoryFromCurrentNode()
+}
+
+function appendStoryFromCurrentNode() {
+  const currentSession = getCurrentSession()
+  const node = appState.model?.nodes?.[currentSession?.nodeId]
+  if (node?.text && currentSession) {
+    const resolvedText = resolveVariables(node.text, currentSession, appState.model)
+    appState.storyLog.push(resolvedText)
+  }
+}
+
+function renderStory() {
+  if (!storyView) return
+
+  // Performance optimization: Virtual scrolling for long stories
+  const maxVisibleEntries = 50
+  const shouldVirtualize = appState.storyLog.length > maxVisibleEntries
+
+  let visibleEntries
+  let startIndex = 0
+
+  if (shouldVirtualize) {
+    // Show the most recent entries by default
+    startIndex = Math.max(0, appState.storyLog.length - maxVisibleEntries)
+    visibleEntries = appState.storyLog.slice(startIndex)
+  } else {
+    visibleEntries = appState.storyLog
+  }
+
+  storyView.textContent = visibleEntries.join('\n\n')
+
+  // Add virtualization indicator
+  if (shouldVirtualize) {
+    const indicator = document.createElement('div')
+    indicator.className = 'virtualization-indicator'
+    indicator.textContent = `... (${startIndex} 件の古いエントリが非表示) ...`
+    indicator.style.cssText = `
+      text-align: center;
+      padding: 1rem;
+      color: #666;
+      font-style: italic;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 1rem;
+    `
+
+    // Insert at the beginning
+    storyView.insertBefore(indicator, storyView.firstChild)
+
+    // Add scroll handler for lazy loading more content
+    let scrollTimeout
+    const handleScroll = () => {
+      clearTimeout(scrollTimeout)
+      scrollTimeout = setTimeout(() => {
+        if (storyView.scrollTop === 0 && startIndex > 0) {
+          // Load more content when scrolled to top
+          const additionalEntries = Math.min(20, startIndex)
+          const newStartIndex = startIndex - additionalEntries
+          const newVisibleEntries = appState.storyLog.slice(newStartIndex, startIndex + maxVisibleEntries)
+
+          storyView.textContent = newVisibleEntries.join('\n\n')
+
+          // Update indicator
+          const newIndicator = indicator.cloneNode(true)
+          newIndicator.textContent = `... (${newStartIndex} 件の古いエントリが非表示) ...`
+          storyView.insertBefore(newIndicator, storyView.firstChild)
+
+          startIndex = newStartIndex
+
+          // Scroll to show newly loaded content
+          storyView.scrollTop = 50
+        }
+      }, 100)
+    }
+
+    storyView.addEventListener('scroll', handleScroll)
+  }
+}
 
 // CSVプレビューモーダル
 confirmImportBtn.addEventListener('click', async () => {
   const file = csvFileInput.files[0]
   if (!file) return
   hideCsvPreview()
-  await importCsvFile(file)
+  await safeImportCsv(file)
 })
 
-// トップレベルのプレビュー/ダウンロード
-previewTopBtn.addEventListener('click', () => {
-  if (!getModel()) {
-    setStatus('まずモデルを読み込んでください', 'warn')
-    return
-  }
-  let current = getModel().startNode
-  let story = ''
-  const visited = new Set()
-  while (current && !visited.has(current)) {
-    visited.add(current)
-    const node = getModel().nodes[current]
-    if (node?.text) story += node.text + '\n\n'
-    if (node?.choices?.length === 1) current = node.choices[0].target
-    else break
-  }
-  alert('小説プレビュー:\n\n' + story)
+cancelPreviewBtn.addEventListener('click', () => {
+  hideCsvPreview()
 })
 
-downloadTopBtn.addEventListener('click', () => {
-  if (!getModel()) {
-    setStatus('まずモデルを読み込んでください', 'warn')
-    return
-  }
-  const json = JSON.stringify(getModel(), null, 2)
-  const blob = new Blob([json], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = currentModelName ? `${currentModelName}.json` : 'model.json'
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-})
-
-// Keyboard shortcuts
-document.addEventListener('keydown', (e) => {
-  if (e.ctrlKey && e.key === 's') {
-    e.preventDefault()
-    if (guiEditMode.style.display !== 'none') {
-      saveGuiBtn.click()
+saveGuiBtn.addEventListener('click', () => {
+  try {
+    // Validate model before saving
+    const validationErrors = validateModel(appState.model.nodes)
+    if (validationErrors.length > 0) {
+      showErrors(validationErrors)
+      setStatus(`モデルにエラーがあります: ${validationErrors.length}件`, 'warn')
+      return
     }
+
+    hideErrors()
+    // Restart session with current model
+    startNewSession(appState.model)
+    setCurrentModelName('gui-edited')
+    exitGuiEditMode()
+
+    setStatus('GUI編集を保存しました', 'success')
+    setControlsEnabled(true)
+    renderState()
+    renderChoices()
+    storyManager.initStory()
+    storyManager.renderStory()
+  } catch (err) {
+    showErrors([err?.message ?? err])
+    setStatus(`GUI保存に失敗しました: ${err?.message ?? err}`, 'warn')
   }
 })
 
-// Initialize extracted handlers with dependency injection
-const graphHandler = initGraphHandler({
-  getModel,
-  getSession,
-  graphSvg,
-  zoomInBtn,
-  zoomOutBtn,
-  resetViewBtn,
-  highlightedNodes,
+cancelGuiBtn.addEventListener('click', () => {
+  // 元モデルを復元
+  const restored = guiEditorManager.restoreOriginalModel()
+
+  if (restored) {
+    // ドラフトもクリア
+    localStorage.removeItem(DRAFT_MODEL_STORAGE_KEY)
+
+    // UIを更新
+    if (guiEditorManager.nodeList) {
+      guiEditorManager.renderNodeList()
+    }
+
+    setStatus('編集をキャンセルし、元のモデルに戻しました', 'info')
+  } else {
+    setStatus('元のモデルが見つかりませんでした', 'warn')
+  }
+
+  exitGuiEditMode()
+  setControlsEnabled(true)
 })
-renderGraph = graphHandler.renderGraph
-graphHandler.setupGraphControls()
-
-const debugHandler = initDebugHandler({
-  getModel,
-  getSession,
-  flagsDisplay,
-  resourcesDisplay,
-  inventoryDisplay,
-  reachableNodes,
-})
-renderDebugInfo = debugHandler.renderDebugInfo
-
-const csvImportHandler = initCsvImportHandler({
-  getModel,
-  setModel,
-  getSession,
-  setSession,
-  setStatus,
-  showErrors,
-  hideErrors,
-  renderState,
-  renderChoices,
-  initStory,
-  renderStoryEnhanced,
-  csvPreviewModal,
-  csvFileName,
-  csvPreviewContent,
-  storyView,
-})
-showCsvPreview = csvImportHandler.showCsvPreview
-hideCsvPreview = csvImportHandler.hideCsvPreview
-importCsvFile = csvImportHandler.importCsvFile
-
-const aiConfigHandler = initAiConfig({
-  getModel,
-  getSession,
-  setStatus,
-  aiProvider,
-  openaiSettings,
-  openaiApiKey,
-  openaiModel,
-  saveAiSettings,
-  generateNextNodeBtn,
-  paraphraseCurrentBtn,
-  aiOutput,
-  Logger,
-})
-initAiProvider = aiConfigHandler.initAiProvider
-aiConfigHandler.loadSavedConfig()
-aiConfigHandler.setupListeners()
-
-const splitViewHandler = initSplitView({
-  getModel,
-  toggleSplitViewBtn,
-  storyMainContainer,
-  storyResizer,
-  storyJsonEditor,
-})
-splitViewHandler.setupListeners()
-
-// Initialize existing handlers
-const nodesPanel = initNodesPanel({
-  getModel,
-  setModel,
-  getSession,
-  setSession,
-  setStatus,
-  renderGraph,
-  renderState,
-  renderChoices,
-  initStory,
-  renderStoryEnhanced,
-  nodeOverview,
-  nodeSearch,
-  storyView
-})
-
-// Setup node list events
-nodesPanel.setupNodeListEvents(nodeList)
-
-// Override global jumpToNode function
-window.jumpToNode = nodesPanel.jumpToNode
-
-// Override global highlightNode function
-window.highlightNode = nodesPanel.highlightNode
-
-const tabs = initTabs({
-  renderGraph,
-  renderDebugInfo,
-  renderNodeOverview: nodesPanel.renderNodeOverview,
-  initAiProvider,
-  storyTab,
-  debugTab,
-  graphTab,
-  nodeListTab,
-  aiTab,
-  storyPanel,
-  debugPanel,
-  graphPanel,
-  nodeListPanel,
-  aiPanel
-})
-
-// Initialize tabs
-tabs.initialize()
-
-const guiEditor = initGuiEditor({
-  getModel,
-  setModel,
-  getSession,
-  setSession,
-  setStatus,
-  setControlsEnabled,
-  renderState,
-  renderChoices,
-  initStory,
-  renderStoryEnhanced,
-  // DOM references
-  guiEditMode,
-  guiEditor: nodeList,
-  addNodeBtn,
-  previewBtn,
-  downloadBtn,
-  saveGuiBtn,
-  cancelGuiBtn,
-  storyView,
-  chooseParaphrase,
-  parseConditions,
-  parseEffects
-})
-
-// Set guiEditor reference in nodesPanel
-nodesPanel.setGuiEditor(guiEditor);
-
-// Setup GUI editor buttons
-if (editBtn) {
-  editBtn.addEventListener('click', () => guiEditor.startEditing())
-}
-saveGuiBtn.addEventListener('click', () => guiEditor.saveEditing())
-cancelGuiBtn.addEventListener('click', () => guiEditor.cancelEditing())
 
 // 言い換えイベント（非AI）
 nodeList.addEventListener('click', (e) => {
+  if (e.target.classList.contains('rename-node-btn')) {
+    const nodeId = e.target.dataset.nodeId
+    const input = nodeList.querySelector(
+      `input[data-node-id="${nodeId}"][data-field="id"]`,
+    )
+    if (!input) {
+      setStatus('ノードID入力欄が見つかりません', 'error')
+      return
+    }
+    guiEditorManager.renameNodeId(nodeId, input.value)
+  }
+
   if (e.target.classList.contains('paraphrase-btn')) {
     const nodeId = e.target.dataset.nodeId
     const choiceIndex = e.target.dataset.choiceIndex
@@ -816,12 +1356,1172 @@ nodeList.addEventListener('click', (e) => {
       `input[data-node-id="${nodeId}"][data-choice-index="${choiceIndex}"][data-field="text"]`,
     )
     if (!input) return
+
     try {
-      input.value = chooseParaphrase(input.value, { style: 'desu-masu' })
+      // 複数のバリアントを生成（デザイナー辞書を使用）
+      const variants = lexiconManager.paraphrase(input.value, { variantCount: 3 })
+      if (variants.length === 0) {
+        setStatus('言い換えバリアントを生成できませんでした', 'warn')
+        return
+      }
+
+      // バリアント選択モーダルを表示
+      guiEditorManager.showParaphraseVariants(input, variants)
     } catch (err) {
       console.error('言い換えエラー:', err)
       setStatus(`言い換えに失敗しました: ${err?.message ?? err}`, 'warn')
     }
   }
+  if (e.target.classList.contains('add-choice-btn')) {
+    const nodeId = e.target.dataset.nodeId
+    guiEditorManager.addChoice(nodeId)
+  }
 
+  if (e.target.classList.contains('delete-node-btn')) {
+    const nodeId = e.target.dataset.nodeId
+    guiEditorManager.deleteNode(nodeId)
+  }
+
+  if (e.target.classList.contains('delete-choice-btn')) {
+    const nodeId = e.target.dataset.nodeId
+    const choiceIndex = parseInt(e.target.dataset.choiceIndex)
+    guiEditorManager.deleteChoice(nodeId, choiceIndex)
+  }
 })
+
+// 入力変更でモデル更新
+nodeList.addEventListener('input', (e) => {
+  guiEditorManager.updateModelFromInput(e.target)
+})
+
+// フォーカス外れ時にもモデル更新（フォールバック）
+nodeList.addEventListener('blur', (e) => {
+  if (e.target.tagName === 'INPUT') {
+    guiEditorManager.updateModelFromInput(e.target)
+  }
+}, true)
+
+function showVariableEditor() {
+  const currentSession = getCurrentSession()
+  if (!currentSession) {
+    setStatus('セッションを開始してください', 'warn')
+    return
+  }
+
+  const variables = currentSession.variables || {}
+  const varKeys = Object.keys(variables)
+
+  let message = '変数を編集してください (key=value の形式で入力)\n\n現在の変数:\n'
+  message += varKeys.length > 0 ? varKeys.map(key => `${key}=${variables[key]}`).join('\n') : 'なし'
+  message += '\n\n新しい変数を追加または既存の変数を編集 (空行でスキップ):'
+
+  const input = prompt(message)
+  if (input === null) return // Cancelled
+
+  const newVariables = { ...variables }
+
+  if (input.trim()) {
+    const parts = input.split('=')
+    if (parts.length === 2) {
+      const key = parts[0].trim()
+      const value = parts[1].trim()
+      if (key) {
+        newVariables[key] = value
+        setStatus(`変数 ${key} を ${value} に設定しました`, 'success')
+      } else {
+        setStatus('変数キーが無効です', 'warn')
+        return
+      }
+    } else {
+      setStatus('形式が正しくありません (key=value)', 'warn')
+      return
+    }
+  }
+
+  // Update session
+  const updatedSession = { ...currentSession, variables: newVariables }
+  setCurrentSession(updatedSession)
+  renderState()
+  renderDebugInfo()
+}
+
+// トップレベルのプレビュー/ダウンロード
+previewTopBtn.addEventListener('click', () => {
+  if (!appState.model) {
+    setStatus('まずモデルを読み込んでください', 'warn')
+    return
+  }
+  let current = appState.model.startNode
+  let story = ''
+  const visited = new Set()
+  while (current && !visited.has(current)) {
+    visited.add(current)
+    const node = appState.model.nodes[current]
+    if (node?.text) story += node.text + '\n\n'
+    if (node?.choices?.length === 1) current = node.choices[0].target
+    else break
+  }
+  storyPreviewContent.textContent = story
+  storyPreviewModal.classList.add('show')
+})
+
+// Close story preview modal
+closePreviewBtn.addEventListener('click', () => {
+  storyPreviewModal.classList.remove('show')
+})
+
+toggleSidebarBtn.addEventListener('click', () => {
+  storyContent.classList.toggle('sidebar-hidden')
+})
+
+downloadTopBtn.addEventListener('click', () => {
+  if (!appState.model) {
+    setStatus('まずモデルを読み込んでください', 'warn')
+    return
+  }
+  const modelName = getCurrentModelName()
+  downloadExportModel(modelName ? `${modelName}.json` : 'model.json')
+})
+
+// ============================================================================
+// Save/Load System (via SaveManager)
+// ============================================================================
+
+// SaveManager instance will be initialized later with proper dependencies
+const saveManager = new SaveManager()
+
+// Legacy function wrappers for backward compatibility
+function renderSaveSlots() {
+  saveManager.renderSlots()
+}
+
+function startAutoSave() {
+  saveManager.startAutoSave()
+}
+
+function stopAutoSave() {
+  saveManager.stopAutoSave()
+}
+
+// ============================================================================
+// 言い換えバリアント選択モーダル
+// ============================================================================
+
+let currentParaphraseTarget = null
+
+const exportModalInstance = new ExportModal(exportManager)
+exportModalInstance.initialize(exportModal)
+
+// Export Button Handler
+if (exportBtn) {
+  exportBtn.addEventListener('click', () => {
+    if (!appState.model) {
+      setStatus('モデルを読み込んでください', 'warn')
+      return
+    }
+    const currentName = getCurrentModelName() || 'story'
+    // extension is added by manager, so just pass name
+    const filename = currentName.replace(/\.json$/i, '')
+    exportModalInstance.show(filename)
+  })
+}
+
+// Handle Export Action
+exportModalInstance.onExport = async (formatId, filename) => {
+  try {
+    setStatus(`${formatId}形式でエクスポート中...`)
+    await exportManager.export(formatId, appState.model, filename)
+    setStatus('エクスポート完了', 'success')
+  } catch (error) {
+    console.error(error)
+    setStatus(`エクスポート失敗: ${error.message}`, 'error')
+  }
+}
+
+// ============================================================================
+// Batch Edit Manager
+// ============================================================================
+
+const batchEditManager = {
+  openModal() {
+    if (guiEditMode.style.display === 'none') {
+      setStatus('GUI編集モードでのみ使用可能です', 'warn')
+      return
+    }
+    batchEditModal.style.display = 'flex'
+    batchEditModal.classList.add('show')
+  },
+
+  closeModal() {
+    batchEditModal.style.display = 'none'
+    batchEditModal.classList.remove('show')
+  },
+
+  applyTextReplace() {
+    const search = searchText.value.trim()
+    const replace = replaceText.value.trim()
+
+    if (!search) {
+      setStatus('検索テキストを入力してください', 'warn')
+      return
+    }
+
+    let replacedCount = 0
+    for (const nodeId in _model.nodes) {
+      const node = _model.nodes[nodeId]
+      if (node.text && node.text.includes(search)) {
+        node.text = node.text.replaceAll(search, replace)
+        replacedCount++
+      }
+    }
+
+    if (replacedCount > 0) {
+      this.refreshUI()
+      setStatus(`${replacedCount}個のノードテキストを置換しました`, 'success')
+    } else {
+      setStatus('該当するテキストが見つかりませんでした', 'info')
+    }
+  },
+
+  applyChoiceReplace() {
+    const search = choiceSearchText.value.trim()
+    const replace = choiceReplaceText.value.trim()
+
+    if (!search) {
+      setStatus('検索テキストを入力してください', 'warn')
+      return
+    }
+
+    let replacedCount = 0
+    for (const nodeId in _model.nodes) {
+      const node = _model.nodes[nodeId]
+      if (node.choices) {
+        for (const choice of node.choices) {
+          if (choice.text && choice.text.includes(search)) {
+            choice.text = choice.text.replaceAll(search, replace)
+            replacedCount++
+          }
+        }
+      }
+    }
+
+    if (replacedCount > 0) {
+      this.refreshUI()
+      setStatus(`${replacedCount}個の選択肢テキストを置換しました`, 'success')
+    } else {
+      setStatus('該当するテキストが見つかりませんでした', 'info')
+    }
+  },
+
+  applyTargetReplace() {
+    const oldTarget = oldTargetText.value.trim()
+    const newTarget = newTargetText.value.trim()
+
+    if (!oldTarget || !newTarget) {
+      setStatus('変更元と変更先のノードIDを入力してください', 'warn')
+      return
+    }
+
+    if (!_model.nodes[newTarget]) {
+      setStatus('変更先のノードが存在しません', 'warn')
+      return
+    }
+
+    let replacedCount = 0
+    for (const nodeId in _model.nodes) {
+      const node = _model.nodes[nodeId]
+      if (node.choices) {
+        for (const choice of node.choices) {
+          if (choice.target === oldTarget) {
+            choice.target = newTarget
+            replacedCount++
+          }
+        }
+      }
+    }
+
+    if (replacedCount > 0) {
+      this.refreshUI()
+      setStatus(`${replacedCount}個のターゲットを変更しました`, 'success')
+    } else {
+      setStatus('該当するターゲットが見つかりませんでした', 'info')
+    }
+  },
+
+  refreshUI() {
+    renderNodeList()
+  }
+}
+
+function checkForDraftModel() {
+  const draftData = localStorage.getItem(DRAFT_MODEL_STORAGE_KEY)
+  if (!draftData) return
+
+  try {
+    const draft = JSON.parse(draftData)
+    if (!draft.model) return
+
+    // モーダルでドラフト情報を表示
+    if (guiEditorManager && guiEditorManager.openDraftRestoreModal) {
+      guiEditorManager.openDraftRestoreModal()
+    } else {
+      // フォールバック: 簡易ダイアログ
+      if (confirm('未保存のドラフトモデルが見つかりました。読み込みますか？')) {
+        restoreDraftModel(draft)
+      } else {
+        // キャンセル時はドラフトを削除しない（ユーザーが後で復元できるように）
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to load draft model:', error)
+  }
+}
+
+/**
+ * ドラフトモデルを復元（内部関数）
+ * @param {Object} draft - ドラフトデータ
+ */
+function restoreDraftModel(draft) {
+  try {
+    // Restore model and session using centralized state
+    appState.model = draft.model
+    startNewSession(appState.model)
+    setCurrentModelName(draft.modelName || 'draft')
+    appState.storyLog = draft.storyLog || []
+
+    setStatus('ドラフトモデルを読み込みました', 'success')
+    renderState()
+    renderChoices()
+    storyManager.renderStory()
+    renderDebugInfo()
+
+    // ドラフトを削除
+    localStorage.removeItem(DRAFT_MODEL_STORAGE_KEY)
+  } catch (error) {
+    console.error('Failed to restore draft model:', error)
+    setStatus('ドラフトの復元に失敗しました', 'error')
+  }
+}
+
+// モーダルイベントリスナー
+document.getElementById('cancelParaphraseBtn').removeEventListener('click', () => guiEditorManager.hideParaphraseModal())
+
+// モーダル外クリックで閉じる
+document.getElementById('paraphraseModal').removeEventListener('click', (e) => {
+  if (e.target.id === 'paraphraseModal') {
+    guiEditorManager.hideParaphraseModal()
+  }
+})
+
+// Initialize status and check for draft model on load
+checkForDraftModel()
+setStatus('初期化完了 - モデルを読み込んでください', 'info')
+
+// Batch edit event listeners
+if (batchEditBtn) batchEditBtn.addEventListener('click', () => guiEditorManager.getBatchEditManager().openModal())
+if (applyTextReplaceBtn) applyTextReplaceBtn.addEventListener('click', () => guiEditorManager.getBatchEditManager().applyTextReplace())
+if (applyChoiceReplaceBtn) applyChoiceReplaceBtn.addEventListener('click', () => guiEditorManager.getBatchEditManager().applyChoiceReplace())
+if (applyTargetReplaceBtn) applyTargetReplaceBtn.addEventListener('click', () => guiEditorManager.getBatchEditManager().applyTargetReplace())
+if (closeBatchEditBtn) closeBatchEditBtn.addEventListener('click', () => guiEditorManager.getBatchEditManager().closeModal())
+
+// ===========================
+// Color Palette Event Listeners
+// ===========================
+const themeBtn = document.getElementById('themeBtn')
+// ===========================
+// Quick Node Creation
+// ===========================
+// NOTE: NODE_TEMPLATES is imported from constants.js
+const createQuickNodeBtn = document.getElementById('createQuickNodeBtn')
+const cancelQuickNodeBtn = document.getElementById('cancelQuickNodeBtn')
+
+if (createQuickNodeBtn) {
+  createQuickNodeBtn.addEventListener('click', () => guiEditorManager.createQuickNode())
+}
+
+if (cancelQuickNodeBtn) {
+  cancelQuickNodeBtn.addEventListener('click', () => guiEditorManager.closeQuickNodeModal())
+}
+
+// N key for quick node creation is now handled by KeyBindingManager (quickNode action)
+
+// Batch Choice Edit
+// ===========================
+function openBatchChoiceModal() {
+  const modal = document.getElementById('batchChoiceModal')
+  const nodeSelect = document.getElementById('batchNodeSelect')
+
+  // Populate node list
+  clearContent(nodeSelect)
+  const defaultOption = document.createElement('option')
+  defaultOption.value = ''
+  defaultOption.textContent = 'ノードを選択...'
+  nodeSelect.appendChild(defaultOption)
+
+  Object.keys(_model.nodes).forEach(nodeId => {
+    const option = document.createElement('option')
+    option.value = nodeId
+    option.textContent = `${nodeId} - ${_model.nodes[nodeId].text?.substring(0, 30) || '(テキストなし)'}`
+    nodeSelect.appendChild(option)
+  })
+
+  modal.style.display = 'flex'
+  modal.classList.add('show')
+}
+
+// Event listeners for batch choice edit
+const batchNodeSelect = document.getElementById('batchNodeSelect')
+const batchCondition = document.getElementById('batchCondition')
+const batchEffect = document.getElementById('batchEffect')
+const batchConditionText = document.getElementById('batchConditionText')
+const batchEffectText = document.getElementById('batchEffectText')
+const cancelBatchChoiceBtn = document.getElementById('cancelBatchChoiceBtn')
+const applyBatchChoiceBtn = document.getElementById('applyBatchChoiceBtn')
+
+if (batchNodeSelect) {
+  batchNodeSelect.addEventListener('change', () => guiEditorManager.updateBatchChoiceList())
+}
+
+if (batchCondition) {
+  batchCondition.addEventListener('change', (e) => {
+    batchConditionText.disabled = !e.target.checked
+  })
+}
+
+if (batchEffect) {
+  batchEffect.addEventListener('change', (e) => {
+    batchEffectText.disabled = !e.target.checked
+  })
+}
+
+if (cancelBatchChoiceBtn) {
+  cancelBatchChoiceBtn.addEventListener('click', () => {
+    document.getElementById('batchChoiceModal').style.display = 'none'
+    document.getElementById('batchChoiceModal').classList.remove('show')
+  })
+}
+
+if (applyBatchChoiceBtn) {
+  applyBatchChoiceBtn.addEventListener('click', () => guiEditorManager.applyBatchChoice())
+}
+
+// Add button listeners for quick node and batch choice
+const quickNodeBtn = document.getElementById('quickNodeBtn')
+const batchChoiceBtn = document.getElementById('batchChoiceBtn')
+
+if (quickNodeBtn) {
+  quickNodeBtn.addEventListener('click', () => guiEditorManager.openQuickNodeModal())
+}
+
+if (batchChoiceBtn) {
+  batchChoiceBtn.addEventListener('click', () => guiEditorManager.openBatchChoiceModal())
+}
+
+// ============================================================================
+// Search and Filter Event Listeners
+// ============================================================================
+
+// Helper function to update search results
+function updateSearchFilter() {
+  if (!guiEditorManager || !appState.model) return
+
+  const query = nodeSearchInput?.value || ''
+  const filterType = nodeFilterSelect?.value || 'all'
+
+  const result = guiEditorManager.applySearchAndFilter(query, filterType)
+
+  if (result && searchResultCount) {
+    if (query || filterType !== 'all') {
+      if (result.visible === 0) {
+        searchResultCount.textContent = '該当なし'
+        searchResultCount.classList.add('no-results')
+      } else {
+        searchResultCount.textContent = `${result.visible}/${result.total} ノード`
+        searchResultCount.classList.remove('no-results')
+      }
+    } else {
+      searchResultCount.textContent = ''
+      searchResultCount.classList.remove('no-results')
+    }
+  }
+}
+
+// Search input event listener with debounce
+let searchDebounceTimer = null
+if (nodeSearchInput) {
+  nodeSearchInput.addEventListener('input', () => {
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer)
+    searchDebounceTimer = setTimeout(updateSearchFilter, 300)
+  })
+}
+
+// Clear search button
+if (clearSearchBtn) {
+  clearSearchBtn.addEventListener('click', () => {
+    if (nodeSearchInput) nodeSearchInput.value = ''
+    if (nodeFilterSelect) nodeFilterSelect.value = 'all'
+    if (guiEditorManager) guiEditorManager.resetSearchAndFilter()
+    if (searchResultCount) searchResultCount.textContent = ''
+  })
+}
+
+// Filter select event listener
+if (nodeFilterSelect) {
+  nodeFilterSelect.addEventListener('change', updateSearchFilter)
+}
+
+// ============================================================================
+// Snippet Event Listeners
+// ============================================================================
+
+const snippetBtn = document.getElementById('snippetBtn')
+const snippetModal = document.getElementById('snippetModal')
+const snippetNameInput = document.getElementById('snippetNameInput')
+const saveSnippetBtn = document.getElementById('saveSnippetBtn')
+const snippetList = document.getElementById('snippetList')
+const closeSnippetModalBtn = document.getElementById('closeSnippetModalBtn')
+
+// Render snippet list
+function renderSnippetList() {
+  if (!snippetList || !guiEditorManager) return
+
+  const snippets = guiEditorManager.getSnippets()
+
+  clearContent(snippetList)
+
+  if (snippets.length === 0) {
+    const p = document.createElement('p')
+    p.className = 'snippet-empty'
+    p.style.cssText = 'color: var(--color-text-muted); text-align: center; padding: 2rem;'
+    p.textContent = 'スニペットがありません'
+    snippetList.appendChild(p)
+    return
+  }
+
+  const fragment = document.createDocumentFragment()
+  snippets.forEach(snippet => {
+    const div = document.createElement('div')
+    div.className = 'snippet-item'
+    div.dataset.snippetId = snippet.id
+
+    const info = document.createElement('div')
+    info.className = 'snippet-info'
+
+    const name = document.createElement('div')
+    name.className = 'snippet-name'
+    name.textContent = snippet.name
+    info.appendChild(name)
+
+    const meta = document.createElement('div')
+    meta.className = 'snippet-meta'
+    meta.textContent = `作成: ${new Date(snippet.createdAt).toLocaleDateString('ja-JP')}`
+    info.appendChild(meta)
+    div.appendChild(info)
+
+    const actionsGroup = document.createElement('div')
+    actionsGroup.className = 'snippet-actions-group'
+
+    const insertBtn = document.createElement('button')
+    insertBtn.className = 'insert-snippet-btn primary'
+    insertBtn.dataset.snippetId = snippet.id
+    insertBtn.textContent = '挿入'
+    actionsGroup.appendChild(insertBtn)
+
+    const deleteBtn = document.createElement('button')
+    deleteBtn.className = 'delete-snippet-btn'
+    deleteBtn.dataset.snippetId = snippet.id
+    deleteBtn.textContent = '削除'
+    actionsGroup.appendChild(deleteBtn)
+
+    div.appendChild(actionsGroup)
+    fragment.appendChild(div)
+  })
+  snippetList.appendChild(fragment)
+
+  // Add event listeners for insert and delete buttons
+  snippetList.querySelectorAll('.insert-snippet-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const snippetId = btn.dataset.snippetId
+      guiEditorManager.insertFromSnippet(snippetId)
+      snippetModal.style.display = 'none'
+    })
+  })
+
+  snippetList.querySelectorAll('.delete-snippet-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const snippetId = btn.dataset.snippetId
+      if (confirm('このスニペットを削除しますか？')) {
+        guiEditorManager.deleteSnippet(snippetId)
+        renderSnippetList()
+      }
+    })
+  })
+}
+
+// Open snippet modal
+if (snippetBtn) {
+  snippetBtn.addEventListener('click', () => {
+    if (snippetModal) {
+      snippetModal.style.display = 'flex'
+      snippetModal.classList.add('show')
+      renderSnippetList()
+    }
+  })
+}
+
+// Save snippet
+if (saveSnippetBtn) {
+  saveSnippetBtn.addEventListener('click', () => {
+    const name = snippetNameInput?.value.trim() || ''
+    if (guiEditorManager.saveAsSnippet(name)) {
+      if (snippetNameInput) snippetNameInput.value = ''
+      renderSnippetList()
+    }
+  })
+}
+
+// Close snippet modal
+if (closeSnippetModalBtn) {
+  closeSnippetModalBtn.addEventListener('click', () => {
+    if (snippetModal) {
+      snippetModal.style.display = 'none'
+      snippetModal.classList.remove('show')
+    }
+  })
+}
+
+// Draft restore modal event listeners
+const cancelDraftRestoreBtn = document.getElementById('cancelDraftRestoreBtn')
+const confirmDraftRestoreBtn = document.getElementById('confirmDraftRestoreBtn')
+
+if (cancelDraftRestoreBtn) {
+  cancelDraftRestoreBtn.addEventListener('click', () => {
+    if (guiEditorManager && guiEditorManager.closeDraftRestoreModal) {
+      guiEditorManager.closeDraftRestoreModal()
+    }
+    // キャンセル時はドラフトを削除しない（ユーザーが後で復元できるように）
+  })
+}
+
+if (confirmDraftRestoreBtn) {
+  confirmDraftRestoreBtn.addEventListener('click', () => {
+    if (guiEditorManager && guiEditorManager.getDraftInfo) {
+      const draftInfo = guiEditorManager.getDraftInfo()
+      if (draftInfo) {
+        restoreDraftModel(draftInfo)
+        guiEditorManager.closeDraftRestoreModal()
+      } else {
+        setStatus('ドラフトが見つかりません', 'error')
+        guiEditorManager.closeDraftRestoreModal()
+      }
+    }
+  })
+}
+
+// Close draft restore modal on backdrop click
+const draftRestoreModal = document.getElementById('draftRestoreModal')
+if (draftRestoreModal) {
+  draftRestoreModal.addEventListener('click', (e) => {
+    if (e.target === draftRestoreModal) {
+      if (guiEditorManager && guiEditorManager.closeDraftRestoreModal) {
+        guiEditorManager.closeDraftRestoreModal()
+      }
+    }
+  })
+}
+
+// Close modal on backdrop click
+if (snippetModal) {
+  snippetModal.addEventListener('click', (e) => {
+    if (e.target === snippetModal) {
+      snippetModal.style.display = 'none'
+      snippetModal.classList.remove('show')
+    }
+  })
+}
+
+// ============================================================================
+// Custom Template Event Listeners
+// ============================================================================
+
+const manageTemplatesBtn = document.getElementById('manageTemplatesBtn')
+const templateModal = document.getElementById('templateModal')
+const customTemplateNameInput = document.getElementById('customTemplateNameInput')
+const saveCustomTemplateBtn = document.getElementById('saveCustomTemplateBtn')
+const customTemplateList = document.getElementById('customTemplateList')
+const closeTemplateModalBtn = document.getElementById('closeTemplateModalBtn')
+const customTemplateGroup = document.getElementById('customTemplateGroup')
+
+// Render custom template list in modal
+function renderCustomTemplateList() {
+  if (!customTemplateList || !guiEditorManager) return
+
+  const templates = guiEditorManager.getCustomTemplates()
+
+  clearContent(customTemplateList)
+
+  if (templates.length === 0) {
+    const p = document.createElement('p')
+    p.className = 'template-empty'
+    p.style.cssText = 'color: var(--color-text-muted); text-align: center; padding: 2rem;'
+    p.textContent = 'カスタムテンプレートがありません'
+    customTemplateList.appendChild(p)
+    return
+  }
+
+  const fragment = document.createDocumentFragment()
+  templates.forEach(template => {
+    const div = document.createElement('div')
+    div.className = 'snippet-item'
+    div.dataset.templateId = template.id
+
+    const info = document.createElement('div')
+    info.className = 'snippet-info'
+
+    const name = document.createElement('div')
+    name.className = 'snippet-name'
+    name.textContent = template.name
+    info.appendChild(name)
+
+    const meta = document.createElement('div')
+    meta.className = 'snippet-meta'
+    meta.textContent = `作成: ${new Date(template.createdAt).toLocaleDateString('ja-JP')}`
+    info.appendChild(meta)
+    div.appendChild(info)
+
+    const actionsGroup = document.createElement('div')
+    actionsGroup.className = 'snippet-actions-group'
+
+    const deleteBtn = document.createElement('button')
+    deleteBtn.className = 'delete-template-btn'
+    deleteBtn.dataset.templateId = template.id
+    deleteBtn.textContent = '削除'
+    actionsGroup.appendChild(deleteBtn)
+
+    div.appendChild(actionsGroup)
+    fragment.appendChild(div)
+  })
+  customTemplateList.appendChild(fragment)
+
+  // Add delete event listeners
+  customTemplateList.querySelectorAll('.delete-template-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const templateId = btn.dataset.templateId
+      if (confirm('このテンプレートを削除しますか？')) {
+        guiEditorManager.deleteCustomTemplate(templateId)
+        renderCustomTemplateList()
+        updateCustomTemplateOptions()
+      }
+    })
+  })
+}
+
+// Update custom template options in quick node modal
+function updateCustomTemplateOptions() {
+  if (!customTemplateGroup || !guiEditorManager) return
+
+  const templates = guiEditorManager.getCustomTemplates()
+
+  clearContent(customTemplateGroup)
+
+  if (templates.length === 0) {
+    const option = document.createElement('option')
+    option.disabled = true
+    option.textContent = 'カスタムテンプレートなし'
+    customTemplateGroup.appendChild(option)
+    return
+  }
+
+  templates.forEach(template => {
+    const option = document.createElement('option')
+    option.value = template.id
+    option.textContent = template.name
+    customTemplateGroup.appendChild(option)
+  })
+}
+
+// Open template manager modal
+if (manageTemplatesBtn) {
+  manageTemplatesBtn.addEventListener('click', () => {
+    if (templateModal) {
+      templateModal.style.display = 'flex'
+      templateModal.classList.add('show')
+      renderCustomTemplateList()
+    }
+  })
+}
+
+// Save custom template
+if (saveCustomTemplateBtn) {
+  saveCustomTemplateBtn.addEventListener('click', () => {
+    const name = customTemplateNameInput?.value.trim() || ''
+    if (guiEditorManager.saveAsCustomTemplate(name)) {
+      if (customTemplateNameInput) customTemplateNameInput.value = ''
+      renderCustomTemplateList()
+      updateCustomTemplateOptions()
+    }
+  })
+}
+
+// Close template modal
+if (closeTemplateModalBtn) {
+  closeTemplateModalBtn.addEventListener('click', () => {
+    if (templateModal) {
+      templateModal.style.display = 'none'
+      templateModal.classList.remove('show')
+    }
+  })
+}
+
+// Close modal on backdrop click
+if (templateModal) {
+  templateModal.addEventListener('click', (e) => {
+    if (e.target === templateModal) {
+      templateModal.style.display = 'none'
+      templateModal.classList.remove('show')
+    }
+  })
+}
+
+// ============================================================================
+// Module Initialization
+// ============================================================================
+
+// Initialize modules (appState is already initialized at the top of the file)
+const dom = new DOMManager()
+const eventManager = new EventManager()
+const storyManager = new StoryManager(appState)
+// Phase 2: 新しいグラフエディタを使用（読み取り専用ビュー）
+const graphManager = new GraphEditorManager(appState)
+// 既存のGraphManagerは将来の拡張のために保持
+// const oldGraphManager = new GraphManager(appState)
+const debugManager = new DebugManager(appState)
+const guiEditorManager = new GuiEditorManager(appState)
+const referenceManager = new ReferenceManager()
+const csvManager = new CsvManager(appState)
+const aiManager = new AiManager(appState)
+const lexiconManager = new LexiconManager()
+const searchManager = new SearchManager()
+const themeManager = new ThemeManager()
+const validationPanel = new ValidationPanel(appState)
+const lexiconUIManager = new LexiconUIManager()
+const keyBindingUIManager = new KeyBindingUIManager()
+mermaidPreviewManager = new MermaidPreviewManager()
+
+// Initialize story manager
+storyManager.initialize(document.getElementById('storyPanel'))
+
+// Initialize graph manager
+graphManager.initialize(document.getElementById('graphSvg'))
+
+// Initialize debug manager
+debugManager.initialize(
+  document.getElementById('flagsDisplay'),
+  document.getElementById('resourcesDisplay'),
+  document.getElementById('variablesDisplay'),
+  document.getElementById('reachableNodes')
+)
+
+// Initialize validation panel
+validationPanel.initialize(
+  document.getElementById('validationContainer'),
+  (nodeId) => {
+    // Navigate to node in GUI editor when clicked
+    if (guiEditMode && guiEditMode.classList.contains('active')) {
+      const nodeCard = document.querySelector(`[data-node-id="${nodeId}"]`)
+      if (nodeCard) {
+        nodeCard.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        nodeCard.classList.add('highlight')
+        setTimeout(() => nodeCard.classList.remove('highlight'), 2000)
+      }
+    }
+  }
+)
+
+// Initialize Mermaid preview manager
+mermaidPreviewManager.initialize(document.querySelector('.app-container'))
+
+// Validation button event listener
+const runValidationBtn = document.getElementById('runValidationBtn')
+if (runValidationBtn) {
+  runValidationBtn.addEventListener('click', () => {
+    const summary = validationPanel.validateAndRender()
+    if (summary) {
+      if (summary.errors > 0) {
+        setStatus(`検証完了: ${summary.errors}件のエラー、${summary.warnings}件の警告`, 'error')
+      } else if (summary.warnings > 0) {
+        setStatus(`検証完了: ${summary.warnings}件の警告`, 'warn')
+      } else {
+        setStatus('検証完了: 問題は検出されませんでした', 'success')
+      }
+    }
+  })
+}
+
+saveManager.initialize({
+  appState,
+  setStatus,
+  uiCallbacks: {
+    renderState,
+    renderChoices,
+    renderStory,
+    renderDebugInfo
+  },
+  saveSlotsContainer: saveSlots
+})
+
+// Extend SaveManager UI updates to refresh Mermaid preview after load
+const originalSaveManagerUpdateUI = saveManager.updateUI.bind(saveManager)
+saveManager.updateUI = function () {
+  originalSaveManagerUpdateUI()
+  updateMermaidDiagramIfVisible()
+}
+
+// Key binding initialization is done after keyBindingUIManager setup (see below)
+
+// Initialize GUI editor manager
+guiEditorManager.initialize(
+  document.getElementById('nodeList'),
+  document.getElementById('guiEditMode'),
+  document.getElementById('batchEditModal'),
+  document.getElementById('quickNodeModal'),
+  document.getElementById('batchChoiceModal'),
+  document.getElementById('paraphraseModal'),
+  document.getElementById('draftRestoreModal')
+)
+
+// Initialize reference manager
+referenceManager.initialize(
+  document.getElementById('referenceToc'),
+  document.getElementById('referenceContent')
+)
+
+// Initialize CSV manager
+csvManager.initialize(
+  document.getElementById('csvImportModal'),
+  document.getElementById('csvExportModal')
+)
+
+// Initialize AI manager
+aiManager.initialize(
+  document.getElementById('aiOutput'),
+  document.getElementById('generateNextNodeBtn'),
+  document.getElementById('paraphraseCurrentBtn')
+)
+
+// Initialize lexicon manager
+lexiconManager.initialize()
+
+// Initialize search manager
+searchManager.initialize()
+
+// Keep engine runtime paraphrase lexicon in sync with designer lexicon
+const applyToRuntimeLexicon = (lexicon, options) => {
+  try {
+    setParaphraseLexicon(lexicon, options)
+  } catch (e) {
+    Logger.warn('Failed to apply designer lexicon to engine runtime lexicon', e)
+  }
+}
+
+try {
+  const designerLexicon = lexiconManager.getLexicon()
+  applyToRuntimeLexicon(designerLexicon, { merge: true })
+} catch (e) {
+  Logger.warn('Failed to initialize engine runtime lexicon from designer lexicon', e)
+}
+
+// Initialize lexicon UI manager
+lexiconUIManager.initialize(lexiconManager, setStatus, applyToRuntimeLexicon)
+lexiconUIManager.initUI()
+
+// Initialize key binding UI manager with dependencies
+keyBindingUIManager.initialize(keyBindingManager, appState, setStatus, {
+  mermaidPreviewManager,
+  guiEditorManager,
+  graphManager,
+  searchManager,
+  updateMermaidCallback: updateMermaidDiagramIfVisible
+})
+
+// Initialize KeyBindingManager with handlers from keyBindingUIManager
+keyBindingManager.initialize({
+  setStatus,
+  handlers: keyBindingUIManager.getHandlers(),
+  uiElements: {
+    inventoryKey,
+    debugKey,
+    graphKey,
+    storyKey,
+    aiKey,
+    mermaidKey,
+    keyBindingDisplay
+  },
+  guiEditMode,
+  saveGuiBtn
+})
+
+// Key binding UI event listeners
+if (saveKeyBindings) {
+  saveKeyBindings.addEventListener('click', () => keyBindingManager.save())
+}
+if (resetKeyBindings) {
+  resetKeyBindings.addEventListener('click', () => keyBindingManager.reset())
+}
+
+// Initialize theme manager (palette UI and saved theme)
+setupThemeEventListeners(themeManager)
+themeManager.loadSavedPalette()
+
+// Set up graph control event listeners
+// Phase 2: 新しいGraphEditorManager用のイベントリスナー
+if (fitGraphBtn) {
+  fitGraphBtn.onclick = () => {
+    if (graphManager && typeof graphManager.fitToView === 'function') {
+      graphManager.fitToView()
+    }
+  }
+}
+if (resetGraphBtn) {
+  resetGraphBtn.onclick = () => {
+    if (graphManager && typeof graphManager.reset === 'function') {
+      graphManager.reset()
+    }
+  }
+}
+if (graphSettingsBtn) {
+  graphSettingsBtn.onclick = () => {
+    const graphSettings = document.getElementById('graphSettings')
+    graphSettings.style.display = graphSettings.style.display === 'none' ? 'block' : 'none'
+  }
+}
+// Phase 2: 以下の機能は将来の拡張として実装予定
+// if (nodeShape) {
+//   nodeShape.onchange = () => graphManager.setNodeShape(nodeShape.value)
+// }
+// if (fontSize) {
+//   fontSize.oninput = () => graphManager.setFontSize(parseInt(fontSize.value))
+// }
+// if (showConditions) {
+//   showConditions.onchange = () => graphManager.setShowConditions(showConditions.checked)
+// }
+// if (saveGraphPreset) {
+//   saveGraphPreset.onclick = () => {
+//     if (graphManager.savePreset()) {
+//       setStatus('グラフプリセットを保存しました', 'success')
+//     } else {
+//       setStatus('プリセットの保存に失敗しました', 'warn')
+//     }
+//   }
+// }
+// if (loadGraphPreset) {
+//   loadGraphPreset.onclick = () => {
+//     if (graphManager.loadPreset()) {
+//       setStatus('グラフプリセットを読み込みました', 'success')
+//     } else {
+//       setStatus('保存されたプリセットがありません', 'warn')
+//     }
+//   }
+// }
+
+// CSV import/export event listeners
+if (importCsvBtn) {
+  importCsvBtn.addEventListener('click', () => {
+    csvManager.showCsvImportModal()
+  })
+}
+
+if (exportCsvBtn) {
+  exportCsvBtn.addEventListener('click', () => {
+    csvManager.showCsvExportModal()
+  })
+}
+
+if (refreshSavesBtn) {
+  refreshSavesBtn.addEventListener('click', () => {
+    renderSaveSlots()
+  })
+}
+
+// GUI Edit Mode Toggle
+if (guiEditBtn) {
+  guiEditBtn.addEventListener('click', () => {
+    if (!appState.model) {
+      setStatus('まずモデルを読み込んでください', 'warn')
+      return
+    }
+
+    const isCurrentlyEditing = guiEditMode.classList.contains('active')
+
+    if (isCurrentlyEditing) {
+      // Exit GUI edit mode
+      guiEditMode.classList.remove('active')
+      guiEditMode.style.display = 'none'
+      if (storyPanel) {
+        storyPanel.classList.add('active')
+      }
+      guiEditBtn.textContent = '編集'
+      guiEditBtn.innerHTML = '<svg class="icon icon-sm"><use href="#icon-edit"></use></svg>編集'
+      setStatus('GUI編集モードを終了しました')
+    } else {
+      // Enter GUI edit mode
+      // 元モデルを保存（ロールバック用）
+      guiEditorManager.saveOriginalModel()
+
+      guiEditMode.classList.add('active')
+      guiEditMode.style.removeProperty('display')
+      if (storyPanel) {
+        storyPanel.classList.remove('active')
+      }
+      guiEditBtn.textContent = '閲覧'
+      guiEditBtn.innerHTML = '<svg class="icon icon-sm"><use href="#icon-eye"></use></svg>閲覧'
+      guiEditorManager.nodeRenderer.renderNodeList()
+      setStatus('GUI編集モードを開始しました', 'success')
+    }
+  })
+}
+
+// Phase 2: GraphEditorManagerからアクセスできるようにグローバル変数を公開
+window.guiEditorManager = guiEditorManager
+window.switchTab = switchTab
+
+if (import.meta.env.DEV) {
+  window.__NARRATIVEGEN_DEVTOOLS__ = {
+    getState() {
+      const currentSession = getCurrentSession()
+      return {
+        hasModel: Boolean(appState.model),
+        currentModelName: getCurrentModelName(),
+        currentNodeId: currentSession?.nodeId ?? null,
+        nodeCount: appState.model ? Object.keys(appState.model.nodes || {}).length : 0,
+        graphHistoryDepth: graphManager.history.length,
+        graphRedoDepth: graphManager.redoStack.length,
+        mermaidVisible: Boolean(mermaidPreviewManager?.isVisible),
+      }
+    },
+    getExportFormats() {
+      return exportManager.getAvailableFormats()
+    },
+    renderGraph() {
+      graphManager.render()
+      return {
+        hasSvg: Boolean(graphSvg?.childElementCount),
+        childCount: graphSvg?.childElementCount ?? 0,
+      }
+    },
+    undoGraph() {
+      graphManager.undo()
+      return {
+        graphHistoryDepth: graphManager.history.length,
+        graphRedoDepth: graphManager.redoStack.length,
+      }
+    },
+    redoGraph() {
+      graphManager.redo()
+      return {
+        graphHistoryDepth: graphManager.history.length,
+        graphRedoDepth: graphManager.redoStack.length,
+      }
+    },
+  }
+}
