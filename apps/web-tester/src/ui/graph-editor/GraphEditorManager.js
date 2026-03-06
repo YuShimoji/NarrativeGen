@@ -4,9 +4,10 @@
  * Dagre.jsを使用した階層型レイアウトでストーリー構造を可視化・編集
  */
 
-import dagre from 'dagre'
 import * as d3 from 'd3'
 import { NODE_TEMPLATES, NODE_ID_PREFIX } from '../../config/constants.js'
+import { DagreLayoutEngine } from './layout/DagreLayoutEngine.js'
+import { ContextMenuManager } from './interaction/ContextMenuManager.js'
 
 export class GraphEditorManager {
   constructor(appState) {
@@ -22,7 +23,7 @@ export class GraphEditorManager {
     this.selectedNodeIds = new Set() // 複数選択用
     this.dragSourceNodeId = null // エッジ作成用のドラッグ元ノード
     this.editingNodeId = null // インライン編集中のノードID
-    this.contextMenu = null // 右クリックメニュー要素
+    this.contextMenu = null // 右クリックメニュー要素（ContextMenuManager経由）
     this._lastNodeClick = { nodeId: null, time: 0 } // ダブルクリック検出用
 
     // 複数選択・範囲選択
@@ -82,6 +83,12 @@ export class GraphEditorManager {
     // History for Undo/Redo
     this.history = []
     this.redoStack = []
+
+    // 分離モジュール
+    this.layoutEngine = new DagreLayoutEngine()
+    this.contextMenuManager = new ContextMenuManager({
+      onAction: (action, nodeId, edge, event) => this._handleContextMenuAction(action, nodeId, edge, event)
+    })
   }
 
   /**
@@ -93,7 +100,8 @@ export class GraphEditorManager {
     this._setupSVG()
     this._setupEventHandlers()
     this._setupResizeObserver()
-    this._createContextMenu()
+    this.contextMenuManager.initialize()
+    this.contextMenu = this.contextMenuManager.element
     this._setupMinimap()
   }
 
@@ -170,108 +178,16 @@ export class GraphEditorManager {
   }
 
   /**
-   * 右クリックメニューを作成
-   */
-  _createContextMenu() {
-    // 既存のメニューを削除
-    const existingMenu = document.getElementById('graph-context-menu')
-    if (existingMenu) {
-      existingMenu.remove()
-    }
-
-    // メニュー要素を作成
-    this.contextMenu = document.createElement('div')
-    this.contextMenu.id = 'graph-context-menu'
-    this.contextMenu.className = 'context-menu'
-    this.contextMenu.style.cssText = `
-      position: absolute;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      padding: 4px 0;
-      display: none;
-      z-index: 1000;
-      min-width: 150px;
-    `
-    document.body.appendChild(this.contextMenu)
-
-    // メニュー外クリックで閉じる
-    document.addEventListener('click', (event) => {
-      if (this.contextMenu && !this.contextMenu.contains(event.target)) {
-        this.contextMenu.style.display = 'none'
-      }
-    })
-  }
-
-  /**
-   * 右クリックメニューを表示
+   * 右クリックメニューを表示（ContextMenuManagerに委譲）
    * @param {Event} event - マウスイベント
-   * @param {string|null} nodeId - ノードID（nullの場合はキャンバス上）
-   * @param {Object|null} edge - エッジ情報（nullの場合はエッジ上ではない）
+   * @param {string|null} nodeId - ノードID
+   * @param {Object|null} edge - エッジ情報
    */
   _showContextMenu(event, nodeId = null, edge = null) {
-    if (!this.contextMenu) return
-
-    event.preventDefault()
-    event.stopPropagation()
-
-    // メニュー位置を設定
-    this.contextMenu.style.left = `${event.clientX}px`
-    this.contextMenu.style.top = `${event.clientY}px`
-    this.contextMenu.style.display = 'block'
-
-    // メニュー内容を生成
-    let menuHTML = ''
-
-    if (nodeId) {
-      // ノード上での右クリック
-      menuHTML = `
-        <div class="context-menu-item" data-action="edit-node">編集</div>
-        <div class="context-menu-item" data-action="delete-node">削除</div>
-        <div class="context-menu-divider"></div>
-        <div class="context-menu-item" data-action="add-node-from">ここから接続を作成</div>
-      `
-    } else if (edge) {
-      // エッジ上での右クリック
-      menuHTML = `
-        <div class="context-menu-item" data-action="edit-edge">編集</div>
-        <div class="context-menu-item" data-action="delete-edge">削除</div>
-      `
-    } else {
-      // キャンバス上での右クリック
-      menuHTML = `
-        <div class="context-menu-item" data-action="add-node-conversation">会話ノードを追加</div>
-        <div class="context-menu-item" data-action="add-node-choice">選択ノードを追加</div>
-        <div class="context-menu-item" data-action="add-node-branch">分岐ノードを追加</div>
-        <div class="context-menu-item" data-action="add-node-ending">終了ノードを追加</div>
-        <div class="context-menu-divider"></div>
-        <div class="context-menu-item" data-action="toggle-grid-snap">グリッドスナップ: ${this.grid.enabled ? 'ON' : 'OFF'}</div>
-        <div class="context-menu-item" data-action="toggle-grid-display">グリッド表示: ${this.grid.showGrid ? 'ON' : 'OFF'}</div>
-        <div class="context-menu-item" data-action="toggle-minimap">ミニマップ: ${this.minimap.enabled ? 'ON' : 'OFF'}</div>
-      `
-    }
-
-    this.contextMenu.innerHTML = menuHTML
-
-    // メニュー項目のイベントハンドラー
-    this.contextMenu.querySelectorAll('.context-menu-item').forEach(item => {
-      item.style.cssText = `
-        padding: 8px 16px;
-        cursor: pointer;
-        font-size: 14px;
-      `
-      item.addEventListener('mouseenter', () => {
-        item.style.backgroundColor = '#f0f0f0'
-      })
-      item.addEventListener('mouseleave', () => {
-        item.style.backgroundColor = 'transparent'
-      })
-      item.addEventListener('click', (e) => {
-        e.stopPropagation()
-        this._handleContextMenuAction(item.dataset.action, nodeId, edge, event)
-        this.contextMenu.style.display = 'none'
-      })
+    this.contextMenuManager.show(event, nodeId, edge, {
+      gridEnabled: this.grid.enabled,
+      gridVisible: this.grid.showGrid,
+      minimapEnabled: this.minimap.enabled
     })
   }
 
@@ -500,53 +416,7 @@ export class GraphEditorManager {
    * @returns {Object} Dagreグラフオブジェクト
    */
   _calculateLayout(nodes, edges) {
-    const g = new dagre.graphlib.Graph()
-    g.setDefaultEdgeLabel(() => ({}))
-    g.setGraph({
-      rankdir: 'TB', // トップダウン
-      nodesep: 50,
-      ranksep: 80,
-      marginx: 50,
-      marginy: 50
-    })
-
-    // ノードを追加
-    nodes.forEach(node => {
-      // カスタム位置がある場合はDagre計算から除外するか、固定位置として扱う
-      // Dagreは固定位置をサポートしないため、計算後の処理で上書きするが、
-      // グラフ全体への影響を避けるため、ここでは設定だけ行う
-      g.setNode(node.id, {
-        width: node.width,
-        height: node.height,
-        label: node.label,
-        nodeType: node.nodeType,
-        color: node.color,
-        // カスタム位置情報を保持
-        graphPosition: node.graphPosition
-      })
-    })
-
-    // エッジを追加
-    edges.forEach(edge => {
-      g.setEdge(edge.from, edge.to, {
-        label: edge.label,
-        choiceId: edge.choiceId
-      })
-    })
-
-    // レイアウトを計算
-    dagre.layout(g)
-
-    // カスタム位置を持つノードの位置を上書き
-    g.nodes().forEach(v => {
-      const node = g.node(v)
-      if (node.graphPosition) {
-        node.x = node.graphPosition.x
-        node.y = node.graphPosition.y
-      }
-    })
-
-    return g
+    return this.layoutEngine.calculate(nodes, edges)
   }
 
   /**
@@ -1978,10 +1848,8 @@ export class GraphEditorManager {
       this.resizeObserver = null
     }
 
-    if (this.contextMenu) {
-      this.contextMenu.remove()
-      this.contextMenu = null
-    }
+    this.contextMenuManager.destroy()
+    this.contextMenu = null
 
     // ミニマップを削除
     if (this.minimap.container) {
