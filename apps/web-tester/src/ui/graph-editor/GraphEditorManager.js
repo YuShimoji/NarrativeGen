@@ -50,13 +50,13 @@ export class GraphEditorManager {
     this.resizeDebounceTimer = null // デバウンス用タイマー
     this.resizeDebounceDelay = 300 // デバウンス遅延時間（ms）
 
-    // ノードタイプ別の色定義
+    // ノードタイプ別の色定義（モダンクラシカル：落ち着いたトーン）
     this.nodeColors = {
-      start: '#22c55e',      // 緑
-      conversation: '#3b82f6', // 青
-      choice: '#eab308',     // 黄
-      branch: '#f97316',     // オレンジ
-      ending: '#ef4444'      // 赤
+      start: '#6b9b7e',      // セージグリーン
+      conversation: '#7c8a9b', // スレートブルー
+      choice: '#c4a35a',     // マットゴールド
+      branch: '#b88b6b',     // テラコッタ
+      ending: '#b87070'      // ダスティローズ
     }
 
     // ミニマップ関連
@@ -103,6 +103,18 @@ export class GraphEditorManager {
     this.contextMenuManager.initialize()
     this.contextMenu = this.contextMenuManager.element
     this._setupMinimap()
+  }
+
+  /**
+   * ミニマップの親要素を取得（SVGの親のgraph-container、またはSVGの親要素）
+   * @returns {HTMLElement|null}
+   */
+  _getMinimapParent() {
+    if (!this.container) return null
+    // graph-containerを探す（SVGの親要素）
+    const parent = this.container.parentElement
+    if (parent) return parent
+    return null
   }
 
   /**
@@ -1220,7 +1232,14 @@ export class GraphEditorManager {
   _setupMinimap() {
     if (!this.minimap.enabled) return
 
-    // ミニマップコンテナを作成
+    const minimapParent = this._getMinimapParent()
+    if (!minimapParent) return
+
+    // 既存のミニマップを削除
+    const existing = document.getElementById('graph-minimap')
+    if (existing) existing.remove()
+
+    // ミニマップコンテナを作成（SVGの親要素に追加、SVG内ではなくHTML要素として）
     this.minimap.container = document.createElement('div')
     this.minimap.container.id = 'graph-minimap'
     this.minimap.container.style.cssText = `
@@ -1237,7 +1256,7 @@ export class GraphEditorManager {
       z-index: 100;
     `
 
-    this.container.appendChild(this.minimap.container)
+    minimapParent.appendChild(this.minimap.container)
 
     // ミニマップSVGを作成
     this.minimap.svg = d3.select(this.minimap.container)
@@ -1255,7 +1274,13 @@ export class GraphEditorManager {
    * ミニマップを更新
    */
   _updateMinimap() {
-    if (!this.minimap.enabled || !this.minimap.svg || !this.g) return
+    if (!this.minimap.enabled || !this.g) return
+
+    // ミニマップコンテナがDOMから切り離されていたら再作成
+    if (!this.minimap.container || !this.minimap.container.isConnected) {
+      this._setupMinimap()
+    }
+    if (!this.minimap.svg) return
 
     // メイングラフの境界を取得
     const mainBounds = this.g.node().getBBox()
@@ -1302,7 +1327,7 @@ export class GraphEditorManager {
   toggleMinimap() {
     this.minimap.enabled = !this.minimap.enabled
     if (this.minimap.enabled) {
-      if (!this.minimap.container) {
+      if (!this.minimap.container || !this.minimap.container.isConnected) {
         this._setupMinimap()
       } else {
         this.minimap.container.style.display = 'block'
@@ -1646,7 +1671,7 @@ export class GraphEditorManager {
     if (node.timeWindow) {
       indicators.push({
         type: 'time',
-        color: '#f59e0b',
+        color: '#c4a35a',
         symbol: '⏱',
         tooltip: `時間制限: ${node.timeWindow.start}-${node.timeWindow.end}`
       })
@@ -1656,7 +1681,7 @@ export class GraphEditorManager {
     if (node.flags && node.flags.length > 0) {
       indicators.push({
         type: 'flags',
-        color: '#8b5cf6',
+        color: '#8b7da8',
         symbol: '🚩',
         tooltip: `フラグ条件: ${node.flags.join(', ')}`
       })
@@ -1666,7 +1691,7 @@ export class GraphEditorManager {
     if (node.resources) {
       indicators.push({
         type: 'resources',
-        color: '#10b981',
+        color: '#6b9b7e',
         symbol: '💎',
         tooltip: 'リソース条件あり'
       })
@@ -1712,7 +1737,7 @@ export class GraphEditorManager {
     if (choice.conditions && choice.conditions.length > 0) {
       indicators.push({
         type: 'condition',
-        color: '#f59e0b',
+        color: '#c4a35a',
         symbol: '?',
         tooltip: `条件: ${choice.conditions.map(c => `${c.flag} ${c.operator} ${c.value}`).join(', ')}`
       })
@@ -1722,7 +1747,7 @@ export class GraphEditorManager {
     if (choice.onEnter && choice.onEnter.length > 0) {
       indicators.push({
         type: 'effect',
-        color: '#10b981',
+        color: '#6b9b7e',
         symbol: '✨',
         tooltip: `効果: ${choice.onEnter.map(e => `${e.type}: ${e.value}`).join(', ')}`
       })
@@ -1732,7 +1757,7 @@ export class GraphEditorManager {
     if (choice.next) {
       indicators.push({
         type: 'next',
-        color: '#3b82f6',
+        color: '#7c8a9b',
         symbol: '→',
         tooltip: `自動遷移: ${choice.next}`
       })

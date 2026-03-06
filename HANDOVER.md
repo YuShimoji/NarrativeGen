@@ -1,79 +1,77 @@
 # 作業申し送り
 
 ## 最終更新
-- **日時**: 2026-02-12T13:55:00+09:00
-- **更新者**: Cascade
-- **ブランチ**: `feature/main-js-split-phase2`（PR作成待ち）
-- **GitHubAutoApprove**: false
+- **日時**: 2026-03-06
+- **ブランチ**: `feature/main-js-split-phase2`
+- **PR**: #80（オープン中）
 
-## 直近の作業（2026-02-12）
+## 直近の作業（2026-03-06）
 
-### ✅ TASK_101: main.js 分割第2弾（本セッション）
-- **main.js**: 1392行 → 825行（40.7%削減、目標1000行未満達成）
-- 5つの新規ハンドラーを抽出:
-  - `handlers/graph-handler.js` (~115行) — renderGraph, ズーム制御
-  - `handlers/debug-handler.js` (~105行) — renderDebugInfo
-  - `handlers/csv-import-handler.js` (~215行) — CSVインポート/プレビュー
-  - `handlers/ai-config.js` (~195行) — AI設定・生成・言い換え
-  - `handlers/split-view.js` (~90行) — 分割ビュートグル/リサイザー
-- **ビルド・テスト全グリーン**: engine-ts 18 tests, web-tester build 54.70KB
-- **Vite dev server 動作確認**: 全タブ正常（Story/Debug/Graph/NodeList/AI）
-- レポート: `docs/inbox/REPORT_TASK101_MainJS_Split_Phase2.md`
+### アーキテクチャリデザイン（3フェーズ完了）
 
-### ✅ 前セッション（PR #72-75）
-- PR #72: shared-workflows サブモジュール導入
-- PR #73: TASK_101-108 チケット作成
-- PR #74: AI_CONTEXT.md 刷新、CI doctor-bootstrap ジョブ追加
-- PR #75: コードクリーンアップ（nodes-panel/main.js デッドコード除去）
+#### Phase 1: 推論レジストリ基盤
+
+- プラグインレジストリパターンで条件評価・エフェクト適用を拡張可能に
+- `packages/engine-ts/src/inference/` に registry, conditions, effects を構築
+
+#### Phase 2: グラフエディタ実用化
+
+- `GraphEditorManager.js` からDagreLayoutEngine, ContextMenuManagerを分離
+- レイアウト設定改善（nodesep: 80, ranksep: 120, edgesep: 40）
+
+#### Phase 3: 推論機能実装
+
+- 前方連鎖: `buildDependencyGraph`, `applyChoiceWithForwardChaining`
+- 後方連鎖: `findPathToGoal`, `findReachableNodes`
+- Capability Discovery: `getSupportedConditions`, `getSupportedEffects`
+
+### UI改善
+
+- ミニマップDOM配置バグ修正（SVG内のdiv → graph-container配下に移動）
+- カラーパレットを「モダンクラシカル」に変更（落ち着いたトーン）
+- E2Eテスト: theme-toggle 11件をskipマーク（UIと未接続のため）
+
+### ドキュメント整理（108件 → 34件）
+
+- Windsurf系3件を `docs/archive/legacy-windsurf/` に移動
+- レポート群39件を `docs/archive/legacy-reports/` に移動
+- ステータス/ロードマップ11件を `docs/archive/legacy-status/` に移動
+- 古いHANDOVER 5件を `docs/archive/legacy-handovers/` に移動
+- 完了済みタスク26件を `docs/archive/legacy-tasks/` に移動
+- WORKER_PROMPT_* 19件を `docs/archive/legacy-tasks/` に移動
+- 陳腐化テスト文書3件を `docs/archive/legacy-tests/` に移動
+- `.shared-workflows` submodule 参照解除（190ファイル）
+- `.cursor/` ディレクトリ削除
 
 ## 現在の状態
 
-### CI
-- **engine-ts**: build / lint / test / validate:models — 全グリーン
-- **web-tester**: build — グリーン（18 modules, 51.87KB gzip 17.42KB）
-- **doctor-bootstrap**: continue-on-error で通過
+### CI・テスト
 
-### apps/web-tester モジュール構成
-| ファイル | 行数 | 役割 |
-|---------|------|------|
-| main.js | 825 | 初期化・配線・コアUI |
-| handlers/graph-handler.js | ~115 | グラフ描画・ズーム制御 |
-| handlers/debug-handler.js | ~105 | デバッグ情報描画 |
-| handlers/csv-import-handler.js | ~215 | CSVインポート/プレビュー |
-| handlers/ai-config.js | ~195 | AI設定・UI・操作 |
-| handlers/split-view.js | ~90 | 分割ビュートグル/リサイザー |
-| handlers/nodes-panel.js | 281 | ノード一覧・ジャンプ・ハイライト |
-| handlers/tabs.js | 97 | タブ切り替え |
-| handlers/gui-editor.js | 522 | GUI編集モード |
-| handlers/story-handler.js | — | ストーリー描画 |
-| handlers/ai-handler.js | — | AI生成・言い換え（低レベル） |
-| utils/csv-parser.js | — | CSVパーサー |
-| utils/csv-exporter.js | — | CSVエクスポート |
-| utils/model-utils.js | — | モデルユーティリティ |
-| utils/logger.js | — | ログ・エラーバウンダリ |
+- **engine-ts**: 73テスト全合格（10ファイル）
+- **web-tester**: Viteビルド成功
+- **E2E**: 24 passed, 36 skipped
 
-## タスク台帳
+### 主要モジュール構成
 
-詳細は `docs/tasks/TASK_101-108` を参照。
+#### packages/engine-ts/src/inference/
 
-| ID | タスク | ステータス | 優先度 |
-|----|--------|-----------|--------|
-| TASK_101 | main.js 分割第2弾（1392→825行） | DONE | 高 |
-| TASK_102 | ノード階層システム Phase 2 | OPEN | 高 |
-| TASK_103 | CI Doctor 統合 | OPEN | 中 |
-| TASK_104 | AI UX 改善 | OPEN | 中 |
-| TASK_105 | モデル検証強化 | OPEN | 中 |
-| TASK_106 | パフォーマンス最適化 | OPEN | 低 |
-| TASK_107 | セーブ/ロード機能 | OPEN | 低 |
-| TASK_108 | バッチ AI 処理 | OPEN | 低 |
+| ファイル | 役割 |
+|---------|------|
+| registry.ts | InferenceRegistry（Map-based singleton） |
+| types.ts | EvaluationContext, ConditionEvaluator, EffectApplicator |
+| forward-chaining.ts | 依存グラフ構築、前方連鎖推論 |
+| backward-chaining.ts | BFSパス探索、到達可能ノード |
+| capabilities.ts | 登録済evaluator/applicatorの動的発見 |
+| conditions/*.ts | Flag, Resource, Variable, TimeWindow, Logical |
+| effects/*.ts | SetFlag, AddResource, SetVariable, Goto |
 
-## 次回作業の推奨
+#### apps/web-tester/src/ui/graph-editor/
 
-| 推奨度 | 選択肢 | 説明 |
-|--------|--------|------|
-| ★★★ | TASK_102 | ノード階層 Phase 2（node_group 列対応） |
-| ★★☆ | TASK_103 | CI doctor を required check に昇格 |
-| ★☆☆ | TASK_104 | AI UX 改善 |
+| ファイル | 役割 |
+|---------|------|
+| GraphEditorManager.js | グラフ可視化・編集の中核 |
+| layout/DagreLayoutEngine.js | Dagre.jsラッパー |
+| interaction/ContextMenuManager.js | 右クリックメニュー |
 
 ## 再開手順
 1. `git fetch origin && git pull`
@@ -84,4 +82,5 @@
 6. `npm run dev --workspace=apps/web-tester` → `http://localhost:5173/`
 
 ---
-**SSOT 参照**: docs/Windsurf_AI_Collab_Rules_latest.md
+
+SSOT: `docs/WORKFLOW_STATE_SSOT.md`
