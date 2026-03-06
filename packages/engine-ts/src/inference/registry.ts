@@ -48,6 +48,14 @@ class InferenceRegistry {
     if (!applicator) return undefined
     return applicator.apply(effect, session)
   }
+
+  getRegisteredConditionTypes(): string[] {
+    return [...this.conditions.keys()]
+  }
+
+  getRegisteredEffectTypes(): string[] {
+    return [...this.effects.keys()]
+  }
 }
 
 export const registry = new InferenceRegistry()
