@@ -61,13 +61,6 @@ interface ValidationError extends Error {
   details?: string
 }
 
-function createValidationError(code: string, message: string): ValidationError {
-  const error = new Error(message) as ValidationError
-  error.code = code
-  error.name = 'ValidationError'
-  return error
-}
-
 function detectCircularReferencesWithPaths(model: Model): string[] {
   const graph = new Map<string, Set<string>>()
 
