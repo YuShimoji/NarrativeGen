@@ -6,7 +6,7 @@
 ## 現在地
 
 - Phase 2 のグラフ編集・エクスポート基盤は完了済み。
-- AI は Mock / OpenAI / Ollama を含む実装が入り、Web Tester 側の基礎機能は再開発可能な状態。
+- AI は Mock / OpenAI を含む実装が入り、Web Tester 側の基礎機能は再開発可能な状態。
 - 直近の課題は新機能追加よりも、回帰確認・文書同期・配布品質の底上げ。
 - `apps/web-tester` のビルドは成功し、初期 chunk は圧縮されたが、Mermaid 側の大きい async chunk 警告が残る。
 

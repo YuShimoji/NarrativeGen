@@ -53,7 +53,7 @@ NarrativeGen/
 - ✅ 条件 / 効果エディタ
 - ✅ リアルタイムプレビュー
 - ✅ Export (Twine / Ink / CSV)
-- ✅ AI Provider 設定 (Mock / OpenAI / Ollama)
+- ✅ AI Provider 設定 (Mock / OpenAI)
 - ✅ レキシコン import / merge / replace とスキーマ検証
 
 ## 検証済みの再開発基盤

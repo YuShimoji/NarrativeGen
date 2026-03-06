@@ -178,9 +178,6 @@ const aiProvider = document.getElementById('aiProvider')
 const openaiSettings = document.getElementById('openaiSettings')
 const openaiApiKey = document.getElementById('openaiApiKey')
 const openaiModel = document.getElementById('openaiModel')
-const ollamaSettings = document.getElementById('ollamaSettings')
-const ollamaUrl = document.getElementById('ollamaUrl')
-const ollamaModel = document.getElementById('ollamaModel')
 const saveAiSettings = document.getElementById('saveAiSettings')
 const generateNextNodeBtn = document.getElementById('generateNextNodeBtn')
 const paraphraseCurrentBtn = document.getElementById('paraphraseCurrentBtn')
@@ -212,10 +209,6 @@ let aiConfig = {
   openai: {
     apiKey: '',
     model: 'gpt-3.5-turbo'
-  },
-  ollama: {
-    url: 'http://localhost:11434',
-    model: 'llama2'
   }
 }
 let aiProviderInstance = null
@@ -503,11 +496,6 @@ async function initAiProvider() {
         aiProviderInstance = createAIProvider({
           provider: 'openai',
           openai: aiConfig.openai
-        })
-      } else if (aiProvider.value === 'ollama') {
-        aiProviderInstance = createAIProvider({
-          provider: 'ollama',
-          ollama: aiConfig.ollama
         })
       } else {
         aiProviderInstance = createAIProvider({ provider: 'mock' })

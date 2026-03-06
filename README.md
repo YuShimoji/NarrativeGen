@@ -224,13 +224,13 @@ npm run build
 言い換え機能の特徴:
 - **非AIバリアント生成**: 同義語置換・文体変換・決定的乱数による即時生成（API不要・オフライン）
 - **GUI統合**: Web Testerのモデル編集で「言い換え」ボタンクリックで即時置換
-- **AI補助（任意）**: OpenAI/Ollama連携でより高度な言い換え（APIキー必要）
+- **AI補助（任意）**: OpenAI連携でより高度な言い換え（APIキー必要）
 
 See `docs/ai-features.md` for detailed design and `test-ai-features.md` for testing procedures. Current status:
 
 - ✅ **非AI実装**: 決定的バリアント生成（同義語・文体変換・乱数シード）
 - ✅ **GUI統合**: ノード/選択肢テキストの「言い換え」ボタン
-- ⏳ **AI補助**: OpenAI API/Ollama統合（任意）
+- ⏳ **AI補助**: OpenAI API統合（任意）
 - ⏳ **バッチ処理**: 全ノード一括変換
 
 #### 言い換え機能の使用方法（非AI優先）
@@ -297,7 +297,7 @@ The NUnit smoke test `EngineSmokeTests` loads `models/examples/linear.json`, pla
 - **Development Server**: Vite dev server runs without errors
 - **Model Loading**: Sample models load correctly
 - **CSV Import/Export**: Full spreadsheet integration
-- **AI Features**: Mock, OpenAI, and Ollama integration working (AI as supporting tool, not core)
+- **AI Features**: Mock and OpenAI integration working (AI as supporting tool, not core)
 - **Graph Visualization**: D3.js rendering with virtualization
 - **Error Handling**: Comprehensive error boundaries and logging
 - **Automated Tests**: 15 tests passing with Vitest
@@ -323,7 +323,7 @@ The Web Tester is now fully operational with:
 - **CSV import/export**: Full spreadsheet integration for story authoring
 - **Graph visualization**: Interactive node relationship display
 - **Error handling**: Comprehensive validation and user feedback
-- **AI support**: Optional AI features for content generation (OpenAI/Ollama integration)
+- **AI support**: Optional AI features for content generation (OpenAI integration)
 
 **Start developing narratives immediately at `http://localhost:5173`!** 🎉
 

@@ -18,7 +18,7 @@
 **現在の対応**:
 
 - CSS を外部ファイルに分離 (`src/styles/main.css`, `gui-editor.css`)
-- `main.js` でランタイムスタイル強制適用
+- `bootstrap.js` でランタイムスタイル強制適用（旧 `main.js` は分割済み: `bootstrap.js`, `session-controller.js`, `ui-bindings.js`）
 - `!important` による上書き
 
 **残タスク**:

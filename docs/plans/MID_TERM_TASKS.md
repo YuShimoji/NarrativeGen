@@ -9,7 +9,6 @@
 
 | タスクID | タイトル | カテゴリ | 優先度 | 工数 |
 |----------|----------|----------|--------|------|
-| TASK_033 | Ollama 統合 | AI 拡張 | 高 | 5-7日 |
 | TASK_034 | AI バッチ処理 | AI 拡張 | 中 | 3-5日 |
 | TASK_035 | main.js リファクタリング | 品質向上 | 中 | 3-5日 |
 | TASK_036 | チャンクサイズ最適化 | 品質向上 | 低 | 2-3日 |
@@ -19,105 +18,21 @@
 
 ## Phase 3: AI 機能拡張
 
-### TASK_033: Ollama 統合 (ローカル LLM)
+### ~~TASK_033: Ollama 統合 (ローカル LLM)~~
 
-**Status**: OPEN  
-**Tier**: 2  
-**Branch**: feature/ollama-integration  
-**Owner**: Worker  
-**Created**: 2026-02-07
-
-#### 目的
-
-- インターネット接続なしでの AI 機能利用
-- API コスト削減
-- プライバシー配慮 (ローカル処理)
-
-#### 技術調査
-
-```javascript
-// Ollama API 概要
-// エンドポイント: http://localhost:11434/api/generate
-// 
-// リクエスト例:
-{
-  "model": "llama2",
-  "prompt": "Rewrite this text: 'Hello World'",
-  "stream": false
-}
-
-// レスポンス例:
-{
-  "response": "Greetings, Earth!",
-  "done": true
-}
-```
-
-#### 実装内容
-
-##### 1. Ollama クライアント
-
-```
-ファイル: apps/web-tester/src/features/ai/ollama-client.js
-
-機能:
-- 接続テスト (ping)
-- モデル一覧取得
-- テキスト生成
-- ストリーミング対応
-```
-
-##### 2. プロバイダー設定 UI
-
-```
-ファイル: apps/web-tester/src/ui/ai-settings.js
-
-追加項目:
-- Ollama サーバー URL (デフォルト: localhost:11434)
-- モデル選択ドロップダウン
-- 接続テストボタン
-```
-
-##### 3. 共通インターフェース
-
-```javascript
-// AI プロバイダー共通インターフェース
-interface AIProvider {
-  name: string;
-  isAvailable(): Promise<boolean>;
-  generateText(prompt: string, options: object): Promise<string>;
-  paraphrase(text: string, style: string): Promise<string>;
-}
-```
-
-#### 対象ファイル
-
-- `apps/web-tester/src/features/ai/` (新規ディレクトリ構造)
-  - `providers/mock.js` (既存移行)
-  - `providers/openai.js` (既存移行)
-  - `providers/ollama.js` (新規)
-  - `AIManager.js` (統合管理)
-- `apps/web-tester/src/ui/ai-panel.js` (更新)
-
-#### DoD
-
-- [ ] Ollama API クライアント実装
-- [ ] プロバイダー切り替え UI
-- [ ] モデル選択機能
-- [ ] 接続テスト機能
-- [ ] 言い換え機能動作
-- [ ] ドキュメント更新
+**Status**: DELETED
+**削除日**: 2026-03-07
+**理由**: 精度・リソース負荷の問題により削除決定
 
 ---
 
 ### TASK_034: AI バッチ処理
 
-**Status**: OPEN  
-**Tier**: 2  
-**Branch**: feature/ai-batch  
-**Owner**: Worker  
-**Created**: 2026-02-07  
-**Depends**: TASK_033
+**Status**: OPEN
+**Tier**: 2
+**Branch**: feature/ai-batch
+**Owner**: Worker
+**Created**: 2026-02-07
 
 #### 目的
 
@@ -357,9 +272,9 @@ Hello, traveler!
 
 ```
 Month 1 (2/21-3/21):
-├── Week 1-2: TASK_033 Ollama 統合 (5-7日)
-├── Week 2-3: TASK_034 AI バッチ (3-5日)
-└── Week 3-4: TASK_035 main.js リファクタリング (3-5日)
+├── Week 1-2: TASK_034 AI バッチ (3-5日)
+├── Week 2-3: TASK_035 main.js リファクタリング (3-5日)
+└── Week 3-4: バッファ / バグ修正
 
 Month 2 (3/21-4/7):
 ├── Week 1: TASK_036 チャンク最適化 (2-3日)

@@ -93,9 +93,6 @@ export function getUIElements() {
         openaiSettings: document.getElementById('openaiSettings'),
         openaiApiKey: document.getElementById('openaiApiKey'),
         openaiModel: document.getElementById('openaiModel'),
-        ollamaSettings: document.getElementById('ollamaSettings'),
-        ollamaUrl: document.getElementById('ollamaUrl'),
-        ollamaModel: document.getElementById('ollamaModel'),
         saveAiSettings: document.getElementById('saveAiSettings'),
         generateNextNodeBtn: document.getElementById('generateNextNodeBtn'),
         paraphraseCurrentBtn: document.getElementById('paraphraseCurrentBtn'),
@@ -196,10 +193,6 @@ export function getDefaultAIConfig() {
         openai: {
             apiKey: '',
             model: 'gpt-3.5-turbo'
-        },
-        ollama: {
-            url: 'http://localhost:11434',
-            model: 'llama2'
         }
     }
 }

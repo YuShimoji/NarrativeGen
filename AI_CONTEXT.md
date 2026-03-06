@@ -87,7 +87,6 @@
 
 ### 中期（1-2ヶ月）
 
-- [pending] TASK_033: Ollama 統合 (5-7日)
 - [pending] TASK_034: AI バッチ処理 (3-5日)
 - [pending] TASK_035: main.js リファクタリング (3-5日)
 - [pending] TASK_036: チャンクサイズ最適化 (2-3日)

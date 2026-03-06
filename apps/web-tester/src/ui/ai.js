@@ -15,10 +15,6 @@ export class AiManager {
       openai: {
         apiKey: '',
         model: 'gpt-3.5-turbo'
-      },
-      ollama: {
-        url: 'http://localhost:11434',
-        model: 'llama2'
       }
     }
   }
@@ -291,27 +287,11 @@ export class AiManager {
     return { valid: true }
   }
 
-  validateOllamaConfig() {
-    if (this.aiConfig.provider === 'ollama') {
-      if (!this.aiConfig.ollama.url) {
-        return { valid: false, error: 'Ollama URLが設定されていません' }
-      }
-      if (!this.aiConfig.ollama.model) {
-        return { valid: false, error: 'Ollamaモデルが設定されていません' }
-      }
-    }
-    return { valid: true }
-  }
 
   validateConfig() {
     const openaiValidation = this.validateOpenAIConfig()
     if (!openaiValidation.valid) {
       return openaiValidation
-    }
-
-    const ollamaValidation = this.validateOllamaConfig()
-    if (!ollamaValidation.valid) {
-      return ollamaValidation
     }
 
     return { valid: true }
