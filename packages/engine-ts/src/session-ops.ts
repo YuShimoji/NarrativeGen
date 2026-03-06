@@ -1,4 +1,6 @@
 import type { Choice, Condition, Effect, Model, SessionState } from './types.js'
+import { registry } from './inference/registry.js'
+import type { EvaluationContext } from './inference/types.js'
 
 // Performance optimization: Memoization cache
 const conditionCache = new Map<string, boolean>()
@@ -13,6 +15,7 @@ function getConditionKey(cond: Condition, flags: Record<string, boolean>, resour
   return `${JSON.stringify(cond)}:${JSON.stringify(flags)}:${JSON.stringify(resources)}:${JSON.stringify(variables)}:${time}`
 }
 
+// Fallback comparison operator (used when registry is not initialized)
 function cmp(op: '>=' | '<=' | '>' | '<' | '==', a: number, b: number): boolean {
   switch (op) {
     case '>=':
@@ -42,40 +45,51 @@ function evalCondition(
     return conditionCache.get(key)!
   }
 
+  const ctx: EvaluationContext = { flags, resources, variables, time }
+  const registryResult = registry.evaluateCondition(
+    cond as { type: string } & Record<string, unknown>,
+    ctx,
+  )
+
   let result: boolean
-  if (cond.type === 'flag') {
-    result = (flags[cond.key] ?? false) === cond.value
-  } else if (cond.type === 'resource') {
-    const v = resources[cond.key] ?? 0
-    result = cmp(cond.op, v, cond.value)
-  } else if (cond.type === 'variable') {
-    const v = variables[cond.key] ?? ''
-    switch (cond.op) {
-      case '==':
-        result = v === cond.value
-        break
-      case '!=':
-        result = v !== cond.value
-        break
-      case 'contains':
-        result = v.includes(cond.value)
-        break
-      case '!contains':
-        result = !v.includes(cond.value)
-        break
-      default:
-        result = false
-    }
-  } else if (cond.type === 'timeWindow') {
-    result = time >= cond.start && time <= cond.end
-  } else if (cond.type === 'and') {
-    result = cond.conditions.every(c => evalCondition(c, flags, resources, variables, time))
-  } else if (cond.type === 'or') {
-    result = cond.conditions.some(c => evalCondition(c, flags, resources, variables, time))
-  } else if (cond.type === 'not') {
-    result = !evalCondition(cond.condition, flags, resources, variables, time)
+  if (registryResult !== undefined) {
+    result = registryResult
   } else {
-    result = true
+    // Fallback: inline evaluation for when registry has no evaluator registered
+    if (cond.type === 'flag') {
+      result = (flags[cond.key] ?? false) === cond.value
+    } else if (cond.type === 'resource') {
+      const v = resources[cond.key] ?? 0
+      result = cmp(cond.op, v, cond.value)
+    } else if (cond.type === 'variable') {
+      const v = variables[cond.key] ?? ''
+      switch (cond.op) {
+        case '==':
+          result = v === cond.value
+          break
+        case '!=':
+          result = v !== cond.value
+          break
+        case 'contains':
+          result = v.includes(cond.value)
+          break
+        case '!contains':
+          result = !v.includes(cond.value)
+          break
+        default:
+          result = false
+      }
+    } else if (cond.type === 'timeWindow') {
+      result = time >= cond.start && time <= cond.end
+    } else if (cond.type === 'and') {
+      result = cond.conditions.every(c => evalCondition(c, flags, resources, variables, time))
+    } else if (cond.type === 'or') {
+      result = cond.conditions.some(c => evalCondition(c, flags, resources, variables, time))
+    } else if (cond.type === 'not') {
+      result = !evalCondition(cond.condition, flags, resources, variables, time)
+    } else {
+      result = true
+    }
   }
 
   // Cache result (limit cache size to prevent memory leaks)
@@ -88,6 +102,15 @@ function evalCondition(
 }
 
 function applyEffect(effect: Effect, session: SessionState): SessionState {
+  const registryResult = registry.applyEffect(
+    effect as { type: string } & Record<string, unknown>,
+    session,
+  )
+  if (registryResult !== undefined) {
+    return registryResult
+  }
+
+  // Fallback: inline effect application
   if (effect.type === 'setFlag') {
     return { ...session, flags: { ...session.flags, [effect.key]: effect.value } }
   }
