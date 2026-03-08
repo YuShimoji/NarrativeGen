@@ -53,6 +53,17 @@
                       },
                       {
                         "type": "object",
+                        "required": ["type", "key", "op", "value"],
+                        "properties": {
+                          "type": { "const": "variable" },
+                          "key": { "type": "string" },
+                          "op": { "type": "string", "enum": ["==", "!=", "contains", "!contains", ">=", "<=", ">", "<"] },
+                          "value": { "oneOf": [{ "type": "string" }, { "type": "number" }] }
+                        },
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
                         "required": ["type", "start", "end"],
                         "properties": {
                           "type": { "const": "timeWindow" },
@@ -85,6 +96,27 @@
                           "type": { "const": "addResource" },
                           "key": { "type": "string" },
                           "delta": { "type": "number" }
+                        },
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "required": ["type", "key", "value"],
+                        "properties": {
+                          "type": { "const": "setVariable" },
+                          "key": { "type": "string" },
+                          "value": { "oneOf": [{ "type": "string" }, { "type": "number" }] }
+                        },
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "required": ["type", "key", "op", "value"],
+                        "properties": {
+                          "type": { "const": "modifyVariable" },
+                          "key": { "type": "string" },
+                          "op": { "type": "string", "enum": ["+", "-", "*", "/"] },
+                          "value": { "type": "number" }
                         },
                         "additionalProperties": false
                       },

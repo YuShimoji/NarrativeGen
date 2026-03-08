@@ -26,6 +26,7 @@ import { ExportManager } from './src/features/export/ExportManager.js'
 import { TwineFormatter } from './src/features/export/formatters/TwineFormatter.js'
 import { InkFormatter } from './src/features/export/formatters/InkFormatter.js'
 import { CsvFormatter } from './src/features/export/formatters/CsvFormatter.js'
+import { YarnFormatter } from './src/features/export/formatters/YarnFormatter.js'
 
 // App controller
 import { initializeApp } from './src/app-controller.js'
@@ -43,6 +44,7 @@ const exportManager = new ExportManager()
 exportManager.registerFormatter('twine', new TwineFormatter())
 exportManager.registerFormatter('ink', new InkFormatter())
 exportManager.registerFormatter('csv', new CsvFormatter())
+exportManager.registerFormatter('yarn', new YarnFormatter())
 
 // Create all manager instances
 const managers = {

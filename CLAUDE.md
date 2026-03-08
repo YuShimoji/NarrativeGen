@@ -15,6 +15,14 @@
 - When exploring code, start with get_symbols_overview, then read only the specific symbols needed
 - Keep responses concise — avoid repeating file contents back to the user
 
+## Spec View
+
+仕様ドキュメントの一覧・ステータス・実装率をブラウザで確認できる。
+
+- データ: `docs/spec-index.json` (Source of Truth)
+- 閲覧: `docs/spec-viewer.html` (`npx serve docs` → `http://localhost:3000/spec-viewer.html`)
+- 仕様を追加・更新したら spec-index.json も併せて更新すること
+
 ## Decision Log
 
 | 日付 | 決定事項 | 選択肢 | 決定理由 |

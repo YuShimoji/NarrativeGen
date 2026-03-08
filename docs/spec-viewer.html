@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NarrativeGen Spec Viewer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0d1117; color: #c9d1d9; line-height: 1.5;
+    max-width: 1100px; margin: 0 auto; padding: 24px 16px;
+  }
+  h1 { font-size: 1.4rem; font-weight: 600; margin-bottom: 4px; }
+  .subtitle { color: #8b949e; font-size: 0.85rem; margin-bottom: 20px; }
+
+  /* Progress bar */
+  .progress-section { margin-bottom: 24px; }
+  .progress-label { font-size: 0.85rem; color: #8b949e; margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .progress-bar { background: #21262d; border-radius: 6px; height: 12px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 6px; transition: width 0.4s ease; }
+  .progress-fill.high { background: #3fb950; }
+  .progress-fill.mid { background: #d29922; }
+  .progress-fill.low { background: #f85149; }
+
+  /* Stats */
+  .stats { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-card {
+    background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+    padding: 10px 16px; min-width: 100px; text-align: center;
+  }
+  .stat-card .num { font-size: 1.5rem; font-weight: 700; }
+  .stat-card .label { font-size: 0.75rem; color: #8b949e; }
+  .stat-card.done .num { color: #3fb950; }
+  .stat-card.partial .num { color: #d29922; }
+  .stat-card.todo .num { color: #8b949e; }
+  .stat-card.legacy .num { color: #f85149; }
+
+  /* Filters */
+  .filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-btn {
+    background: #21262d; border: 1px solid #30363d; border-radius: 20px;
+    color: #c9d1d9; padding: 4px 14px; font-size: 0.8rem; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: #58a6ff; }
+  .filter-btn.active { background: #1f6feb; border-color: #1f6feb; color: #fff; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; padding: 8px 12px; font-size: 0.75rem; font-weight: 600;
+    color: #8b949e; border-bottom: 1px solid #21262d; text-transform: uppercase;
+    letter-spacing: 0.05em; cursor: pointer; user-select: none;
+  }
+  th:hover { color: #c9d1d9; }
+  th .sort-icon { margin-left: 4px; font-size: 0.65rem; }
+  td { padding: 10px 12px; border-bottom: 1px solid #21262d; font-size: 0.85rem; }
+  tr:hover td { background: #161b22; }
+
+  /* Badge */
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 12px;
+    font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+  }
+  .badge.done { background: #23312a; color: #3fb950; }
+  .badge.partial { background: #312a1c; color: #d29922; }
+  .badge.todo { background: #21262d; color: #8b949e; }
+  .badge.legacy { background: #31201f; color: #f85149; }
+
+  /* Category */
+  .cat-tag {
+    display: inline-block; padding: 1px 6px; border-radius: 4px;
+    font-size: 0.7rem; background: #21262d; color: #8b949e;
+  }
+
+  /* Progress mini */
+  .pct-bar { display: flex; align-items: center; gap: 6px; }
+  .pct-bar .bar { width: 60px; height: 6px; background: #21262d; border-radius: 3px; overflow: hidden; }
+  .pct-bar .fill { height: 100%; border-radius: 3px; }
+  .pct-bar .val { font-size: 0.75rem; color: #8b949e; min-width: 32px; }
+
+  /* Links */
+  a { color: #58a6ff; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .id-col { color: #8b949e; font-family: monospace; font-size: 0.8rem; }
+  .title-col { font-weight: 500; }
+  .summary-col { color: #8b949e; font-size: 0.8rem; }
+
+  .empty { text-align: center; color: #484f58; padding: 40px; font-size: 0.9rem; }
+
+  @media (max-width: 700px) {
+    .summary-col, .cat-col { display: none; }
+    td, th { padding: 8px 6px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>NarrativeGen Spec Viewer</h1>
+<p class="subtitle">仕様ドキュメント一覧 &mdash; spec-index.json から自動生成</p>
+
+<div class="progress-section">
+  <div class="progress-label">
+    <span>全体進捗</span>
+    <span id="progress-text">--</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="filters" id="filters"></div>
+
+<table>
+  <thead>
+    <tr>
+      <th data-sort="id">ID <span class="sort-icon"></span></th>
+      <th data-sort="title">仕様名 <span class="sort-icon"></span></th>
+      <th data-sort="status">状態 <span class="sort-icon"></span></th>
+      <th data-sort="pct">進捗 <span class="sort-icon"></span></th>
+      <th class="cat-col" data-sort="cat">種別 <span class="sort-icon"></span></th>
+      <th class="summary-col">概要</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+
+<div class="empty" id="empty" style="display:none">該当する仕様がありません</div>
+
+<script>
+(async () => {
+  let specs = [];
+  let activeFilter = 'all';
+  let sortKey = 'id';
+  let sortAsc = true;
+
+  try {
+    const res = await fetch('spec-index.json');
+    specs = await res.json();
+  } catch (e) {
+    document.getElementById('empty').style.display = 'block';
+    document.getElementById('empty').textContent = 'spec-index.json の読み込みに失敗しました: ' + e.message;
+    return;
+  }
+
+  // Stats
+  const counts = { done: 0, partial: 0, todo: 0, legacy: 0 };
+  specs.forEach(s => { counts[s.status] = (counts[s.status] || 0) + 1; });
+  const statsEl = document.getElementById('stats');
+  Object.entries(counts).forEach(([k, v]) => {
+    if (v === 0) return;
+    const labels = { done: '完了', partial: '部分', todo: '未着手', legacy: 'レガシー' };
+    statsEl.innerHTML += `<div class="stat-card ${k}"><div class="num">${v}</div><div class="label">${labels[k]}</div></div>`;
+  });
+
+  // Progress
+  const active = specs.filter(s => s.status !== 'legacy');
+  const avgPct = active.length ? Math.round(active.reduce((a, s) => a + s.pct, 0) / active.length) : 0;
+  const fill = document.getElementById('progress-fill');
+  fill.style.width = avgPct + '%';
+  fill.classList.add(avgPct >= 80 ? 'high' : avgPct >= 50 ? 'mid' : 'low');
+  document.getElementById('progress-text').textContent = avgPct + '%';
+
+  // Filters
+  const cats = [...new Set(specs.map(s => s.cat))].sort();
+  const filtersEl = document.getElementById('filters');
+  filtersEl.innerHTML = '<button class="filter-btn active" data-cat="all">All</button>';
+  const catLabels = { core: 'Core', ui: 'UI', system: 'System', data: 'Data', infra: 'Infra' };
+  cats.forEach(c => {
+    filtersEl.innerHTML += `<button class="filter-btn" data-cat="${c}">${catLabels[c] || c}</button>`;
+  });
+  filtersEl.addEventListener('click', e => {
+    const btn = e.target.closest('.filter-btn');
+    if (!btn) return;
+    filtersEl.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.cat;
+    render();
+  });
+
+  // Sort
+  document.querySelectorAll('th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.sort;
+      if (sortKey === key) { sortAsc = !sortAsc; } else { sortKey = key; sortAsc = true; }
+      render();
+    });
+  });
+
+  function pctColor(p) {
+    return p >= 80 ? '#3fb950' : p >= 50 ? '#d29922' : p > 0 ? '#f85149' : '#484f58';
+  }
+
+  function render() {
+    let filtered = activeFilter === 'all' ? [...specs] : specs.filter(s => s.cat === activeFilter);
+    filtered.sort((a, b) => {
+      let va = a[sortKey], vb = b[sortKey];
+      if (typeof va === 'string') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+      if (va < vb) return sortAsc ? -1 : 1;
+      if (va > vb) return sortAsc ? 1 : -1;
+      return 0;
+    });
+
+    const tbody = document.getElementById('tbody');
+    const empty = document.getElementById('empty');
+    if (filtered.length === 0) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    tbody.innerHTML = filtered.map(s => `
+      <tr>
+        <td class="id-col">${s.id}</td>
+        <td class="title-col"><a href="${s.file}" target="_blank">${s.title}</a></td>
+        <td><span class="badge ${s.status}">${s.status}</span></td>
+        <td>
+          <div class="pct-bar">
+            <div class="bar"><div class="fill" style="width:${s.pct}%;background:${pctColor(s.pct)}"></div></div>
+            <span class="val">${s.pct}%</span>
+          </div>
+        </td>
+        <td class="cat-col"><span class="cat-tag">${s.cat}</span></td>
+        <td class="summary-col">${s.summary}</td>
+      </tr>
+    `).join('');
+  }
+
+  render();
+})();
+</script>
+
+</body>
+</html>
