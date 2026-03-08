@@ -90,142 +90,53 @@ exportManager.registerFormatter('twine', new TwineFormatter())
 exportManager.registerFormatter('ink', new InkFormatter())
 exportManager.registerFormatter('csv', new CsvFormatter())
 
-const startBtn = document.getElementById('startBtn')
-const choicesContainer = document.getElementById('choices')
-const stateView = document.getElementById('stateView')
-const statusText = document.getElementById('statusText')
-const modelSelect = document.getElementById('modelSelect')
-const fileInput = document.getElementById('fileInput')
-const uploadBtn = document.getElementById('uploadBtn')
-const dropZone = document.getElementById('dropZone')
-const previewTopBtn = document.getElementById('previewTopBtn')
-const downloadTopBtn = document.getElementById('downloadTopBtn')
-const importCsvBtn = document.getElementById('importCsvBtn')
-const csvFileInput = document.getElementById('csvFileInput')
-const exportCsvBtn = document.getElementById('exportCsvBtn')
-const guiEditMode = document.getElementById('guiEditMode')
-const guiEditBtn = document.getElementById('editBtn')
-const nodeList = document.getElementById('nodeList')
-const addNodeBtn = document.getElementById('addNodeBtn')
-const previewBtn = document.getElementById('previewBtn')
-const downloadBtn = document.getElementById('downloadBtn')
-const saveGuiBtn = document.getElementById('saveGuiBtn')
-const cancelGuiBtn = document.getElementById('cancelGuiBtn')
-
-// Search and Filter elements
-const nodeSearchInput = document.getElementById('nodeSearchInput')
-const clearSearchBtn = document.getElementById('clearSearchBtn')
-const nodeFilterSelect = document.getElementById('nodeFilterSelect')
-const searchResultCount = document.getElementById('searchResultCount')
-const storyView = document.getElementById('storyView')
-const errorPanel = document.getElementById('errorPanel')
-const errorList = document.getElementById('errorList')
-const csvPreviewModal = document.getElementById('csvPreviewModal')
-const csvFileName = document.getElementById('csvFileName')
-const csvPreviewContent = document.getElementById('csvPreviewContent')
-const confirmImportBtn = document.getElementById('confirmImportBtn')
-const cancelPreviewBtn = document.getElementById('cancelPreviewBtn')
-
-// Story preview modal elements
-const storyPreviewModal = document.getElementById('storyPreviewModal')
-const storyPreviewContent = document.getElementById('storyPreviewContent')
-const closePreviewBtn = document.getElementById('closePreviewBtn')
-const storyContent = document.getElementById('storyContent')
-const toggleSidebarBtn = document.getElementById('toggleSidebarBtn')
-
-// Tab elements
-const storyTab = document.getElementById('storyTab')
-const graphTab = document.getElementById('graphTab')
-const debugTab = document.getElementById('debugTab')
-const referenceTab = document.getElementById('referenceTab')
-const storyPanel = document.getElementById('storyPanel')
-const graphPanel = document.getElementById('graphPanel')
-const debugPanel = document.getElementById('debugPanel')
-const referencePanel = document.getElementById('referencePanel')
-
-// Graph elements
-const graphSvg = document.getElementById('graphSvg')
-const fitGraphBtn = document.getElementById('fitGraphBtn')
-const resetGraphBtn = document.getElementById('resetGraphBtn')
-const showConditions = document.getElementById('showConditions')
-const graphSettingsBtn = document.getElementById('graphSettingsBtn')
-const graphSettings = document.getElementById('graphSettings')
-const nodeShape = document.getElementById('nodeShape')
-const fontSize = document.getElementById('fontSize')
-const saveGraphPreset = document.getElementById('saveGraphPreset')
-const loadGraphPreset = document.getElementById('loadGraphPreset')
-const exportBtn = document.getElementById('exportBtn')
-
-// Export Modal elements
-const exportModal = document.getElementById('exportModal')
-// ... other elements will be selected inside ExportModal class
-
-// Debug elements
-const flagsDisplay = document.getElementById('flagsDisplay')
-const resourcesDisplay = document.getElementById('resourcesDisplay')
-const variablesDisplay = document.getElementById('variablesDisplay')
-const editVariablesBtn = document.getElementById('editVariablesBtn')
-const reachableNodes = document.getElementById('reachableNodes')
-const saveLoadSection = document.getElementById('saveLoadSection')
-const saveSlots = document.getElementById('saveSlots')
-const refreshSavesBtn = document.getElementById('refreshSavesBtn')
-
-// AI elements
-const advancedTab = document.getElementById('advancedTab')
-const advancedPanel = document.getElementById('advancedPanel')
-const enableAdvancedFeatures = document.getElementById('enableAdvancedFeatures')
-const aiProvider = document.getElementById('aiProvider')
-const openaiSettings = document.getElementById('openaiSettings')
-const openaiApiKey = document.getElementById('openaiApiKey')
-const openaiModel = document.getElementById('openaiModel')
-const saveAiSettings = document.getElementById('saveAiSettings')
-const generateNextNodeBtn = document.getElementById('generateNextNodeBtn')
-const paraphraseCurrentBtn = document.getElementById('paraphraseCurrentBtn')
-const aiOutput = document.getElementById('aiOutput')
-
-// Designer lexicon UI elements
-const lexiconLoadBtn = document.getElementById('lexiconLoadBtn')
-const lexiconMergeBtn = document.getElementById('lexiconMergeBtn')
-const lexiconReplaceBtn = document.getElementById('lexiconReplaceBtn')
-const lexiconExportBtn = document.getElementById('lexiconExportBtn')
-const lexiconImportBtn = document.getElementById('lexiconImportBtn')
-const lexiconFileInput = document.getElementById('lexiconFileInput')
-const lexiconTextarea = document.getElementById('lexiconTextarea')
-
-// Key binding elements
-const keyBindingDisplay = document.getElementById('keyBindingDisplay')
-const inventoryKey = document.getElementById('inventoryKey')
-const debugKey = document.getElementById('debugKey')
-const graphKey = document.getElementById('graphKey')
-const storyKey = document.getElementById('storyKey')
-const aiKey = document.getElementById('aiKey')
-const mermaidKey = document.getElementById('mermaidKey')
-const saveKeyBindings = document.getElementById('saveKeyBindings')
-const resetKeyBindings = document.getElementById('resetKeyBindings')
+// DOM element references (centralized in ui-bindings.js)
+const {
+  startBtn, choicesContainer, stateView, statusText, modelSelect,
+  fileInput, uploadBtn, dropZone, previewTopBtn, downloadTopBtn,
+  importCsvBtn, csvFileInput, exportCsvBtn, guiEditMode, guiEditBtn,
+  nodeList, addNodeBtn, previewBtn, downloadBtn, saveGuiBtn, cancelGuiBtn,
+  nodeSearchInput, clearSearchBtn, nodeFilterSelect, searchResultCount,
+  storyView, errorPanel, errorList, csvPreviewModal, csvFileName,
+  csvPreviewContent, confirmImportBtn, cancelPreviewBtn,
+  storyPreviewModal, storyPreviewContent, closePreviewBtn,
+  storyContent, toggleSidebarBtn,
+  storyTab, graphTab, debugTab, referenceTab,
+  storyPanel, graphPanel, debugPanel, referencePanel,
+  graphSvg, fitGraphBtn, resetGraphBtn, showConditions,
+  graphSettingsBtn, graphSettings, nodeShape, fontSize,
+  saveGraphPreset, loadGraphPreset, exportBtn, exportModal,
+  flagsDisplay, resourcesDisplay, variablesDisplay, editVariablesBtn,
+  reachableNodes, saveLoadSection, saveSlots, refreshSavesBtn,
+  advancedTab, advancedPanel, enableAdvancedFeatures,
+  aiProvider, openaiSettings, openaiApiKey, openaiModel,
+  saveAiSettings, generateNextNodeBtn, paraphraseCurrentBtn, aiOutput,
+  lexiconLoadBtn, lexiconMergeBtn, lexiconReplaceBtn,
+  lexiconExportBtn, lexiconImportBtn, lexiconFileInput, lexiconTextarea,
+  keyBindingDisplay, inventoryKey, debugKey, graphKey,
+  storyKey, aiKey, mermaidKey, saveKeyBindings, resetKeyBindings,
+  batchEditBtn, batchEditModal, searchText, replaceText,
+  applyTextReplaceBtn, choiceSearchText, choiceReplaceText,
+  applyChoiceReplaceBtn, oldTargetText, newTargetText,
+  applyTargetReplaceBtn, closeBatchEditBtn,
+  themeBtn, createQuickNodeBtn, cancelQuickNodeBtn, quickNodeBtn,
+  quickNodeModal, batchChoiceBtn, batchChoiceModal,
+  batchNodeSelect, batchCondition, batchEffect,
+  batchConditionText, batchEffectText, cancelBatchChoiceBtn, applyBatchChoiceBtn,
+  snippetBtn, snippetModal, snippetNameInput, saveSnippetBtn,
+  snippetList, closeSnippetModalBtn,
+  cancelDraftRestoreBtn, confirmDraftRestoreBtn, draftRestoreModal,
+  manageTemplatesBtn, templateModal, customTemplateNameInput,
+  saveCustomTemplateBtn, customTemplateList, closeTemplateModalBtn,
+  customTemplateGroup, runValidationBtn, validationContainer,
+  referenceToc, referenceContent, csvImportModal, csvExportModal,
+  aiSettings, keyBindingSettings, aiActions, lexiconEditor,
+  paraphraseModal, cancelParaphraseBtn
+} = getUIElements()
 
 // AI configuration
-let aiConfig = {
-  provider: 'mock',
-  openai: {
-    apiKey: '',
-    model: 'gpt-3.5-turbo'
-  }
-}
+let aiConfig = getDefaultAIConfig()
 let aiProviderInstance = null
-
-// Batch edit elements
-const batchEditBtn = document.getElementById('batchEditBtn')
-const batchEditModal = document.getElementById('batchEditModal')
-const searchText = document.getElementById('searchText')
-const replaceText = document.getElementById('replaceText')
-const applyTextReplaceBtn = document.getElementById('applyTextReplaceBtn')
-const choiceSearchText = document.getElementById('choiceSearchText')
-const choiceReplaceText = document.getElementById('choiceReplaceText')
-const applyChoiceReplaceBtn = document.getElementById('applyChoiceReplaceBtn')
-const oldTargetText = document.getElementById('oldTargetText')
-const newTargetText = document.getElementById('newTargetText')
-const applyTargetReplaceBtn = document.getElementById('applyTargetReplaceBtn')
-const closeBatchEditBtn = document.getElementById('closeBatchEditBtn')
 
 function renderState() {
   const currentSession = getCurrentSession()
@@ -861,21 +772,16 @@ advancedTab.addEventListener('click', () => switchTab('advanced'))
 if (enableAdvancedFeatures) {
   enableAdvancedFeatures.addEventListener('change', (e) => {
     const enabled = e.target.checked
-    const aiSettings = document.getElementById('aiSettings')
-    const keyBindingSettings = document.getElementById('keyBindingSettings')
-    const aiActions = document.getElementById('aiActions')
-    const lexiconEditor = document.getElementById('lexiconEditor')
-
     if (enabled) {
-      aiSettings.style.display = 'block'
-      keyBindingSettings.style.display = 'block'
-      aiActions.style.display = 'block'
-      lexiconEditor.style.display = 'block'
+      if (aiSettings) aiSettings.style.display = 'block'
+      if (keyBindingSettings) keyBindingSettings.style.display = 'block'
+      if (aiActions) aiActions.style.display = 'block'
+      if (lexiconEditor) lexiconEditor.style.display = 'block'
     } else {
-      aiSettings.style.display = 'none'
-      keyBindingSettings.style.display = 'none'
-      aiActions.style.display = 'none'
-      lexiconEditor.style.display = 'none'
+      if (aiSettings) aiSettings.style.display = 'none'
+      if (keyBindingSettings) keyBindingSettings.style.display = 'none'
+      if (aiActions) aiActions.style.display = 'none'
+      if (lexiconEditor) lexiconEditor.style.display = 'none'
     }
 
     // Save preference
@@ -1608,10 +1514,10 @@ function restoreDraftModel(draft) {
 }
 
 // モーダルイベントリスナー
-document.getElementById('cancelParaphraseBtn').removeEventListener('click', () => guiEditorManager.hideParaphraseModal())
+if (cancelParaphraseBtn) cancelParaphraseBtn.removeEventListener('click', () => guiEditorManager.hideParaphraseModal())
 
 // モーダル外クリックで閉じる
-document.getElementById('paraphraseModal').removeEventListener('click', (e) => {
+if (paraphraseModal) paraphraseModal.removeEventListener('click', (e) => {
   if (e.target.id === 'paraphraseModal') {
     guiEditorManager.hideParaphraseModal()
   }
@@ -1631,13 +1537,9 @@ if (closeBatchEditBtn) closeBatchEditBtn.addEventListener('click', () => guiEdit
 // ===========================
 // Color Palette Event Listeners
 // ===========================
-const themeBtn = document.getElementById('themeBtn')
 // ===========================
 // Quick Node Creation
 // ===========================
-// NOTE: NODE_TEMPLATES is imported from constants.js
-const createQuickNodeBtn = document.getElementById('createQuickNodeBtn')
-const cancelQuickNodeBtn = document.getElementById('cancelQuickNodeBtn')
 
 if (createQuickNodeBtn) {
   createQuickNodeBtn.addEventListener('click', () => guiEditorManager.createQuickNode())
@@ -1652,30 +1554,20 @@ if (cancelQuickNodeBtn) {
 // Batch Choice Edit
 // ===========================
 function openBatchChoiceModal() {
-  const modal = document.getElementById('batchChoiceModal')
-  const nodeSelect = document.getElementById('batchNodeSelect')
-
   // Populate node list
-  nodeSelect.innerHTML = '<option value="">ノードを選択...</option>'
+  batchNodeSelect.innerHTML = '<option value="">ノードを選択...</option>'
   Object.keys(_model.nodes).forEach(nodeId => {
     const option = document.createElement('option')
     option.value = nodeId
     option.textContent = `${nodeId} - ${_model.nodes[nodeId].text?.substring(0, 30) || '(テキストなし)'}`
-    nodeSelect.appendChild(option)
+    batchNodeSelect.appendChild(option)
   })
 
-  modal.style.display = 'flex'
-  modal.classList.add('show')
+  batchChoiceModal.style.display = 'flex'
+  batchChoiceModal.classList.add('show')
 }
 
 // Event listeners for batch choice edit
-const batchNodeSelect = document.getElementById('batchNodeSelect')
-const batchCondition = document.getElementById('batchCondition')
-const batchEffect = document.getElementById('batchEffect')
-const batchConditionText = document.getElementById('batchConditionText')
-const batchEffectText = document.getElementById('batchEffectText')
-const cancelBatchChoiceBtn = document.getElementById('cancelBatchChoiceBtn')
-const applyBatchChoiceBtn = document.getElementById('applyBatchChoiceBtn')
 
 if (batchNodeSelect) {
   batchNodeSelect.addEventListener('change', () => guiEditorManager.updateBatchChoiceList())
@@ -1695,8 +1587,8 @@ if (batchEffect) {
 
 if (cancelBatchChoiceBtn) {
   cancelBatchChoiceBtn.addEventListener('click', () => {
-    document.getElementById('batchChoiceModal').style.display = 'none'
-    document.getElementById('batchChoiceModal').classList.remove('show')
+    batchChoiceModal.style.display = 'none'
+    batchChoiceModal.classList.remove('show')
   })
 }
 
@@ -1705,8 +1597,6 @@ if (applyBatchChoiceBtn) {
 }
 
 // Add button listeners for quick node and batch choice
-const quickNodeBtn = document.getElementById('quickNodeBtn')
-const batchChoiceBtn = document.getElementById('batchChoiceBtn')
 
 if (quickNodeBtn) {
   quickNodeBtn.addEventListener('click', () => guiEditorManager.openQuickNodeModal())
@@ -1773,12 +1663,7 @@ if (nodeFilterSelect) {
 // Snippet Event Listeners
 // ============================================================================
 
-const snippetBtn = document.getElementById('snippetBtn')
-const snippetModal = document.getElementById('snippetModal')
-const snippetNameInput = document.getElementById('snippetNameInput')
-const saveSnippetBtn = document.getElementById('saveSnippetBtn')
-const snippetList = document.getElementById('snippetList')
-const closeSnippetModalBtn = document.getElementById('closeSnippetModalBtn')
+// Snippet event listeners
 
 // Render snippet list
 function renderSnippetList() {
@@ -1861,8 +1746,6 @@ if (closeSnippetModalBtn) {
 }
 
 // Draft restore modal event listeners
-const cancelDraftRestoreBtn = document.getElementById('cancelDraftRestoreBtn')
-const confirmDraftRestoreBtn = document.getElementById('confirmDraftRestoreBtn')
 
 if (cancelDraftRestoreBtn) {
   cancelDraftRestoreBtn.addEventListener('click', () => {
@@ -1889,7 +1772,6 @@ if (confirmDraftRestoreBtn) {
 }
 
 // Close draft restore modal on backdrop click
-const draftRestoreModal = document.getElementById('draftRestoreModal')
 if (draftRestoreModal) {
   draftRestoreModal.addEventListener('click', (e) => {
     if (e.target === draftRestoreModal) {
@@ -1914,13 +1796,7 @@ if (snippetModal) {
 // Custom Template Event Listeners
 // ============================================================================
 
-const manageTemplatesBtn = document.getElementById('manageTemplatesBtn')
-const templateModal = document.getElementById('templateModal')
-const customTemplateNameInput = document.getElementById('customTemplateNameInput')
-const saveCustomTemplateBtn = document.getElementById('saveCustomTemplateBtn')
-const customTemplateList = document.getElementById('customTemplateList')
-const closeTemplateModalBtn = document.getElementById('closeTemplateModalBtn')
-const customTemplateGroup = document.getElementById('customTemplateGroup')
+// Custom template elements use destructured references from getUIElements()
 
 // Render custom template list in modal
 function renderCustomTemplateList() {
@@ -2047,22 +1923,17 @@ const keyBindingUIManager = new KeyBindingUIManager()
 mermaidPreviewManager = new MermaidPreviewManager()
 
 // Initialize story manager
-storyManager.initialize(document.getElementById('storyPanel'))
+storyManager.initialize(storyPanel)
 
 // Initialize graph manager
-graphManager.initialize(document.getElementById('graphSvg'))
+graphManager.initialize(graphSvg)
 
 // Initialize debug manager
-debugManager.initialize(
-  document.getElementById('flagsDisplay'),
-  document.getElementById('resourcesDisplay'),
-  document.getElementById('variablesDisplay'),
-  document.getElementById('reachableNodes')
-)
+debugManager.initialize(flagsDisplay, resourcesDisplay, variablesDisplay, reachableNodes)
 
 // Initialize validation panel
 validationPanel.initialize(
-  document.getElementById('validationContainer'),
+  validationContainer,
   (nodeId) => {
     // Navigate to node in GUI editor when clicked
     if (guiEditMode && guiEditMode.classList.contains('active')) {
@@ -2080,7 +1951,6 @@ validationPanel.initialize(
 mermaidPreviewManager.initialize(document.querySelector('.app-container'))
 
 // Validation button event listener
-const runValidationBtn = document.getElementById('runValidationBtn')
 if (runValidationBtn) {
   runValidationBtn.addEventListener('click', () => {
     const summary = validationPanel.validateAndRender()
@@ -2119,33 +1989,18 @@ saveManager.updateUI = function () {
 
 // Initialize GUI editor manager
 guiEditorManager.initialize(
-  document.getElementById('nodeList'),
-  document.getElementById('guiEditMode'),
-  document.getElementById('batchEditModal'),
-  document.getElementById('quickNodeModal'),
-  document.getElementById('batchChoiceModal'),
-  document.getElementById('paraphraseModal'),
-  document.getElementById('draftRestoreModal')
+  nodeList, guiEditMode, batchEditModal, quickNodeModal,
+  batchChoiceModal, paraphraseModal, draftRestoreModal
 )
 
 // Initialize reference manager
-referenceManager.initialize(
-  document.getElementById('referenceToc'),
-  document.getElementById('referenceContent')
-)
+referenceManager.initialize(referenceToc, referenceContent)
 
 // Initialize CSV manager
-csvManager.initialize(
-  document.getElementById('csvImportModal'),
-  document.getElementById('csvExportModal')
-)
+csvManager.initialize(csvImportModal, csvExportModal)
 
 // Initialize AI manager
-aiManager.initialize(
-  document.getElementById('aiOutput'),
-  document.getElementById('generateNextNodeBtn'),
-  document.getElementById('paraphraseCurrentBtn')
-)
+aiManager.initialize(aiOutput, generateNextNodeBtn, paraphraseCurrentBtn)
 
 // Initialize lexicon manager
 lexiconManager.initialize()
@@ -2229,8 +2084,7 @@ if (resetGraphBtn) {
 }
 if (graphSettingsBtn) {
   graphSettingsBtn.onclick = () => {
-    const graphSettings = document.getElementById('graphSettings')
-    graphSettings.style.display = graphSettings.style.display === 'none' ? 'block' : 'none'
+    if (graphSettings) graphSettings.style.display = graphSettings.style.display === 'none' ? 'block' : 'none'
   }
 }
 // Phase 2: 以下の機能は将来の拡張として実装予定

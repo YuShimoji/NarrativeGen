@@ -135,14 +135,19 @@ export function getUIElements() {
         // Theme button
         themeBtn: document.getElementById('themeBtn'),
 
+        // Export elements
+        exportBtn: document.getElementById('exportBtn'),
+        exportModal: document.getElementById('exportModal'),
+
         // Quick node elements
         createQuickNodeBtn: document.getElementById('createQuickNodeBtn'),
         cancelQuickNodeBtn: document.getElementById('cancelQuickNodeBtn'),
         quickNodeBtn: document.getElementById('quickNodeBtn'),
-        exportBtn: document.getElementById('exportBtn'),
+        quickNodeModal: document.getElementById('quickNodeModal'),
         batchChoiceBtn: document.getElementById('batchChoiceBtn'),
 
         // Batch choice elements
+        batchChoiceModal: document.getElementById('batchChoiceModal'),
         batchNodeSelect: document.getElementById('batchNodeSelect'),
         batchCondition: document.getElementById('batchCondition'),
         batchEffect: document.getElementById('batchEffect'),
@@ -176,6 +181,20 @@ export function getUIElements() {
         // Validation elements
         runValidationBtn: document.getElementById('runValidationBtn'),
         validationContainer: document.getElementById('validationContainer'),
+
+        // Reference panel elements
+        referenceToc: document.getElementById('referenceToc'),
+        referenceContent: document.getElementById('referenceContent'),
+
+        // CSV modal elements
+        csvImportModal: document.getElementById('csvImportModal'),
+        csvExportModal: document.getElementById('csvExportModal'),
+
+        // Advanced panel sub-elements
+        aiSettings: document.getElementById('aiSettings'),
+        keyBindingSettings: document.getElementById('keyBindingSettings'),
+        aiActions: document.getElementById('aiActions'),
+        lexiconEditor: document.getElementById('lexiconEditor'),
 
         // Modal elements
         paraphraseModal: document.getElementById('paraphraseModal'),
