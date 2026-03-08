@@ -414,7 +414,7 @@
         "properties": {
           "provider": {
             "type": "string",
-            "enum": ["openai", "mock", "ollama"],
+            "enum": ["openai", "mock"],
             "description": "AI provider to use"
           },
           "context": {
