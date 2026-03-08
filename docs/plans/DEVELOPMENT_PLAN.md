@@ -101,15 +101,21 @@
 
 ---
 
-### 優先度3: Yarn Spinner エクスポート
+### 優先度3: Yarn Spinner エクスポート [完了]
 
-**現状**: CSV/Ink/Twine/JSONの4形式が実装済み (ExportManager + Formatterプラグイン方式)。
+**完了日**: 2026-03-09
 
-**タスク内容**:
-- YarnSpinnerFormatter.js の新規作成
-- ExportManagerへの登録
-- エクスポートモーダルUIへの追加
-- 動作確認
+**実装内容**:
+- YarnFormatter.js作成 (Yarn Spinner 2.x形式: title/tags/---/===構造)
+- 条件/効果マッピング (flag/resource/variable→Yarn式、setFlag/addResource/setVariable/modifyVariable/goto→<<set>>/<<jump>>)
+- Start node特殊処理 (model.startNodeへの自動ジャンプ)
+- ID sanitization (ピリオド→アンダースコア)
+- 変数宣言生成 (<<declare>>)
+- main.jsへの登録 (5形式目のエクスポーター)
+- verify-export-formatters.mjsでのテスト追加
+- 仕様ドキュメント作成 (docs/specs/yarn-spinner-export.md, SP-EXP-YARN-001)
+
+**非対応機能**: ParaphraseLexicon/ParaphraseStyle/ChoiceOutcome/timeWindow/contains演算子 (Yarn Spinnerに該当概念なし)
 
 ---
 
