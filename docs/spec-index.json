@@ -88,5 +88,23 @@
     "cat": "system",
     "file": "docs/plans/DEVELOPMENT_PLAN.md",
     "summary": "実装済み機能一覧・今後の開発タスク"
+  },
+  {
+    "id": "SP-VAR-001",
+    "title": "変数システム拡張",
+    "status": "done",
+    "pct": 100,
+    "cat": "core",
+    "file": "docs/specs/variable-system.md",
+    "summary": "文字列・数値型対応、四則演算、数値比較条件"
+  },
+  {
+    "id": "SP-EXP-YARN-001",
+    "title": "Yarn Spinner エクスポート",
+    "status": "done",
+    "pct": 100,
+    "cat": "data",
+    "file": "docs/specs/yarn-spinner-export.md",
+    "summary": "Yarn Spinner 2.x形式(.yarn)出力、条件/効果マッピング"
   }
 ]
