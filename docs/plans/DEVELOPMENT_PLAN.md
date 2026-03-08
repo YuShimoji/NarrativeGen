@@ -85,15 +85,17 @@
 
 ---
 
-### 優先度2: main.js リファクタリング
+### 優先度2: main.js リファクタリング [完了]
 
-**現状**: main.js (~2365行) がエントリポイント。src/に分割モジュール群(bootstrap.js, session-controller.js, ui-bindings.js等)が存在するが移行未完了。feature/main-js-split-phase2ブランチはマージ困難(100+ファイル差分)。
+**完了日**: 2026-03-08
 
-**タスク内容**:
-- 旧ブランチ(feature/main-js-split-phase2)は破棄
-- mainブランチから段階的に再分割
-- index.htmlのエントリポイントをsrc/bootstrap.jsに切り替え
-- 機能単位でモジュール抽出 → テスト通過確認の繰り返し
+**結果**:
+- main.js: 2365行 → 69行 (薄いエントリポイント: マネージャー生成 + initializeApp()呼び出し)
+- app-controller.js: ~1630行 (イベント配線、ヘルパー関数、マネージャー初期化)
+- app-editor-events.js: ~430行 (スニペット/テンプレート/バッチ/検索/ドラフト管理)
+- ui-bindings.js: ~100 DOM要素の一元管理
+- デッドコード除去: batchEditManager(未定義_model)、openBatchChoiceModal(同)、未使用変数/import
+- 旧ブランチ(feature/main-js-split-phase2)は使用せず、mainから段階的に再分割
 
 ---
 
