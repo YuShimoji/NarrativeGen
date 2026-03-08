@@ -69,19 +69,21 @@
 
 ## 開発タスク
 
-### 優先度1: 変数/条件システム拡張
+### 優先度1: 変数/条件システム拡張 [完了]
 
-**現状**: 条件分岐(AND/OR/NOT)は実装済み。変数は文字列型のみ。
+**完了日**: 2026-03-09
 
-**タスク内容**:
-- 条件分岐拡張の実装済み確認 → ドキュメント反映
-- 変数システムの拡張検討:
-  - 数値型変数のサポート
-  - 変数演算 (加算/減算/乗算等)
-  - テキスト内変数展開 (`{variable_name}` → 値に置換)
-  - 変数比較演算子の拡張
+**実装内容**:
+- 数値型変数サポート (`VariableState = Record<string, string | number>`)
+- 数値比較条件演算子追加 (`>=`, `<=`, `>`, `<`)
+- 四則演算効果 (`modifyVariable: { op: '+' | '-' | '*' | '/', value: number }`)
+- UI対応 (condition-effect-editor.js: 数値自動判定、演算子ドロップダウン)
+- エクスポート対応 (YarnFormatter.js: modifyVariable → `<<set>>`)
+- 仕様ドキュメント作成 (docs/specs/variable-system.md, SP-VAR-001)
 
-**前提**: 具体的な拡張内容は仕様策定後に決定 (SPEC FIRST)
+**テキスト内変数展開**: 既存実装済み (story.js: `{variable_name}` → 値置換)
+
+**テスト**: tsc + vitest 15件 + verify-export-formatters + vite build全通過
 
 ---
 

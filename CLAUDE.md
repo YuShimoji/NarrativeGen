@@ -41,3 +41,13 @@
 | 2026-03-09 | Yarn Spinner エクスポート実装完了 | 優先度3タスク | YarnFormatter.js追加、verify-export-formatters.mjsでテスト済み。5形式目のエクスポーターとして登録 |
 | 2026-03-09 | 変数システム仕様策定 | 仕様先行 / 実装先行 | docs/specs/variable-system.md作成。数値型変数・演算・テキスト内展開を定義。実装は次フェーズ |
 | 2026-03-09 | spec-viewer.html導入 | ドキュメント形式 | Markdown管理 + Webビューアで仕様一覧・進捗確認。spec-index.jsonがSource of Truth |
+| 2026-03-09 | 変数システム拡張実装 (Priority 1) | 数値型追加 + 基本四則演算 | VariableState型拡張、modifyVariable効果、数値比較条件(>=, <=, >, <)、UI対応完了。condition-effect-editor.jsで自動型判定 |
+| 2026-03-09 | evalCondition/applyEffect重複解消 | 共通モジュール化 / 現状維持 / 部分統合 | 3ファイル(session-ops.ts/index.ts/browser.ts)で90行超の重複を`condition-effect-ops.ts`に集約。session-ops.tsのキャッシュ機構は維持 |
+
+## Project Context
+
+プロジェクト名: NarrativeGen
+環境: Node.js 20+ / TypeScript 5.x / Vite 5 / Vitest / Playwright
+ブランチ戦略: main (デフォルトブランチ: open-ws/engine-skeleton-2025-09-02)
+現フェーズ: β版相当（コア機能実装完了、Unity連携・最適化準備中）
+直近の状態: Yarn Spinnerエクスポート + 変数拡張 + 重複解消リファクタリング完了。仕様ドキュメント3件追加(SP-VAR-001, SP-EXP-YARN-001, SP-REFACTOR-001)。次: コミット作成→push、または開発優先順2-5の実施

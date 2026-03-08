@@ -106,5 +106,14 @@
     "cat": "data",
     "file": "docs/specs/yarn-spinner-export.md",
     "summary": "Yarn Spinner 2.x形式(.yarn)出力、条件/効果マッピング"
+  },
+  {
+    "id": "SP-REFACTOR-001",
+    "title": "条件・効果ロジック重複解消",
+    "status": "done",
+    "pct": 100,
+    "cat": "infra",
+    "file": "docs/specs/code-refactoring-condition-effect.md",
+    "summary": "evalCondition/applyEffect/cmpの3ファイル重複を共通モジュール化"
   }
 ]
