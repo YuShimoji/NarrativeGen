@@ -39,7 +39,7 @@
 | レキシコンUI | 編集/表示/モデル埋め込み対応 | lexicon-ui-manager.js, lexicon.js |
 | AI管理 | Mock/OpenAI切替/生成/言い換え | ai.js |
 | 条件/効果エディタ | 構造化された条件・効果設定UI | condition-effect-editor.js |
-| エクスポート | CSV + Ink + Twine + JSON (4形式) | ExportManager.js, formatters/ |
+| エクスポート | CSV + Ink + Twine + JSON + Yarn Spinner (5形式) | ExportManager.js, formatters/ |
 | モデル検証 | CLI + UI双方 | model-validator.js |
 | 保存/読込 | SaveManager/自動保存 | save-manager.js |
 | デバッグパネル | 開発時情報表示 | debug.js |
@@ -119,6 +119,23 @@
 
 ---
 
+### 優先度3.5: コード品質改善 (リファクタリング) [完了]
+
+**完了日**: 2026-03-09
+
+**タスク**: evalCondition/applyEffect重複解消
+
+**実装内容**:
+- `condition-effect-ops.ts` 共通モジュール作成 (cmp/evalCondition/applyEffect)
+- session-ops.ts: 共通モジュールからインポート、キャッシュラッパー維持
+- index.ts: ローカル重複定義削除 (~90行削減)
+- browser.ts: ローカル重複定義削除 (~100行削減)
+- 仕様ドキュメント作成 (docs/specs/code-refactoring-condition-effect.md, SP-REFACTOR-001)
+
+**効果**: 保守性向上、コード削減約190行、型安全性向上
+
+---
+
 ### 優先度4: レスポンシブデザイン + アクセシビリティ
 
 **現状**: デスクトップ向けのみ。モバイル非対応。アクセシビリティ未対応。
@@ -165,7 +182,7 @@
 | 大規模モデル対応 | 現時点で不要 |
 | ツールチップ&ヘルプ | 不要 |
 | 診断ログ拡張 | core/logger.jsで十分 |
-| XLSX/PDFエクスポート | 4形式+Yarn Spinnerで十分 |
+| XLSX/PDFエクスポート | 5形式で十分 |
 
 ---
 
