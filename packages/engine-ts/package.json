@@ -20,7 +20,7 @@
     }
   },
   "scripts": {
-    "build": "tsc -p .",
+    "build": "node ../../node_modules/typescript/bin/tsc -p .",
     "test": "vitest run",
     "validate:models": "node dist/tools/validate-models.js",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",

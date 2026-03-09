@@ -24,10 +24,37 @@ export default defineConfig({
           }
 
           if (
-            normalizedId.includes('/src/ui/graph-editor/') ||
             normalizedId.includes('/node_modules/d3/') ||
-            normalizedId.includes('/node_modules/dagre/')
+            normalizedId.includes('/node_modules/d3-sankey/') ||
+            normalizedId.includes('/node_modules/dagre/') ||
+            normalizedId.includes('/node_modules/dagre-d3-es/')
           ) {
+            return 'vendor-diagram-layout'
+          }
+
+          if (
+            normalizedId.includes('/node_modules/dayjs/') ||
+            normalizedId.includes('/node_modules/dompurify/') ||
+            normalizedId.includes('/node_modules/khroma/') ||
+            normalizedId.includes('/node_modules/lodash-es/') ||
+            normalizedId.includes('/node_modules/marked/') ||
+            normalizedId.includes('/node_modules/roughjs/') ||
+            normalizedId.includes('/node_modules/stylis/') ||
+            normalizedId.includes('/node_modules/uuid/') ||
+            normalizedId.includes('/node_modules/@mermaid-js/parser/')
+          ) {
+            return 'vendor-mermaid-deps'
+          }
+
+          if (normalizedId.includes('/node_modules/mermaid/')) {
+            return 'vendor-mermaid-core'
+          }
+
+          if (normalizedId.includes('/node_modules/cytoscape/')) {
+            return 'vendor-cytoscape'
+          }
+
+          if (normalizedId.includes('/src/ui/graph-editor/')) {
             return 'feature-graph-editor'
           }
 

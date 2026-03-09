@@ -1,153 +1,109 @@
-﻿# 技術的負債と改善タスク
+# Technical Debt and Improvement Tasks
 
-**最終更新**: 2026-02-05
+Last updated: 2026-03-10
 
-## 概要
-
-このドキュメントは、プロジェクト内の技術的負債、未完了のリファクタリング、および将来の改善タスクを追跡します。
-
----
-
-## 🔴 高優先度
-
-### 1. レイアウト問題の完全解決
-
-**状況**: 対応中  
-**問題**: IDE プレビュー環境での外部スタイル注入によりレイアウトが崩れる
-
-**現在の対応**:
-
-- CSS を外部ファイルに分離 (`src/styles/main.css`, `gui-editor.css`)
-- `bootstrap.js` でランタイムスタイル強制適用（旧 `main.js` は分割済み: `bootstrap.js`, `session-controller.js`, `ui-bindings.js`）
-- `!important` による上書き
-
-**残タスク**:
-
-- [ ] 通常ブラウザでの動作確認
-- [ ] IDE プレビュー環境での動作確認
-- [ ] 必要に応じて追加の isolation 対策
-
-### 2. 手動テストの実施
-
-**状況**: 一部実施  
-**参照**: `docs/GUI_EDITOR_TEST_GUIDE.md`
-
-**テスト項目**:
-
-- [ ] コピー＆ペースト (Ctrl+C/V)
-- [ ] 検索・フィルタ機能
-- [ ] スニペット機能
-- [ ] カスタムテンプレート
-- [ ] リアルタイムプレビュー
-- [ ] モデル検証
-- [ ] Mermaid プレビュー
-- [x] Save/Load（基本ケースのみ）
+## Overview
+This document tracks technical debt and improvement work items.
 
 ---
 
-## 🟡 中優先度
+## High Priority
 
-### 3. main.js のリファクタリング
+### 1. Stabilize Spec SoT operation
+Status: in progress
 
-**状況**: 未着手  
-**問題**: `main.js` が約 2200 行と大きく、複数の責務が混在
+- Added syntax and reference validation for `docs/spec-index.json`.
+- Script: `scripts/spec-index-check.mjs`
+- Command: `npm run check:spec-index`
+- Workflow note added to `docs/plans/DEVELOPMENT_PLAN.md`.
 
-**提案する分割**:
+Remaining tasks:
+- [ ] Require `npm run check:spec-index` in PR/CI.
+- [ ] Add change-review examples for spec maintenance.
 
-```text
-main.js (現在: ~2200行)
-    ↓ 分割
-src/
-├── bootstrap.js          # 初期化・環境検出
-├── ui-bindings.js        # DOM 要素取得・イベントバインド
-├── session-controller.js # セッション管理
-└── app.js               # エントリーポイント (各モジュールを統合)
-```
+### 2. Dependency health recheck
+Status: in progress
 
-**優先度が低い理由**:
+- Workspace build is restored.
+- Build scripts in `packages/engine-ts` and `packages/backend` now use hoisted TypeScript.
 
-- 現在の機能は正常に動作
-- 各 UI マネージャーは既に分離済み (`src/ui/`)
-- Vite ビルドで単一ファイルにバンドルされる
+Remaining tasks:
+- [ ] Monitor `npm ls --depth=0` for `extraneous/invalid` recurrence.
+- [ ] Add environment troubleshooting notes for permission/sandbox differences.
 
-### 4. index.html のインライン CSS 削除
+### 3. Encoding safety operation
+Status: in progress
 
-**状況**: 部分的に完了  
-**問題**: 外部 CSS 追加後もインライン CSS が残存（~1600行）
+- Added `npm run check:encoding-safety` and `npm run check:safety`.
+- Added `npm run check:safety:changed` for changed-file-oriented validation.
+- Added incident record: `docs/governance/encoding-safety-incident-2026-03-10.md`.
 
-**対応**:
-
-- 外部 CSS が優先されるため機能上は問題なし
-- ファイルサイズ削減のため、将来的に削除を検討
-
-### 5. レキシコン拡張
-
-**状況**: 一部実装済み  
-**参照**: `docs/reference.md`
-
-**残タスク**:
-
-- [x] GUI からのクイック追加
-- [x] モデル埋め込み (`meta.paraphraseLexicon`)
-- [x] Lexicon JSON スキーマ定義（`Packages/engine-ts/schemas/lexicon.schema.json`）
-- [x] インポート時のスキーマ検証（ajv 等）
-- [x] モデルエクスポート時の `meta.paraphraseLexicon` 自動埋め込み
+Remaining tasks:
+- [ ] Make changed-file mode use Git diff directly in restricted/sandboxed environments.
+- [ ] Add CI/pre-commit guidance for encoding safety checks.
 
 ---
 
-## 🟢 低優先度
+## Medium Priority
 
-### 6. チャンクサイズ警告
+### 4. Chunk optimization
+Status: in progress
 
-**状況**: 既知  
-**問題**: ビルド時に 500KB 超過警告が出る
+- Dynamic import added for Graph editor and Mermaid preview managers.
+- Mermaid import now targets `mermaid/dist/mermaid.core.mjs`.
+- Manual chunking now separates `vendor-mermaid-core`, `vendor-mermaid-deps`, `vendor-diagram-layout`, and `vendor-cytoscape`.
 
-```text
-(!) Some chunks are larger than 500 kB after minification.
-- index-*.js: 641 kB
-- cytoscape.esm.js: 442 kB
-```
+Remaining tasks:
+- [ ] Decide whether to accept or further reduce `vendor-mermaid-core` (~1.27 MB).
+- [ ] Add chunk budget enforcement for regression detection.
+- [ ] Measure first screen load performance.
 
-**対応案**:
+### 5. Responsive and accessibility improvements
+Status: not started
 
-- `build.rollupOptions.output.manualChunks` で分割
-- 動的 import でコード分割
-- 現時点では機能に影響なし
+Remaining tasks:
+- [ ] Mobile/tablet layout definitions.
+- [ ] ARIA labels and keyboard navigation.
+- [ ] Manual usability checks on key screens.
 
-### 7. アクセシビリティ改善
+### 6. Manual test expansion
+Status: partially done
 
-**状況**: 未着手  
-**タスク**:
-
-- [ ] ARIA ラベル追加
-- [ ] キーボードナビゲーション改善
-- [ ] スクリーンリーダー対応
-
-### 8. レスポンシブデザイン
-
-**状況**: 未着手  
-**タスク**:
-
-- [ ] モバイル対応
-- [ ] タブレット対応
-- [ ] ブレークポイント設定
+Remaining tasks:
+- [ ] Re-verify core graph editor scenarios.
+- [ ] Regression checks for variable system and Yarn export.
+- [ ] Negative-path checks for model import/export.
 
 ---
 
-## ✅ 完了済み
+## Low Priority
 
-| タスク | 完了日 | 備考 |
-|--------|--------|------|
-| CSS 外部化 | 2025-12-08 | `src/styles/` に分離 |
-| ランタイムスタイル強制適用 | 2025-12-08 | `main.js` 先頭に追加 |
-| ドキュメント整理 | 2025-12-08 | 古いファイルをアーカイブ |
-| Mermaid 特殊文字エスケープ | 2025-12-06 | |
-| Mermaid 予約語回避 | 2025-12-06 | |
-| 初期化バグ修正 | 2025-12-06 | |
+### 7. Documentation cleanup
+Status: ongoing
+
+Remaining tasks:
+- [ ] Simplify workflow to prevent doc/spec update leaks.
+- [ ] Periodic legacy document review.
+- [ ] Normalize mojibake-affected legacy planning documents.
 
 ---
 
-## 更新履歴
+## Completed
 
-- 2025-12-08: 初版作成
-- 2025-12-12: レキシコン対応状況と手動テスト状況を更新
+| Task | Date | Note |
+|------|------|------|
+| main.js split refactor | 2026-03-08 | `apps/web-tester/main.js` is now a thin entry |
+| Yarn Spinner export | 2026-03-09 | Formatter added |
+| Variable system extension | 2026-03-09 | Numeric compare/ops/UI integrated |
+| Condition/effect dedup | 2026-03-09 | Shared module introduced |
+| spec-index JSON recovery | 2026-03-09 | Valid JSON + file references checked |
+| spec-index checker | 2026-03-09 | `npm run check:spec-index` |
+| encoding safety checker | 2026-03-09 | `npm run check:encoding-safety` |
+| encoding safety workflow + incident record | 2026-03-10 | workflow doc and incident record added |
+| Mermaid chunk split v2 | 2026-03-10 | `vendor-mermaid-core/deps` and `vendor-diagram-layout` introduced |
+
+---
+
+## History
+- 2026-03-09: rewritten to current state
+- 2026-03-10: updated for encoding safety workflow and Mermaid chunk split

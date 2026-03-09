@@ -1,119 +1,119 @@
 [
   {
     "id": "SP-001",
-    "title": "Web Tester 総合仕様",
+    "title": "Web Tester Spec",
     "status": "done",
     "pct": 95,
     "cat": "system",
     "file": "docs/OpenSpec-WebTester.md",
-    "summary": "GUI/グラフエディタ・CSV・AI・保存等の全体仕様"
+    "summary": "Overall spec for GUI, graph editor, CSV, and AI features"
   },
   {
     "id": "SP-002",
-    "title": "エンジン アーキテクチャ",
+    "title": "Engine Architecture",
     "status": "done",
     "pct": 100,
     "cat": "core",
     "file": "docs/architecture.md",
-    "summary": "エンジン層の設計・データモデル・API定義"
+    "summary": "Engine design, data model, and API structure"
   },
   {
     "id": "SP-003",
-    "title": "Mermaid プレビュー",
+    "title": "Mermaid Preview",
     "status": "done",
     "pct": 100,
     "cat": "ui",
     "file": "docs/Mermaid_Preview_Spec.md",
-    "summary": "フローチャートプレビュー・ズーム/パン仕様"
+    "summary": "Preview, zoom, and pan behavior for Mermaid diagrams"
   },
   {
     "id": "SP-004",
-    "title": "デザイン改善",
+    "title": "Design Improvements",
     "status": "partial",
     "pct": 60,
     "cat": "ui",
     "file": "docs/DESIGN_IMPROVEMENTS_SPEC.md",
-    "summary": "SVGアイコン・カラーパレット・レイアウト改善"
+    "summary": "Ongoing UI color, readability, and layout improvements"
   },
   {
     "id": "SP-005",
-    "title": "スプレッドシート形式",
+    "title": "Spreadsheet Format",
     "status": "done",
     "pct": 100,
     "cat": "data",
     "file": "docs/spreadsheet-format.md",
-    "summary": "CSV/TSVフォーマット・条件/効果記法"
+    "summary": "CSV/TSV format and condition/effect column definitions"
   },
   {
     "id": "SP-006",
-    "title": "AI機能",
+    "title": "AI Features",
     "status": "partial",
     "pct": 80,
     "cat": "system",
     "file": "docs/ai-features.md",
-    "summary": "非AI言い換え・Mock/OpenAIプロバイダー"
+    "summary": "AI paraphrase and provider behavior (Mock/OpenAI)"
   },
   {
     "id": "SP-007",
-    "title": "グラフエディタ (Phase 2)",
+    "title": "Graph Editor Phase 2",
     "status": "done",
     "pct": 100,
     "cat": "ui",
     "file": "docs/PHASE2_GRAPH_EDITOR_DESIGN.md",
-    "summary": "SVGビジュアルエディタ・DnD・ミニマップ"
+    "summary": "SVG visual editor, drag and drop, and minimap"
   },
   {
     "id": "SP-008",
-    "title": "ノード機能分析",
+    "title": "Node Feature Analysis",
     "status": "legacy",
     "pct": 0,
     "cat": "system",
     "file": "docs/Node_Feature_Analysis.md",
-    "summary": "NodeType設計検討(未採用)"
+    "summary": "Legacy NodeType analysis"
   },
   {
     "id": "SP-009",
-    "title": "技術的負債",
+    "title": "Technical Debt",
     "status": "partial",
     "pct": 40,
     "cat": "infra",
     "file": "docs/TECHNICAL_DEBT.md",
-    "summary": "main.js分割・テスト拡充・レイアウト問題"
+    "summary": "Post-split debt, test expansion, and performance work"
   },
   {
     "id": "SP-010",
-    "title": "開発プラン",
+    "title": "Development Plan",
     "status": "done",
     "pct": 100,
     "cat": "system",
     "file": "docs/plans/DEVELOPMENT_PLAN.md",
-    "summary": "実装済み機能一覧・今後の開発タスク"
+    "summary": "Single source for roadmap and progress"
   },
   {
     "id": "SP-VAR-001",
-    "title": "変数システム拡張",
+    "title": "Variable System Extension",
     "status": "done",
     "pct": 100,
     "cat": "core",
     "file": "docs/specs/variable-system.md",
-    "summary": "文字列・数値型対応、四則演算、数値比較条件"
+    "summary": "Numeric variables, operations, comparisons, text expansion"
   },
   {
     "id": "SP-EXP-YARN-001",
-    "title": "Yarn Spinner エクスポート",
+    "title": "Yarn Spinner Export",
     "status": "done",
     "pct": 100,
     "cat": "data",
     "file": "docs/specs/yarn-spinner-export.md",
-    "summary": "Yarn Spinner 2.x形式(.yarn)出力、条件/効果マッピング"
+    "summary": "Export spec for Yarn Spinner 2.x (.yarn)"
   },
   {
     "id": "SP-REFACTOR-001",
-    "title": "条件・効果ロジック重複解消",
+    "title": "Condition/Effect Refactor",
     "status": "done",
     "pct": 100,
     "cat": "infra",
     "file": "docs/specs/code-refactoring-condition-effect.md",
-    "summary": "evalCondition/applyEffect/cmpの3ファイル重複を共通モジュール化"
+    "summary": "Shared module for evalCondition/applyEffect/cmp"
   }
 ]
