@@ -391,7 +391,7 @@ app.delete('/api/sessions/:id', (req, res) => {
 
 // AI endpoints
 app.get('/api/ai/providers', (req, res) => {
-  res.json({ providers: ['mock', 'openai', 'ollama'] })
+  res.json({ providers: ['mock', 'openai'] })
 })
 
 app.post('/api/ai/generate', async (req, res) => {
@@ -400,7 +400,7 @@ app.post('/api/ai/generate', async (req, res) => {
     const provider = (body.provider as AIConfig['provider']) || 'mock'
     const apiKeyHeader = (req.header('X-API-Key') || req.header('Authorization') || '').toString()
     const apiKey = apiKeyHeader.startsWith('Bearer ') ? apiKeyHeader.slice(7) : apiKeyHeader
-    const config: AIConfig = provider === 'openai' ? { provider, openai: { apiKey } } : provider === 'ollama' ? { provider, ollama: { baseUrl: process.env.OLLAMA_BASE_URL } } : { provider: 'mock' }
+    const config: AIConfig = provider === 'openai' ? { provider, openai: { apiKey } } : { provider: 'mock' }
     if (config.provider === 'openai' && !config.openai?.apiKey) {
       return res.status(400).json({ message: 'OpenAI API key required', code: 'API_KEY_REQUIRED' })
     }
@@ -412,7 +412,7 @@ app.post('/api/ai/generate', async (req, res) => {
     const currentNodeText = String(ctx.currentNodeText || '')
     const choiceText = ctx.choiceText ? String(ctx.choiceText) : undefined
     const text = await ai.generateNextNode({ previousNodes, currentNodeText, choiceText })
-    res.json({ text, metadata: { provider: config.provider, model: config.openai?.model || config.ollama?.model || 'mock' } })
+    res.json({ text, metadata: { provider: config.provider, model: config.openai?.model || 'mock' } })
   } catch (error) {
     res.status(400).json({ message: 'AI generation failed', code: 'AI_GENERATION_FAILED', details: error instanceof Error ? error.message : String(error) })
   }

@@ -4,8 +4,6 @@ import { fileURLToPath } from 'url'
 
 import Ajv from 'ajv'
 
-import { registerBuiltins } from './inference/registry.js'
-registerBuiltins()
 import type { AnySchema } from 'ajv'
 
 import type {
@@ -34,7 +32,9 @@ function isResourceStateRecord(value: unknown): value is ResourceState {
 
 function isVariableStateRecord(value: unknown): value is VariableState {
   if (!isRecord(value)) return false
-  return Object.values(value).every((entry) => typeof entry === 'string')
+  return Object.values(value).every(
+    (entry) => typeof entry === 'string' || typeof entry === 'number'
+  )
 }
 
 function isSessionState(value: unknown): value is SessionState {
@@ -64,7 +64,6 @@ interface ValidationError extends Error {
 function detectCircularReferencesWithPaths(model: Model): string[] {
   const graph = new Map<string, Set<string>>()
 
-  // Build adjacency list from nodes and effects
   for (const [nodeId, node] of Object.entries(model.nodes)) {
     if (!graph.has(nodeId)) {
       graph.set(nodeId, new Set())
@@ -73,7 +72,6 @@ function detectCircularReferencesWithPaths(model: Model): string[] {
       if (choice.target) {
         graph.get(nodeId)!.add(choice.target)
       }
-      // Also add goto effect targets
       for (const effect of choice.effects ?? []) {
         if (effect.type === 'goto' && effect.target) {
           graph.get(nodeId)!.add(effect.target)
@@ -89,7 +87,6 @@ function detectCircularReferencesWithPaths(model: Model): string[] {
 
   function dfs(node: string): void {
     if (recursionStack.has(node)) {
-      // Found a cycle - include the node at the end to show it loops back
       const cycleStart = path.indexOf(node)
       const cycle = [...path.slice(cycleStart), node]
       cycles.push(cycle.join(' → '))
@@ -113,7 +110,6 @@ function detectCircularReferencesWithPaths(model: Model): string[] {
     recursionStack.delete(node)
   }
 
-  // Check all nodes for cycles
   for (const node of Object.keys(model.nodes)) {
     if (!visited.has(node)) {
       dfs(node)
@@ -127,7 +123,6 @@ function assertModelIntegrity(model: Model, options: ValidationOptions = {}): vo
   const errors: string[] = []
   const seenNodeIds = new Set<string>()
 
-  // Check for duplicate node IDs
   for (const [nodeKey, node] of Object.entries(model.nodes)) {
     if (seenNodeIds.has(node.id)) {
       errors.push(`DUPLICATE_ID: Duplicate node ID '${node.id}' found in nodes`)
@@ -138,7 +133,6 @@ function assertModelIntegrity(model: Model, options: ValidationOptions = {}): vo
       errors.push(`DUPLICATE_ID: node key '${nodeKey}' must match node.id '${node.id}'`)
     }
 
-    // Check for duplicate choice IDs within a node
     const seenChoiceIds = new Set<string>()
     for (const choice of node.choices ?? []) {
       if (seenChoiceIds.has(choice.id)) {
@@ -148,15 +142,12 @@ function assertModelIntegrity(model: Model, options: ValidationOptions = {}): vo
     }
   }
 
-  // Check for missing startNode
   if (!model.nodes[model.startNode]) {
     errors.push(`MISSING_REFERENCE: startNode '${model.startNode}' does not exist in nodes`)
   }
 
-  // Check for missing choice targets and goto effect targets
   for (const [nodeKey, node] of Object.entries(model.nodes)) {
     for (const choice of node.choices ?? []) {
-      // Check if choice has a target
       if (!choice.target || choice.target === '') {
         errors.push(
           `MISSING_REFERENCE: choice '${choice.id}' in node '${nodeKey}' is missing target (node: ${nodeKey}, choice: ${choice.id})`,
@@ -164,14 +155,12 @@ function assertModelIntegrity(model: Model, options: ValidationOptions = {}): vo
         continue
       }
 
-      // Check if target node exists
       if (!model.nodes[choice.target]) {
         errors.push(
           `MISSING_REFERENCE: choice '${choice.id}' in node '${nodeKey}' targets non-existent node '${choice.target}' (node: ${nodeKey}, choice: ${choice.id})`,
         )
       }
 
-      // Check goto effect targets
       for (const effect of choice.effects ?? []) {
         if (effect.type === 'goto') {
           if (!model.nodes[effect.target]) {
@@ -184,7 +173,6 @@ function assertModelIntegrity(model: Model, options: ValidationOptions = {}): vo
     }
   }
 
-  // Check for circular references if not allowed
   if (options.allowCircularReferences === false) {
     const cycles = detectCircularReferencesWithPaths(model)
     for (const cycle of cycles) {
@@ -193,7 +181,6 @@ function assertModelIntegrity(model: Model, options: ValidationOptions = {}): vo
   }
 
   if (errors.length > 0) {
-    // Throw error with combined message that preserves error codes
     const message = errors.join('\n')
     const error = new Error(message) as ValidationError
     error.code = errors[0].split(':')[0]
@@ -226,20 +213,8 @@ export function loadModel(modelData: unknown, options: ValidationOptions = {}): 
   return model
 }
 
-// Re-export session operations from the shared module (uses inference registry)
+// Re-export session operations (uses memoization cache internally)
 export { startSession, getAvailableChoices, applyChoice, serialize } from './session-ops.js'
-
-// Re-export inference registry for extensibility
-export { registry, registerBuiltins } from './inference/registry.js'
-export type { ConditionEvaluator, EffectApplicator, EvaluationContext, DependencyInfo } from './inference/types.js'
-export type { Choice, Condition, Effect, FlagState, Model, NodeDef, ResourceState, SessionState, VariableState } from './types'
-
-// Re-export inference features (Phase 3)
-export { buildDependencyGraph, getAffectedChoices, applyChoiceWithForwardChaining } from './inference/forward-chaining.js'
-export type { DependencyGraph, ForwardChainingResult } from './inference/forward-chaining.js'
-export { findPathToGoal, findReachableNodes } from './inference/backward-chaining.js'
-export type { Goal, PathStep } from './inference/backward-chaining.js'
-export { getSupportedConditions, getSupportedEffects } from './inference/capabilities.js'
 
 export function deserialize(payload: string): SessionState {
   const parsed: unknown = JSON.parse(payload)
@@ -248,3 +223,5 @@ export function deserialize(payload: string): SessionState {
   }
   return parsed
 }
+
+export type { Choice, Condition, Effect, FlagState, Model, NodeDef, ResourceState, SessionState, VariableState } from './types'

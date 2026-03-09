@@ -25,6 +25,7 @@ export const EffectTypes = {
   SET_FLAG: 'setFlag',        // フラグ設定: setFlag:name=value
   ADD_RESOURCE: 'addResource', // リソース加算: addResource:name=value
   SET_VARIABLE: 'setVariable',  // 変数設定: setVariable:name=value
+  MODIFY_VARIABLE: 'modifyVariable', // 変数演算: modifyVariable:name+value
   GOTO: 'goto' // 遷移: goto:target
 }
 
@@ -135,6 +136,10 @@ export class ConditionEffectEditor {
           <option value="!=" ${parsed.operator === '!=' ? 'selected' : ''}>!=</option>
           <option value="contains" ${parsed.operator === 'contains' ? 'selected' : ''}>contains</option>
           <option value="!contains" ${parsed.operator === '!contains' ? 'selected' : ''}>!contains</option>
+          <option value=">" ${parsed.operator === '>' ? 'selected' : ''}>&gt;</option>
+          <option value=">=" ${parsed.operator === '>=' ? 'selected' : ''}>&gt;=</option>
+          <option value="<" ${parsed.operator === '<' ? 'selected' : ''}>&lt;</option>
+          <option value="<=" ${parsed.operator === '<=' ? 'selected' : ''}>&lt;=</option>
         `
       }
 
@@ -170,19 +175,27 @@ export class ConditionEffectEditor {
     const parsed = this._parseEffect(effect)
     const isGoto = parsed.type === 'goto'
     const isRaw = parsed.type === 'raw'
-    
+    const isModifyVar = parsed.type === 'modifyVariable'
+
     return `
       <div class="effect-item" data-effect-index="${effectIndex}">
         <select class="effect-type" data-field="type">
           <option value="setFlag" ${parsed.type === 'setFlag' ? 'selected' : ''}>フラグ設定</option>
           <option value="addResource" ${parsed.type === 'addResource' ? 'selected' : ''}>リソース加算</option>
           <option value="setVariable" ${parsed.type === 'setVariable' ? 'selected' : ''}>変数設定</option>
+          <option value="modifyVariable" ${parsed.type === 'modifyVariable' ? 'selected' : ''}>変数演算</option>
           <option value="goto" ${parsed.type === 'goto' ? 'selected' : ''}>遷移</option>
           <option value="raw" ${parsed.type === 'raw' ? 'selected' : ''}>カスタム</option>
         </select>
         <input type="text" class="effect-raw" placeholder="効果(生)" value="${this._escapeAttr(parsed.rawText)}" data-field="raw" ${isRaw ? '' : 'style="display:none"'}>
         <input type="text" class="effect-name" placeholder="名前" value="${this._escapeAttr(parsed.name)}" data-field="name" ${isRaw ? 'style="display:none"' : ''}>
-        <span class="effect-equals" ${(isGoto || isRaw) ? 'style="display:none"' : ''}>=</span>
+        <select class="effect-operator" data-field="operator" ${isModifyVar ? '' : 'style="display:none"'}>
+          <option value="+" ${parsed.operator === '+' ? 'selected' : ''}>+</option>
+          <option value="-" ${parsed.operator === '-' ? 'selected' : ''}>-</option>
+          <option value="*" ${parsed.operator === '*' ? 'selected' : ''}>*</option>
+          <option value="/" ${parsed.operator === '/' ? 'selected' : ''}>/</option>
+        </select>
+        <span class="effect-equals" ${(isGoto || isRaw || isModifyVar) ? 'style="display:none"' : ''}>=</span>
         <input type="text" class="effect-value" placeholder="値" value="${this._escapeAttr(parsed.value)}" data-field="value" ${(isGoto || isRaw) ? 'style="display:none"' : ''}>
         <button type="button" class="delete-effect-btn btn-icon" data-node-id="${nodeId}" data-choice-index="${choiceIndex}" data-effect-index="${effectIndex}">×</button>
       </div>
@@ -275,6 +288,9 @@ export class ConditionEffectEditor {
       if (type === 'setVariable') {
         return { type: 'setVariable', name: effectStr.key ?? '', value: String(effectStr.value ?? ''), rawText: '' }
       }
+      if (type === 'modifyVariable') {
+        return { type: 'modifyVariable', name: effectStr.key ?? '', operator: effectStr.op ?? '+', value: String(effectStr.value ?? 0), rawText: '' }
+      }
       if (type === 'goto') {
         return { type: 'goto', name: effectStr.target ?? '', value: '', rawText: '' }
       }
@@ -300,6 +316,11 @@ export class ConditionEffectEditor {
     const gotoMatch = effectStr.match(/^(goto):(.+)$/)
     if (gotoMatch) {
       return { type: 'goto', name: gotoMatch[2], value: '', rawText: '' }
+    }
+
+    const modifyMatch = effectStr.match(/^modifyVariable:(\w+)([+\-*/])(.+)$/)
+    if (modifyMatch) {
+      return { type: 'modifyVariable', name: modifyMatch[1], operator: modifyMatch[2], value: modifyMatch[3], rawText: '' }
     }
 
     return { type: 'raw', name: '', value: '', rawText: effectStr }
@@ -371,13 +392,17 @@ export class ConditionEffectEditor {
 
     if (type === 'variable') {
       const op = operator === '=' ? '==' : operator
+      const numVal = Number(value)
+      if (['>=', '<=', '>', '<'].includes(op) && value !== '' && Number.isFinite(numVal)) {
+        return { type: 'variable', key: name, op, value: numVal }
+      }
       return { type: 'variable', key: name, op, value: String(value ?? '') }
     }
 
     return this.buildConditionString(type, name, operator, value)
   }
 
-  buildEffectObject(type, name, value) {
+  buildEffectObject(type, name, value, operator) {
     if (!name) return null
 
     if (type === 'setFlag') {
@@ -391,7 +416,17 @@ export class ConditionEffectEditor {
     }
 
     if (type === 'setVariable') {
+      const numVal = Number(value)
+      if (value !== '' && Number.isFinite(numVal)) {
+        return { type: 'setVariable', key: name, value: numVal }
+      }
       return { type: 'setVariable', key: name, value: String(value ?? '') }
+    }
+
+    if (type === 'modifyVariable') {
+      const delta = Number(value)
+      if (!Number.isFinite(delta)) return null
+      return { type: 'modifyVariable', key: name, op: operator || '+', value: delta }
     }
 
     if (type === 'goto') {
@@ -436,9 +471,13 @@ export class ConditionEffectEditor {
       return { type: 'resource', key: resourceMatch[1].trim(), op, value: n }
     }
 
-    const varMatch = text.match(/^variable:([^=<>!]+)(==|=|!=|contains|!contains)(.+)$/)
+    const varMatch = text.match(/^variable:([^=<>!]+)(==|=|!=|>=|<=|>|<|contains|!contains)(.+)$/)
     if (varMatch) {
       const op = varMatch[2] === '=' ? '==' : varMatch[2]
+      const numVal = Number(varMatch[3].trim())
+      if (['>=', '<=', '>', '<'].includes(op) && Number.isFinite(numVal)) {
+        return { type: 'variable', key: varMatch[1].trim(), op, value: numVal }
+      }
       return { type: 'variable', key: varMatch[1].trim(), op, value: varMatch[3].trim() }
     }
 
@@ -475,7 +514,20 @@ export class ConditionEffectEditor {
 
     const setVarMatch = text.match(/^setVariable:([^=]+)=(.+)$/)
     if (setVarMatch) {
-      return { type: 'setVariable', key: setVarMatch[1].trim(), value: setVarMatch[2] }
+      const val = setVarMatch[2]
+      const numVal = Number(val)
+      if (val !== '' && Number.isFinite(numVal)) {
+        return { type: 'setVariable', key: setVarMatch[1].trim(), value: numVal }
+      }
+      return { type: 'setVariable', key: setVarMatch[1].trim(), value: val }
+    }
+
+    const modifyVarMatch = text.match(/^modifyVariable:([^+\-*/]+)([+\-*/])(.+)$/)
+    if (modifyVarMatch) {
+      const delta = Number(modifyVarMatch[3])
+      if (Number.isFinite(delta)) {
+        return { type: 'modifyVariable', key: modifyVarMatch[1].trim(), op: modifyVarMatch[2], value: delta }
+      }
     }
 
     const gotoMatch = text.match(/^goto:(.+)$/)
@@ -527,8 +579,9 @@ export class ConditionEffectEditor {
     }
     const name = itemElement.querySelector('.effect-name')?.value || ''
     const value = itemElement.querySelector('.effect-value')?.value || ''
-    
-    return this.buildEffectObject(type, name, value)
+    const operator = itemElement.querySelector('.effect-operator')?.value || '+'
+
+    return this.buildEffectObject(type, name, value, operator)
   }
 
   /**
@@ -567,6 +620,10 @@ export class ConditionEffectEditor {
               <option value="!=">!=</option>
               <option value="contains">contains</option>
               <option value="!contains">!contains</option>
+              <option value=">">&gt;</option>
+              <option value=">=">&gt;=</option>
+              <option value="<">&lt;</option>
+              <option value="<=">&lt;=</option>
             `
           } else {
             operatorEl.innerHTML = `<option value="=">=</option>`
@@ -589,10 +646,13 @@ export class ConditionEffectEditor {
         const nameEl = item.querySelector('.effect-name')
         const rawEl = item.querySelector('.effect-raw')
         const isRaw = e.target.value === 'raw'
+        const operatorEl = item.querySelector('.effect-operator')
+        const isModifyVar = e.target.value === 'modifyVariable'
 
         if (rawEl) rawEl.style.display = isRaw ? '' : 'none'
         if (nameEl) nameEl.style.display = isRaw ? 'none' : ''
-        if (equalsEl) equalsEl.style.display = (isGoto || isRaw) ? 'none' : ''
+        if (operatorEl) operatorEl.style.display = isModifyVar ? '' : 'none'
+        if (equalsEl) equalsEl.style.display = (isGoto || isRaw || isModifyVar) ? 'none' : ''
         if (valueEl) valueEl.style.display = (isGoto || isRaw) ? 'none' : ''
       }
     })

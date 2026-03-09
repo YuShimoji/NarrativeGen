@@ -462,7 +462,6 @@
                 <select id="aiProvider">
                   <option value="mock">Mock (テスト用)</option>
                   <option value="openai">OpenAI</option>
-                  <option value="ollama">Ollama</option>
                 </select>
               </label>
               <div id="openaiSettings" style="display: none;">
@@ -471,15 +470,6 @@
                     <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
                     <option value="gpt-4">GPT-4</option>
                     <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                  </select></label>
-              </div>
-              <div id="ollamaSettings" style="display: none;">
-                <label>Ollama Server URL: <input type="text" id="ollamaUrl" value="http://localhost:11434"></label>
-                <label>Model: <select id="ollamaModel">
-                    <option value="llama2">Llama 2</option>
-                    <option value="codellama">Code Llama</option>
-                    <option value="mistral">Mistral</option>
-                    <option value="gemma">Gemma</option>
                   </select></label>
               </div>
               <button id="saveAiSettings">設定を保存</button>

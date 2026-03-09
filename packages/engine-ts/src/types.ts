@@ -1,11 +1,11 @@
 export type FlagState = Record<string, boolean>
 export type ResourceState = Record<string, number>
-export type VariableState = Record<string, string>
+export type VariableState = Record<string, string | number>
 
 export type Condition =
   | { type: 'flag'; key: string; value: boolean }
   | { type: 'resource'; key: string; op: '>=' | '<=' | '>' | '<' | '=='; value: number }
-  | { type: 'variable'; key: string; op: '==' | '!=' | 'contains' | '!contains'; value: string }
+  | { type: 'variable'; key: string; op: '==' | '!=' | 'contains' | '!contains' | '>=' | '<=' | '>' | '<'; value: string | number }
   | { type: 'timeWindow'; start: number; end: number }
   | { type: 'and'; conditions: Condition[] }
   | { type: 'or'; conditions: Condition[] }
@@ -14,7 +14,8 @@ export type Condition =
 export type Effect =
   | { type: 'setFlag'; key: string; value: boolean }
   | { type: 'addResource'; key: string; delta: number }
-  | { type: 'setVariable'; key: string; value: string }
+  | { type: 'setVariable'; key: string; value: string | number }
+  | { type: 'modifyVariable'; key: string; op: '+' | '-' | '*' | '/'; value: number }
   | { type: 'goto'; target: string }
 
 export interface ChoiceOutcome {

@@ -53,7 +53,7 @@ NarrativeGen/
 - ✅ 条件 / 効果エディタ
 - ✅ リアルタイムプレビュー
 - ✅ Export (Twine / Ink / CSV)
-- ✅ AI Provider 設定 (Mock / OpenAI / Ollama)
+- ✅ AI Provider 設定 (Mock / OpenAI)
 - ✅ レキシコン import / merge / replace とスキーマ検証
 
 ## 検証済みの再開発基盤
@@ -101,9 +101,8 @@ NarrativeGen/
 
 | ドキュメント | 用途 |
 |---|---|
-| `features-status.md` | 機能一覧の詳細 |
+| `docs/plans/DEVELOPMENT_PLAN.md` | 開発プラン・機能一覧 |
 | `docs/HANDOVER.md` | 運用上の最新状態 |
-| `docs/plans/RESTART_ROADMAP_20260301.md` | 2026-03-01 時点の短中長期ロードマップ |
 | `docs/GUI_EDITOR_TEST_GUIDE.md` | 手動回帰テスト |
 | `docs/reports/REPORT_TASK_028.md` | Export 実装の詳細 |
 

@@ -1,6 +1,8 @@
-import type { Choice, Condition, Effect, Model, SessionState } from './types.js'
-import { registry } from './inference/registry.js'
-import type { EvaluationContext } from './inference/types.js'
+import type { Choice, Condition, Model, SessionState } from './types.js'
+import {
+  evalCondition as evalConditionCore,
+  applyEffect,
+} from './condition-effect-ops.js'
 
 // Performance optimization: Memoization cache
 const conditionCache = new Map<string, boolean>()
@@ -11,33 +13,15 @@ function getSessionKey(session: SessionState): string {
   return `${session.nodeId}:${session.time}:${JSON.stringify(session.flags)}:${JSON.stringify(session.resources)}:${JSON.stringify(session.variables)}`
 }
 
-function getConditionKey(cond: Condition, flags: Record<string, boolean>, resources: Record<string, number>, variables: Record<string, string>, time: number): string {
+function getConditionKey(cond: Condition, flags: Record<string, boolean>, resources: Record<string, number>, variables: Record<string, string | number>, time: number): string {
   return `${JSON.stringify(cond)}:${JSON.stringify(flags)}:${JSON.stringify(resources)}:${JSON.stringify(variables)}:${time}`
-}
-
-// Fallback comparison operator (used when registry is not initialized)
-function cmp(op: '>=' | '<=' | '>' | '<' | '==', a: number, b: number): boolean {
-  switch (op) {
-    case '>=':
-      return a >= b
-    case '<=':
-      return a <= b
-    case '>':
-      return a > b
-    case '<':
-      return a < b
-    case '==':
-      return a === b
-    default:
-      return false
-  }
 }
 
 function evalCondition(
   cond: Condition,
   flags: Record<string, boolean>,
   resources: Record<string, number>,
-  variables: Record<string, string>,
+  variables: Record<string, string | number>,
   time: number,
 ): boolean {
   const key = getConditionKey(cond, flags, resources, variables, time)
@@ -45,52 +29,7 @@ function evalCondition(
     return conditionCache.get(key)!
   }
 
-  const ctx: EvaluationContext = { flags, resources, variables, time }
-  const registryResult = registry.evaluateCondition(
-    cond as { type: string } & Record<string, unknown>,
-    ctx,
-  )
-
-  let result: boolean
-  if (registryResult !== undefined) {
-    result = registryResult
-  } else {
-    // Fallback: inline evaluation for when registry has no evaluator registered
-    if (cond.type === 'flag') {
-      result = (flags[cond.key] ?? false) === cond.value
-    } else if (cond.type === 'resource') {
-      const v = resources[cond.key] ?? 0
-      result = cmp(cond.op, v, cond.value)
-    } else if (cond.type === 'variable') {
-      const v = variables[cond.key] ?? ''
-      switch (cond.op) {
-        case '==':
-          result = v === cond.value
-          break
-        case '!=':
-          result = v !== cond.value
-          break
-        case 'contains':
-          result = v.includes(cond.value)
-          break
-        case '!contains':
-          result = !v.includes(cond.value)
-          break
-        default:
-          result = false
-      }
-    } else if (cond.type === 'timeWindow') {
-      result = time >= cond.start && time <= cond.end
-    } else if (cond.type === 'and') {
-      result = cond.conditions.every(c => evalCondition(c, flags, resources, variables, time))
-    } else if (cond.type === 'or') {
-      result = cond.conditions.some(c => evalCondition(c, flags, resources, variables, time))
-    } else if (cond.type === 'not') {
-      result = !evalCondition(cond.condition, flags, resources, variables, time)
-    } else {
-      result = true
-    }
-  }
+  const result = evalConditionCore(cond, flags, resources, variables, time)
 
   // Cache result (limit cache size to prevent memory leaks)
   if (conditionCache.size > 10000) {
@@ -99,32 +38,6 @@ function evalCondition(
   conditionCache.set(key, result)
 
   return result
-}
-
-function applyEffect(effect: Effect, session: SessionState): SessionState {
-  const registryResult = registry.applyEffect(
-    effect as { type: string } & Record<string, unknown>,
-    session,
-  )
-  if (registryResult !== undefined) {
-    return registryResult
-  }
-
-  // Fallback: inline effect application
-  if (effect.type === 'setFlag') {
-    return { ...session, flags: { ...session.flags, [effect.key]: effect.value } }
-  }
-  if (effect.type === 'addResource') {
-    const cur = session.resources[effect.key] ?? 0
-    return { ...session, resources: { ...session.resources, [effect.key]: cur + effect.delta } }
-  }
-  if (effect.type === 'setVariable') {
-    return { ...session, variables: { ...session.variables, [effect.key]: effect.value } }
-  }
-  if (effect.type === 'goto') {
-    return { ...session, nodeId: effect.target }
-  }
-  return session
 }
 
 export function startSession(model: Model, initial?: Partial<SessionState>): SessionState {

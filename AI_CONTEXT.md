@@ -1,93 +1,102 @@
-﻿# AI Context
+## 現在の状況
 
-## 基本情報
+- 作業対象: プロジェクト全体（lexicon UX, Ajv, Packages/ 統一, 申送り）
+- ブランチ: `main`（作業完了、反映済み）
+- 目的: すべての変更を main に反映、申送りドキュメント作成完了。
 
-- **最終更新**: 2026-02-06T13:52:00+09:00
-- **更新者**: Cascade
-- **report_style**: standard
-- **mode**: implementation
+## 参照リンク
 
-## プロジェクト概要
+- PR: <https://github.com/YuShimoji/NarrativeGen/pull/64> (merged)
 
-**NarrativeGen** — スプレッドシート駆動のナラティブエンジン。CSV/TSV でフラグ・リソース・条件分岐を記述し、TypeScript エンジン + Unity SDK + Web Tester で動作。
+## 今回の決定事項
 
-## 現在のミッション
+- 条件/効果は **エンジン互換の構造化オブジェクト** を基本とし、
+  未対応形式は **raw(カスタム)** として破壊せず保持する。
+- GUI保存/キャンセル時のモード終了は `exitGuiEditMode()` に統一。
+- ストーリー描画は UIコンテナ（`#storyContent`）ではなく、本文エリア（`#storyView`）に限定する。
 
-- **タイトル**: コードクリーンアップ + TASK_101 main.js 分割第2弾
-- **ブランチ**: open-ws/engine-skeleton-2025-09-02
-- **進捗**: クリーンアップ完了、TASK_101 続行可能
+## 直近の変更（コミット済み）
+
+- `apps/web-tester/src/ui/story.js`
+  - `StoryManager` の描画先を `#storyView` 優先に修正（UI破壊防止）
+- `apps/web-tester/main.js`
+  - GUI保存/キャンセルで `exitGuiEditMode()` を使用
+  - GUI保存前の検証関数 `validateModel()` を追加
+- `apps/web-tester/src/ui/condition-effect-editor.js`
+  - 構造化 condition/effect 対応、raw(JSON) 往復、operator制御
+- `apps/web-tester/src/ui/gui-editor.js`
+  - Batch choice editing の構造化対応、ドラフト保存強化
+- `apps/web-tester/src/features/model-validator.js`
+  - `key/flag` 揺れ吸収
+- `apps/web-tester/index.html`
+  - UI軽微変更
+- `apps/web-tester/src/ui/condition-effect-editor.js`
+  - `EffectTypes.SET_RESOURCE` を削除（エンジン非互換のため）。既存の `setResource:` 文字列は raw として保持。
+- `docs/OpenSpec-WebTester.md`
+  - 構造化条件/効果対応の反映など、現状に合わせて更新。
+- `docs/PROJECT_STATUS.md`
+  - `meta.paraphraseLexicon` のエクスポート時自動埋め込みを「実装済み」に更新。
+- `apps/web-tester/src/ui/lexicon-ui-manager.js`
+  - Lexicon JSON の import/merge/replace に Ajv スキーマ検証を追加
+  - クイック追加フォーム（原文 + variants）の UI 操作を追加
+  - designer lexicon 変更時に engine runtime lexicon へ同期
+- `apps/web-tester/main.js`
+  - 起動時に designer lexicon を engine runtime lexicon に初期反映
+  - Lexicon UI からの変更を engine runtime lexicon へ適用するコールバックを接続
+- 各所
+  - `packages/` → `Packages/` の表記をコード/CI/docs で統一
+- `docs/UI_IMPROVEMENTS_TEST.md`, `docs/GUI_EDITOR_TEST_GUIDE.md`
+  - 手動回帰テストの実施記録欄を追加
+  - Puppeteer によるスモーク結果を記録（起動/実行/タブ切替/GUI編集入退場/レキシコン操作）
+- `docs/archive/HANDOVER_2025-12-15.md`
+  - 作業申送りドキュメント作成（調査内容、変更内容、次回ポイント含む）
+- main ブランチ
+  - lexicon-ux-ajv-packages-casing を fast-forward merge し、origin/main に push
+
+## 検証（実施済み）
+
+- Puppeteer: `branching_flags` で GUI編集→条件追加→保存→選択肢が絞られること、`draft_model` が object 保存されること。
+- `apps/web-tester`: `npm run build` 成功。
+- ルート: `npm run check`（lint/test/validate/build）成功。
+- git: merge/push 成功、log で確認済み。
 
 ## 次の中断可能点
 
-- コミット・プッシュ後（クリーンアップ完了時点）
+- 新規作業の開始（spec v1.1, GUI v2 等）。AI_CONTEXT をリセットし、mode/report_style を確認。
 
-## 決定事項
+## Worker完了ステータス
 
-- shared-workflows を .shared-workflows/ にサブモジュールとして導入 (PR #72)
-- TASKS.md の8タスクを docs/tasks/TASK_101-108 チケットに変換 (PR #73)
-- SSOT: docs/Windsurf_AI_Collab_Rules_latest.md を単一参照先とする
-- GitHubAutoApprove: false（HANDOVER.md に記載）
+- （現在、実行中のWorkerはありません。Workerが起動されたら、ここに `worker_name: status, priority: P, timeout: T` 形式で記録されます）
 
-## リスク/懸念
+## Backlog / 次タスク
 
-- main.js が 1241行（目標1000行未満）、分割第2弾の残作業あり
-- sdk-unity CI: Unity ライセンス secrets 未設定（ジョブはコメントアウト中）
-- TASKS.md と docs/tasks/ の二重管理状態（TASKS.md は参照リンクのみに移行予定）
+- `docs/GUI_EDITOR_TEST_GUIDE.md` に沿った手動テスト（回帰）を継続（必要に応じて追加観点/自動化）。
+- `timeWindow` 条件のエンジン仕様との最終整合確認。
+- Phase 2: 読み取り専用のグラフビュー（スパイク）を最小で実装。
 
 ## タスク管理（短期/中期/長期）
 
-### 短期（Next）
+> **📋 詳細プラン**: `docs/plans/` フォルダを参照
 
-- [pending] ノード階層システム Phase 2 (ref: docs/tasks/TASK_102_NodeHierarchy_Phase2.md, Status: OPEN)
-- [pending] CI Doctor 統合 (ref: docs/tasks/TASK_103_CI_Doctor_Integration.md, Status: OPEN)
-- [pending] AI UX 改善（採用ボタン） (ref: docs/tasks/TASK_104_AI_UX_Improvement.md, Status: OPEN)
-- [pending] モデル検証強化 (ref: docs/tasks/TASK_105_ModelValidation.md, Status: COMPLETED)
-- [pending] パフォーマンス最適化 (ref: docs/tasks/TASK_106_Performance.md, Status: OPEN)
-- [pending] セーブ/ロード機能 (ref: docs/tasks/TASK_107_SaveLoad.md, Status: OPEN)
-- [pending] バッチ AI 処理 (ref: docs/tasks/TASK_108_BatchAI.md, Status: OPEN)
+### 短期（1-2週間）
 
-### 中期（Later）
+- [pending] TASK_029: 高度ショートカット実装 (2-3日)
+- [pending] TASK_030: エクスポート検証・拡張 (1-2日)
+- [pending] TASK_031: 手動テスト実施 (2-3日)
+- [pending] TASK_032: Undo/Redo 完全確認 (1-2日)
 
-- [ ] TASK_102: ノード階層システム Phase 2（node_group 列対応）
-- [ ] TASK_104: AI UX 改善（採用ボタン）
-- [ ] TASK_105: モデル検証強化
+### 中期（1-2ヶ月）
 
-### 長期（Someday）
+- [pending] TASK_034: AI バッチ処理 (3-5日)
+- [pending] TASK_035: main.js リファクタリング (3-5日)
+- [pending] TASK_036: チャンクサイズ最適化 (2-3日)
+- [pending] TASK_037: 追加エクスポート形式 (5-7日)
 
-- [ ] TASK_106: パフォーマンス最適化
-- [ ] TASK_107: セーブ/ロード機能
-- [ ] TASK_108: バッチ AI 処理
+### 長期（3ヶ月以降）
 
-## アーキテクチャ概要
-
-```
-NarrativeGen/
-├── .shared-workflows/     # shared-workflows サブモジュール
-├── apps/web-tester/       # Vite ベース Web テスター
-│   ├── main.js            # 1241行（初期化・配線・残存ロジック）
-│   ├── handlers/          # nodes-panel(281), tabs(97), gui-editor(522), story-handler, ai-handler
-│   └── utils/             # csv-parser, csv-exporter, logger, model-utils
-├── packages/engine-ts/    # TypeScript コアエンジン (vitest, ajv)
-│   └── src/               # index, types, session-ops, game-session, inventory, entities
-├── packages/sdk-unity/    # Unity SDK (C#, CI コメントアウト中)
-├── models/                # JSON/CSV サンプルモデル + schema
-├── docs/                  # HANDOVER, SSOT ルール, tasks/, inbox/
-└── .github/workflows/     # CI (engine-ts + web-tester + doctor-bootstrap)
-```
-
-## 環境
-
-- Node.js 20+, npm workspaces
-- engine-ts: 18 tests passed, 6 models validated
-- web-tester: Vite build 成功 (18 modules, 51.87KB)
-- CI: engine-ts + web-tester + doctor-bootstrap の3ジョブ体制
-
-## 履歴
-
-- 2026-02-06 13:52: コードクリーンアップ（デッドコード除去、重複リスナー除去、guiEditMode宣言追加）、HANDOVER/AI_CONTEXT/TASK_101 更新
-- 2026-02-06 13:45: AI_CONTEXT.md を shared-workflows テンプレートに準拠して刷新 (PR #74)
-- 2026-02-06 13:35: TASK_101-108 チケット作成、docs/HANDOVER.md 更新 (PR #73)
-- 2026-02-06 13:10: shared-workflows サブモジュール導入、SSOT 配置 (PR #72)
-- 2025-12: GUI エディタリファクタリング (PR #63)
-- 2025-10-31: main.js 分割第1弾、ストーリーテキスト改行処理改善
-- 2025-10-27: OpenSpec 仕様化、スプレッドシート駆動 v2.0
+- [planned] TASK_038: バージョン管理統合 (7-10日)
+- [planned] TASK_039: 共有リンク機能 (3-5日)
+- [planned] TASK_040: アクセシビリティ改善 (5-7日)
+- [planned] TASK_041: レスポンシブデザイン (7-10日)
+- [planned] TASK_042: パフォーマンス最適化 (7-10日)
+- [planned] TASK_043: Unity Editor 拡張 (15-20日)

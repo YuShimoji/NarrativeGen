@@ -93,9 +93,6 @@ export function getUIElements() {
         openaiSettings: document.getElementById('openaiSettings'),
         openaiApiKey: document.getElementById('openaiApiKey'),
         openaiModel: document.getElementById('openaiModel'),
-        ollamaSettings: document.getElementById('ollamaSettings'),
-        ollamaUrl: document.getElementById('ollamaUrl'),
-        ollamaModel: document.getElementById('ollamaModel'),
         saveAiSettings: document.getElementById('saveAiSettings'),
         generateNextNodeBtn: document.getElementById('generateNextNodeBtn'),
         paraphraseCurrentBtn: document.getElementById('paraphraseCurrentBtn'),
@@ -138,14 +135,19 @@ export function getUIElements() {
         // Theme button
         themeBtn: document.getElementById('themeBtn'),
 
+        // Export elements
+        exportBtn: document.getElementById('exportBtn'),
+        exportModal: document.getElementById('exportModal'),
+
         // Quick node elements
         createQuickNodeBtn: document.getElementById('createQuickNodeBtn'),
         cancelQuickNodeBtn: document.getElementById('cancelQuickNodeBtn'),
         quickNodeBtn: document.getElementById('quickNodeBtn'),
-        exportBtn: document.getElementById('exportBtn'),
+        quickNodeModal: document.getElementById('quickNodeModal'),
         batchChoiceBtn: document.getElementById('batchChoiceBtn'),
 
         // Batch choice elements
+        batchChoiceModal: document.getElementById('batchChoiceModal'),
         batchNodeSelect: document.getElementById('batchNodeSelect'),
         batchCondition: document.getElementById('batchCondition'),
         batchEffect: document.getElementById('batchEffect'),
@@ -180,6 +182,20 @@ export function getUIElements() {
         runValidationBtn: document.getElementById('runValidationBtn'),
         validationContainer: document.getElementById('validationContainer'),
 
+        // Reference panel elements
+        referenceToc: document.getElementById('referenceToc'),
+        referenceContent: document.getElementById('referenceContent'),
+
+        // CSV modal elements
+        csvImportModal: document.getElementById('csvImportModal'),
+        csvExportModal: document.getElementById('csvExportModal'),
+
+        // Advanced panel sub-elements
+        aiSettings: document.getElementById('aiSettings'),
+        keyBindingSettings: document.getElementById('keyBindingSettings'),
+        aiActions: document.getElementById('aiActions'),
+        lexiconEditor: document.getElementById('lexiconEditor'),
+
         // Modal elements
         paraphraseModal: document.getElementById('paraphraseModal'),
         cancelParaphraseBtn: document.getElementById('cancelParaphraseBtn')
@@ -196,10 +212,6 @@ export function getDefaultAIConfig() {
         openai: {
             apiKey: '',
             model: 'gpt-3.5-turbo'
-        },
-        ollama: {
-            url: 'http://localhost:11434',
-            model: 'llama2'
         }
     }
 }
