@@ -11,7 +11,7 @@ export const variableEvaluator: ConditionEvaluator<VariableCondition> = {
   type: 'variable',
 
   evaluate(cond: VariableCondition, ctx: EvaluationContext): boolean {
-    const v = ctx.variables[cond.key] ?? ''
+    const v = String(ctx.variables[cond.key] ?? '')
     switch (cond.op) {
       case '==': return v === cond.value
       case '!=': return v !== cond.value
