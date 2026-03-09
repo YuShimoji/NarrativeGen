@@ -1,6 +1,60 @@
+/**
+ * GUI Editor handler - Provides in-browser visual editing of narrative models
+ *
+ * Allows users to create, edit, and delete story nodes and choices with
+ * visual feedback. Supports drag-and-drop reordering, conditions/effects
+ * editing, and draft auto-save. Changes can be saved or discarded atomically.
+ *
+ * @module handlers/gui-editor
+ */
+
 import { GameSession } from '@narrativegen/engine-ts/dist/browser.js';
 import { serializeConditions, serializeEffects } from '../utils/csv-parser.js';
 
+/**
+ * Initialize GUI editor with dependency injection
+ *
+ * Sets up event listeners for node and choice editing, validates changes,
+ * and manages UI state transitions between edit and play modes.
+ *
+ * @param {Object} deps - Dependencies object
+ * @param {Function} deps.getModel - Get current narrative model
+ * @param {Function} deps.setModel - Update narrative model
+ * @param {Function} deps.getSession - Get current game session
+ * @param {Function} deps.setSession - Update game session
+ * @param {Function} deps.setStatus - Display status message
+ * @param {Function} deps.setControlsEnabled - Enable/disable play controls
+ * @param {Function} deps.renderState - Re-render game state display
+ * @param {Function} deps.renderChoices - Re-render choice buttons
+ * @param {Function} deps.initStory - Initialize story log
+ * @param {Function} deps.renderStoryEnhanced - Render formatted story
+ * @param {Object} deps.saveLoadHandler - Save/load handler for triggering auto-save
+ * @param {HTMLElement} deps.guiEditMode - Edit mode container
+ * @param {HTMLElement} deps.guiEditor - Editor content container
+ * @param {HTMLElement} deps.saveGuiBtn - Save changes button
+ * @param {HTMLElement} deps.cancelGuiBtn - Cancel editing button
+ * @param {HTMLElement} deps.storyView - Story display element
+ * @param {Function} deps.chooseParaphrase - Paraphrase generation function
+ * @param {Function} deps.parseConditions - Parse condition strings
+ * @param {Function} deps.parseEffects - Parse effect strings
+ * @returns {Object} Handler public API
+ * @returns {Function} returns.startEditing - Enter edit mode
+ * @returns {Function} returns.cancelEditing - Discard changes and exit
+ * @returns {Function} returns.saveEditing - Apply changes and exit
+ * @returns {Function} returns.updateModelFromInput - Update model from input fields
+ * @returns {Function} returns.renderNodeList - Render editable node list
+ * @returns {Function} returns.renderChoicesForNode - Render choices for specific node
+ *
+ * @example
+ * const editor = initGuiEditor({
+ *   getModel: () => model,
+ *   setModel: (m) => model = m,
+ *   guiEditMode: document.getElementById('edit-mode'),
+ *   guiEditor: document.getElementById('editor'),
+ *   // ... other dependencies
+ * });
+ * editor.startEditing();
+ */
 export function initGuiEditor(deps) {
   const {
     getModel,
@@ -13,6 +67,7 @@ export function initGuiEditor(deps) {
     renderChoices,
     initStory,
     renderStoryEnhanced,
+    saveLoadHandler, // For auto-save after edit
     // DOM references
     guiEditMode,
     guiEditor,
@@ -24,7 +79,18 @@ export function initGuiEditor(deps) {
     parseEffects
   } = deps;
 
+  /** @type {Model|null} Snapshot of model at edit start for reverting changes */
   let originalModel = null;
+
+  /**
+   * Save current model to localStorage as draft
+   *
+   * Persists model draft to browser storage for recovery in case
+   * of accidental edits or browser crashes. Errors are silently ignored.
+   *
+   * @returns {void}
+   * @private
+   */
   function saveDraft() {
     try {
       const m = getModel();
@@ -32,7 +98,15 @@ export function initGuiEditor(deps) {
     } catch (_) {}
   }
 
-  // Start GUI editing mode
+  /**
+   * Start GUI editing mode
+   *
+   * Saves current model snapshot, disables play controls, and populates
+   * editor with node list for visual editing.
+   *
+   * @returns {void}
+   * @public
+   */
   function startEditing() {
     const _model = getModel();
     if (!_model) {
@@ -50,7 +124,15 @@ export function initGuiEditor(deps) {
     setStatus('GUI編集モードを開始しました', 'info');
   }
 
-  // Cancel editing and revert changes
+  /**
+   * Cancel editing and revert changes
+   *
+   * Reverts model to snapshot taken at edit start, closes editor,
+   * and re-enables play controls.
+   *
+   * @returns {void}
+   * @public
+   */
   function cancelEditing() {
     if (!originalModel) return;
 
@@ -62,7 +144,15 @@ export function initGuiEditor(deps) {
     setStatus('GUI編集をキャンセルしました', 'info');
   }
 
-  // Save changes from GUI editing
+  /**
+   * Save changes from GUI editing
+   *
+   * Validates edited model, recreates game session, updates all UI,
+   * and triggers auto-save. All changes are atomic.
+   *
+   * @returns {void}
+   * @public
+   */
   function saveEditing() {
     if (!originalModel) return;
 
@@ -87,13 +177,24 @@ export function initGuiEditor(deps) {
       setControlsEnabled(true);
 
       setStatus('GUI編集を保存しました', 'success');
+
+      // Trigger auto-save for model changes
+      if (saveLoadHandler) {
+        saveLoadHandler.scheduleAutoSave();
+      }
     } catch (err) {
       console.error('GUI save error:', err);
       setStatus(`GUI保存に失敗しました: ${err?.message ?? err}`, 'warn');
     }
   }
 
-  // Populate editor with current model data (legacy - replaced by renderNodeList based UI)
+  /**
+   * Populate editor with current model data (legacy - replaced by renderNodeList)
+   *
+   * @returns {void}
+   * @private
+   * @deprecated Use populateEditor() which calls renderNodeList instead
+   */
   function populateEditorLegacy() {
     const _model = getModel();
     if (!guiEditor || !_model) return;
@@ -105,7 +206,16 @@ export function initGuiEditor(deps) {
     setupEditorListeners();
   }
 
-  // Generate HTML content for the editor
+  /**
+   * Generate HTML content for the editor
+   *
+   * Creates HTML representation of all nodes and choices for
+   * legacy editor interface.
+   *
+   * @param {Model} model - Narrative model to render
+   * @returns {string} HTML content for editor
+   * @private
+   */
   function generateEditorContent(model) {
     const nodes = Object.entries(model.nodes || {}).map(([id, node]) => `
       <div class="node-editor-item" data-node-id="${id}">
@@ -155,7 +265,15 @@ export function initGuiEditor(deps) {
     `;
   };
 
-  // Generate HTML for choices editor
+  /**
+   * Generate HTML for choices editor
+   *
+   * Creates HTML representation of choices with edit fields.
+   *
+   * @param {Choice[]} choices - Array of choices to render
+   * @returns {string} HTML content for choices
+   * @private
+   */
   function generateChoicesEditor(choices) {
     return choices.map((choice, index) => `
       <div class="choice-editor-item" data-choice-index="${index}">
@@ -165,9 +283,18 @@ export function initGuiEditor(deps) {
         <button class="delete-choice-btn">×</button>
       </div>
     `).join('');
-  };
+  }
 
-  // Setup event listeners for editor interactions
+  /**
+   * Setup event listeners for editor interactions (legacy)
+   *
+   * Attaches click handlers to add/delete buttons and change handlers
+   * to form fields.
+   *
+   * @returns {void}
+   * @private
+   * @deprecated
+   */
   function setupEditorListeners() {
     // Add node button
     const addNodeBtn = guiEditor.querySelector('.add-node-btn');
@@ -210,7 +337,15 @@ export function initGuiEditor(deps) {
     }
   }
 
-  // Add a new node
+  /**
+   * Add a new node
+   *
+   * Prompts user for node ID, validates uniqueness, and adds new node
+   * with empty text and choices array.
+   *
+   * @returns {void}
+   * @private
+   */
   function addNewNode() {
     const _model = getModel();
     const nodeId = prompt('Enter new node ID:');
@@ -224,7 +359,15 @@ export function initGuiEditor(deps) {
     populateEditor();
   }
 
-  // Add a new choice to a node
+  /**
+   * Add a new choice to a node
+   *
+   * Appends a new empty choice to a node's choice array and re-renders.
+   *
+   * @param {string} nodeId - ID of node to add choice to
+   * @returns {void}
+   * @private
+   */
   function addNewChoice(nodeId) {
     const _model = getModel();
     if (!_model.nodes[nodeId]) return;
@@ -238,7 +381,16 @@ export function initGuiEditor(deps) {
     populateEditor();
   }
 
-  // Delete a node
+  /**
+   * Delete a node
+   *
+   * Removes node after user confirmation. Does not clean up choice
+   * references to deleted node.
+   *
+   * @param {string} nodeId - ID of node to delete
+   * @returns {void}
+   * @private
+   */
   function deleteNode(nodeId) {
     const _model = getModel();
     if (!confirm(`ノード "${nodeId}" を削除しますか？`)) return;
@@ -248,7 +400,16 @@ export function initGuiEditor(deps) {
     populateEditor();
   }
 
-  // Validate the edited model
+  /**
+   * Validate the edited model
+   *
+   * Checks that start node is valid and all nodes have non-empty text.
+   * Displays status messages on validation failure.
+   *
+   * @param {Model} model - Model to validate
+   * @returns {boolean} True if model passes all validations
+   * @private
+   */
   function validateEditedModel(model) {
     // Basic validation - can be expanded
     if (!model.startNode || !model.nodes[model.startNode]) {
@@ -265,8 +426,19 @@ export function initGuiEditor(deps) {
     }
 
     return true;
-  };
+  }
 
+  /**
+   * Rename node ID and update all references
+   *
+   * Renames a node and updates all choice targets, start node, and
+   * node order metadata. Validates new ID is unique and non-empty.
+   *
+   * @param {string} oldId - Current node ID
+   * @param {string} newId - New node ID
+   * @returns {boolean} True if rename succeeded
+   * @private
+   */
   function renameNodeId(oldId, newId) {
     const model = getModel();
     if (!model?.nodes?.[oldId]) return false;
@@ -291,7 +463,18 @@ export function initGuiEditor(deps) {
     return true;
   }
 
-  // Update model from input changes
+  /**
+   * Update model from input changes
+   *
+   * Handles real-time model updates from form input fields.
+   * Supports node properties (text, type, tags), choice fields
+   * (id, text, target, conditions, effects, outcome), and
+   * auto-parsing of conditions/effects strings.
+   *
+   * @param {HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement} input - Changed input element
+   * @returns {void}
+   * @private
+   */
   function updateModelFromInput(input) {
     if (!input.dataset.nodeId) return
 
@@ -365,9 +548,18 @@ export function initGuiEditor(deps) {
     }
     if (field !== 'id') setModel(_model);
     if (field !== 'id') saveDraft();
-};
+  }
 
-  // Render the node list for editing
+  /**
+   * Render the node list for editing
+   *
+   * Creates editable DOM representation of all nodes with fields for
+   * text, type, tags, and choices. Supports drag-and-drop reordering
+   * via metadata.nodeOrder.
+   *
+   * @returns {void}
+   * @public
+   */
   const renderNodeList = () => {
     const _model = getModel();
     const container = guiEditor.querySelector('.node-list') || document.createElement('div')
@@ -416,7 +608,16 @@ export function initGuiEditor(deps) {
     }
   }
 
-  // Render choices for a specific node
+  /**
+   * Render choices for a specific node
+   *
+   * Creates editable DOM representation of choices with fields for
+   * text, target node, conditions, effects, and outcome.
+   *
+   * @param {string} nodeId - Node ID to render choices for
+   * @returns {string} HTML content for choices list
+   * @public
+   */
   const renderChoicesForNode = (nodeId) => {
     const _model = getModel();
     const node = _model.nodes[nodeId]
@@ -453,7 +654,16 @@ export function initGuiEditor(deps) {
     `).join('')
   }
 
-  // Setup GUI editor event listeners
+  /**
+   * Setup GUI editor event listeners
+   *
+   * Attaches handlers for input/change events and click handlers for
+   * node/choice add/delete buttons. Implements drag-and-drop for
+   * reordering nodes and choices.
+   *
+   * @returns {void}
+   * @private
+   */
   function setupGuiEditorEvents() {
     guiEditor.addEventListener('input', updateModelFromInput)
     guiEditor.addEventListener('change', updateModelFromInput)
@@ -562,7 +772,15 @@ export function initGuiEditor(deps) {
     })
   }
 
-  // Populate editor with current model
+  /**
+   * Populate editor with current model
+   *
+   * Renders the node list and sets up event listeners for
+   * editor interaction.
+   *
+   * @returns {void}
+   * @private
+   */
   function populateEditor() {
     renderNodeList()
     setupGuiEditorEvents()
@@ -570,11 +788,17 @@ export function initGuiEditor(deps) {
 
   // Public API
   return {
+    /** Enter edit mode with model snapshot for revert capability */
     startEditing,
+    /** Discard changes and exit edit mode */
     cancelEditing,
+    /** Apply and save all changes, validate, and exit edit mode */
     saveEditing,
+    /** Handle real-time model updates from input fields */
     updateModelFromInput,
+    /** Re-render node list with current model state */
     renderNodeList,
+    /** Render choices for a specific node */
     renderChoicesForNode
   };
 }

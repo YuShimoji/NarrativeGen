@@ -20,13 +20,9 @@ export interface AIProvider {
 }
 
 export interface AIConfig {
-  provider: 'openai' | 'ollama' | 'mock'
+  provider: 'openai' | 'mock'
   openai?: {
     apiKey: string
-    model?: string
-  }
-  ollama?: {
-    baseUrl?: string
     model?: string
   }
 }
@@ -60,8 +56,6 @@ export function createAIProvider(config: AIConfig): AIProvider {
         throw new Error('OpenAI API key required')
       }
       return new OpenAIProvider(config.openai)
-    case 'ollama':
-      return new OllamaProvider(config.ollama)
     case 'mock':
     default:
       return new MockAIProvider()
@@ -209,14 +203,3 @@ ${text}
   }
 }
 
-class OllamaProvider implements AIProvider {
-  constructor(private _config?: AIConfig['ollama']) {}
-
-  async generateNextNode(_context: StoryContext): Promise<string> {
-    throw new Error('Ollama integration not implemented yet')
-  }
-
-  async paraphrase(_text: string, _options?: ParaphraseOptions): Promise<string[]> {
-    throw new Error('Ollama integration not implemented yet')
-  }
-}

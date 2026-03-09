@@ -1,87 +1,165 @@
 # 作業申し送り
 
 ## 最終更新
-- **日時**: 2026-02-12T13:55:00+09:00
-- **更新者**: Cascade
-- **ブランチ**: `feature/main-js-split-phase2`（PR作成待ち）
-- **GitHubAutoApprove**: false
 
-## 直近の作業（2026-02-12）
+- **日時**: 2026-03-09
+- **ブランチ**: `feature/main-js-split-phase2`
+- **マージ済み**: `origin/main` (b7eaa19) を merge、push 済み
+- **PR**: #80（オープン中）
+- **ベースブランチ**: `open-ws/engine-skeleton-2025-09-02`
 
-### ✅ TASK_101: main.js 分割第2弾（本セッション）
-- **main.js**: 1392行 → 825行（40.7%削減、目標1000行未満達成）
-- 5つの新規ハンドラーを抽出:
-  - `handlers/graph-handler.js` (~115行) — renderGraph, ズーム制御
-  - `handlers/debug-handler.js` (~105行) — renderDebugInfo
-  - `handlers/csv-import-handler.js` (~215行) — CSVインポート/プレビュー
-  - `handlers/ai-config.js` (~195行) — AI設定・生成・言い換え
-  - `handlers/split-view.js` (~90行) — 分割ビュートグル/リサイザー
-- **ビルド・テスト全グリーン**: engine-ts 18 tests, web-tester build 54.70KB
-- **Vite dev server 動作確認**: 全タブ正常（Story/Debug/Graph/NodeList/AI）
-- レポート: `docs/inbox/REPORT_TASK101_MainJS_Split_Phase2.md`
+## プロジェクト概要
 
-### ✅ 前セッション（PR #72-75）
-- PR #72: shared-workflows サブモジュール導入
-- PR #73: TASK_101-108 チケット作成
-- PR #74: AI_CONTEXT.md 刷新、CI doctor-bootstrap ジョブ追加
-- PR #75: コードクリーンアップ（nodes-panel/main.js デッドコード除去）
+ナラティブ生成システム。ノード・選択肢ベースのストーリーモデルを JSON 形式で定義し、TypeScript エンジンで実行、Web UI でプレビュー・編集する。
+
+### ワークスペース構成
+
+```text
+NarrativeGen/
+  packages/engine-ts/    # ストーリーエンジン (TypeScript, Vitest)
+  apps/web-tester/       # Web UI (Vite, Playwright E2E)
+  models/                # サンプルモデル + JSON スキーマ
+```
+
+### エンジンの公開 API (`@narrativegen/engine-ts`)
+
+| エクスポート | 用途 |
+| ----------- | ---- |
+| `loadModel(data)` | JSON モデル読み込み + スキーマ/整合性検証 |
+| `startSession(model)` | セッション開始 → SessionState |
+| `getAvailableChoices(session, model)` | 現在ノードの選択可能な選択肢（条件評価済み） |
+| `applyChoice(session, model, choiceId)` | 選択肢適用 → 新 SessionState |
+| `serialize(session)` / `deserialize(payload)` | セッション永続化 |
+
+### 組み込み条件/エフェクト型
+
+**条件**: `flag`, `resource`, `variable`（数値/文字列比較・演算）, `timeWindow`, `and`, `or`, `not`
+**エフェクト**: `setFlag`, `addResource`, `setVariable`, `modifyVariable`（数値演算）, `goto`
+
+詳細は `docs/specs/variable-system.md` を参照。
+
+## 直近の作業（2026-03-09）
+
+### ブランチ統合 (feature/main-js-split-phase2 + origin/main)
+
+- `git merge origin/main` を実施（14コミット差分）
+- コンflict解決方針: origin/main の設計方向（condition-effect-ops.ts 統合）を採用
+
+### origin/main の主要変更（取り込み済み）
+
+#### main.js 分割完了
+
+- `main.js`: 2365行 → 69行（ブートストラップ + 配線のみ）
+- `src/app-controller.js` (~1633行): アプリ初期化・イベントワイヤリング
+- `src/app-editor-events.js` (~425行): エディタ系イベント処理
+
+#### condition-effect-ops.ts 導入
+
+- `session-ops.ts`・`index.ts`・`browser.ts` に分散していた evalCondition/applyEffect の重複を `condition-effect-ops.ts` に統合
+- `session-ops.ts` はキャッシュ機構を維持しながら condition-effect-ops.ts に委譲
+
+#### Yarn Spinner エクスポート
+
+- `YarnFormatter.js` 追加（Yarn Spinner 2.x 形式）
+- エクスポーター: CSV / Ink / Twine / Yarn の 4 形式
+
+#### 変数システム拡張
+
+- `VariableState`: 数値型（number）対応
+- `modifyVariable` エフェクト: 数値演算（add/sub/mul/div）
+- 数値比較条件: `>=`, `<=`, `>`, `<`
+- 仕様書: `docs/specs/variable-system.md`
+
+#### ドキュメント
+
+- `docs/specs/`: 仕様書 3 件追加（variable-system, yarn-spinner-export, code-refactoring）
+- `docs/spec-index.json` + `docs/spec-viewer.html`: 仕様書一元ビューア
+- CLAUDE.md: Decision Log 更新、Spec View セクション追加
+
+### 推論システム（現ブランチ独自）
+
+現ブランチには `packages/engine-ts/src/inference/` ディレクトリが存在する（origin/main では削除済み）。
+推論ロジックは `condition-effect-ops.ts` に統合されたが、推論レジストリ・前方/後方連鎖は
+現ブランチの `inference/` に残存している。統合方針は未決定。
 
 ## 現在の状態
 
-### CI
-- **engine-ts**: build / lint / test / validate:models — 全グリーン
-- **web-tester**: build — グリーン（18 modules, 51.87KB gzip 17.42KB）
-- **doctor-bootstrap**: continue-on-error で通過
+### CI・テスト
 
-### apps/web-tester モジュール構成
-| ファイル | 行数 | 役割 |
-|---------|------|------|
-| main.js | 825 | 初期化・配線・コアUI |
-| handlers/graph-handler.js | ~115 | グラフ描画・ズーム制御 |
-| handlers/debug-handler.js | ~105 | デバッグ情報描画 |
-| handlers/csv-import-handler.js | ~215 | CSVインポート/プレビュー |
-| handlers/ai-config.js | ~195 | AI設定・UI・操作 |
-| handlers/split-view.js | ~90 | 分割ビュートグル/リサイザー |
-| handlers/nodes-panel.js | 281 | ノード一覧・ジャンプ・ハイライト |
-| handlers/tabs.js | 97 | タブ切り替え |
-| handlers/gui-editor.js | 522 | GUI編集モード |
-| handlers/story-handler.js | — | ストーリー描画 |
-| handlers/ai-handler.js | — | AI生成・言い換え（低レベル） |
-| utils/csv-parser.js | — | CSVパーサー |
-| utils/csv-exporter.js | — | CSVエクスポート |
-| utils/model-utils.js | — | モデルユーティリティ |
-| utils/logger.js | — | ログ・エラーバウンダリ |
+- **engine-ts**: 73テスト全合格（10ファイル）
+- **web-tester**: Vite ビルド成功（チャンクサイズ警告は既知）
+- **E2E**: 24 passed, 36 skipped（skip 要否判断は未完了）
 
-## タスク台帳
+### 主要モジュール構成
 
-詳細は `docs/tasks/TASK_101-108` を参照。
+#### packages/engine-ts/src/
 
-| ID | タスク | ステータス | 優先度 |
-|----|--------|-----------|--------|
-| TASK_101 | main.js 分割第2弾（1392→825行） | DONE | 高 |
-| TASK_102 | ノード階層システム Phase 2 | OPEN | 高 |
-| TASK_103 | CI Doctor 統合 | OPEN | 中 |
-| TASK_104 | AI UX 改善 | OPEN | 中 |
-| TASK_105 | モデル検証強化 | OPEN | 中 |
-| TASK_106 | パフォーマンス最適化 | OPEN | 低 |
-| TASK_107 | セーブ/ロード機能 | OPEN | 低 |
-| TASK_108 | バッチ AI 処理 | OPEN | 低 |
+| モジュール | 役割 |
+| --------- | ---- |
+| index.ts | Node.js 向けエントリ（fs 使用、スキーマ読み込み） |
+| browser.ts | ブラウザ向けエントリ（fs 不使用） |
+| types.ts | Model, SessionState, Condition, Effect 等の型定義 |
+| session-ops.ts | startSession, getAvailableChoices, applyChoice（メモ化キャッシュ付き） |
+| condition-effect-ops.ts | evalCondition / applyEffect の共有実装 |
+| inference/ | 推論システム（現ブランチ独自。registry, forward/backward chaining） |
 
-## 次回作業の推奨
+#### apps/web-tester/src/
 
-| 推奨度 | 選択肢 | 説明 |
-|--------|--------|------|
-| ★★★ | TASK_102 | ノード階層 Phase 2（node_group 列対応） |
-| ★★☆ | TASK_103 | CI doctor を required check に昇格 |
-| ★☆☆ | TASK_104 | AI UX 改善 |
+| モジュール | 役割 |
+| --------- | ---- |
+| main.js | エントリ（69行。ブートストラップ + 配線のみ） |
+| app-controller.js | アプリケーション初期化・イベントワイヤリング |
+| app-editor-events.js | エディタ系イベント処理 |
+| core/state.js | グローバルアプリ状態管理 |
+| ui/graph-editor/GraphEditorManager.js | D3.js + Dagre.js グラフ可視化・編集 |
+| ui/condition-effect-editor.js | 条件/エフェクト GUI エディタ（variable 型対応済み） |
+| features/export/ | CSV, Ink, Twine, Yarn エクスポーター |
+
+### アクティブドキュメント一覧（docs/）
+
+| ドキュメント | 内容 |
+| ----------- | ---- |
+| WORKFLOW_STATE_SSOT.md | ミッション・Done 条件・選別規則 |
+| TECHNICAL_DEBT.md | 技術的負債と改善タスク |
+| architecture.md | システムアーキテクチャ概要 |
+| reference.md | エンジン仕様リファレンス |
+| ai-features.md | AI 機能仕様（言い換え/生成） |
+| spreadsheet-format.md | CSV/TSV フォーマット v2.0 仕様 |
+| specs/variable-system.md | 変数システム仕様（数値型・演算） |
+| specs/yarn-spinner-export.md | Yarn Spinner エクスポート仕様 |
+| specs/code-refactoring-condition-effect.md | condition-effect-ops リファクタリング仕様 |
+| spec-index.json | 仕様書一元インデックス（Source of Truth） |
+| spec-viewer.html | 仕様書ブラウザビューア |
+| OpenSpec.md / OpenSpec-WebTester.md | Web Tester UX 仕様 |
+
+## 既知の課題
+
+- E2E 36 件が skip（theme-toggle 11 件は UI 未接続、他 25 件は優先度判断待ち）
+- ビルド時チャンクサイズ警告（325 KB + 442 KB、機能に影響なし）
+- `inference/` ディレクトリの扱い: origin/main では削除済みだが現ブランチに残存
+- WORKFLOW_STATE_SSOT.md の Done 条件 4 項目が未チェック
+
+## 次の推奨作業
+
+1. E2E skip 36 件の要否判断（SSOT Done 条件直結）
+2. Yarn Spinner エクスポートの実運用検証
+3. variable 型 GUI エディタ対応の完成確認
+4. `inference/` の方針決定（condition-effect-ops.ts に統合 or 維持）
 
 ## 再開手順
-1. `git fetch origin && git pull`
-2. `npm ci`
-3. `npm run build --workspace=packages/engine-ts`
-4. `npm test --workspace=packages/engine-ts`
-5. `npm run build --workspace=apps/web-tester`
-6. `npm run dev --workspace=apps/web-tester` → `http://localhost:5173/`
+
+```bash
+git fetch origin && git pull
+npm ci
+npm run build:engine
+npm run test:engine
+npm run build:tester
+npm run dev:tester
+# → http://localhost:5173/
+```
 
 ---
-**SSOT 参照**: docs/Windsurf_AI_Collab_Rules_latest.md
+
+SSOT: `docs/WORKFLOW_STATE_SSOT.md`
+技術的負債: `docs/TECHNICAL_DEBT.md`
+仕様書一覧: `docs/spec-viewer.html`（`npx serve docs` → http://localhost:3000/spec-viewer.html）

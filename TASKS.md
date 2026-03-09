@@ -1,101 +1,87 @@
 # 今後の開発タスク表
 
-## 📋 **完了済みタスク**
+**最終更新**: 2026-03-09
+
+## 完了済みタスク
 
 | タスク | ステータス | 完了日 | 詳細 |
 |--------|-----------|--------|------|
-| ストーリーテキスト改行処理改善 | ✅ 完了 | 2025-10-31 | HTML段落レンダリング実装、`renderStoryEnhanced()`導入 |
-| main.js モジュール分割（第1弾） | ✅ 完了 | 2025-10-31 | `handlers/`, `utils/` ディレクトリへの機能分離 |
-| OpenSpec 仕様化 | ✅ 完了 | 2025-10-31 | ノード階層構造の技術仕様書作成 |
+| ストーリーテキスト改行処理改善 | 完了 | 2025-10-31 | HTML 段落レンダリング実装 |
+| main.js 分割 Phase 1 | 完了 | 2025-10-31 | handlers/, utils/ への機能分離 |
+| main.js 分割 Phase 2〜4 | 完了 | 2026-03-09 | main.js 2365行→69行。app-controller.js + app-editor-events.js |
+| 推論レジストリ基盤 | 完了 | 2026-03-06 | inference/ プラグインパターン |
+| グラフエディタモジュール分割 | 完了 | 2026-03-06 | DagreLayoutEngine, ContextMenuManager 分離 |
+| 前方/後方連鎖推論 | 完了 | 2026-03-06 | forward-chaining, backward-chaining 実装 |
+| condition-effect-ops.ts 統合 | 完了 | 2026-03-09 | 3ファイルの重複 evalCondition/applyEffect を集約 |
+| Yarn Spinner エクスポート | 完了 | 2026-03-09 | YarnFormatter.js 追加（4形式目） |
+| 変数システム拡張 | 完了 | 2026-03-09 | 数値型・四則演算・比較条件・UI対応 |
+| ドキュメント整理 | 完了 | 2026-03-06 | 108件 → 23件（アクティブ） |
+| AI 採用ボタン | 完了 | 2026-03 | 生成履歴の簡易保持 |
+| Undo/Redo 基本実装 | 完了 | 2026-03 | |
+| セーブ/ロード（localStorage） | 完了 | 2026-03 | localStorage + 自動保存 |
+| ノード階層 Phase 2 | 完了 | 2026-03 | node_group 対応 |
+| XSS Phase 1 修正 | 完了 | 2026-02 | html-utils 中央化 |
+| Spec Viewer 導入 | 完了 | 2026-03-09 | spec-index.json + spec-viewer.html |
 
-## 🎯 **優先度順タスク一覧**
+## 優先度順タスク一覧
 
-| 優先度 | タスク | 対象 | 難易度 | 見積時間 | 依存関係 | 期待効果 |
-|--------|--------|------|--------|----------|----------|----------|
-| **高** | main.js 分割（第2弾） | web-tester | 中 | 1-2日 | 第1弾完了 | 保守性向上 |
-| **高** | ノード階層システム Phase 2 | 全コンポーネント | 高 | 2-3日 | データ構造設計 | 大規模プロジェクト対応 |
-| **高** | CI/CD 安定化 | 全プロジェクト | 中 | 1-2日 | 環境整備 | 品質保証 |
-| **中** | AI UX 改善（採用ボタン） | web-tester | 中 | 1日 | AI機能実装 | ユーザビリティ向上 |
-| **中** | モデル検証強化 | 全コンポーネント | 低 | 0.5日 | 現在の検証 | エラーハンドリング改善 |
-| **中** | パフォーマンス最適化 | web-tester | 中 | 1-2日 | 既存実装 | スケーラビリティ向上 |
-| **低** | セーブ/ロード機能 | web-tester | 高 | 2-3日 | セッション管理 | ユーザー体験向上 |
-| **低** | バッチAI処理 | web-tester | 高 | 2-3日 | AI機能拡張 | 生産性向上 |
+| 優先度 | タスク | 対象 | 難易度 | 見積時間 |
+|--------|--------|------|--------|----------|
+| **高** | E2E skip 36件の要否判断と対応 | web-tester | 中 | 1-2日 |
+| **高** | Yarn Spinner エクスポート実運用検証 | web-tester | 低 | 0.5日 |
+| **高** | GUI Undo/Redo の手動回帰テスト（SSOT Done 条件） | web-tester | 中 | 1日 |
+| **中** | inference/ ディレクトリの方針決定 | engine-ts | 中 | 0.5日 |
+| **中** | チャンクサイズ警告解消（rollup manualChunks） | web-tester | 中 | 1日 |
+| **低** | アクセシビリティ改善（ARIA ラベル等） | web-tester | 低 | 1日 |
+| **低** | モバイル/タブレット対応 | web-tester | 高 | 2-3日 |
 
-## 📊 **タスク詳細**
+## タスク詳細
 
-### **高優先度タスク**
+### 高優先度
 
-#### **1. main.js 分割（第2弾）**
-**サブタスク**:
-- A-1: `handlers/nodes-panel.js` 作成（`renderNodeOverview`, `jumpToNode`, `highlightNode`）
-- A-2: `handlers/tabs.js` 作成（`switchTab`, タブイベント管理）
-- A-3: `handlers/gui-editor.js` 作成（GUI編集モード関連）
+#### E2E skip 36件の整理
 
-**実装方針**:
-- 依存注入パターンを採用
-- DOM参照とコールバック関数を引数で注入
-- main.js は初期化と配線のみに縮小
+**課題**: 36件がスキップのまま。SSOT の Done 条件に直結。
 
-#### **2. ノード階層システム Phase 2**
-**サブタスク**:
-- CSVパーサに `node_group` 列対応
-- エクスポート側に階層情報出力オプション
-- 参照解決関数の実装とテスト
-- 後方互換性の確保
+**分類方針**:
+- theme-toggle 11件: UI 未接続のため削除候補
+- undo-redo 系: 基本テストのみ。拡充候補
+- その他: 個別に理由を精査して「有効化 / 削除 / 保留明記」の3択
 
-**技術仕様**:
-- `node_group` 形式: `"chapters/intro"`, `"chapters/main_quest/battlefield"`
-- ローカルID解決: `resolveNodeId(model, "battle", ["chapters", "main"])`
-- 完全ID形式: `"chapters.main.battle"`
+#### Yarn Spinner エクスポート実運用検証
 
-#### **3. CI/CD 安定化**
-**課題**:
-- web-tester ジョブの lint/build エラー解消
-- sdk-unity ジョブの Unity ライセンス設定
-- テストカバレッジ向上
+**確認内容**:
+- `models/` 配下のサンプルモデルを Yarn 形式に出力
+- Yarn Spinner Dialogue System（Unity / Web Previewer）で読み込み確認
+- `docs/specs/yarn-spinner-export.md` との仕様整合チェック
 
-**対応策**:
-- ESLint/Prettier 設定統一
-- 依存関係の lock ファイル管理
-- テスト自動化の強化
+#### GUI Undo/Redo 手動回帰テスト
 
-### **中優先度タスク**
+**確認内容**（`docs/GUI_EDITOR_TEST_GUIDE.md` 参照）:
+- ノード追加/削除/編集の Undo/Redo
+- 条件/エフェクト編集の Undo/Redo
+- 複数操作後の Redo の一貫性
 
-#### **4. AI UX 改善**
-- 生成結果の「採用」ボタン実装
-- 生成履歴の簡易保持
-- バッチ生成インターフェース
+### 中優先度
 
-#### **5. モデル検証強化**
-- ID重複検出の強化
-- 参照整合性チェック
-- 循環参照検出
-- 詳細なエラーメッセージ
+#### inference/ ディレクトリの方針
 
-#### **6. パフォーマンス最適化**
-- 仮想スクロールの改善（現在50件制限）
-- グラフ描画の最適化（>100ノード対応）
-- CSV処理のチャンキング改善
+origin/main では `inference/` を削除して `condition-effect-ops.ts` に統合。
+現ブランチには `inference/` が残存（推論レジストリ・前方/後方連鎖）。
 
-### **低優先度タスク**
+**選択肢**:
+- A. `condition-effect-ops.ts` に forward/backward chaining も統合して `inference/` を削除
+- B. `inference/` を維持（API として外部公開）
+- C. 別パッケージ（`@narrativegen/engine-inference`）に分離
 
-#### **7. セーブ/ロード機能**
-- セッション状態のブラウザストレージ保存
-- モデル編集状態の自動保存
-- 履歴管理とundo/redo
+#### チャンクサイズ警告解消
 
-#### **8. バッチAI処理**
-- 全ノードの一括言い換え
-- 条件付きバッチ生成
-- 処理進捗表示
+`build.rollupOptions.output.manualChunks` で分割。または dynamic import でコード分割。
+対象: `index-*.js: 325 kB`, `cytoscape.esm.js: 442 kB`
 
-## 📈 **進捗指標**
+## 進捗指標
 
-- **品質**: テストカバレッジ 80% 以上
-- **パフォーマンス**: 100ノードモデルで快適動作
-- **保守性**: main.js 1000行未満に削減
-- **拡張性**: 新機能追加時の影響範囲最小化
-
----
-**更新日**: 2025-11-04
-**次回見直し**: 各タスク完了時
+- **テスト**: engine-ts 73/73 合格。E2E 24 passed / 36 skipped
+- **ビルド**: engine-ts + web-tester ともに成功
+- **保守性**: main.js 69行（目標達成）
+- **エクスポート形式**: 4形式（CSV / Ink / Twine / Yarn）

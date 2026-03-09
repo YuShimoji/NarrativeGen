@@ -4,16 +4,29 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "postbuild": "",
-    "copy:models": "node copy-models.js",
     "dev": "vite",
-    "preview": "vite preview"
+    "build": "vite build && npm run copy:models",
+    "copy:models": "node ./scripts/copy-models-to-dist.mjs",
+    "preview": "vite preview",
+    "lint": "node -e \"console.log('web-tester: lint not configured (skipped)')\"",
+    "test": "node ./scripts/verify-export-formatters.mjs"
   },
   "dependencies": {
-    "@narrativegen/engine-ts": "file:../../packages/engine-ts"
+    "@narrativegen/engine-ts": "file:../../packages/engine-ts",
+    "d3": "^7.9.0",
+    "dagre": "^0.8.5",
+    "mermaid": "^11.12.1"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.52.4"
+  },
+  "overrides": {
+    "vite": {
+      "rollup": "npm:@rollup/wasm-node"
+    }
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "vite": "^5.4.9"
   }
 }

@@ -1,6 +1,50 @@
-// Tab Handler - manages tab switching and panel state
-// Extracted from main.js for better maintainability
+/**
+ * Tabs Handler - Manages tab switching and panel state
+ *
+ * Provides tab navigation and panel visibility management for the main UI.
+ * Supports story, debug, graph, node list, and AI tabs with lazy
+ * initialization of expensive operations.
+ *
+ * @module handlers/tabs
+ */
 
+/**
+ * Initialize Tabs handler with dependency injection
+ *
+ * Sets up tab switching functionality with event listeners and panel
+ * management. Triggers specific operations (render graph, debug info, etc.)
+ * when tabs are activated.
+ *
+ * @param {Object} deps - Dependencies object
+ * @param {Function} deps.renderGraph - Render graph function
+ * @param {Function} deps.renderDebugInfo - Render debug info function
+ * @param {Function} deps.renderNodeOverview - Render node overview function
+ * @param {Function} deps.initAiProvider - Initialize AI provider function
+ * @param {HTMLElement} deps.storyTab - Story tab button
+ * @param {HTMLElement} deps.debugTab - Debug tab button
+ * @param {HTMLElement} deps.graphTab - Graph tab button
+ * @param {HTMLElement} deps.nodeListTab - Node list tab button
+ * @param {HTMLElement} deps.aiTab - AI tab button
+ * @param {HTMLElement} deps.storyPanel - Story panel element
+ * @param {HTMLElement} deps.debugPanel - Debug panel element
+ * @param {HTMLElement} deps.graphPanel - Graph panel element
+ * @param {HTMLElement} deps.nodeListPanel - Node list panel element
+ * @param {HTMLElement} deps.aiPanel - AI panel element
+ * @returns {Object} Handler public API
+ * @returns {Function} returns.switchTab - Switch to specified tab
+ * @returns {Function} returns.getCurrentTab - Get currently active tab name
+ * @returns {Function} returns.isTabActive - Check if specific tab is active
+ * @returns {Function} returns.initialize - Initialize tab system
+ *
+ * @example
+ * const handler = initTabs({
+ *   renderGraph: () => { /* render */ },
+ *   storyTab: document.getElementById('story-tab'),
+ *   storyPanel: document.getElementById('story-panel'),
+ *   // ... other dependencies
+ * });
+ * handler.initialize();
+ */
 export function initTabs(deps) {
   const {
     renderGraph,
@@ -22,7 +66,16 @@ export function initTabs(deps) {
 
   let currentTab = 'story';
 
-  // Switch to a specific tab
+  /**
+   * Switch to a specific tab and activate its panel
+   *
+   * Hides all panels, removes active classes, then shows the target panel
+   * and activates its tab button. Triggers lazy initialization for tabs
+   * that require expensive operations (graph rendering, debug info, etc.).
+   *
+   * @param {string} tabName - Tab identifier ('story', 'debug', 'graph', 'nodeList', 'ai')
+   * @returns {void}
+   */
   function switchTab(tabName) {
     // Hide all panels
     [storyPanel, debugPanel, graphPanel, nodeListPanel, aiPanel].forEach(panel => {
@@ -68,17 +121,31 @@ export function initTabs(deps) {
     }
   }
 
-  // Get current active tab
+  /**
+   * Get the name of the currently active tab
+   *
+   * @returns {string} Tab identifier
+   */
   function getCurrentTab() {
     return currentTab;
   }
 
-  // Check if a specific tab is active
+  /**
+   * Check if a specific tab is currently active
+   *
+   * @param {string} tabName - Tab identifier to check
+   * @returns {boolean} True if tab is active
+   */
   function isTabActive(tabName) {
     return currentTab === tabName;
   }
 
-  // Setup tab event listeners
+  /**
+   * Setup click event listeners for all tab buttons
+   *
+   * @returns {void}
+   * @private
+   */
   function setupTabListeners() {
     const tabButtons = [
       { element: storyTab, name: 'story' },
@@ -95,7 +162,13 @@ export function initTabs(deps) {
     });
   }
 
-  // Initialize tabs (call this once during app initialization)
+  /**
+   * Initialize tabs and start with story tab active
+   *
+   * Should be called once during application initialization.
+   *
+   * @returns {void}
+   */
   function initialize() {
     setupTabListeners();
     // Start with story tab active

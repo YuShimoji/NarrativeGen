@@ -1,0 +1,20 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "start",
+  "resources": { "coin": 1 },
+  "nodes": {
+    "start": {
+      "id": "start",
+      "text": "A vendor sells apples (2 coins).",
+      "choices": [
+        { "id": "earn", "text": "Earn a coin", "target": "start", "effects": [ { "type": "addResource", "key": "coin", "delta": 1 } ] },
+        { "id": "buy", "text": "Buy apple (2)", "target": "bought", "conditions": [ { "type": "resource", "key": "coin", "op": ">=", "value": 2 } ], "effects": [ { "type": "addResource", "key": "coin", "delta": -2 } ] }
+      ]
+    },
+    "bought": {
+      "id": "bought",
+      "text": "You bought an apple.",
+      "choices": [ { "id": "done", "text": "Done", "target": "start" } ]
+    }
+  }
+}
