@@ -4,11 +4,10 @@
  * After applying a choice's effects, identifies which other choices
  * have conditions that may now evaluate differently.
  */
-import type { Model, Condition, Effect } from '../types.js'
+import type { Model, Condition, Effect, SessionState } from '../types.js'
 import type { DependencyInfo } from './types.js'
 import { registry } from './registry.js'
 import { applyChoice } from '../session-ops.js'
-import type { SessionState } from '../types.js'
 
 type StateKey = string
 

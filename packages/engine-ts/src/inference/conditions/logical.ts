@@ -1,5 +1,5 @@
 import type { Condition } from '../../types.js'
-import type { ConditionEvaluator, EvaluationContext, DependencyInfo } from '../types.js'
+import type { ConditionEvaluator, EvaluationContext } from '../types.js'
 
 // logical evaluators need access to the registry to recurse
 // this is resolved at runtime via the registry reference

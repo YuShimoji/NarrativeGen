@@ -3,7 +3,6 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import Ajv from 'ajv'
-
 import type { AnySchema } from 'ajv'
 
 import type {
