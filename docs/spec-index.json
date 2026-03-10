@@ -32,7 +32,7 @@
     "status": "partial",
     "pct": 60,
     "cat": "ui",
-    "file": "docs/DESIGN_IMPROVEMENTS_SPEC.md",
+    "file": "docs/archive/legacy-specs/DESIGN_IMPROVEMENTS_SPEC.md",
     "summary": "Ongoing UI color, readability, and layout improvements"
   },
   {
@@ -59,7 +59,7 @@
     "status": "done",
     "pct": 100,
     "cat": "ui",
-    "file": "docs/PHASE2_GRAPH_EDITOR_DESIGN.md",
+    "file": "docs/archive/legacy-status/PHASE2_GRAPH_EDITOR_DESIGN.md",
     "summary": "SVG visual editor, drag and drop, and minimap"
   },
   {
@@ -68,7 +68,7 @@
     "status": "legacy",
     "pct": 0,
     "cat": "system",
-    "file": "docs/Node_Feature_Analysis.md",
+    "file": "docs/archive/legacy-specs/Node_Feature_Analysis.md",
     "summary": "Legacy NodeType analysis"
   },
   {
