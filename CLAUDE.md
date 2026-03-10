@@ -46,6 +46,7 @@
 | 2026-03-10 | 文字コード安全運用を導入 | アドホック運用 / 安全チェック導入 | `spec-index`破損と文字化け再発を受け、`check:safety` / `check:safety:changed`、運用手順、インシデント記録を追加 |
 | 2026-03-10 | Mermaidチャンク分割を更新 | 現状維持 / 遅延読込のみ / 依存分離 | `vendor-mermaid` 1.79MB 警告を分離し、依存と共有レイアウト処理を別チャンク化して状況を可視化 |
 | 2026-03-11 | feature/main-js-split-phase2をmainに統合 | マージ / cherry-pick / 保留 | 85コミット分の機能(推論エンジン/階層UI/セマンティック検索/XSS修正/Save-Load/ハンドラー分離)を一括統合。コンフリクト8件解決。テスト15→73件に増加 |
+| 2026-03-11 | 推論エンジンUI統合 Phase 1実装 | Live Preview拡張 / 新タブ / グラフ内表示 | Live Previewパネルに折りたたみセクションとして追加。既存UIへの構造変更を最小化。Phase 2-3は別途 |
 
 ## Project Context
 
@@ -53,5 +54,5 @@
 環境: Node.js 20+ / TypeScript 5.x / Vite 5 / Vitest / Playwright
 ブランチ戦略: main (デフォルトブランチ: open-ws/engine-skeleton-2025-09-02)
 現フェーズ: β版相当（コア機能実装完了、Unity連携・最適化準備中）
-直近の状態: 文字化け修正3ファイル完了、feature/main-js-split-phase2を85コミット統合（推論エンジン/階層UI/セマンティック検索/XSS修正/Save-Load/ハンドラー10モジュール分離）。build/test(73件)/check:safety全通過。DEVELOPMENT_PLANとspec-indexを実コード状態に同期済み。
+直近の状態: 推論エンジンUI統合Phase 1完了(SP-INF-UI-001)。browser.tsに推論APIをre-export、InferenceBridge/InferencePanelを新規作成、gui-editor.jsに統合。Live Previewに到達パス分析セクション追加。build/test(73件)/check:safety(18エントリ)全通過。手動確認未実施(dev serverでの表示確認が次ステップ)。
 記録先: 文字コード運用は `docs/plans/DEVELOPMENT_PLAN.md`、インシデント記録は `docs/governance/encoding-safety-incident-2026-03-10.md`、残課題は `docs/TECHNICAL_DEBT.md` で管理。
