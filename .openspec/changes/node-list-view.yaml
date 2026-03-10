@@ -1,0 +1,30 @@
+name: node-list-view
+description: Add a node list view for overview and feature ideation
+component: web-tester
+priority: medium
+status: proposed
+
+requirements:
+  - Create a new tab for node list view
+  - Display all nodes with basic info (id, text preview, choice count)
+  - Add filtering and sorting options
+  - Quick navigation to node editing
+  - Support for feature ideation notes
+
+implementation_plan:
+  - Add "Node List" tab to main interface
+  - Implement node list rendering with search/filter
+  - Add click handlers for navigation to graph/edit modes
+  - Include note-taking functionality for each node
+
+testing_requirements:
+  - All nodes displayed correctly
+  - Search/filter works accurately
+  - Navigation between views functions
+  - Notes are saved per node
+
+acceptance_criteria:
+  - Complete node overview available
+  - Easy navigation to detailed views
+  - Note-taking supports ideation
+  - Performance with large models

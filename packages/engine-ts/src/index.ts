@@ -6,17 +6,12 @@ import Ajv from 'ajv'
 import type { AnySchema } from 'ajv'
 
 import type {
-  Choice,
   FlagState,
   Model,
   ResourceState,
   SessionState,
   VariableState,
 } from './types'
-import {
-  evalCondition,
-  applyEffect,
-} from './condition-effect-ops.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -56,32 +51,139 @@ function isSessionState(value: unknown): value is SessionState {
   return true
 }
 
-function assertModelIntegrity(model: Model): void {
-  const issues: string[] = []
-  if (!model.nodes[model.startNode]) {
-    issues.push(`startNode '${model.startNode}' does not exist in nodes`)
-  }
-  for (const [nodeKey, node] of Object.entries(model.nodes)) {
-    if (node.id !== nodeKey) {
-      issues.push(`node key '${nodeKey}' must match node.id '${node.id}'`)
+interface ValidationOptions {
+  allowCircularReferences?: boolean
+}
+
+interface ValidationError extends Error {
+  code: string
+  details?: string
+}
+
+function detectCircularReferencesWithPaths(model: Model): string[] {
+  const graph = new Map<string, Set<string>>()
+
+  for (const [nodeId, node] of Object.entries(model.nodes)) {
+    if (!graph.has(nodeId)) {
+      graph.set(nodeId, new Set())
     }
+    for (const choice of node.choices ?? []) {
+      if (choice.target) {
+        graph.get(nodeId)!.add(choice.target)
+      }
+      for (const effect of choice.effects ?? []) {
+        if (effect.type === 'goto' && effect.target) {
+          graph.get(nodeId)!.add(effect.target)
+        }
+      }
+    }
+  }
+
+  const cycles: string[] = []
+  const visited = new Set<string>()
+  const recursionStack = new Set<string>()
+  const path: string[] = []
+
+  function dfs(node: string): void {
+    if (recursionStack.has(node)) {
+      const cycleStart = path.indexOf(node)
+      const cycle = [...path.slice(cycleStart), node]
+      cycles.push(cycle.join(' → '))
+      return
+    }
+
+    if (visited.has(node)) {
+      return
+    }
+
+    visited.add(node)
+    recursionStack.add(node)
+    path.push(node)
+
+    const neighbors = graph.get(node) ?? new Set()
+    for (const neighbor of neighbors) {
+      dfs(neighbor)
+    }
+
+    path.pop()
+    recursionStack.delete(node)
+  }
+
+  for (const node of Object.keys(model.nodes)) {
+    if (!visited.has(node)) {
+      dfs(node)
+    }
+  }
+
+  return cycles
+}
+
+function assertModelIntegrity(model: Model, options: ValidationOptions = {}): void {
+  const errors: string[] = []
+  const seenNodeIds = new Set<string>()
+
+  for (const [nodeKey, node] of Object.entries(model.nodes)) {
+    if (seenNodeIds.has(node.id)) {
+      errors.push(`DUPLICATE_ID: Duplicate node ID '${node.id}' found in nodes`)
+    }
+    seenNodeIds.add(node.id)
+
+    if (node.id !== nodeKey) {
+      errors.push(`DUPLICATE_ID: node key '${nodeKey}' must match node.id '${node.id}'`)
+    }
+
     const seenChoiceIds = new Set<string>()
     for (const choice of node.choices ?? []) {
       if (seenChoiceIds.has(choice.id)) {
-        issues.push(`duplicate choice id '${choice.id}' in node '${nodeKey}'`)
+        errors.push(`DUPLICATE_ID: Duplicate choice ID '${choice.id}' in node '${nodeKey}'`)
       }
       seenChoiceIds.add(choice.id)
-      if (!choice.target) {
-        issues.push(`choice '${choice.id}' in node '${nodeKey}' is missing target`)
+    }
+  }
+
+  if (!model.nodes[model.startNode]) {
+    errors.push(`MISSING_REFERENCE: startNode '${model.startNode}' does not exist in nodes`)
+  }
+
+  for (const [nodeKey, node] of Object.entries(model.nodes)) {
+    for (const choice of node.choices ?? []) {
+      if (!choice.target || choice.target === '') {
+        errors.push(
+          `MISSING_REFERENCE: choice '${choice.id}' in node '${nodeKey}' is missing target (node: ${nodeKey}, choice: ${choice.id})`,
+        )
         continue
       }
+
       if (!model.nodes[choice.target]) {
-        issues.push(`choice '${choice.id}' in node '${nodeKey}' targets missing node '${choice.target}'`)
+        errors.push(
+          `MISSING_REFERENCE: choice '${choice.id}' in node '${nodeKey}' targets non-existent node '${choice.target}' (node: ${nodeKey}, choice: ${choice.id})`,
+        )
+      }
+
+      for (const effect of choice.effects ?? []) {
+        if (effect.type === 'goto') {
+          if (!model.nodes[effect.target]) {
+            errors.push(
+              `MISSING_REFERENCE: goto effect targeting non-existent node '${effect.target}' in choice '${choice.id}' of node '${nodeKey}'`,
+            )
+          }
+        }
       }
     }
   }
-  if (issues.length > 0) {
-    throw new Error(`Model integrity check failed:\n${issues.join('\n')}`)
+
+  if (options.allowCircularReferences === false) {
+    const cycles = detectCircularReferencesWithPaths(model)
+    for (const cycle of cycles) {
+      errors.push(`CIRCULAR_REFERENCE: Circular reference detected: ${cycle}`)
+    }
+  }
+
+  if (errors.length > 0) {
+    const message = errors.join('\n')
+    const error = new Error(message) as ValidationError
+    error.code = errors[0].split(':')[0]
+    throw error
   }
 }
 
@@ -97,7 +199,7 @@ function loadSchema(): unknown {
   return JSON.parse(json)
 }
 
-export function loadModel(modelData: unknown): Model {
+export function loadModel(modelData: unknown, options: ValidationOptions = {}): Model {
   const ajv = new Ajv({ allErrors: true })
   const schema = loadSchema() as AnySchema
   const validate = ajv.compile(schema)
@@ -106,56 +208,12 @@ export function loadModel(modelData: unknown): Model {
     throw new Error(`Model validation failed:\n${err}`)
   }
   const model = modelData as Model
-  assertModelIntegrity(model)
+  assertModelIntegrity(model, options)
   return model
 }
 
-export function startSession(model: Model, initial?: Partial<SessionState>): SessionState {
-  return {
-    nodeId: initial?.nodeId ?? model.startNode,
-    flags: { ...(model.flags ?? {}), ...(initial?.flags ?? {}) },
-    resources: { ...(model.resources ?? {}), ...(initial?.resources ?? {}) },
-    variables: initial?.variables ?? {},
-    time: initial?.time ?? 0,
-  }
-}
-
-export function getAvailableChoices(session: SessionState, model: Model): Choice[] {
-  const node = model.nodes[session.nodeId]
-  if (!node) return []
-  const choices = node.choices ?? []
-  return choices.filter((c) =>
-    (c.conditions ?? []).every((cond) =>
-      evalCondition(cond, session.flags, session.resources, session.variables, session.time),
-    ),
-  )
-}
-
-export function applyChoice(session: SessionState, model: Model, choiceId: string): SessionState {
-  const node = model.nodes[session.nodeId]
-  if (!node) throw new Error(`Node not found: ${session.nodeId}`)
-  const choice = (node.choices ?? []).find((c) => c.id === choiceId)
-  if (!choice) throw new Error(`Choice not found: ${choiceId}`)
-  // ensure choice is available
-  const available = getAvailableChoices(session, model).some((c) => c.id === choiceId)
-  if (!available) throw new Error(`Choice not available: ${choiceId}`)
-
-  let next = { ...session }
-  for (const eff of choice.effects ?? []) {
-    next = applyEffect(eff, next)
-  }
-  // default transition if no goto effect
-  if (!choice.effects?.some((e) => e.type === 'goto')) {
-    next = { ...next, nodeId: choice.target }
-  }
-  // simple time progression
-  next.time = next.time + 1
-  return next
-}
-
-export function serialize(session: SessionState): string {
-  return JSON.stringify(session)
-}
+// Re-export session operations (uses memoization cache internally)
+export { startSession, getAvailableChoices, applyChoice, serialize } from './session-ops.js'
 
 export function deserialize(payload: string): SessionState {
   const parsed: unknown = JSON.parse(payload)
@@ -164,3 +222,5 @@ export function deserialize(payload: string): SessionState {
   }
   return parsed
 }
+
+export type { Choice, Condition, Effect, FlagState, Model, NodeDef, ResourceState, SessionState, VariableState } from './types'

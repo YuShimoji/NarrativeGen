@@ -12,6 +12,7 @@ import {
   evalCondition,
   applyEffect,
 } from './condition-effect-ops.js'
+
 export { chooseParaphrase, paraphraseJa, getParaphraseLexicon, setParaphraseLexicon } from './paraphrase.js'
 export {
   createAIProvider,

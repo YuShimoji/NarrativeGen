@@ -1,0 +1,31 @@
+name: split-view-interface
+description: Implement split view with horizontal layout for JSON and main interface
+component: web-tester
+priority: medium
+status: proposed
+
+requirements:
+  - Add split view mode (horizontal layout)
+  - JSON editor in left panel, main interface in right panel
+  - Tab switching between full view and split view
+  - Synchronized editing between panels
+  - Resizable panels with drag handle
+
+implementation_plan:
+  - Create split view layout structure
+  - Implement resizable panel functionality
+  - Add tab switching between modes
+  - Synchronize JSON and GUI editing
+  - Maintain responsive design
+
+testing_requirements:
+  - Split view displays correctly
+  - Panel resizing works smoothly
+  - Tab switching preserves state
+  - Synchronization between panels
+
+acceptance_criteria:
+  - Horizontal split view available
+  - JSON and GUI editing synchronized
+  - No vertical overflow issues
+  - Mobile responsive design

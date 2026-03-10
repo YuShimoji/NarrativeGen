@@ -1,0 +1,30 @@
+name: stabilize-ci-pipeline
+description: Stabilize CI/CD pipeline for web-tester and sdk-unity components
+component: ci-cd
+priority: high
+status: proposed
+
+requirements:
+  - Fix failing web-tester build jobs
+  - Fix failing sdk-unity build jobs (Unity license required)
+  - Ensure engine-ts builds successfully
+  - Update workflow configurations as needed
+  - Add proper build dependencies
+
+implementation_plan:
+  - Review current CI workflow configurations
+  - Fix web-tester build script issues
+  - Set up Unity license activation for sdk-unity
+  - Test CI pipeline locally if possible
+  - Update build scripts and dependencies
+
+testing_requirements:
+  - All CI jobs pass successfully
+  - Build artifacts are generated correctly
+  - No new failures introduced
+
+acceptance_criteria:
+  - web-tester CI job passes
+  - sdk-unity CI job passes
+  - engine-ts continues to pass
+  - Build process is reliable and reproducible

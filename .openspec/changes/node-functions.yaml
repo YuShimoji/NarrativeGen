@@ -1,0 +1,31 @@
+name: node-functions
+description: Implement node function types for advanced narrative patterns (sub-states, functions, etc.)
+component: core-engine
+priority: high
+status: proposed
+
+requirements:
+  - Add function types to node definitions
+  - Support sub-state nodes that modify parent state
+  - Implement function nodes for reusable logic
+  - Add pattern templates for common use cases
+  - Maintain backward compatibility
+
+implementation_plan:
+  - Extend node schema with function_type field
+  - Add sub-state handling in engine
+  - Implement function node execution logic
+  - Create pattern library and templates
+  - Update UI for function type selection
+
+testing_requirements:
+  - Sub-state nodes modify parent correctly
+  - Function nodes execute reusable logic
+  - Backward compatibility maintained
+  - Pattern templates work correctly
+
+acceptance_criteria:
+  - Multiple node function types available
+  - Advanced narrative patterns supported
+  - UI guides function type selection
+  - Documentation includes usage examples

@@ -1,44 +1,31 @@
-#!/usr/bin/env node
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const fs = require('fs');
-const path = require('path');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Copy models directory to public/models
-const sourceDir = path.join(__dirname, '../../models');
-const destDir = path.join(__dirname, 'public/models');
-
-console.log('Copying models to public directory...');
-console.log(`Source: ${sourceDir}`);
-console.log(`Destination: ${destDir}`);
-
-try {
-  // Create public directory if it doesn't exist
-  if (!fs.existsSync(path.join(__dirname, 'public'))) {
-    fs.mkdirSync(path.join(__dirname, 'public'));
+function copyDir(src, dest) {
+  if (!fs.existsSync(dest)) {
+    fs.mkdirSync(dest, { recursive: true });
   }
 
-  // Copy models directory recursively
-  function copyDir(src, dest) {
-    if (!fs.existsSync(dest)) {
-      fs.mkdirSync(dest, { recursive: true });
-    }
+  const entries = fs.readdirSync(src, { withFileTypes: true });
 
-    const entries = fs.readdirSync(src, { withFileTypes: true });
-    for (const entry of entries) {
-      const srcPath = path.join(src, entry.name);
-      const destPath = path.join(dest, entry.name);
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
 
-      if (entry.isDirectory()) {
-        copyDir(srcPath, destPath);
-      } else {
-        fs.copyFileSync(srcPath, destPath);
-      }
+    if (entry.isDirectory()) {
+      copyDir(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
     }
   }
-
-  copyDir(sourceDir, destDir);
-  console.log('✅ Models copied successfully');
-} catch (error) {
-  console.error('❌ Error copying models:', error);
-  process.exit(1);
 }
+
+const srcDir = path.join(__dirname, '../../models');
+const destDir = path.join(__dirname, 'dist/models');
+
+copyDir(srcDir, destDir);
+console.log('Models copied successfully');

@@ -5,7 +5,26 @@
 
 export const COLOR_PALETTES = {
   default: {
-    name: 'デフォルト',
+    name: 'モダンクラシカル',
+    colors: {
+      '--color-primary': '#8b9daf',
+      '--color-primary-dark': '#6e8295',
+      '--color-secondary': '#9b8b7a',
+      '--color-secondary-dark': '#7d6e5e',
+      '--color-text': '#e8e6e3',
+      '--color-text-muted': '#98989d',
+      '--color-background': '#1c1c1e',
+      '--color-surface': '#2c2c2e',
+      '--color-surface-light': '#3a3a3c',
+      '--color-border': '#48484a',
+      '--color-hover': '#3a3a3e',
+      '--color-success': '#6b9b7e',
+      '--color-warning': '#c4a35a',
+      '--color-error': '#b87070',
+    }
+  },
+  classic: {
+    name: 'クラシック',
     colors: {
       '--color-primary': '#5a67d8',
       '--color-primary-dark': '#6b46c1',

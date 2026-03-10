@@ -1,0 +1,43 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "start",
+  "flags": {},
+  "resources": {
+    "health": 100,
+    "energy": 50
+  },
+  "nodes": {
+    "start": {
+      "id": "start",
+      "text": "あなたは冒険の始まりにいます。持っているアイテムを確認したり、アイテムを拾ったりしてみましょう。",
+      "choices": [
+        { "id": "check_inventory", "text": "インベントリを確認", "target": "inventory_check" },
+        { "id": "pickup_sword", "text": "剣を拾う", "target": "pickup_result", "outcome": { "type": "ADD_ITEM", "value": "sword" } },
+        { "id": "pickup_potion", "text": "ポーションを拾う", "target": "pickup_result", "outcome": { "type": "ADD_ITEM", "value": "potion" } },
+        { "id": "drop_item", "text": "アイテムを捨てる", "target": "drop_result" }
+      ]
+    },
+    "inventory_check": {
+      "id": "inventory_check",
+      "text": "現在のインベントリを確認しました。アイテムがあれば表示されます。",
+      "choices": [
+        { "id": "back_to_start", "text": "戻る", "target": "start" }
+      ]
+    },
+    "pickup_result": {
+      "id": "pickup_result",
+      "text": "アイテムを拾いました！インベントリを確認してみましょう。",
+      "choices": [
+        { "id": "check_inventory_after_pickup", "text": "インベントリを確認", "target": "inventory_check" },
+        { "id": "back_to_start", "text": "戻る", "target": "start" }
+      ]
+    },
+    "drop_result": {
+      "id": "drop_result",
+      "text": "アイテムを捨てる場合、REMOVE_ITEMのoutcomeを持つ選択肢が必要です。",
+      "choices": [
+        { "id": "back_to_start", "text": "戻る", "target": "start" }
+      ]
+    }
+  }
+}
