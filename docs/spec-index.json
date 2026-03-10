@@ -115,5 +115,41 @@
     "cat": "infra",
     "file": "docs/specs/code-refactoring-condition-effect.md",
     "summary": "Shared module for evalCondition/applyEffect/cmp"
+  },
+  {
+    "id": "SP-INF-001",
+    "title": "Inference Engine",
+    "status": "done",
+    "pct": 100,
+    "cat": "core",
+    "file": "docs/specs/inference-engine.md",
+    "summary": "Pluggable inference with forward/backward chaining and registry"
+  },
+  {
+    "id": "SP-HIE-001",
+    "title": "Node Hierarchy System",
+    "status": "done",
+    "pct": 100,
+    "cat": "ui",
+    "file": "docs/specs/hierarchy-system.md",
+    "summary": "Tree view grouping, expansion state, and navigation"
+  },
+  {
+    "id": "SP-SEARCH-001",
+    "title": "Search System",
+    "status": "done",
+    "pct": 100,
+    "cat": "ui",
+    "file": "docs/specs/search-system.md",
+    "summary": "3-tier search: keyword + synonym + semantic (OpenAI)"
+  },
+  {
+    "id": "SP-XSS-001",
+    "title": "XSS Protection",
+    "status": "done",
+    "pct": 100,
+    "cat": "infra",
+    "file": "docs/specs/xss-protection.md",
+    "summary": "Centralized HTML escaping and safe DOM manipulation"
   }
 ]
