@@ -45,6 +45,7 @@
 | 2026-03-09 | evalCondition/applyEffect重複解消 | 共通モジュール化 / 現状維持 / 部分統合 | 3ファイル(session-ops.ts/index.ts/browser.ts)で90行超の重複を`condition-effect-ops.ts`に集約。session-ops.tsのキャッシュ機能は維持 |
 | 2026-03-10 | 文字コード安全運用を導入 | アドホック運用 / 安全チェック導入 | `spec-index`破損と文字化け再発を受け、`check:safety` / `check:safety:changed`、運用手順、インシデント記録を追加 |
 | 2026-03-10 | Mermaidチャンク分割を更新 | 現状維持 / 遅延読込のみ / 依存分離 | `vendor-mermaid` 1.79MB 警告を分離し、依存と共有レイアウト処理を別チャンク化して状況を可視化 |
+| 2026-03-11 | feature/main-js-split-phase2をmainに統合 | マージ / cherry-pick / 保留 | 85コミット分の機能(推論エンジン/階層UI/セマンティック検索/XSS修正/Save-Load/ハンドラー分離)を一括統合。コンフリクト8件解決。テスト15→73件に増加 |
 
 ## Project Context
 
@@ -52,5 +53,5 @@
 環境: Node.js 20+ / TypeScript 5.x / Vite 5 / Vitest / Playwright
 ブランチ戦略: main (デフォルトブランチ: open-ws/engine-skeleton-2025-09-02)
 現フェーズ: β版相当（コア機能実装完了、Unity連携・最適化準備中）
-直近の状態: ビルド復旧、`spec-index.json`復旧、文字コード安全チェック導入、Mermaid依存のチャンク分割を実施。`npm run check:safety` と `npm run build` は成功。Mermaidは遅延読込化済みだが `vendor-mermaid-core` は約1.27MBで継続課題。
+直近の状態: 文字化け修正3ファイル完了、feature/main-js-split-phase2を85コミット統合（推論エンジン/階層UI/セマンティック検索/XSS修正/Save-Load/ハンドラー10モジュール分離）。build/test(73件)/check:safety全通過。DEVELOPMENT_PLANとspec-indexを実コード状態に同期済み。
 記録先: 文字コード運用は `docs/plans/DEVELOPMENT_PLAN.md`、インシデント記録は `docs/governance/encoding-safety-incident-2026-03-10.md`、残課題は `docs/TECHNICAL_DEBT.md` で管理。

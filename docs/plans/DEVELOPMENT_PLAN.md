@@ -20,6 +20,9 @@
 | エンティティ | CSV読込・パース | entities.ts |
 | 言い換え(非AI) | 同義語置換・文体変換・決定的バリアント生成 | paraphrase.ts |
 | AIプロバイダー | Mock + OpenAI (generateNextNode/paraphrase) | ai-provider.ts |
+| 推論エンジン | forward/backward chaining、依存グラフ、パス探索(BFS)、拡張可能レジストリ | inference/ (12ファイル) |
+| ノードIDリゾルバ | グループスコープID解決、階層ナビゲーション | resolver.ts |
+| モデル検証拡張 | ID重複/参照整合性/循環参照検出 | validation.ts |
 
 ### Web Tester (apps/web-tester)
 
@@ -44,6 +47,13 @@
 | 保存/読込 | SaveManager/自動保存 | save-manager.js |
 | デバッグパネル | 開発時情報表示 | debug.js |
 | Toast通知 | フィードバック表示 | toast.js |
+| ハンドラーモジュール | DI パターンによるUI論理分離 (10モジュール) | handlers/ |
+| ノード階層UI | ツリービュー/折りたたみ/パンくず/状態永続化 | hierarchy-state.js, utils/hierarchy-utils.js |
+| 高度検索 | マルチファクターランキング/グループスコープ/履歴/同義語辞書 | utils/search-utils.js, search-history.js, synonym-dict.js |
+| セマンティック検索 | OpenAI Embeddings API/コサイン類似度/ハイブリッド検索 | utils/semantic-search.js, hybrid-search.js, embeddings-cache.js |
+| XSS防御 | 集約escapeHtml/安全DOM操作ユーティリティ | src/utils/html-utils.js |
+| CSVユーティリティ | 条件/効果付きCSVパース/シリアライズ | utils/csv-parser.js, csv-exporter.js |
+| モデルユーティリティ | サンプル/カスタム読込/変数解決 | utils/model-utils.js |
 
 ### バックエンド (Packages/backend)
 
@@ -56,13 +66,14 @@
 | 機能 | 説明 |
 |------|------|
 | MinimalNarrativeController | JSON TextAsset読込によるランタイム |
+| Inventory | add/remove/has/list/clear/toJSON (engine-tsからの移植) |
 
 ### テスト
 
 | 種類 | 件数 |
 |------|------|
-| ユニットテスト (Vitest) | 15テスト |
-| E2Eテスト (Playwright) | 2ファイル (theme-toggle, undo-redo) |
+| ユニットテスト (Vitest) | 73テスト (10ファイル) |
+| E2Eテスト (Playwright) | 2ファイル (theme-toggle, undo-redo) ※Playwright版競合で要修正 |
 | モデル検証 (CLI) | 6モデル |
 
 ---
@@ -83,7 +94,7 @@
 
 **テキスト変数展開**: 既に実装済み (story.js: `{variable_name}` → 値置換)
 
-**テスト**: tsc + vitest 15件 + verify-export-formatters + vite build全通過
+**テスト**: tsc + vitest 73件 + verify-export-formatters + vite build全通過
 
 ---
 
@@ -97,7 +108,7 @@
 - app-editor-events.js: ~430行 (スニペット/テンプレート/バッチ/検索/ドラフト管理)
 - ui-bindings.js: ~100 DOM要素の一括管理
 - デッドコード除去: batchEditManager(未定義_model)、openBatchChoiceModal(同)、未使用変数/import
-- 旧ブランチ(feature/main-js-split-phase2)は使用せず、mainから漸進的に再分割
+- feature/main-js-split-phase2ブランチを2026-03-11にmainへ統合完了 (85コミット、ハンドラー10モジュール分離)
 
 ---
 
