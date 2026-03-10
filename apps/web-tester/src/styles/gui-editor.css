@@ -1538,3 +1538,96 @@
   color: var(--color-text-muted);
   margin-right: 0.25rem;
 }
+
+/* ==========================================================================
+   Inference Analysis Panel
+   ========================================================================== */
+
+.inference-analysis-section {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.inference-analysis-section.collapsed .inference-path-content {
+  display: none;
+}
+
+.inference-analysis-section.collapsed .inference-header-toggle {
+  transform: rotate(-90deg);
+}
+
+.inference-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 0.375rem 0;
+  user-select: none;
+}
+
+.inference-header:hover {
+  color: var(--color-primary);
+}
+
+.inference-header-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.inference-header-toggle {
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+  transition: transform 0.2s ease;
+}
+
+.inference-path-content {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.inference-path-node {
+  display: inline;
+  color: var(--color-primary);
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.0625rem 0.25rem;
+  border-radius: 3px;
+  transition: background 0.15s ease;
+}
+
+.inference-path-node:hover {
+  background: rgba(91, 141, 239, 0.15);
+  text-decoration: underline;
+}
+
+.inference-path-arrow {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.inference-path-choice {
+  display: inline;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.inference-no-path {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.inference-start-node {
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 500;
+}

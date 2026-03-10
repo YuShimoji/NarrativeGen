@@ -20,6 +20,8 @@ import {
   exportReportAsPdf,
   exportAll
 } from '../utils/export-utils.js'
+import { InferenceBridge } from '../features/inference/inference-bridge.js'
+import { InferencePanel } from '../features/inference/inference-panel.js'
 
 export class GuiEditorManager {
   constructor(appState) {
@@ -58,6 +60,10 @@ export class GuiEditorManager {
     // Analysis state
     this.currentAnalysisResult = null
     this.selectedEndingId = null
+
+    // Inference engine integration
+    this.inferenceBridge = new InferenceBridge()
+    this.inferencePanel = null
   }
 
   initialize(nodeListElement, guiEditModeElement, batchEditModalElement, quickNodeModalElement, batchChoiceModalElement, paraphraseModalElement, draftRestoreModalElement) {
@@ -136,6 +142,30 @@ export class GuiEditorManager {
 
     // Setup export button handlers
     this._setupExportHandlers()
+
+    // Initialize inference panel (insert before ending visualization)
+    this.inferencePanel = new InferencePanel({
+      bridge: this.inferenceBridge,
+      onNodeClick: (nodeId) => this.selectNode(nodeId),
+    })
+    if (this.livePreviewPanel) {
+      const inferenceEl = this.inferencePanel.createElement()
+      // Insert before ending visualization or at end of preview content
+      const previewContent = this.livePreviewPanel.querySelector('.preview-content')
+      if (previewContent) {
+        const endingViz = document.getElementById('endingVisualization')
+        if (endingViz) {
+          previewContent.insertBefore(inferenceEl, endingViz)
+        } else {
+          previewContent.appendChild(inferenceEl)
+        }
+      }
+    }
+
+    // Initialize inference bridge with current model
+    if (this.appState.model) {
+      this.inferenceBridge.initialize(this.appState.model)
+    }
   }
 
   /**
@@ -207,6 +237,11 @@ export class GuiEditorManager {
       } else {
         this.pathDisplay.innerHTML = '<span style="color: var(--color-text-muted);">スタートノードから到達不能</span>'
       }
+    }
+
+    // Update inference analysis panel
+    if (this.inferencePanel) {
+      this.inferencePanel.update(nodeId)
     }
   }
 
@@ -850,6 +885,10 @@ export class GuiEditorManager {
     const result = this.nodeRenderer.renderNodeList()
     // ノードリスト更新時にマルチエンディング可視化を更新
     this._updateEndingVisualization()
+    // 推論エンジンの依存グラフを再構築
+    if (this.appState.model) {
+      this.inferenceBridge.updateModel(this.appState.model)
+    }
     return result
   }
 

@@ -67,3 +67,12 @@ export function applyChoice(session: SessionState, model: Model, choiceId: strin
 }
 
 export type { Choice, Condition, Effect, FlagState, Model, NodeDef, ResourceState, SessionState, VariableState } from './types'
+
+// Inference engine
+export { findPathToGoal, findReachableNodes } from './inference/backward-chaining.js'
+export { buildDependencyGraph, getAffectedChoices } from './inference/forward-chaining.js'
+export { getSupportedConditions, getSupportedEffects } from './inference/capabilities.js'
+export { registry, registerBuiltins } from './inference/registry.js'
+export type { Goal, PathStep } from './inference/backward-chaining.js'
+export type { DependencyGraph, ForwardChainingResult } from './inference/forward-chaining.js'
+export type { ConditionEvaluator, EffectApplicator, EvaluationContext, DependencyInfo } from './inference/types.js'
