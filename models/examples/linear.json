@@ -1,0 +1,64 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "start",
+  "nodes": {
+    "start": {
+      "id": "start",
+      "text": "You wake up in a dimly lit room. A candle flickers on a wooden table nearby.",
+      "choices": [
+        { "id": "look_around", "text": "Look around the room", "target": "room_description" },
+        { "id": "take_candle", "text": "Take the candle", "target": "with_candle" }
+      ]
+    },
+    "room_description": {
+      "id": "room_description",
+      "text": "The room is small with stone walls. There is a heavy wooden door to the north and a narrow window to the east.",
+      "choices": [
+        { "id": "go_door", "text": "Try the door", "target": "hallway" },
+        { "id": "check_window", "text": "Look out the window", "target": "window_view" }
+      ]
+    },
+    "with_candle": {
+      "id": "with_candle",
+      "text": "You pick up the candle. Its warm light reveals scratches on the wall near the door.",
+      "choices": [
+        { "id": "examine_scratches", "text": "Examine the scratches", "target": "scratches" },
+        { "id": "go_door_lit", "text": "Head to the door", "target": "hallway" }
+      ]
+    },
+    "window_view": {
+      "id": "window_view",
+      "text": "Through the window, you see a moonlit garden far below. You are high up in a tower.",
+      "choices": [
+        { "id": "back_to_room", "text": "Turn back to the room", "target": "room_description" }
+      ]
+    },
+    "scratches": {
+      "id": "scratches",
+      "text": "The scratches form words: 'The key is under the stone.' You notice a loose stone in the floor.",
+      "choices": [
+        { "id": "lift_stone", "text": "Lift the stone", "target": "found_key" }
+      ]
+    },
+    "found_key": {
+      "id": "found_key",
+      "text": "Under the stone, you find a rusty iron key.",
+      "choices": [
+        { "id": "use_key", "text": "Use the key on the door", "target": "hallway" }
+      ]
+    },
+    "hallway": {
+      "id": "hallway",
+      "text": "You step into a long hallway. The air is cold and damp. You hear distant footsteps.",
+      "choices": [
+        { "id": "go_forward", "text": "Walk forward", "target": "ending" },
+        { "id": "go_back", "text": "Go back to the room", "target": "start" }
+      ]
+    },
+    "ending": {
+      "id": "ending",
+      "text": "You follow the hallway to a large door that opens to the outside. Dawn breaks over the horizon. You are free.",
+      "choices": []
+    }
+  }
+}
