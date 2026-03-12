@@ -127,6 +127,46 @@ export class InferenceBridge {
   }
 
   /**
+   * 状態キーの使用箇所を逆引きする (UC-4)。
+   * 依存グラフから、指定キーを条件で参照している選択肢と、効果で変更している選択肢を返す。
+   * @param {string} stateKey - "flag:keyName" / "resource:keyName" / "variable:keyName" 形式
+   * @returns {{ conditions: string[], effects: string[] }} "nodeId:choiceId" 形式のリスト
+   */
+  findStateKeyUsage(stateKey) {
+    if (!this._depGraph) return { conditions: [], effects: [] }
+    const conditions = []
+    const condSet = this._depGraph.stateToChoices.get(stateKey)
+    if (condSet) {
+      conditions.push(...condSet)
+    }
+    const effects = []
+    for (const [choiceKey, keys] of this._depGraph.choiceToAffectedKeys) {
+      if (keys.has(stateKey)) {
+        effects.push(choiceKey)
+      }
+    }
+    return { conditions, effects }
+  }
+
+  /**
+   * 全ての状態キーを取得する。
+   * @returns {string[]} 状態キーのリスト
+   */
+  getAllStateKeys() {
+    if (!this._depGraph) return []
+    const keys = new Set()
+    for (const key of this._depGraph.stateToChoices.keys()) {
+      keys.add(key)
+    }
+    for (const affectedKeys of this._depGraph.choiceToAffectedKeys.values()) {
+      for (const key of affectedKeys) {
+        keys.add(key)
+      }
+    }
+    return [...keys].sort()
+  }
+
+  /**
    * 初期化済みかどうか
    * @returns {boolean}
    */

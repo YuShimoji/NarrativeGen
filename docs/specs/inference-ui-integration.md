@@ -166,11 +166,11 @@ function renderImpactAnalysis(affected: string[]): HTMLElement
 - [x] 到達パスのノードIDクリックで移動
 - [x] `gui-editor.css` 推論パネルスタイル追加
 
-### Phase 2（分析機能）
+### Phase 2（分析機能）[実装済み — 手動確認未実施]
 
-- [ ] 影響分析（UC-3）の表示
-- [ ] 状態キー逆引き（UC-4）のデバッグパネルUI
-- [ ] 到達可能ノード一覧（UC-2）
+- [x] 影響分析（UC-3）の表示 — InferencePanel._updateImpact
+- [x] 状態キー逆引き（UC-4）のLive Previewパネル表示 — InferencePanel._updateStateKeys + InferenceBridge.findStateKeyUsage/getAllStateKeys
+- [ ] 到達可能ノード一覧（UC-2）— セッション状態依存のため Phase 3 に移動
 
 ### Phase 3（グラフ連携・将来）
 
@@ -199,8 +199,10 @@ function renderImpactAnalysis(affected: string[]): HTMLElement
 - `apps/web-tester/src/ui/gui-editor.js` -- 推論パネル統合
 - `apps/web-tester/src/styles/gui-editor.css` -- 推論パネルスタイル
 
-### Phase 2（予定）
-- `apps/web-tester/src/features/inference/inference-query.js` -- デバッグパネルUI
+### Phase 2（実装済み）
+- `apps/web-tester/src/features/inference/inference-bridge.js` -- findStateKeyUsage/getAllStateKeys追加
+- `apps/web-tester/src/features/inference/inference-panel.js` -- 影響分析(_updateImpact)/状態キー(_updateStateKeys)セクション追加
+- `apps/web-tester/src/styles/gui-editor.css` -- 影響分析/状態キーUIスタイル追加
 
 ## テスト
 

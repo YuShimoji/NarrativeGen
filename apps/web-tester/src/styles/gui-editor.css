@@ -1549,7 +1549,10 @@
   border-top: 1px solid var(--color-border);
 }
 
-.inference-analysis-section.collapsed .inference-path-content {
+.inference-analysis-section.collapsed .inference-path-content,
+.inference-analysis-section.collapsed .inference-impact-content,
+.inference-analysis-section.collapsed .inference-state-keys-content,
+.inference-analysis-section.collapsed .inference-sub-label {
   display: none;
 }
 
@@ -1630,4 +1633,108 @@
   color: var(--color-primary);
   font-size: 0.8rem;
   font-weight: 500;
+}
+
+.inference-sub-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.inference-empty {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-style: italic;
+  padding: 0.25rem 0;
+}
+
+/* Impact analysis (UC-3) */
+.inference-impact-content {
+  margin-top: 0.25rem;
+}
+
+.inference-impact-choice {
+  margin-bottom: 0.5rem;
+}
+
+.inference-impact-choice-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text);
+  display: block;
+  margin-bottom: 0.125rem;
+}
+
+.inference-impact-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding-left: 0.5rem;
+}
+
+.inference-impact-item {
+  font-size: 0.7rem;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 3px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  transition: background 0.15s ease;
+}
+
+.inference-impact-item:hover {
+  background: rgba(91, 141, 239, 0.15);
+  text-decoration: underline;
+}
+
+/* State key usage (UC-4) */
+.inference-state-keys-content {
+  margin-top: 0.25rem;
+}
+
+.inference-state-key-item {
+  margin-bottom: 0.5rem;
+  padding: 0.375rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.inference-state-key-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+  font-family: var(--font-mono, monospace);
+}
+
+.inference-state-key-refs {
+  font-size: 0.7rem;
+  margin-top: 0.125rem;
+}
+
+.inference-ref-label {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.inference-state-key-ref {
+  display: inline-block;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 0.0625rem 0.25rem;
+  margin: 0 0.125rem;
+  border-radius: 3px;
+  transition: background 0.15s ease;
+}
+
+.inference-state-key-ref:hover {
+  background: rgba(91, 141, 239, 0.15);
+  text-decoration: underline;
 }

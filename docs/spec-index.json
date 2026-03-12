@@ -156,7 +156,7 @@
     "id": "SP-INF-UI-001",
     "title": "Inference UI Integration",
     "status": "partial",
-    "pct": 40,
+    "pct": 75,
     "cat": "ui",
     "file": "docs/specs/inference-ui-integration.md",
     "summary": "Inference engine visualization in editor (path analysis, impact, state key lookup)"
