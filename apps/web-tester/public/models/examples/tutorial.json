@@ -1,0 +1,67 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "intro",
+  "flags": {
+    "learnedChoices": false,
+    "learnedResources": false
+  },
+  "resources": {
+    "knowledge": 0,
+    "energy": 100
+  },
+  "nodes": {
+    "intro": {
+      "id": "intro",
+      "text": "ようこそNarrativeGenへ！これは基本機能を学ぶためのチュートリアルです。\n\nあなたは新しい学習者です。選択肢を選んで物語を進めましょう。",
+      "choices": [
+        { "id": "learnChoices", "text": "選択肢について学ぶ", "target": "choicesLesson" },
+        { "id": "learnResources", "text": "リソースについて学ぶ", "target": "resourcesLesson" },
+        { "id": "skipTutorial", "text": "チュートリアルをスキップ", "target": "graduation" }
+      ]
+    },
+    "choicesLesson": {
+      "id": "choicesLesson",
+      "text": "選択肢とは：\n物語を進めるための重要な決断です。選択肢を選ぶことでストーリーが分岐します。\n\nこの選択肢を選ぶと、フラグが設定されます。",
+      "choices": [
+        { "id": "understandChoices", "text": "選択肢を理解した", "target": "backToIntro", "effects": [{ "type": "setFlag", "key": "learnedChoices", "value": true }] },
+        { "id": "confused", "text": "よくわからない", "target": "choicesHelp" }
+      ]
+    },
+    "choicesHelp": {
+      "id": "choicesHelp",
+      "text": "選択肢の例：\n・「ドアを開ける」\n・「鍵を探す」\n・「待つ」\n\n各選択肢は異なる結果をもたらします。",
+      "choices": [
+        { "id": "nowUnderstand", "text": "今わかった", "target": "backToIntro", "effects": [{ "type": "setFlag", "key": "learnedChoices", "value": true }] }
+      ]
+    },
+    "resourcesLesson": {
+      "id": "resourcesLesson",
+      "text": "リソースとは：\nゲーム内の数値データです。体力、ゴールド、経験値などが該当します。\n\nリソースは選択肢の条件になったり、変化したりします。",
+      "choices": [
+        { "id": "understandResources", "text": "リソースを理解した", "target": "backToIntro", "effects": [{ "type": "setFlag", "key": "learnedResources", "value": true }, { "type": "addResource", "key": "knowledge", "delta": 10 }] },
+        { "id": "resourceExample", "text": "例を見せて", "target": "resourceExample" }
+      ]
+    },
+    "resourceExample": {
+      "id": "resourceExample",
+      "text": "リソースの例：\n現在のエネルギー: {{energy}}\n知識: {{knowledge}}\n\nこの選択肢を選ぶとエネルギーが減ります。",
+      "choices": [
+        { "id": "loseEnergy", "text": "エネルギーを消費する", "target": "backToIntro", "effects": [{ "type": "addResource", "key": "energy", "delta": -20 }, { "type": "addResource", "key": "knowledge", "delta": 5 }] },
+        { "id": "keepEnergy", "text": "エネルギーを温存", "target": "backToIntro" }
+      ]
+    },
+    "backToIntro": {
+      "id": "backToIntro",
+      "text": "チュートリアルに戻ります。",
+      "choices": [
+        { "id": "continueTutorial", "text": "続ける", "target": "intro" },
+        { "id": "finishTutorial", "text": "終了する", "target": "graduation" }
+      ]
+    },
+    "graduation": {
+      "id": "graduation",
+      "text": "チュートリアル完了！\n\n学習内容:\n・選択肢: {{learnedChoices}}\n・リソース: {{learnedResources}}\n・最終知識: {{knowledge}}\n・残りエネルギー: {{energy}}\n\nこれで基本機能をマスターしました！",
+      "choices": []
+    }
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "name": "NarrativeGen",
+  "version": "1.0.0",
+  "description": "Interactive narrative engine with spreadsheet-driven story creation",
+  "author": "YuShimoji",
+  "license": "MIT",
+
+  "project": {
+    "type": "monorepo",
+    "workspaces": [
+      "packages/*",
+      "apps/*"
+    ]
+  },
+
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=8.0.0"
+  },
+
+  "features": {
+    "spreadsheetIntegration": true,
+    "aiGeneration": true,
+    "graphVisualization": true,
+    "csvImportExport": true,
+    "guiEditor": true,
+    "multiLanguage": false
+  },
+
+  "ui": {
+    "theme": "glassmorphism",
+    "responsive": true,
+    "animations": true,
+    "darkMode": false
+  },
+
+  "performance": {
+    "maxGraphNodes": 100,
+    "virtualScrolling": true,
+    "chunkedCsvProcessing": true,
+    "memoizedConditionEvaluation": true
+  },
+
+  "ai": {
+    "providers": ["mock", "openai"],
+    "defaultProvider": "mock",
+    "supportedModels": {
+      "openai": ["gpt-3.5-turbo", "gpt-4"]
+    }
+  },
+
+  "validation": {
+    "strictMode": true,
+    "schemaValidation": true,
+    "modelIntegrityChecks": true
+  },
+
+  "logging": {
+    "level": "info",
+    "maxEntries": 100,
+    "persistence": "sessionStorage"
+  },
+
+  "development": {
+    "port": 5173,
+    "host": "0.0.0.0",
+    "hmr": true,
+    "sourceMaps": true
+  },
+
+  "build": {
+    "target": "es2021",
+    "minify": true,
+    "sourcemap": true,
+    "chunkSizeWarningLimit": 1000
+  },
+
+  "paths": {
+    "models": "/models",
+    "examples": "/models/examples",
+    "entities": "/models/entities",
+    "schemas": "/models/schema"
+  }
+}

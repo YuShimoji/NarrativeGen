@@ -1,0 +1,168 @@
+{
+  "nodes": {
+    "start": {
+      "text": "あなたは異世界に召喚されました。目の前に2人の神様がいます。",
+      "choices": [
+        {
+          "text": "勇者として戦う力を選ぶ",
+          "target": "warrior_path",
+          "effects": [
+            {"type": "setFlag", "key": "class", "value": "warrior"}
+          ]
+        },
+        {
+          "text": "賢者として魔法の力を選ぶ",
+          "target": "mage_path",
+          "effects": [
+            {"type": "setFlag", "key": "class", "value": "mage"}
+          ]
+        }
+      ]
+    },
+    "warrior_path": {
+      "text": "戦士の力を得ました。剣と鎧が装備されます。",
+      "choices": [
+        {
+          "text": "最初に村に向かう",
+          "target": "village_first"
+        },
+        {
+          "text": "最初に森を探検する",
+          "target": "forest_first"
+        }
+      ]
+    },
+    "mage_path": {
+      "text": "魔法の力を得ました。杖とローブが装備されます。",
+      "choices": [
+        {
+          "text": "最初に村に向かう",
+          "target": "village_first"
+        },
+        {
+          "text": "最初に森を探検する",
+          "target": "forest_first"
+        }
+      ]
+    },
+    "village_first": {
+      "text": "村に到着しました。村人たちが歓迎してくれます。「魔王が村を脅かしているんだ」",
+      "choices": [
+        {
+          "text": "魔王を倒す任務を受ける",
+          "target": "quest_accept_village"
+        },
+        {
+          "text": "まずは装備を整える",
+          "target": "village_shop"
+        }
+      ]
+    },
+    "forest_first": {
+      "text": "森に入ると、謎の老人に出会いました。「若者よ、試練を受けよ」",
+      "choices": [
+        {
+          "text": "試練を受ける",
+          "target": "elder_trial"
+        },
+        {
+          "text": "断って村に向かう",
+          "target": "village_first"
+        }
+      ]
+    },
+    "quest_accept_village": {
+      "text": "村人たちから魔王の情報を得ました。「魔王は山の上の城にいる」",
+      "choices": [
+        {
+          "text": "すぐに山に向かう",
+          "target": "mountain_path"
+        },
+        {
+          "text": "森を経由して山に向かう",
+          "target": "forest_path"
+        }
+      ]
+    },
+    "village_shop": {
+      "text": "村の店で新しい装備を買いました。準備が整いました。",
+      "choices": [
+        {
+          "text": "魔王を倒しに行く",
+          "target": "mountain_path"
+        }
+      ]
+    },
+    "elder_trial": {
+      "text": "試練に成功しました！強力なアイテムを入手しました。",
+      "choices": [
+        {
+          "text": "魔王を倒しに行く",
+          "target": "mountain_path"
+        }
+      ]
+    },
+    "mountain_path": {
+      "text": "山道を登っていると、ゴブリンが出現しました！",
+      "choices": [
+        {
+          "text": "戦う",
+          "target": "fight_goblin"
+        },
+        {
+          "text": "逃げる",
+          "target": "retreat_mountain"
+        }
+      ]
+    },
+    "forest_path": {
+      "text": "森を通って山に向かいます。エルフの村を発見しました。",
+      "choices": [
+        {
+          "text": "エルフに協力を依頼する",
+          "target": "elf_alliance"
+        },
+        {
+          "text": "そのまま進む",
+          "target": "mountain_path"
+        }
+      ]
+    },
+    "fight_goblin": {
+      "text": "ゴブリンを倒しました。魔王の城が近づいてきました。",
+      "choices": [
+        {
+          "text": "城に入る",
+          "target": "castle_entrance"
+        }
+      ]
+    },
+    "retreat_mountain": {
+      "text": "逃げて村に戻りました。魔王討伐は諦めました。",
+      "choices": []
+    },
+    "elf_alliance": {
+      "text": "エルフたちが協力してくれることになりました。",
+      "choices": [
+        {
+          "text": "山に向かう",
+          "target": "mountain_path"
+        }
+      ]
+    },
+    "castle_entrance": {
+      "text": "魔王の城に入りました。最上階で魔王と対峙します。",
+      "choices": [
+        {
+          "text": "戦いを挑む",
+          "target": "final_battle_win"
+        }
+      ]
+    },
+    "final_battle_win": {
+      "text": "魔王を倒しました！世界は平和を取り戻しました。",
+      "choices": []
+    }
+  },
+  "startNode": "start"
+}

@@ -1,0 +1,34 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "start",
+  "flags": { "hasKey": false },
+  "nodes": {
+    "start": {
+      "id": "start",
+      "text": "A locked door blocks your way.",
+      "choices": [
+        { "id": "findKey", "text": "Search for a key", "target": "hall", "effects": [ { "type": "setFlag", "key": "hasKey", "value": true } ] },
+        { "id": "forceDoor", "text": "Force the door", "target": "bruise" }
+      ]
+    },
+    "hall": {
+      "id": "hall",
+      "text": "You found a key in the hall.",
+      "choices": [
+        { "id": "backToDoor", "text": "Return to door", "target": "start" }
+      ]
+    },
+    "bruise": {
+      "id": "bruise",
+      "text": "Ouch. The door is sturdy.",
+      "choices": [
+        { "id": "back", "text": "Go back", "target": "start" }
+      ]
+    },
+    "room": {
+      "id": "room",
+      "text": "The room beyond is quiet.",
+      "choices": []
+    }
+  }
+}
