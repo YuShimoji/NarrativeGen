@@ -286,104 +286,17 @@ function checkWebTester(projectRoot, options = {}) {
 
   results.push(createCheckResult('tester.directory', 'OK', 'apps/web-tester/ exists', { path: testerPath }));
 
-  // package.jsonの確認
-  const packageJsonPath = path.join(testerPath, 'package.json');
-  if (!fs.existsSync(packageJsonPath)) {
-    const msg = 'web-tester package.json not found';
-    issues.push(msg);
-    results.push(createCheckResult('tester.package-json', 'ERROR', msg));
-    return { issues, warnings, results };
-  }
-
-  const packageJson = JSON.parse(readFileSafe(packageJsonPath) || '{}');
-  
-  if (!packageJson.scripts || !packageJson.scripts.build) {
-    const msg = 'web-tester package.json missing build script';
-    issues.push(msg);
-    results.push(createCheckResult('tester.build-script', 'ERROR', msg));
-  } else {
+  // index.htmlの確認 (スタンドアロンHTML方式)
+  const indexPath = path.join(testerPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
     if (!quiet) {
-      console.log(` Build script: ${packageJson.scripts.build}`);
-    }
-    results.push(createCheckResult('tester.build-script', 'OK', 
-      'Build script exists', 
-      { script: packageJson.scripts.build }));
-  }
-
-  // vite.config.jsの確認
-  const viteConfigPath = path.join(testerPath, 'vite.config.js');
-  if (fs.existsSync(viteConfigPath)) {
-    if (!quiet) {
-      console.log(' vite.config.js found');
-    }
-    results.push(createCheckResult('tester.vite-config', 'OK', 'vite.config.js exists'));
-  } else {
-    const msg = 'vite.config.js not found';
-    warnings.push(msg);
-    results.push(createCheckResult('tester.vite-config', 'WARN', msg));
-  }
-
-  // srcディレクトリの確認
-  const srcPath = path.join(testerPath, 'src');
-  if (fs.existsSync(srcPath)) {
-    const jsFiles = fs.readdirSync(srcPath, { recursive: true })
-      .filter(f => f.endsWith('.js'));
-    if (jsFiles.length > 0) {
-      if (!quiet) {
-        console.log(` Source JavaScript files: ${jsFiles.length}`);
-      }
-      results.push(createCheckResult('tester.source', 'OK', 
-        `Source directory contains ${jsFiles.length} JavaScript files`, 
-        { fileCount: jsFiles.length }));
-    } else {
-      const msg = 'Source directory exists but no JavaScript files found';
-      warnings.push(msg);
-      results.push(createCheckResult('tester.source', 'WARN', msg));
-    }
-  } else {
-    const msg = 'src directory not found';
-    issues.push(msg);
-    results.push(createCheckResult('tester.source', 'ERROR', msg));
-  }
-
-  // distディレクトリの確認（ビルド済みか）
-  const distPath = path.join(testerPath, 'dist');
-  if (fs.existsSync(distPath)) {
-    const htmlFiles = fs.readdirSync(distPath)
-      .filter(f => f.endsWith('.html'));
-    if (htmlFiles.length > 0) {
-      if (!quiet) {
-        console.log(` Built files in dist: index.html found`);
-      }
-      results.push(createCheckResult('tester.dist', 'OK', 
-        'dist directory contains built files', 
-        { hasIndex: htmlFiles.includes('index.html') }));
-    } else {
-      if (!quiet) {
-        console.log(' dist directory exists but empty (needs build)');
-      }
-      results.push(createCheckResult('tester.dist', 'WARN', 
-        'dist directory exists but empty', {}));
-    }
-  } else {
-    if (!quiet) {
-      console.log(' dist directory not found (needs build)');
-    }
-    results.push(createCheckResult('tester.dist', 'WARN', 
-      'dist directory not found (run npm run build:tester)', {}));
-  }
-
-  // index.htmlの確認
-  const indexHtmlPath = path.join(testerPath, 'index.html');
-  if (fs.existsSync(indexHtmlPath)) {
-    if (!quiet) {
-      console.log(' index.html found');
+      console.log(' index.html found (standalone)');
     }
     results.push(createCheckResult('tester.index-html', 'OK', 'index.html exists'));
   } else {
-    const msg = 'index.html not found';
-    warnings.push(msg);
-    results.push(createCheckResult('tester.index-html', 'WARN', msg));
+    const msg = 'web-tester index.html not found';
+    issues.push(msg);
+    results.push(createCheckResult('tester.index-html', 'ERROR', msg));
   }
 
   return { issues, warnings, results };

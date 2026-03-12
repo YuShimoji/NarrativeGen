@@ -52,5 +52,14 @@
     "cat": "core",
     "file": "docs/specs/paraphrase.md",
     "summary": "テキスト言い換え2層: ローカル同義語辞書(決定的) + AI言い換え(OpenAI/Mock)"
+  },
+  {
+    "id": "SP-007",
+    "title": "Web Tester",
+    "status": "done",
+    "pct": 100,
+    "cat": "ui",
+    "file": "docs/specs/web-tester.md",
+    "summary": "ブラウザベースのモデルプレイスルーテスター。D&D/ファイル選択でモデル読み込み、状態パネル+履歴付き"
   }
 ]
