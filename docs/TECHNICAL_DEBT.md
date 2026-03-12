@@ -1,6 +1,6 @@
 # Technical Debt and Improvement Tasks
 
-Last updated: 2026-03-10
+Last updated: 2026-03-12
 
 ## Overview
 This document tracks technical debt and improvement work items.
@@ -66,7 +66,19 @@ Remaining tasks:
 - [ ] ARIA labels and keyboard navigation.
 - [ ] Manual usability checks on key screens.
 
-### 6. Manual test expansion
+### 6. Node graph visual issues
+Status: not started
+
+Two display problems observed on ノードグラフ tab:
+- Minimap (bottom-right) renders with white background on dark theme (`rgba(255,255,255,0.95)` hardcoded in `GraphEditorManager._setupMinimap()`). Also uses foreignObject+cloneNode which is fragile for SVG content.
+- Node text labels overlap outside node boundaries (SVG text lacks clip-path/overflow control).
+
+Remaining tasks:
+- [ ] Replace minimap background with CSS variable for theme-awareness.
+- [ ] Investigate foreignObject SVG clone rendering reliability.
+- [ ] Add clip-path or text-overflow handling to graph node labels.
+
+### 7. Manual test expansion
 Status: partially done
 
 Remaining tasks:
@@ -78,7 +90,7 @@ Remaining tasks:
 
 ## Low Priority
 
-### 7. Documentation cleanup
+### 8. Documentation cleanup
 Status: ongoing
 
 Remaining tasks:
@@ -101,9 +113,14 @@ Remaining tasks:
 | encoding safety checker | 2026-03-09 | `npm run check:encoding-safety` |
 | encoding safety workflow + incident record | 2026-03-10 | workflow doc and incident record added |
 | Mermaid chunk split v2 | 2026-03-10 | `vendor-mermaid-core/deps` and `vendor-diagram-layout` introduced |
+| validate-models cache pollution fix | 2026-03-12 | `clearSessionCaches()` added to session-ops.ts |
+| E2E skip triage (36→5) | 2026-03-12 | theme-toggle deleted (UI未実装), 5 defensive skips retained |
+| Export all-model smoke test | 2026-03-12 | 6 models x 4 formatters = 24 structural checks |
+| Inference UI Phase 2 (UC-3/UC-4) | 2026-03-12 | Impact analysis + state key usage in InferencePanel |
 
 ---
 
 ## History
 - 2026-03-09: rewritten to current state
 - 2026-03-10: updated for encoding safety workflow and Mermaid chunk split
+- 2026-03-12: added graph visual issues, completed Phase 2 items
