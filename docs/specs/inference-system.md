@@ -59,20 +59,22 @@ interface EvaluationContext {
 
 | type | フィールド |
 |------|-----------|
-| `flag` | `{ flag: string, value: boolean }` |
-| `resource` | `{ resource: string, operator: string, value: number }` |
-| `variable` | `{ variable: string, operator: string, value: string }` |
-| `timeWindow` | `{ min?: number, max?: number }` |
-| `and` / `or` / `not` | 論理結合 |
+| `flag` | `{ key: string, value: boolean }` |
+| `resource` | `{ key: string, op: '>=' \| '<=' \| '>' \| '<' \| '==', value: number }` |
+| `variable` | `{ key: string, op: '==' \| '!=' \| 'contains' \| '!contains', value: string \| number }` |
+| `timeWindow` | `{ start: number, end: number }` |
+| `and` / `or` / `not` | 論理結合 (`conditions: Condition[]` / `condition: Condition`) |
 
 ## 組み込みエフェクト Applicator
 
 | type | フィールド |
 |------|-----------|
-| `setFlag` | `{ flag: string, value: boolean }` |
-| `addResource` | `{ resource: string, amount: number }` |
-| `setVariable` | `{ variable: string, value: string }` |
+| `setFlag` | `{ key: string, value: boolean }` |
+| `addResource` | `{ key: string, delta: number }` |
+| `setVariable` | `{ key: string, value: string \| number }` |
 | `goto` | `{ target: string }` |
+
+> **Note**: `modifyVariable` は `condition-effect-ops.ts` に実装済みだが、inference registry には未登録。SP-001 参照。
 
 ## 前方連鎖 (Forward Chaining)
 
