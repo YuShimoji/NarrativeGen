@@ -14,6 +14,6 @@
     "test": "npm run test -w @narrativegen/engine-ts",
     "dev:backend": "npm run dev -w @narrativegen/backend",
     "lint": "npm run lint -w @narrativegen/engine-ts",
-    "doctor": "node scripts/narrgen-doctor.js"
+    "doctor": "node scripts/narrgen-doctor.cjs"
   }
 }

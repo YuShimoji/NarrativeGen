@@ -71,7 +71,7 @@ function checkUnityProject(projectRoot, options = {}) {
   const warnings = [];
   const results = [];
 
-  const unityPath = path.join(projectRoot, 'Packages', 'sdk-unity');
+  const unityPath = path.join(projectRoot, 'packages', 'sdk-unity');
   
   if (!fs.existsSync(unityPath)) {
     const msg = 'Packages/sdk-unity/ directory not found';
@@ -160,7 +160,7 @@ function checkTypeScriptEngine(projectRoot, options = {}) {
   const warnings = [];
   const results = [];
 
-  const enginePath = path.join(projectRoot, 'Packages', 'engine-ts');
+  const enginePath = path.join(projectRoot, 'packages', 'engine-ts');
   
   if (!fs.existsSync(enginePath)) {
     const msg = 'Packages/engine-ts/ directory not found';
@@ -276,11 +276,11 @@ function checkWebTester(projectRoot, options = {}) {
   const results = [];
 
   const testerPath = path.join(projectRoot, 'apps', 'web-tester');
-  
+
   if (!fs.existsSync(testerPath)) {
-    const msg = 'apps/web-tester/ directory not found';
-    issues.push(msg);
-    results.push(createCheckResult('tester.directory', 'ERROR', msg, { path: testerPath }));
+    const msg = 'apps/web-tester/ not found (optional component)';
+    warnings.push(msg);
+    results.push(createCheckResult('tester.directory', 'WARN', msg, { path: testerPath }));
     return { issues, warnings, results };
   }
 
@@ -508,45 +508,29 @@ function checkTestEnvironment(projectRoot, options = {}) {
   const warnings = [];
   const results = [];
 
-  // TEST_PROCEDURES.mdの確認
-  const testProceduresPath = path.join(projectRoot, 'TEST_PROCEDURES.md');
-  if (!fs.existsSync(testProceduresPath)) {
-    const msg = 'TEST_PROCEDURES.md not found';
-    warnings.push(msg);
-    results.push(createCheckResult('test.procedures-file', 'WARN', msg));
-    return { issues, warnings, results };
-  }
-
-  results.push(createCheckResult('test.procedures-file', 'OK', 'TEST_PROCEDURES.md exists'));
-
-  const testProcedures = readFileSafe(testProceduresPath) || '';
-  
-  // Node.jsバージョンの確認（TEST_PROCEDURES.mdから要件を抽出）
-  const nodeVersionMatch = testProcedures.match(/Node\.js\s+(\d+)\+/i);
-  if (nodeVersionMatch) {
-    const requiredVersion = parseInt(nodeVersionMatch[1]);
-    const nodeVersionResult = runCommand('node', ['--version']);
-    if (nodeVersionResult.status === 0) {
-      const currentVersion = nodeVersionResult.stdout.trim();
-      const currentMajor = parseInt(currentVersion.replace('v', '').split('.')[0]);
-      if (currentMajor >= requiredVersion) {
-        if (!quiet) {
-          console.log(` Node.js version: ${currentVersion} (required: ${requiredVersion}+)`);
-        }
-        results.push(createCheckResult('test.node-version', 'OK', 
-          `Node.js version ${currentVersion} meets requirement`, 
-          { current: currentVersion, required: `${requiredVersion}+` }));
-      } else {
-        const msg = `Node.js version ${currentVersion} does not meet requirement (${requiredVersion}+)`;
-        issues.push(msg);
-        results.push(createCheckResult('test.node-version', 'ERROR', msg, 
-          { current: currentVersion, required: `${requiredVersion}+` }));
+  // Node.jsバージョンの確認
+  const requiredNodeVersion = 20;
+  const nodeVersionResult = runCommand('node', ['--version']);
+  if (nodeVersionResult.status === 0) {
+    const currentVersion = nodeVersionResult.stdout.trim();
+    const currentMajor = parseInt(currentVersion.replace('v', '').split('.')[0]);
+    if (currentMajor >= requiredNodeVersion) {
+      if (!quiet) {
+        console.log(` Node.js version: ${currentVersion} (required: ${requiredNodeVersion}+)`);
       }
+      results.push(createCheckResult('test.node-version', 'OK',
+        `Node.js version ${currentVersion} meets requirement`,
+        { current: currentVersion, required: `${requiredNodeVersion}+` }));
     } else {
-      const msg = 'Failed to check Node.js version';
-      warnings.push(msg);
-      results.push(createCheckResult('test.node-version', 'WARN', msg));
+      const msg = `Node.js version ${currentVersion} does not meet requirement (${requiredNodeVersion}+)`;
+      issues.push(msg);
+      results.push(createCheckResult('test.node-version', 'ERROR', msg,
+        { current: currentVersion, required: `${requiredNodeVersion}+` }));
     }
+  } else {
+    const msg = 'Failed to check Node.js version';
+    warnings.push(msg);
+    results.push(createCheckResult('test.node-version', 'WARN', msg));
   }
 
   // npmバージョンの確認
@@ -596,7 +580,7 @@ function checkTestEnvironment(projectRoot, options = {}) {
   }
 
   // エンジンのビルド済み確認（テスト実行に必要）
-  const engineDistPath = path.join(projectRoot, 'Packages', 'engine-ts', 'dist');
+  const engineDistPath = path.join(projectRoot, 'packages', 'engine-ts', 'dist');
   if (fs.existsSync(engineDistPath)) {
     const jsFiles = fs.readdirSync(engineDistPath, { recursive: true })
       .filter(f => f.endsWith('.js'));
