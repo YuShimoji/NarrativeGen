@@ -27,7 +27,7 @@
 
 | 優先度 | タスク | 対象 | 難易度 | 見積時間 |
 |--------|--------|------|--------|----------|
-| **高** | E2E skip 36件の要否判断と対応 | web-tester | 中 | 1-2日 |
+| ~~高~~ | ~~E2E skip 36件の要否判断と対応~~ | ~~web-tester~~ | ~~中~~ | **完了** |
 | **高** | Yarn Spinner エクスポート実運用検証 | web-tester | 低 | 0.5日 |
 | **高** | GUI Undo/Redo の手動回帰テスト（SSOT Done 条件） | web-tester | 中 | 1日 |
 | **中** | inference/ ディレクトリの方針決定 | engine-ts | 中 | 0.5日 |
@@ -81,7 +81,7 @@ origin/main では `inference/` を削除して `condition-effect-ops.ts` に統
 
 ## 進捗指標
 
-- **テスト**: engine-ts 73/73 合格。E2E 24 passed / 36 skipped
+- **テスト**: engine-ts 73/73 合格。E2E 22 passed / 5 skipped (theme-toggle 33件削除済み、残skipは防御的ガード)
 - **ビルド**: engine-ts + web-tester ともに成功
 - **保守性**: main.js 69行（目標達成）
 - **エクスポート形式**: 4形式（CSV / Ink / Twine / Yarn）

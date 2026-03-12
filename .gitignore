@@ -37,3 +37,4 @@ test-results/
 # Project-specific ignores
 packages/sdk-unity/src/
 .serena/
+nul

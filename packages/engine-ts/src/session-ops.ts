@@ -8,6 +8,12 @@ import {
 const conditionCache = new Map<string, boolean>()
 const choicesCache = new Map<string, Choice[]>()
 
+/** Clear all memoization caches. Call when switching models in the same process. */
+export function clearSessionCaches(): void {
+  conditionCache.clear()
+  choicesCache.clear()
+}
+
 // Cache key generation for session state
 function getSessionKey(session: SessionState): string {
   return `${session.nodeId}:${session.time}:${JSON.stringify(session.flags)}:${JSON.stringify(session.resources)}:${JSON.stringify(session.variables)}`

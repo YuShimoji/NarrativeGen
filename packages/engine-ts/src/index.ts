@@ -213,7 +213,7 @@ export function loadModel(modelData: unknown, options: ValidationOptions = {}): 
 }
 
 // Re-export session operations (uses memoization cache internally)
-export { startSession, getAvailableChoices, applyChoice, serialize } from './session-ops.js'
+export { startSession, getAvailableChoices, applyChoice, serialize, clearSessionCaches } from './session-ops.js'
 
 export function deserialize(payload: string): SessionState {
   const parsed: unknown = JSON.parse(payload)

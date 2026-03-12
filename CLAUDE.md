@@ -52,7 +52,7 @@
 
 プロジェクト名: NarrativeGen
 環境: Node.js 20+ / TypeScript 5.x / Vite 5 / Vitest / Playwright
-ブランチ戦略: main (デフォルトブランチ: open-ws/engine-skeleton-2025-09-02)
+ブランチ戦略: trunk-based (main のみ)
 現フェーズ: β版相当（コア機能実装完了、Unity連携・最適化準備中）
 直近の状態: 推論エンジンUI統合Phase 1完了(SP-INF-UI-001)。browser.tsに推論APIをre-export、InferenceBridge/InferencePanelを新規作成、gui-editor.jsに統合。Live Previewに到達パス分析セクション追加。build/test(73件)/check:safety(18エントリ)全通過。手動確認未実施(dev serverでの表示確認が次ステップ)。
 記録先: 文字コード運用は `docs/plans/DEVELOPMENT_PLAN.md`、インシデント記録は `docs/governance/encoding-safety-incident-2026-03-10.md`、残課題は `docs/TECHNICAL_DEBT.md` で管理。
