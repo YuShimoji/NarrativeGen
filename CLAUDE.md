@@ -11,11 +11,16 @@
 方針: 汎用インタラクティブ物語エンジン (100+ノード対応が設計基準)
 直近の状態:
 
-  - インフラ復旧完了: git init, workspaces, 依存解決, schema/例モデル, 73テスト全通過
-  - 仕様書基盤完了: SP-001〜SP-007 (7仕様) + spec-index.json
-  - dead script整理完了: .cjs化, パス修正, stale参照除去
-  - web-tester構築完了: apps/web-tester/index.html (スタンドアロンHTML)
-  - 次: エンジン機能完成 (modifyVariable inference登録, Inventory/Entity統合, 性能テスト, Schema厳密化)
+  - TS Engine完成: modifyVariable推論登録、Entity/Inventory統合、hasItem/addItem/removeItem条件/エフェクト、例モデル2個 (quest/trading)
+  - C# SDK TSパリティ達成: InferenceRegistry (条件8種/エフェクト7種)、Session.Variables/Inventory、Brand→Name修正
+  - SPEC SYNC完了: SP-001/SP-002/SP-004/SP-005/SP-008 を実コードに合わせて更新
+  - 仕様8件: SP-001〜SP-008 + spec-index.json 同期済み
+  - 73テスト全通過、C#ビルド 0 errors
+  - 次の候補:
+    - A. playthrough.schema.json に entities/hasItem/addItem/removeItem 追加 (SP-002/SP-008)
+    - B. Web Tester に Inventory パネル追加 (SP-007/SP-008、UI要承認)
+    - C. spec-index.json pct 補正 (SP-003: 90→85, SP-006: 100→95, SP-007: 100→85)
+    - D. C# SDK テスト追加 (SP-005)
 
 ## DECISION LOG
 
@@ -26,6 +31,8 @@
 | 2026-03-12 | Phase 1 はエンジン完成を先行 | エンジン先行 / Twineコンバータ / 軽量エディタ / AIオーサリング | 基盤が未完成のままオーサリングツールを作ると手戻りが大きい |
 | 2026-03-12 | AI統合は将来フェーズ | 即着手 / 将来 / 対象外 | コアエンジンの安定が先。差別化の核となりうるが基盤完成後に本格化 |
 | 2026-03-12 | 100+ノード大規模モデル対応を設計基準 | 小規模 / 中規模 / 大規模 | 汎用エンジンとして実用的な規模感の基準 |
+| 2026-03-12 | C# SDK は InferenceRegistry パターン (TS パリティ) | switch文維持 / レジストリ化 | TSエンジンとの一貫性、プラグイン拡張性を重視 |
+| 2026-03-12 | Inventory は Session に統合 (GameSession は Entity 解決層) | Session統合 / 二重管理 | 状態の一元管理。GameSession は Entity→ID 変換の薄いラッパーとする |
 
 ## Key Paths
 
@@ -63,3 +70,6 @@
 ### sdk-unity
 - UPM パッケージ形式
 - Engine.LoadModel / StartSession / GetAvailableChoices / ApplyChoice
+- InferenceRegistry: 条件8種 / エフェクト7種 (TS パリティ達成)
+- Session: Flags, Resources, Variables, Inventory, Time
+- GameSession: Entity解決 + ChoiceOutcome処理の高レベルラッパー
