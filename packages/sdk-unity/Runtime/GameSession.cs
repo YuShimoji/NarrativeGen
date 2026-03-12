@@ -6,25 +6,17 @@ using NarrativeGen.Runtime;
 namespace NarrativeGen
 {
     /// <summary>
-    /// Manages runtime state for interactive narrative play, including inventory and outcomes.
+    /// Manages runtime state for interactive narrative play, including entity resolution and outcomes.
+    /// Inventory state is delegated to <see cref="Session"/>.
     /// </summary>
     public class GameSession
     {
         private readonly NarrativeModel _model;
         private Session _session;
         private readonly Dictionary<string, Entity> _entityMap;
-        private readonly List<string> _inventory;
         private readonly Dictionary<string, ChoiceOutcome> _choiceOutcomes;
         private ChoiceOutcome? _lastOutcome;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="GameSession"/> class.
-        /// </summary>
-        /// <param name="model">Narrative model driving the session.</param>
-        /// <param name="entities">Optional entity catalog available to the session.</param>
-        /// <param name="initialInventory">Optional list of entity identifiers granted at start.</param>
-        /// <param name="choiceOutcomes">Optional overrides for choice outcomes keyed by identifier.</param>
-        /// <param name="initialState">Optional previously saved session state.</param>
         public GameSession(
             NarrativeModel model,
             IEnumerable<Entity>? entities = null,
@@ -45,13 +37,28 @@ namespace NarrativeGen
                 }
             }
 
-            _inventory = new List<string>();
+            // Also load entities from model if available
+            if (model.Entities != null)
+            {
+                foreach (var kv in model.Entities)
+                {
+                    if (!_entityMap.ContainsKey(kv.Key))
+                        _entityMap[kv.Key] = kv.Value;
+                }
+            }
+
             if (initialInventory != null)
             {
+                var inventory = new List<string>(_session.Inventory);
                 foreach (var id in initialInventory)
                 {
-                    AddInventoryItem(id);
+                    if (!string.IsNullOrWhiteSpace(id) && _entityMap.ContainsKey(id) &&
+                        !inventory.Any(x => string.Equals(x, id, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        inventory.Add(id);
+                    }
                 }
+                _session = _session.With(inventory: inventory);
             }
 
             _choiceOutcomes = choiceOutcomes != null
@@ -59,29 +66,19 @@ namespace NarrativeGen
                 : new Dictionary<string, ChoiceOutcome>(StringComparer.OrdinalIgnoreCase);
         }
 
-        /// <summary>
-        /// Gets the current runtime session state.
-        /// </summary>
         public Session State => _session;
-
-        /// <summary>
-        /// Gets the most recent outcome produced by <see cref="ApplyChoice(string)"/>.
-        /// </summary>
         public ChoiceOutcome? LastOutcome => _lastOutcome;
 
         /// <summary>
         /// Lists the concrete entity instances currently held in the inventory.
         /// </summary>
-        /// <returns>Entities present in the session inventory.</returns>
         public IReadOnlyList<Entity> ListInventory()
         {
             var items = new List<Entity>();
-            foreach (var id in _inventory)
+            foreach (var id in _session.Inventory)
             {
                 if (_entityMap.TryGetValue(id, out var entity))
-                {
                     items.Add(entity);
-                }
             }
             return items;
         }
@@ -89,33 +86,31 @@ namespace NarrativeGen
         /// <summary>
         /// Adds an entity to the inventory if available.
         /// </summary>
-        /// <param name="id">Identifier of the entity to add.</param>
-        /// <returns>The added entity, or <c>null</c> if not available.</returns>
         public Entity? PickupEntity(string id)
         {
             if (string.IsNullOrWhiteSpace(id)) return null;
             if (!_entityMap.TryGetValue(id, out var entity)) return null;
-            AddInventoryItem(id);
+            if (_session.HasItem(id)) return entity;
+            var inventory = new List<string>(_session.Inventory) { id };
+            _session = _session.With(inventory: inventory);
             return entity;
         }
 
         /// <summary>
         /// Removes an entity from the inventory if present.
         /// </summary>
-        /// <param name="id">Identifier of the entity to remove.</param>
-        /// <returns>The removed entity, or <c>null</c> if not held.</returns>
         public Entity? RemoveEntity(string id)
         {
             if (string.IsNullOrWhiteSpace(id)) return null;
             if (!_entityMap.TryGetValue(id, out var entity)) return null;
-            RemoveInventoryItem(id);
+            var idx = _session.Inventory.FindIndex(x => string.Equals(x, id, StringComparison.OrdinalIgnoreCase));
+            if (idx == -1) return null;
+            var inventory = new List<string>(_session.Inventory);
+            inventory.RemoveAt(idx);
+            _session = _session.With(inventory: inventory);
             return entity;
         }
 
-        /// <summary>
-        /// Retrieves the available choices enriched with resolved outcomes.
-        /// </summary>
-        /// <returns>Collection of available choices.</returns>
         public IReadOnlyList<Choice> GetAvailableChoices()
         {
             var choices = Engine.GetAvailableChoices(_session, _model);
@@ -124,11 +119,6 @@ namespace NarrativeGen
                 .ToList();
         }
 
-        /// <summary>
-        /// Applies a choice and updates session state and inventory accordingly.
-        /// </summary>
-        /// <param name="choiceId">Identifier of the choice to execute.</param>
-        /// <returns>The updated session state.</returns>
         public Session ApplyChoice(string choiceId)
         {
             if (string.IsNullOrWhiteSpace(choiceId))
@@ -144,10 +134,7 @@ namespace NarrativeGen
         private ChoiceOutcome? ResolveOutcome(string choiceId)
         {
             if (_choiceOutcomes.TryGetValue(choiceId, out var outcome))
-            {
                 return outcome;
-            }
-
             var choice = FindChoiceInModel(choiceId);
             return choice?.Outcome;
         }
@@ -160,44 +147,21 @@ namespace NarrativeGen
                 var match = node.Choices.FirstOrDefault(c => string.Equals(c.Id, choiceId, StringComparison.OrdinalIgnoreCase));
                 if (match != null) return match;
             }
-
             return null;
         }
 
         private void ApplyOutcome(ChoiceOutcome? outcome)
         {
             if (outcome == null || string.IsNullOrWhiteSpace(outcome.Type)) return;
-
             switch (outcome.Type.ToUpperInvariant())
             {
                 case "ADD_ITEM":
-                    AddInventoryItem(outcome.Value);
+                    PickupEntity(outcome.Value);
                     break;
                 case "REMOVE_ITEM":
-                    RemoveInventoryItem(outcome.Value);
-                    break;
-                case "NONE":
-                case "":
-                    break;
-                default:
+                    RemoveEntity(outcome.Value);
                     break;
             }
-        }
-
-        private void AddInventoryItem(string? id)
-        {
-            if (string.IsNullOrWhiteSpace(id)) return;
-            var key = id!;
-            if (!_entityMap.ContainsKey(key)) return;
-            if (_inventory.Contains(key)) return;
-            _inventory.Add(key);
-        }
-
-        private void RemoveInventoryItem(string? id)
-        {
-            if (string.IsNullOrWhiteSpace(id)) return;
-            var key = id!;
-            _inventory.Remove(key);
         }
 
         private static Choice CloneChoiceWithOutcome(Choice source, ChoiceOutcome? outcome)

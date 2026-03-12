@@ -12,7 +12,7 @@ namespace NarrativeGen
     [AddComponentMenu("NarrativeGen/MinimalNarrativeController")]
     public class MinimalNarrativeController : MonoBehaviour
     {
-        [Tooltip("Entities CSV TextAsset (id,brand,description,cost)")]
+        [Tooltip("Entities CSV TextAsset (id,name,description,cost)")]
         public TextAsset EntitiesCsv;
 
         [Tooltip("Optional NarrativeModel JSON TextAsset. If not set, uses built-in sample.")]
@@ -189,7 +189,7 @@ namespace NarrativeGen
 
             foreach (var entity in inventory)
             {
-                Debug.Log($"[MinimalNarrativeController] Inventory contains: {entity.Id} ({entity.Brand})");
+                Debug.Log($"[MinimalNarrativeController] Inventory contains: {entity.Id} ({entity.Name})");
             }
         }
 
@@ -221,7 +221,7 @@ namespace NarrativeGen
             {
                 foreach (var entity in inventory)
                 {
-                    sb.AppendLine($"  - {entity.Brand} [{entity.Id}]");
+                    sb.AppendLine($"  - {entity.Name} [{entity.Id}]");
                 }
             }
 
@@ -393,15 +393,15 @@ namespace NarrativeGen
             {
                 colIndex[header[i]] = i;
             }
-            if (!colIndex.ContainsKey("id") || !colIndex.ContainsKey("brand") || !colIndex.ContainsKey("description") || !colIndex.ContainsKey("cost"))
-                throw new ArgumentException("Entities.csv must contain columns: id, brand, description, cost");
+            if (!colIndex.ContainsKey("id") || !colIndex.ContainsKey("name") || !colIndex.ContainsKey("description") || !colIndex.ContainsKey("cost"))
+                throw new ArgumentException("Entities.csv must contain columns: id, name, description, cost");
 
             for (int i = 1; i < rows.Count; i++)
             {
                 var row = rows[i];
                 string id = SafeGet(row, colIndex["id"]).Trim();
                 if (string.IsNullOrEmpty(id)) continue;
-                string brand = SafeGet(row, colIndex["brand"]).Trim();
+                string name = SafeGet(row, colIndex["name"]).Trim();
                 string description = SafeGet(row, colIndex["description"]).Trim();
                 string rawCost = SafeGet(row, colIndex["cost"]).Trim();
                 double cost = 0;
@@ -411,7 +411,7 @@ namespace NarrativeGen
                 result[id] = new Entity
                 {
                     Id = id,
-                    Brand = brand,
+                    Name = name,
                     Description = description,
                     Cost = cost,
                 };

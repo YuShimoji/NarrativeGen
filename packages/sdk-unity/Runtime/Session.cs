@@ -1,70 +1,60 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NarrativeGen.Runtime
 {
     /// <summary>
-    /// Represents the mutable state of a narrative session including flags, resources, and time.
+    /// Represents the state of a narrative session including flags, resources, variables, inventory, and time.
     /// </summary>
     public class Session
     {
-        /// <summary>
-        /// Gets the identifier of the node currently active in the session.
-        /// </summary>
         public string CurrentNodeId { get; }
-
-        /// <summary>
-        /// Gets the boolean flags tracked for this session.
-        /// </summary>
         public Dictionary<string, bool> Flags { get; }
-
-        /// <summary>
-        /// Gets the numeric resources tracked for this session.
-        /// </summary>
         public Dictionary<string, double> Resources { get; }
-
-        /// <summary>
-        /// Gets the narrative time marker for the session.
-        /// </summary>
+        public Dictionary<string, object> Variables { get; }
+        public List<string> Inventory { get; }
         public double Time { get; }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Session"/> class.
-        /// </summary>
-        /// <param name="currentNodeId">Active node identifier.</param>
-        /// <param name="flags">Optional initial flag dictionary.</param>
-        /// <param name="resources">Optional initial resource dictionary.</param>
-        /// <param name="time">Initial time value.</param>
         public Session(string currentNodeId,
                         Dictionary<string, bool>? flags = null,
                         Dictionary<string, double>? resources = null,
+                        Dictionary<string, object>? variables = null,
+                        List<string>? inventory = null,
                         double time = 0)
         {
             CurrentNodeId = currentNodeId;
             Flags = flags != null ? new Dictionary<string, bool>(flags) : new Dictionary<string, bool>();
             Resources = resources != null ? new Dictionary<string, double>(resources) : new Dictionary<string, double>();
+            Variables = variables != null ? new Dictionary<string, object>(variables) : new Dictionary<string, object>();
+            Inventory = inventory != null ? new List<string>(inventory) : new List<string>();
             Time = time;
         }
 
-        /// <summary>
-        /// Creates a copy of the session with selectively overridden values.
-        /// </summary>
-        /// <param name="currentNodeId">Optional override for the current node id.</param>
-        /// <param name="flags">Optional override for the flag dictionary.</param>
-        /// <param name="resources">Optional override for the resource dictionary.</param>
-        /// <param name="time">Optional override for the time value.</param>
-        /// <returns>A new session instance with the provided overrides.</returns>
         public Session With(
             string? currentNodeId = null,
             Dictionary<string, bool>? flags = null,
             Dictionary<string, double>? resources = null,
+            Dictionary<string, object>? variables = null,
+            List<string>? inventory = null,
             double? time = null)
         {
             return new Session(
                 currentNodeId ?? CurrentNodeId,
                 flags ?? Flags,
                 resources ?? Resources,
+                variables ?? Variables,
+                inventory ?? Inventory,
                 time ?? Time
             );
+        }
+
+        /// <summary>
+        /// Checks whether the inventory contains the given item (case-insensitive).
+        /// </summary>
+        public bool HasItem(string key)
+        {
+            return Inventory.Any(id => string.Equals(id, key, StringComparison.OrdinalIgnoreCase));
         }
     }
 }
