@@ -115,11 +115,49 @@ function testInvalidModels() {
   assert.throws(() => yarnFormatter.format({}), /Invalid model/)
 }
 
+// --- All-model smoke tests ---
+// For every .json model, verify all formatters produce non-empty output
+// and that node IDs from the model appear in the output.
+import { readdirSync } from 'node:fs'
+
+function testAllModelsAllFormatters() {
+  const modelsDir = resolve(__dirname, '../../../models/examples')
+  const files = readdirSync(modelsDir).filter(f => f.endsWith('.json'))
+  const formatters = [
+    { name: 'Twine', inst: new TwineFormatter() },
+    { name: 'Ink',   inst: new InkFormatter() },
+    { name: 'CSV',   inst: new CsvFormatter() },
+    { name: 'Yarn',  inst: new YarnFormatter() },
+  ]
+
+  let checks = 0
+  for (const f of files) {
+    const model = JSON.parse(readFileSync(resolve(modelsDir, f), 'utf8'))
+    const nodeIds = Object.keys(model.nodes || {})
+
+    for (const { name, inst } of formatters) {
+      const output = inst.format(model)
+      assert.ok(output.length > 0, `${name} output for ${f} should be non-empty`)
+
+      // Every node ID should appear somewhere in the output
+      for (const id of nodeIds) {
+        assert.ok(
+          output.includes(id),
+          `${name} output for ${f} should contain node ID "${id}"`
+        )
+      }
+      checks++
+    }
+  }
+  console.log(`  all-model smoke: ${checks} checks across ${files.length} models x ${formatters.length} formatters`)
+}
+
 testTwineFormatter()
 testInkFormatter()
 testCsvFormatter()
 testYarnFormatter()
 testYarnFormatterConditions()
 testInvalidModels()
+testAllModelsAllFormatters()
 
 console.log('verify-export-formatters: all checks passed')
