@@ -1,5 +1,6 @@
 export { flagEvaluator } from './flag.js'
 export { resourceEvaluator } from './resource.js'
 export { variableEvaluator } from './variable.js'
+export { hasItemEvaluator } from './has-item.js'
 export { timeWindowEvaluator } from './time-window.js'
 export { andEvaluator, orEvaluator, notEvaluator, setLogicalResolver } from './logical.js'

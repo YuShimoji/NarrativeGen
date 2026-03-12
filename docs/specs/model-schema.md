@@ -1,6 +1,6 @@
 # SP-002: Model Schema
 
-**Status**: done | **Pct**: 80 | **Cat**: data
+**Status**: partial | **Pct**: 80 | **Cat**: data
 
 ## 概要
 
@@ -22,6 +22,7 @@ NarrativeGen のプレイスルーモデルの JSON Schema 仕様。`models/sche
 |-----------|---|------|
 | `flags` | `Record<string, boolean>` | 初期フラグ状態 |
 | `resources` | `Record<string, number>` | 初期リソース値 |
+| `entities` | `Record<string, EntityDef>` | アイテム/アクター定義 (id, name, description, cost) |
 
 ## バリデーション層
 
@@ -55,9 +56,27 @@ start ─┬─ room_description ─┬─ hallway ─── ending
                         └─ hallway
 ```
 
+### `models/examples/quest.json`
+
+13ノードのクエストモデル。flags条件ゲート、resources (gold/wood)、setFlag、addResource を使用。
+
+- 使用条件: `flag`, `resource` (>=, <)
+- 使用エフェクト: `setFlag`, `addResource`
+- フロー: 長老に話す → 森で鍵と木材を集める → 橋を修理 → 山の竜の巣へ
+
+### `models/examples/trading.json`
+
+15ノードの交易モデル。resources (gold/reputation)、variables (haggle_attempts)、modifyVariable を使用。
+
+- 使用条件: `flag`, `resource` (>=)
+- 使用エフェクト: `setFlag`, `addResource`, `setVariable`, `modifyVariable`
+- フロー: 市場で交易 → 酒場で仕事/賭博 → 商人と交渉 → ギルド加入 or 宝探し
+
 ## 未実装・検討事項
 
 - [ ] Condition/Effect の各 type に対する厳密な schema 定義 (現在は additionalProperties: true)
+- [ ] `entities` フィールドの JSON Schema 定義 (EntityDef: id, name, description, cost)
+- [ ] `hasItem` / `addItem` / `removeItem` の厳密な schema 定義
 - [ ] lexicon.schema.json との連携
 - [ ] YAML / Ink 形式の入力サポート
 - [ ] モデルのバージョニング

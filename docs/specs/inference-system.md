@@ -15,8 +15,8 @@ inference/
   forward-chaining.ts   # 前方連鎖推論
   backward-chaining.ts  # 後方連鎖パス探索
   capabilities.ts       # 登録済み機能の動的発見
-  conditions/           # 組み込み条件 Evaluator (5種)
-  effects/              # 組み込みエフェクト Applicator (4種)
+  conditions/           # 組み込み条件 Evaluator (8種)
+  effects/              # 組み込みエフェクト Applicator (7種)
 ```
 
 ## レジストリパターン
@@ -52,6 +52,7 @@ interface EvaluationContext {
   resources: ResourceState
   variables: VariableState
   time: number
+  inventory?: string[]
 }
 ```
 
@@ -62,6 +63,7 @@ interface EvaluationContext {
 | `flag` | `{ key: string, value: boolean }` |
 | `resource` | `{ key: string, op: '>=' \| '<=' \| '>' \| '<' \| '==', value: number }` |
 | `variable` | `{ key: string, op: '==' \| '!=' \| 'contains' \| '!contains', value: string \| number }` |
+| `hasItem` | `{ key: string, value: boolean }` |
 | `timeWindow` | `{ start: number, end: number }` |
 | `and` / `or` / `not` | 論理結合 (`conditions: Condition[]` / `condition: Condition`) |
 
@@ -72,9 +74,10 @@ interface EvaluationContext {
 | `setFlag` | `{ key: string, value: boolean }` |
 | `addResource` | `{ key: string, delta: number }` |
 | `setVariable` | `{ key: string, value: string \| number }` |
+| `modifyVariable` | `{ key: string, op: '+' \| '-' \| '*' \| '/', value: number }` |
+| `addItem` | `{ key: string }` |
+| `removeItem` | `{ key: string }` |
 | `goto` | `{ target: string }` |
-
-> **Note**: `modifyVariable` は `condition-effect-ops.ts` に実装済みだが、inference registry には未登録。SP-001 参照。
 
 ## 前方連鎖 (Forward Chaining)
 

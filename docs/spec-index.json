@@ -6,7 +6,7 @@
     "pct": 100,
     "cat": "core",
     "file": "docs/specs/engine-core.md",
-    "summary": "コアエンジンAPI: モデル読み込み、セッション管理、条件評価、エフェクト適用、バリデーション"
+    "summary": "コアエンジンAPI: モデル読み込み、セッション管理、条件評価(8種)、エフェクト適用(7種)、インベントリ、バリデーション"
   },
   {
     "id": "SP-002",
@@ -15,7 +15,7 @@
     "pct": 80,
     "cat": "data",
     "file": "docs/specs/model-schema.md",
-    "summary": "プレイスルーモデルのJSON Schema。構造検証+整合性チェック。Condition/Effectの厳密スキーマは未定義"
+    "summary": "プレイスルーモデルのJSON Schema。構造検証+整合性チェック。entities/Condition/Effectの厳密スキーマは未定義"
   },
   {
     "id": "SP-003",
@@ -33,16 +33,16 @@
     "pct": 100,
     "cat": "core",
     "file": "docs/specs/inference-system.md",
-    "summary": "プラグイン可能な推論システム: 条件Evaluator/エフェクトApplicator、前方連鎖、後方連鎖"
+    "summary": "プラグイン可能な推論システム: 条件Evaluator 8種/エフェクトApplicator 7種、前方連鎖、後方連鎖"
   },
   {
     "id": "SP-005",
     "title": "Unity SDK",
     "status": "partial",
-    "pct": 70,
+    "pct": 85,
     "cat": "system",
     "file": "docs/specs/unity-sdk.md",
-    "summary": "Unity C# SDK (UPMパッケージ): Engine API、エディタツール、サンプル。TSエンジンとのパリティ未検証"
+    "summary": "Unity C# SDK (UPMパッケージ): Engine API、InferenceRegistry(条件8種/エフェクト7種)、Variables/Inventory統合済み。Serialize/テスト実行が未検証"
   },
   {
     "id": "SP-006",
@@ -61,5 +61,14 @@
     "cat": "ui",
     "file": "docs/specs/web-tester.md",
     "summary": "ブラウザベースのモデルプレイスルーテスター。D&D/ファイル選択でモデル読み込み、状態パネル+履歴付き"
+  },
+  {
+    "id": "SP-008",
+    "title": "Entity / Inventory System",
+    "status": "partial",
+    "pct": 85,
+    "cat": "core",
+    "file": "docs/specs/entity-inventory.md",
+    "summary": "アイテム定義(Entity)とインベントリ管理。TS/C#エンジン統合済み(hasItem/addItem/removeItem)。Web Tester UI・スキーマ定義は未実装"
   }
 ]

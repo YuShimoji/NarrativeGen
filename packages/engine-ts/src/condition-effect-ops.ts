@@ -32,6 +32,7 @@ export function evalCondition(
   resources: ResourceState,
   variables: VariableState,
   time: number,
+  inventory: string[] = [],
 ): boolean {
   if (cond.type === 'flag') {
     return (flags[cond.key] ?? false) === cond.value
@@ -66,17 +67,21 @@ export function evalCondition(
         return false
     }
   }
+  if (cond.type === 'hasItem') {
+    const has = inventory.some(id => id.toLowerCase() === cond.key.toLowerCase())
+    return has === cond.value
+  }
   if (cond.type === 'timeWindow') {
     return time >= cond.start && time <= cond.end
   }
   if (cond.type === 'and') {
-    return cond.conditions.every(c => evalCondition(c, flags, resources, variables, time))
+    return cond.conditions.every(c => evalCondition(c, flags, resources, variables, time, inventory))
   }
   if (cond.type === 'or') {
-    return cond.conditions.some(c => evalCondition(c, flags, resources, variables, time))
+    return cond.conditions.some(c => evalCondition(c, flags, resources, variables, time, inventory))
   }
   if (cond.type === 'not') {
-    return !evalCondition(cond.condition, flags, resources, variables, time)
+    return !evalCondition(cond.condition, flags, resources, variables, time, inventory)
   }
   return true
 }
@@ -104,6 +109,21 @@ export function applyEffect(effect: Effect, session: SessionState): SessionState
       default: result = numCur
     }
     return { ...session, variables: { ...session.variables, [effect.key]: result } }
+  }
+  if (effect.type === 'addItem') {
+    const inv = session.inventory ?? []
+    if (inv.some(id => id.toLowerCase() === effect.key.toLowerCase())) {
+      return session
+    }
+    return { ...session, inventory: [...inv, effect.key] }
+  }
+  if (effect.type === 'removeItem') {
+    const inv = session.inventory ?? []
+    const idx = inv.findIndex(id => id.toLowerCase() === effect.key.toLowerCase())
+    if (idx === -1) return session
+    const next = [...inv]
+    next.splice(idx, 1)
+    return { ...session, inventory: next }
   }
   if (effect.type === 'goto') {
     return { ...session, nodeId: effect.target }

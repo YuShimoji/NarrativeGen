@@ -1,4 +1,7 @@
 export { setFlagApplicator } from './set-flag.js'
 export { addResourceApplicator } from './add-resource.js'
 export { setVariableApplicator } from './set-variable.js'
+export { modifyVariableApplicator } from './modify-variable.js'
+export { addItemApplicator } from './add-item.js'
+export { removeItemApplicator } from './remove-item.js'
 export { gotoApplicator } from './goto.js'

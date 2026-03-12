@@ -1,0 +1,167 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "village",
+  "flags": {
+    "has_key": false,
+    "talked_to_elder": false,
+    "bridge_repaired": false
+  },
+  "resources": {
+    "gold": 10,
+    "wood": 0
+  },
+  "nodes": {
+    "village": {
+      "id": "village",
+      "text": "You stand in a small village square. An elder sits on a bench. A shop is to the east, and a forest path leads north.",
+      "choices": [
+        { "id": "talk_elder", "text": "Talk to the elder", "target": "elder_dialog" },
+        { "id": "go_shop", "text": "Visit the shop", "target": "shop" },
+        {
+          "id": "go_forest",
+          "text": "Head into the forest",
+          "target": "forest",
+          "conditions": [{ "type": "flag", "key": "talked_to_elder", "value": true }]
+        },
+        {
+          "id": "go_bridge",
+          "text": "Cross the bridge",
+          "target": "bridge",
+          "conditions": [{ "type": "flag", "key": "talked_to_elder", "value": true }]
+        }
+      ]
+    },
+    "elder_dialog": {
+      "id": "elder_dialog",
+      "text": "The elder speaks: 'A dragon has taken the mountain pass. You must find the ancient key in the forest and repair the bridge to reach its lair. Bring wood from the forest.'",
+      "choices": [
+        {
+          "id": "accept_quest",
+          "text": "Accept the quest",
+          "target": "village",
+          "effects": [{ "type": "setFlag", "key": "talked_to_elder", "value": true }]
+        }
+      ]
+    },
+    "shop": {
+      "id": "shop",
+      "text": "The shopkeeper displays various goods. An axe costs 5 gold.",
+      "choices": [
+        {
+          "id": "buy_axe",
+          "text": "Buy the axe (5 gold)",
+          "target": "shop_bought",
+          "conditions": [{ "type": "resource", "key": "gold", "op": ">=", "value": 5 }],
+          "effects": [
+            { "type": "addResource", "key": "gold", "delta": -5 },
+            { "type": "setFlag", "key": "has_axe", "value": true }
+          ]
+        },
+        { "id": "leave_shop", "text": "Leave", "target": "village" }
+      ]
+    },
+    "shop_bought": {
+      "id": "shop_bought",
+      "text": "You purchase the axe. The shopkeeper nods approvingly.",
+      "choices": [
+        { "id": "back_village", "text": "Return to the village", "target": "village" }
+      ]
+    },
+    "forest": {
+      "id": "forest",
+      "text": "Tall trees surround you. You see a hollow tree and a path deeper into the woods.",
+      "choices": [
+        {
+          "id": "search_tree",
+          "text": "Search the hollow tree",
+          "target": "found_key",
+          "conditions": [{ "type": "flag", "key": "has_key", "value": false }]
+        },
+        {
+          "id": "chop_wood",
+          "text": "Chop wood with the axe",
+          "target": "chopped_wood",
+          "conditions": [
+            { "type": "flag", "key": "has_axe", "value": true },
+            { "type": "resource", "key": "wood", "op": "<", "value": 3 }
+          ]
+        },
+        { "id": "back_from_forest", "text": "Return to the village", "target": "village" }
+      ]
+    },
+    "found_key": {
+      "id": "found_key",
+      "text": "Inside the hollow tree, you find an ancient key covered in moss.",
+      "choices": [
+        {
+          "id": "take_key",
+          "text": "Take the key",
+          "target": "forest",
+          "effects": [{ "type": "setFlag", "key": "has_key", "value": true }]
+        }
+      ]
+    },
+    "chopped_wood": {
+      "id": "chopped_wood",
+      "text": "You swing the axe and gather a bundle of wood.",
+      "choices": [
+        {
+          "id": "continue_forest",
+          "text": "Continue exploring",
+          "target": "forest",
+          "effects": [{ "type": "addResource", "key": "wood", "delta": 1 }]
+        }
+      ]
+    },
+    "bridge": {
+      "id": "bridge",
+      "text": "The old bridge is broken. Planks are missing over the chasm below.",
+      "choices": [
+        {
+          "id": "repair_bridge",
+          "text": "Repair the bridge (requires 3 wood)",
+          "target": "bridge_fixed",
+          "conditions": [
+            { "type": "resource", "key": "wood", "op": ">=", "value": 3 },
+            { "type": "flag", "key": "bridge_repaired", "value": false }
+          ],
+          "effects": [
+            { "type": "addResource", "key": "wood", "delta": -3 },
+            { "type": "setFlag", "key": "bridge_repaired", "value": true }
+          ]
+        },
+        { "id": "back_bridge", "text": "Go back to the village", "target": "village" }
+      ]
+    },
+    "bridge_fixed": {
+      "id": "bridge_fixed",
+      "text": "You lay the planks across the gaps. The bridge is passable now.",
+      "choices": [
+        {
+          "id": "cross_bridge",
+          "text": "Cross the bridge",
+          "target": "mountain",
+          "conditions": [{ "type": "flag", "key": "bridge_repaired", "value": true }]
+        }
+      ]
+    },
+    "mountain": {
+      "id": "mountain",
+      "text": "You reach the dragon's lair at the mountain peak. A massive door blocks the entrance.",
+      "choices": [
+        {
+          "id": "use_key",
+          "text": "Use the ancient key",
+          "target": "victory",
+          "conditions": [{ "type": "flag", "key": "has_key", "value": true }]
+        },
+        { "id": "retreat", "text": "Retreat to the village", "target": "village" }
+      ]
+    },
+    "victory": {
+      "id": "victory",
+      "text": "The ancient key turns in the lock. The door opens to reveal a chamber filled with treasure. The dragon is gone, driven away by the key's magic. The village is saved!",
+      "choices": []
+    }
+  }
+}

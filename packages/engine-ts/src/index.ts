@@ -48,6 +48,8 @@ function isSessionState(value: unknown): value is SessionState {
   if (!isFlagStateRecord(flags)) return false
   if (!isResourceStateRecord(resources)) return false
   if (!isVariableStateRecord(variables)) return false
+  const inventory = value.inventory
+  if (!Array.isArray(inventory) || !inventory.every((item: unknown) => typeof item === 'string')) return false
   return true
 }
 
@@ -223,4 +225,4 @@ export function deserialize(payload: string): SessionState {
   return parsed
 }
 
-export type { Choice, Condition, Effect, FlagState, Model, NodeDef, ResourceState, SessionState, VariableState } from './types'
+export type { Choice, Condition, Effect, EntityDef, FlagState, Model, NodeDef, ResourceState, SessionState, VariableState } from './types'

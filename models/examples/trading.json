@@ -1,0 +1,211 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "market",
+  "flags": {
+    "merchant_friendly": false,
+    "has_map": false
+  },
+  "resources": {
+    "gold": 20,
+    "reputation": 0
+  },
+  "nodes": {
+    "market": {
+      "id": "market",
+      "text": "The bustling market square stretches before you. Merchants call out their wares. A tavern stands to the west, and a mysterious merchant beckons from a shadowy stall.",
+      "choices": [
+        { "id": "go_tavern", "text": "Enter the tavern", "target": "tavern" },
+        { "id": "mysterious_merchant", "text": "Approach the mysterious merchant", "target": "merchant" },
+        {
+          "id": "go_guild",
+          "text": "Visit the trader's guild",
+          "target": "guild",
+          "conditions": [{ "type": "resource", "key": "reputation", "op": ">=", "value": 3 }]
+        },
+        {
+          "id": "buy_map",
+          "text": "Buy a treasure map (15 gold)",
+          "target": "bought_map",
+          "conditions": [
+            { "type": "resource", "key": "gold", "op": ">=", "value": 15 },
+            { "type": "flag", "key": "has_map", "value": false }
+          ],
+          "effects": [
+            { "type": "addResource", "key": "gold", "delta": -15 },
+            { "type": "setFlag", "key": "has_map", "value": true }
+          ]
+        },
+        {
+          "id": "follow_map",
+          "text": "Follow the treasure map",
+          "target": "treasure_hunt",
+          "conditions": [{ "type": "flag", "key": "has_map", "value": true }]
+        }
+      ]
+    },
+    "tavern": {
+      "id": "tavern",
+      "text": "The tavern is warm and lively. A bard plays in the corner. The innkeeper offers work: deliver a package for 8 gold.",
+      "choices": [
+        {
+          "id": "accept_delivery",
+          "text": "Accept the delivery job",
+          "target": "delivery_done",
+          "effects": [
+            { "type": "addResource", "key": "gold", "delta": 8 },
+            { "type": "addResource", "key": "reputation", "delta": 1 }
+          ]
+        },
+        {
+          "id": "gamble",
+          "text": "Gamble at dice (costs 5 gold)",
+          "target": "gamble_result",
+          "conditions": [{ "type": "resource", "key": "gold", "op": ">=", "value": 5 }],
+          "effects": [{ "type": "addResource", "key": "gold", "delta": -5 }]
+        },
+        { "id": "leave_tavern", "text": "Leave", "target": "market" }
+      ]
+    },
+    "delivery_done": {
+      "id": "delivery_done",
+      "text": "You deliver the package across town and return with your pay. The innkeeper smiles.",
+      "choices": [
+        { "id": "back_market_delivery", "text": "Return to the market", "target": "market" }
+      ]
+    },
+    "gamble_result": {
+      "id": "gamble_result",
+      "text": "The dice roll in your favor! You win double your bet.",
+      "choices": [
+        {
+          "id": "collect_winnings",
+          "text": "Collect your winnings",
+          "target": "tavern",
+          "effects": [{ "type": "addResource", "key": "gold", "delta": 10 }]
+        }
+      ]
+    },
+    "merchant": {
+      "id": "merchant",
+      "text": "The hooded merchant whispers: 'I deal in rare goods. Prove your worth, and I will offer you something special.'",
+      "choices": [
+        {
+          "id": "bribe_merchant",
+          "text": "Offer 10 gold as a gift",
+          "target": "merchant_pleased",
+          "conditions": [{ "type": "resource", "key": "gold", "op": ">=", "value": 10 }],
+          "effects": [
+            { "type": "addResource", "key": "gold", "delta": -10 },
+            { "type": "setFlag", "key": "merchant_friendly", "value": true },
+            { "type": "addResource", "key": "reputation", "delta": 2 }
+          ]
+        },
+        {
+          "id": "haggle",
+          "text": "Try to haggle",
+          "target": "haggle_result",
+          "effects": [
+            { "type": "setVariable", "key": "haggle_attempts", "value": 1 },
+            { "type": "addResource", "key": "reputation", "delta": 1 }
+          ]
+        },
+        { "id": "leave_merchant", "text": "Walk away", "target": "market" }
+      ]
+    },
+    "merchant_pleased": {
+      "id": "merchant_pleased",
+      "text": "The merchant smiles beneath the hood. 'You are generous. I shall remember this.'",
+      "choices": [
+        { "id": "back_market_merchant", "text": "Return to the market", "target": "market" }
+      ]
+    },
+    "haggle_result": {
+      "id": "haggle_result",
+      "text": "The merchant narrows their eyes. 'Interesting approach. Perhaps we can do business after all.'",
+      "choices": [
+        {
+          "id": "haggle_again",
+          "text": "Press harder",
+          "target": "haggle_success",
+          "effects": [
+            { "type": "modifyVariable", "key": "haggle_attempts", "op": "+", "value": 1 }
+          ]
+        },
+        { "id": "give_up_haggle", "text": "Accept the price", "target": "market" }
+      ]
+    },
+    "haggle_success": {
+      "id": "haggle_success",
+      "text": "Your persistence pays off. The merchant offers you a discount on future trades and reveals a shortcut to the guild.",
+      "choices": [
+        {
+          "id": "take_deal",
+          "text": "Accept the deal",
+          "target": "market",
+          "effects": [
+            { "type": "setFlag", "key": "merchant_friendly", "value": true },
+            { "type": "addResource", "key": "reputation", "delta": 2 }
+          ]
+        }
+      ]
+    },
+    "bought_map": {
+      "id": "bought_map",
+      "text": "The cartographer hands you a yellowed parchment. 'Follow the old road east,' she says.",
+      "choices": [
+        { "id": "study_map", "text": "Study the map and return", "target": "market" }
+      ]
+    },
+    "guild": {
+      "id": "guild",
+      "text": "The trader's guild hall is imposing. Only those with sufficient reputation may enter. The guildmaster offers a final challenge: invest 20 gold to become a guild member.",
+      "choices": [
+        {
+          "id": "join_guild",
+          "text": "Pay 20 gold to join",
+          "target": "guild_member",
+          "conditions": [{ "type": "resource", "key": "gold", "op": ">=", "value": 20 }],
+          "effects": [
+            { "type": "addResource", "key": "gold", "delta": -20 },
+            { "type": "addResource", "key": "reputation", "delta": 5 }
+          ]
+        },
+        { "id": "leave_guild", "text": "Not yet", "target": "market" }
+      ]
+    },
+    "guild_member": {
+      "id": "guild_member",
+      "text": "Welcome, guild member! The guildmaster presents you with a golden seal. Your trading career has truly begun.",
+      "choices": [
+        {
+          "id": "celebrate",
+          "text": "Celebrate at the tavern",
+          "target": "ending_guild",
+          "effects": [{ "type": "modifyVariable", "key": "haggle_attempts", "op": "*", "value": 0 }]
+        }
+      ]
+    },
+    "treasure_hunt": {
+      "id": "treasure_hunt",
+      "text": "Following the map, you discover a hidden cave. Inside, a chest gleams with gold.",
+      "choices": [
+        {
+          "id": "open_chest",
+          "text": "Open the chest",
+          "target": "ending_treasure",
+          "effects": [{ "type": "addResource", "key": "gold", "delta": 50 }]
+        }
+      ]
+    },
+    "ending_treasure": {
+      "id": "ending_treasure",
+      "text": "The chest contains a fortune! With this wealth, you could buy anything in the market. Your adventure as a treasure hunter is just beginning.",
+      "choices": []
+    },
+    "ending_guild": {
+      "id": "ending_guild",
+      "text": "As a guild member, trade routes across the kingdom open before you. From humble beginnings in the market square, you have risen to become a master trader.",
+      "choices": []
+    }
+  }
+}

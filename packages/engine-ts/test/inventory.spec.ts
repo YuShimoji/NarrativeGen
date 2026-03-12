@@ -4,8 +4,8 @@ import type { Entity } from '../src/entities'
 import { Inventory } from '../src/inventory'
 
 const entities: Entity[] = [
-  { id: 'mac_burger_001', brand: 'MacBurger', description: 'おいしいバーガー', cost: 100 },
-  { id: 'coffee_001', brand: 'CoffeeStand', description: '香り高いコーヒー', cost: 50 },
+  { id: 'mac_burger_001', name: 'MacBurger', description: 'おいしいバーガー', cost: 100 },
+  { id: 'coffee_001', name: 'CoffeeStand', description: '香り高いコーヒー', cost: 50 },
 ]
 
 describe('Inventory', () => {

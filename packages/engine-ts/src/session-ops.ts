@@ -10,11 +10,11 @@ const choicesCache = new Map<string, Choice[]>()
 
 // Cache key generation for session state
 function getSessionKey(session: SessionState): string {
-  return `${session.nodeId}:${session.time}:${JSON.stringify(session.flags)}:${JSON.stringify(session.resources)}:${JSON.stringify(session.variables)}`
+  return `${session.nodeId}:${session.time}:${JSON.stringify(session.flags)}:${JSON.stringify(session.resources)}:${JSON.stringify(session.variables)}:${JSON.stringify(session.inventory)}`
 }
 
-function getConditionKey(cond: Condition, flags: Record<string, boolean>, resources: Record<string, number>, variables: Record<string, string | number>, time: number): string {
-  return `${JSON.stringify(cond)}:${JSON.stringify(flags)}:${JSON.stringify(resources)}:${JSON.stringify(variables)}:${time}`
+function getConditionKey(cond: Condition, flags: Record<string, boolean>, resources: Record<string, number>, variables: Record<string, string | number>, time: number, inventory: string[]): string {
+  return `${JSON.stringify(cond)}:${JSON.stringify(flags)}:${JSON.stringify(resources)}:${JSON.stringify(variables)}:${time}:${JSON.stringify(inventory)}`
 }
 
 function evalCondition(
@@ -23,13 +23,14 @@ function evalCondition(
   resources: Record<string, number>,
   variables: Record<string, string | number>,
   time: number,
+  inventory: string[] = [],
 ): boolean {
-  const key = getConditionKey(cond, flags, resources, variables, time)
+  const key = getConditionKey(cond, flags, resources, variables, time, inventory)
   if (conditionCache.has(key)) {
     return conditionCache.get(key)!
   }
 
-  const result = evalConditionCore(cond, flags, resources, variables, time)
+  const result = evalConditionCore(cond, flags, resources, variables, time, inventory)
 
   // Cache result (limit cache size to prevent memory leaks)
   if (conditionCache.size > 10000) {
@@ -46,6 +47,7 @@ export function startSession(model: Model, initial?: Partial<SessionState>): Ses
     flags: { ...(model.flags ?? {}), ...(initial?.flags ?? {}) },
     resources: { ...(model.resources ?? {}), ...(initial?.resources ?? {}) },
     variables: initial?.variables ?? {},
+    inventory: initial?.inventory ?? [],
     time: initial?.time ?? 0,
   }
 }
@@ -64,7 +66,7 @@ export function getAvailableChoices(session: SessionState, model: Model): Choice
   const choices = node.choices ?? []
   const available = choices.filter((c) =>
     (c.conditions ?? []).every((cond) =>
-      evalCondition(cond, session.flags, session.resources, session.variables, session.time),
+      evalCondition(cond, session.flags, session.resources, session.variables, session.time, session.inventory),
     ),
   )
 

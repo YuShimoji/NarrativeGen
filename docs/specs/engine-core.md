@@ -49,6 +49,7 @@ interface Model {
   startNode: string
   flags?: FlagState       // Record<string, boolean>
   resources?: ResourceState // Record<string, number>
+  entities?: Record<string, EntityDef>  // アイテム/アクター定義
   nodes: Record<string, NodeDef>
 }
 ```
@@ -84,6 +85,7 @@ interface SessionState {
   flags: FlagState
   resources: ResourceState
   variables: VariableState  // Record<string, string | number>
+  inventory: string[]       // 所持アイテムIDリスト (ユニーク)
   time: number
 }
 ```
@@ -95,6 +97,7 @@ interface SessionState {
 | `flag` | `key`, `value: boolean` | `flags[key] === value` |
 | `resource` | `key`, `op`, `value: number` | `resources[key] op value` |
 | `variable` | `key`, `op`, `value` | 文字列: `==`, `!=`, `contains`, `!contains` / 数値: `>=`, `<=`, `>`, `<` |
+| `hasItem` | `key`, `value: boolean` | `inventory` にアイテムが存在するか (case-insensitive) |
 | `timeWindow` | `start`, `end` | `time >= start && time <= end` |
 | `and` | `conditions: Condition[]` | 全条件が真 |
 | `or` | `conditions: Condition[]` | いずれかの条件が真 |
@@ -108,6 +111,8 @@ interface SessionState {
 | `addResource` | `key`, `delta: number` | `resources[key] += delta` |
 | `setVariable` | `key`, `value` | `variables[key] = value` |
 | `modifyVariable` | `key`, `op: +\|-\|*\|/`, `value: number` | 数値演算。0除算はスキップ |
+| `addItem` | `key: string` | `inventory` にアイテム追加 (重複時 no-op, case-insensitive) |
+| `removeItem` | `key: string` | `inventory` からアイテム除去 (不在時 no-op, case-insensitive) |
 | `goto` | `target: string` | `nodeId = target` (通常の target 遷移をオーバーライド) |
 
 ## バリデーション (`assertModelIntegrity`)
