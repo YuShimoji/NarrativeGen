@@ -1,0 +1,56 @@
+[
+  {
+    "id": "SP-001",
+    "title": "Engine Core API",
+    "status": "done",
+    "pct": 100,
+    "cat": "core",
+    "file": "docs/specs/engine-core.md",
+    "summary": "コアエンジンAPI: モデル読み込み、セッション管理、条件評価、エフェクト適用、バリデーション"
+  },
+  {
+    "id": "SP-002",
+    "title": "Model Schema",
+    "status": "partial",
+    "pct": 80,
+    "cat": "data",
+    "file": "docs/specs/model-schema.md",
+    "summary": "プレイスルーモデルのJSON Schema。構造検証+整合性チェック。Condition/Effectの厳密スキーマは未定義"
+  },
+  {
+    "id": "SP-003",
+    "title": "REST API (Backend)",
+    "status": "done",
+    "pct": 90,
+    "cat": "infra",
+    "file": "docs/specs/rest-api.md",
+    "summary": "Express REST API: モデルCRUD、セッション管理、AI統合、分析。インメモリストレージ"
+  },
+  {
+    "id": "SP-004",
+    "title": "Inference System",
+    "status": "done",
+    "pct": 100,
+    "cat": "core",
+    "file": "docs/specs/inference-system.md",
+    "summary": "プラグイン可能な推論システム: 条件Evaluator/エフェクトApplicator、前方連鎖、後方連鎖"
+  },
+  {
+    "id": "SP-005",
+    "title": "Unity SDK",
+    "status": "partial",
+    "pct": 70,
+    "cat": "system",
+    "file": "docs/specs/unity-sdk.md",
+    "summary": "Unity C# SDK (UPMパッケージ): Engine API、エディタツール、サンプル。TSエンジンとのパリティ未検証"
+  },
+  {
+    "id": "SP-006",
+    "title": "Paraphrase System",
+    "status": "done",
+    "pct": 100,
+    "cat": "core",
+    "file": "docs/specs/paraphrase.md",
+    "summary": "テキスト言い換え2層: ローカル同義語辞書(決定的) + AI言い換え(OpenAI/Mock)"
+  }
+]
