@@ -26,7 +26,7 @@ namespace NarrativeGen
         {
             if (_title != null)
             {
-                _title.text = entity.Brand;
+                _title.text = entity.Name;
             }
 
             if (_description != null)

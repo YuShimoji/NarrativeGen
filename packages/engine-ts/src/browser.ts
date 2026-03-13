@@ -29,6 +29,7 @@ export function startSession(model: Model, initial?: Partial<SessionState>): Ses
     flags: { ...(model.flags ?? {}), ...(initial?.flags ?? {}) },
     resources: { ...(model.resources ?? {}), ...(initial?.resources ?? {}) },
     variables: initial?.variables ?? {},
+    inventory: initial?.inventory ?? [],
     time: initial?.time ?? 0,
   }
 }
@@ -39,7 +40,7 @@ export function getAvailableChoices(session: SessionState, model: Model): Choice
   const choices = node.choices ?? []
   return choices.filter((c) =>
     (c.conditions ?? []).every((cond) =>
-      evalCondition(cond, session.flags, session.resources, session.variables, session.time),
+      evalCondition(cond, session.flags, session.resources, session.variables, session.time, session.inventory),
     ),
   )
 }
@@ -66,7 +67,7 @@ export function applyChoice(session: SessionState, model: Model, choiceId: strin
   return next
 }
 
-export type { Choice, Condition, Effect, FlagState, Model, NodeDef, ResourceState, SessionState, VariableState } from './types'
+export type { Choice, Condition, Effect, EntityDef, FlagState, Model, NodeDef, ResourceState, SessionState, VariableState } from './types'
 
 // Inference engine
 export { findPathToGoal, findReachableNodes } from './inference/backward-chaining.js'

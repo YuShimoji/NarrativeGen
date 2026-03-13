@@ -4,6 +4,7 @@ import {
   flagEvaluator,
   resourceEvaluator,
   variableEvaluator,
+  hasItemEvaluator,
   timeWindowEvaluator,
   andEvaluator,
   orEvaluator,
@@ -14,6 +15,9 @@ import {
   setFlagApplicator,
   addResourceApplicator,
   setVariableApplicator,
+  modifyVariableApplicator,
+  addItemApplicator,
+  removeItemApplicator,
   gotoApplicator,
 } from './effects/index.js'
 
@@ -69,6 +73,7 @@ export function registerBuiltins(): void {
   registry.registerCondition(flagEvaluator)
   registry.registerCondition(resourceEvaluator)
   registry.registerCondition(variableEvaluator)
+  registry.registerCondition(hasItemEvaluator)
   registry.registerCondition(timeWindowEvaluator)
   registry.registerCondition(andEvaluator)
   registry.registerCondition(orEvaluator)
@@ -77,6 +82,9 @@ export function registerBuiltins(): void {
   registry.registerEffect(setFlagApplicator)
   registry.registerEffect(addResourceApplicator)
   registry.registerEffect(setVariableApplicator)
+  registry.registerEffect(modifyVariableApplicator)
+  registry.registerEffect(addItemApplicator)
+  registry.registerEffect(removeItemApplicator)
   registry.registerEffect(gotoApplicator)
 
   // Wire up logical evaluators to use registry-based evaluation

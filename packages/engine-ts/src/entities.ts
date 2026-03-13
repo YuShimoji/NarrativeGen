@@ -2,7 +2,7 @@ import fs from 'fs'
 
 export interface Entity {
   id: string
-  brand: string
+  name: string
   description: string
   cost: number
 }
@@ -49,7 +49,7 @@ export function parseEntitiesCsv(csv: string): Entity[] {
   const header = parseCsvRow(lines[0])
   const colIndex: Record<string, number> = {}
   header.forEach((h, idx) => (colIndex[h] = idx))
-  const required = ['id', 'brand', 'description', 'cost']
+  const required = ['id', 'name', 'description', 'cost']
   for (const key of required) {
     if (!(key in colIndex)) throw new Error(`Missing column '${key}' in Entities.csv`)
   }
@@ -62,7 +62,7 @@ export function parseEntitiesCsv(csv: string): Entity[] {
     const cost = rawCost.length > 0 ? Number(rawCost) : 0
     out.push({
       id,
-      brand: (row[colIndex['brand']] ?? '').trim(),
+      name: (row[colIndex['name']] ?? '').trim(),
       description: (row[colIndex['description']] ?? '').trim(),
       cost: Number.isFinite(cost) ? cost : 0,
     })

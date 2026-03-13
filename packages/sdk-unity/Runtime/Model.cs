@@ -39,6 +39,9 @@ namespace NarrativeGen
         /// <summary>
         /// Gets or sets the collection of narrative nodes keyed by identifier.
         /// </summary>
+        [JsonProperty("entities")]
+        public Dictionary<string, Entity>? Entities { get; set; }
+
         [JsonProperty("nodes")]
         public Dictionary<string, Node> Nodes { get; set; } = new();
 
@@ -237,17 +240,65 @@ namespace NarrativeGen
     /// </summary>
     public class TimeWindowCondition : Condition
     {
-        /// <summary>
-        /// Gets or sets the start time of the window.
-        /// </summary>
         [JsonProperty("start")]
         public double Start { get; set; }
 
-        /// <summary>
-        /// Gets or sets the end time of the window.
-        /// </summary>
         [JsonProperty("end")]
         public double End { get; set; }
+    }
+
+    /// <summary>
+    /// Condition that compares a variable value.
+    /// </summary>
+    public class VariableCondition : Condition
+    {
+        [JsonProperty("key")]
+        public string Key { get; set; } = string.Empty;
+
+        [JsonProperty("op")]
+        public string Op { get; set; } = "==";
+
+        [JsonProperty("value")]
+        public object Value { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Condition that checks inventory for an item (case-insensitive).
+    /// </summary>
+    public class HasItemCondition : Condition
+    {
+        [JsonProperty("key")]
+        public string Key { get; set; } = string.Empty;
+
+        [JsonProperty("value")]
+        public bool Value { get; set; } = true;
+    }
+
+    /// <summary>
+    /// Logical AND: all sub-conditions must be true.
+    /// </summary>
+    public class AndCondition : Condition
+    {
+        [JsonProperty("conditions")]
+        public List<Condition> Conditions { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Logical OR: at least one sub-condition must be true.
+    /// </summary>
+    public class OrCondition : Condition
+    {
+        [JsonProperty("conditions")]
+        public List<Condition> Conditions { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Logical NOT: negates the sub-condition.
+    /// </summary>
+    public class NotCondition : Condition
+    {
+        [JsonProperty("condition")]
+        public Condition SubCondition { get; set; } = null!;
     }
 
     // Effects
@@ -305,10 +356,52 @@ namespace NarrativeGen
     /// </summary>
     public class GotoEffect : Effect
     {
-        /// <summary>
-        /// Gets or sets the identifier of the destination node.
-        /// </summary>
         [JsonProperty("target")]
         public string Target { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Effect that sets a variable to a specific value.
+    /// </summary>
+    public class SetVariableEffect : Effect
+    {
+        [JsonProperty("key")]
+        public string Key { get; set; } = string.Empty;
+
+        [JsonProperty("value")]
+        public object Value { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Effect that performs arithmetic on a numeric variable.
+    /// </summary>
+    public class ModifyVariableEffect : Effect
+    {
+        [JsonProperty("key")]
+        public string Key { get; set; } = string.Empty;
+
+        [JsonProperty("op")]
+        public string Op { get; set; } = "+";
+
+        [JsonProperty("value")]
+        public double Value { get; set; }
+    }
+
+    /// <summary>
+    /// Effect that adds an item to the inventory (unique, case-insensitive).
+    /// </summary>
+    public class AddItemEffect : Effect
+    {
+        [JsonProperty("key")]
+        public string Key { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Effect that removes an item from the inventory (case-insensitive).
+    /// </summary>
+    public class RemoveItemEffect : Effect
+    {
+        [JsonProperty("key")]
+        public string Key { get; set; } = string.Empty;
     }
 }

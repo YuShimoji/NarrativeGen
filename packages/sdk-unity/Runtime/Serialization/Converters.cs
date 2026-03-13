@@ -43,7 +43,12 @@ namespace NarrativeGen.Serialization
             {
                 "flag" => new FlagCondition(),
                 "resource" => new ResourceCondition(),
+                "variable" => new VariableCondition(),
+                "hasItem" => new HasItemCondition(),
                 "timeWindow" => new TimeWindowCondition(),
+                "and" => new AndCondition(),
+                "or" => new OrCondition(),
+                "not" => new NotCondition(),
                 _ => throw new JsonSerializationException($"Unknown condition type '{type}'")
             };
             serializer.Populate(jo.CreateReader(), result);
@@ -79,6 +84,10 @@ namespace NarrativeGen.Serialization
             {
                 "setFlag" => new SetFlagEffect(),
                 "addResource" => new AddResourceEffect(),
+                "setVariable" => new SetVariableEffect(),
+                "modifyVariable" => new ModifyVariableEffect(),
+                "addItem" => new AddItemEffect(),
+                "removeItem" => new RemoveItemEffect(),
                 "goto" => new GotoEffect(),
                 _ => throw new JsonSerializationException($"Unknown effect type '{type}'")
             };

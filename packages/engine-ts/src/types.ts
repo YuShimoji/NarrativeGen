@@ -2,10 +2,18 @@ export type FlagState = Record<string, boolean>
 export type ResourceState = Record<string, number>
 export type VariableState = Record<string, string | number>
 
+export interface EntityDef {
+  id: string
+  name: string
+  description: string
+  cost: number
+}
+
 export type Condition =
   | { type: 'flag'; key: string; value: boolean }
   | { type: 'resource'; key: string; op: '>=' | '<=' | '>' | '<' | '=='; value: number }
   | { type: 'variable'; key: string; op: '==' | '!=' | 'contains' | '!contains' | '>=' | '<=' | '>' | '<'; value: string | number }
+  | { type: 'hasItem'; key: string; value: boolean }
   | { type: 'timeWindow'; start: number; end: number }
   | { type: 'and'; conditions: Condition[] }
   | { type: 'or'; conditions: Condition[] }
@@ -16,6 +24,8 @@ export type Effect =
   | { type: 'addResource'; key: string; delta: number }
   | { type: 'setVariable'; key: string; value: string | number }
   | { type: 'modifyVariable'; key: string; op: '+' | '-' | '*' | '/'; value: number }
+  | { type: 'addItem'; key: string }
+  | { type: 'removeItem'; key: string }
   | { type: 'goto'; target: string }
 
 export interface ChoiceOutcome {
@@ -43,6 +53,7 @@ export interface Model {
   startNode: string
   flags?: FlagState
   resources?: ResourceState
+  entities?: Record<string, EntityDef>
   nodes: Record<string, NodeDef>
 }
 
@@ -51,5 +62,6 @@ export interface SessionState {
   flags: FlagState
   resources: ResourceState
   variables: VariableState
+  inventory: string[]
   time: number
 }
