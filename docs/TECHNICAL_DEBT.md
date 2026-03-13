@@ -67,16 +67,16 @@ Remaining tasks:
 - [ ] Manual usability checks on key screens.
 
 ### 6. Node graph visual issues
-Status: not started
+Status: mostly done (2026-03-14)
 
 Two display problems observed on ノードグラフ tab:
-- Minimap (bottom-right) renders with white background on dark theme (`rgba(255,255,255,0.95)` hardcoded in `GraphEditorManager._setupMinimap()`). Also uses foreignObject+cloneNode which is fragile for SVG content.
-- Node text labels overlap outside node boundaries (SVG text lacks clip-path/overflow control).
+- ~~Minimap (bottom-right) renders with white background on dark theme~~ → Fixed: replaced hardcoded rgba with CSS variables (`--color-surface`, `--color-border`).
+- ~~Node text labels overlap outside node boundaries~~ → Fixed: added `#nodeTextClip` clipPath (112x52) in `_setupDefs()`, applied to node text elements.
 
 Remaining tasks:
-- [ ] Replace minimap background with CSS variable for theme-awareness.
-- [ ] Investigate foreignObject SVG clone rendering reliability.
-- [ ] Add clip-path or text-overflow handling to graph node labels.
+- [ ] Investigate foreignObject SVG clone rendering reliability (minimap content).
+- [x] Replace minimap background with CSS variable for theme-awareness.
+- [x] Add clip-path or text-overflow handling to graph node labels.
 
 ### 7. Manual test expansion
 Status: partially done

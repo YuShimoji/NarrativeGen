@@ -330,6 +330,16 @@ export class GraphEditorManager {
       .attr('dy', '2')
       .attr('stdDeviation', '3')
       .attr('flood-color', 'rgba(0,0,0,0.3)')
+
+    // ノードテキスト用clipPath（120x60のノードサイズに合わせ、パディング付き）
+    const nodeClip = defs.append('clipPath')
+      .attr('id', 'nodeTextClip')
+    nodeClip.append('rect')
+      .attr('x', -56)
+      .attr('y', -26)
+      .attr('width', 112)
+      .attr('height', 52)
+      .attr('rx', 4)
   }
 
   /**
@@ -651,7 +661,7 @@ export class GraphEditorManager {
       })
       .attr('filter', 'url(#nodeShadow)')
 
-    // ノードラベル（テキスト）
+    // ノードラベル（テキスト）— clipPathでノード境界内にクリップ
     node.append('text')
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'middle')
@@ -659,10 +669,11 @@ export class GraphEditorManager {
       .attr('font-weight', '500')
       .attr('fill', '#fff')
       .attr('pointer-events', 'none')
+      .attr('clip-path', 'url(#nodeTextClip)')
       .text((d) => {
         const nodeData = graph.node(d)
         const label = nodeData.label || d
-        return label.length > 12 ? label.substring(0, 12) + '...' : label
+        return label.length > 14 ? label.substring(0, 14) + '...' : label
       })
 
     // ホバー効果（選択時は変更しない）
@@ -1248,8 +1259,8 @@ export class GraphEditorManager {
       right: ${this.minimap.margin}px;
       width: ${this.minimap.width}px;
       height: ${this.minimap.height}px;
-      background: rgba(255, 255, 255, 0.95);
-      border: 1px solid #ccc;
+      background: var(--color-surface, rgba(44, 44, 46, 0.95));
+      border: 1px solid var(--color-border, #48484a);
       border-radius: 4px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
       overflow: hidden;
