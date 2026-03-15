@@ -782,7 +782,7 @@ export class GraphEditorManager {
       this.selectedEdge = null
     }
 
-    this.render()
+    this._updateSelectionStyles()
 
     // GUIエディタとの状態同期：ノードを選択
     if (window.guiEditorManager && typeof window.guiEditorManager.selectNode === 'function') {
@@ -1440,7 +1440,7 @@ export class GraphEditorManager {
       this.selectedNodeIds.add(nodeId)
     })
 
-    this.render()
+    this._updateSelectionStyles()
     if (typeof window.setStatus === 'function') {
       window.setStatus(`${this.selectedNodeIds.size}個のノードを選択しました`, 'info')
     }
