@@ -329,6 +329,8 @@
               <option value="time_gated">time_gated.json</option>
               <option value="multiple_endings">multiple_endings.json</option>
               <option value="tutorial">tutorial.json</option>
+              <option value="quest">quest.json</option>
+              <option value="trading">trading.json</option>
             </select>
             <button id="startBtn" class="primary"><svg class="icon icon-sm">
                 <use href="#icon-play"></use>
@@ -414,8 +416,9 @@
             <button id="saveGraphPreset">プリセット保存</button>
             <button id="loadGraphPreset">プリセット読み込み</button>
           </div>
-          <div class="graph-container" style="flex: 1; padding: 0; border: none;">
+          <div class="graph-container" style="flex: 1; padding: 0; border: none; position: relative;">
             <svg id="graphSvg" style="width: 100%; height: 100%;"></svg>
+            <div id="graphInferencePanel" class="graph-inference-panel"></div>
           </div>
         </div>
 

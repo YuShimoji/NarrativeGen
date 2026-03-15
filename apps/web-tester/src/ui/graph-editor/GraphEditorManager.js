@@ -140,7 +140,7 @@ export class GraphEditorManager {
         // Escapeキーで選択解除・編集モード終了
         if (event.key === 'Escape') {
           this._clearSelection()
-          this.render()
+          this._updateSelectionStyles()
         }
         // Ctrl+Aで全選択
         if (event.key === 'a' && event.ctrlKey) {
@@ -462,6 +462,23 @@ export class GraphEditorManager {
       return
     }
 
+    // 再描画前に、現在のDOM位置を graphPosition として保存する。
+    // これにより dagre 再レイアウトでノードが飛ぶのを防ぐ。
+    if (this.g && this.appState.model) {
+      this.g.selectAll('g.node').each((d) => {
+        const nodeSelection = this.g.select(`g.node[data-node-id="${d}"]`)
+        if (nodeSelection.empty()) return
+        const transform = nodeSelection.attr('transform')
+        const match = /translate\(([^,]+),([^)]+)\)/.exec(transform)
+        if (match && this.appState.model.nodes[d]) {
+          this.appState.model.nodes[d].graphPosition = {
+            x: parseFloat(match[1]),
+            y: parseFloat(match[2])
+          }
+        }
+      })
+    }
+
     // レイアウトを計算
     const graph = this._calculateLayout(nodes, edges)
 
@@ -677,15 +694,16 @@ export class GraphEditorManager {
       })
 
     // ホバー効果（選択時は変更しない）
+    const self = this
     node.on('mouseenter', function (event, d) {
-      if (!this.selectedNodeIds.has(d) && this.selectedNodeId !== d) {
+      if (!self.selectedNodeIds.has(d) && self.selectedNodeId !== d) {
         d3.select(this).select('rect')
           .attr('stroke-width', 3)
           .attr('opacity', 0.9)
       }
     })
       .on('mouseleave', function (event, d) {
-        if (!this.selectedNodeIds.has(d) && this.selectedNodeId !== d) {
+        if (!self.selectedNodeIds.has(d) && self.selectedNodeId !== d) {
           d3.select(this).select('rect')
             .attr('stroke-width', 2)
             .attr('opacity', 1)
@@ -704,7 +722,7 @@ export class GraphEditorManager {
     this.svg.on('click', (event) => {
       if (event.target === this.svg.node() || event.target.tagName === 'svg') {
         this._clearSelection()
-        this.render()
+        this._updateSelectionStyles()
       }
     })
 
@@ -1305,28 +1323,13 @@ export class GraphEditorManager {
     // ミニマップをクリア
     this.minimap.svg.selectAll('*').remove()
 
-    // グラフ内容をミニマップにコピー
+    // グラフ内容をミニマップにコピー（SVGノードを直接クローン）
     const mainContent = this.g.node().cloneNode(true)
     const minimapG = this.minimap.svg.append('g')
-      .attr('transform', `translate(10, 10) scale(${minimapScale})`)
+      .attr('transform', `translate(${10 - mainBounds.x * minimapScale}, ${10 - mainBounds.y * minimapScale}) scale(${minimapScale})`)
 
-    // クローンしたコンテンツを追加
-    const clonedNode = document.importNode(mainContent, true)
-    const foreignObject = minimapG.append('foreignObject')
-      .attr('width', mainBounds.width)
-      .attr('height', mainBounds.height)
-      .attr('x', -mainBounds.x)
-      .attr('y', -mainBounds.y)
-
-    const wrapper = document.createElement('div')
-    wrapper.style.cssText = `
-      width: ${mainBounds.width}px;
-      height: ${mainBounds.height}px;
-      transform: scale(${minimapScale});
-      transform-origin: top left;
-    `
-    wrapper.appendChild(clonedNode)
-    foreignObject.node().appendChild(wrapper)
+    // クローンしたSVGコンテンツを直接追加
+    minimapG.node().appendChild(mainContent)
 
     // 現在のビューポート矩形を描画
     this._updateViewportRect(mainBounds, minimapScale)
@@ -2048,26 +2051,24 @@ export class GraphEditorManager {
       this.selectedNodeId = nodeId
       this.selectedNodeIds.clear()
       this.selectedNodeIds.add(nodeId)
-      this.render() //選択状態反映のために再描画
+      this._updateSelectionStyles() // render()の代わりにスタイルのみ更新
     } else if (!this.selectedNodeIds.has(nodeId)) {
       // Ctrlキーが押されている場合でも、未選択ノードなら選択に追加
       this.selectedNodeIds.add(nodeId)
-      this.render()
+      this._updateSelectionStyles()
     }
 
-    // 複数選択ノードの相対位置を記録
+    // 複数選択ノードの相対位置を記録（現在のDOM位置を読み取る）
     this.drag.multiSelectPositions.clear()
-    const graph = this._calculateLayout(
-      this._buildGraphData().nodes,
-      this._buildGraphData().edges
-    )
-
     this.selectedNodeIds.forEach(id => {
-      const nodeData = graph.node(id)
-      if (nodeData) {
+      const nodeSelection = this.g.select(`g.node[data-node-id="${id}"]`)
+      if (nodeSelection.empty()) return
+      const transform = nodeSelection.attr('transform')
+      const match = /translate\(([^,]+),([^)]+)\)/.exec(transform)
+      if (match) {
         this.drag.multiSelectPositions.set(id, {
-          initialX: nodeData.x,
-          initialY: nodeData.y
+          initialX: parseFloat(match[1]),
+          initialY: parseFloat(match[2])
         })
       }
     })
@@ -2218,6 +2219,13 @@ export class GraphEditorManager {
 
     this.drag.multiSelectPositions.clear()
 
+    // ドラッグ中の一時属性をクリーンアップ
+    this.g.selectAll('g.edge').each((d, i, nodes) => {
+      const edgeG = d3.select(nodes[i])
+      edgeG.select('path').attr('data-original-d', null)
+      edgeG.select('text').attr('data-original-x', null).attr('data-original-y', null)
+    })
+
     if (changed) {
       // モデル変更通知
       if (this.appState.model) {
@@ -2241,53 +2249,115 @@ export class GraphEditorManager {
   }
 
   /**
+   * render()を呼ばずに選択状態のスタイルだけをDOM上で更新する。
+   * ドラッグ開始時に render() を呼ぶとレイアウト再計算で位置が崩壊するため。
+   * @private
+   */
+  _updateSelectionStyles() {
+    if (!this.g) return
+    this.g.selectAll('g.node').each((d, i, nodes) => {
+      const el = d3.select(nodes[i])
+      const rect = el.select('rect')
+      if (rect.empty()) return
+      const isSelected = this.selectedNodeIds.has(d) || this.selectedNodeId === d
+      rect
+        .attr('stroke', isSelected ? '#3b82f6' : '#fff')
+        .attr('stroke-width', isSelected ? (this.selectedNodeIds.has(d) ? 3 : 4) : 2)
+    })
+  }
+
+  /**
    * Update edges connected to a moving node
    * @param {string} nodeId - Node ID
    * @param {number} x - New X coordinate
    * @param {number} y - New Y coordinate
    */
   _updateEdgesForNode(nodeId, x, y) {
-    // このノードに接続するエッジを探して更新
-    // 始点として
+    // このノードに接続するエッジについて、
+    // 元のdagreパスのpoints配列を移動差分でオフセットして再描画する。
+    // 直線化ではなく元のカーブ形状を維持する。
+
+    // ドラッグ開始時の位置
+    const initial = this.drag.multiSelectPositions.get(nodeId)
+    if (!initial) return
+    const dx = x - initial.initialX
+    const dy = y - initial.initialY
+
     this.g.selectAll('g.edge').each((d, i, nodes) => {
       const edgeG = d3.select(nodes[i])
-      // d は dagreの Edge オブジェクト {v, w, ...}
+      const pathEl = edgeG.select('path')
+      if (pathEl.empty()) return
 
-      // 簡易的な更新: 直線にする
-      // Dagreの複雑なパス(points)を動的に再計算するのは困難なので、
-      // ドラッグ中は始点と終点を結ぶ直線などを描画する
+      // 元のパスを保存（初回のみ）
+      if (!pathEl.attr('data-original-d')) {
+        pathEl.attr('data-original-d', pathEl.attr('d'))
+      }
+      const originalD = pathEl.attr('data-original-d')
+      if (!originalD) return
 
-      // このエッジが対象ノードに関係あるか？
-      if (d.v === nodeId) {
-        // 始点が移動。終点の座標を知る必要がある
-        const targetNodeId = d.w
-        const targetNode = this.g.select(`g.node[data-node-id="${targetNodeId}"]`)
-        if (!targetNode.empty()) {
-          const tTransform = targetNode.attr('transform')
-          const tMatch = /translate\(([^,]+),([^)]+)\)/.exec(tTransform)
-          if (tMatch) {
-            const tx = parseFloat(tMatch[1])
-            const ty = parseFloat(tMatch[2])
+      let isSource = d.v === nodeId
+      let isTarget = d.w === nodeId
+      if (!isSource && !isTarget) return
 
-            edgeG.select('path').attr('d', `M ${x} ${y} L ${tx} ${ty}`)
-            edgeG.select('text').attr('x', (x + tx) / 2).attr('y', (y + ty) / 2 - 5)
+      // もう一方のノードも選択・移動中ならそのdxも取得
+      let otherDx = 0, otherDy = 0
+      const otherId = isSource ? d.w : d.v
+      if (this.selectedNodeIds.has(otherId)) {
+        const otherInitial = this.drag.multiSelectPositions.get(otherId)
+        if (otherInitial) {
+          const otherNode = this.g.select(`g.node[data-node-id="${otherId}"]`)
+          if (!otherNode.empty()) {
+            const otherTransform = otherNode.attr('transform')
+            const otherMatch = /translate\(([^,]+),([^)]+)\)/.exec(otherTransform)
+            if (otherMatch) {
+              otherDx = parseFloat(otherMatch[1]) - otherInitial.initialX
+              otherDy = parseFloat(otherMatch[2]) - otherInitial.initialY
+            }
           }
         }
-      } else if (d.w === nodeId) {
-        // 終点が移動。始点の座標を知る必要がある
-        const sourceNodeId = d.v
-        const sourceNode = this.g.select(`g.node[data-node-id="${sourceNodeId}"]`)
-        if (!sourceNode.empty()) {
-          const sTransform = sourceNode.attr('transform')
-          const sMatch = /translate\(([^,]+),([^)]+)\)/.exec(sTransform)
-          if (sMatch) {
-            const sx = parseFloat(sMatch[1])
-            const sy = parseFloat(sMatch[2])
+      }
 
-            edgeG.select('path').attr('d', `M ${sx} ${sy} L ${x} ${y}`)
-            edgeG.select('text').attr('x', (sx + x) / 2).attr('y', (sy + y) / 2 - 5)
-          }
+      // 元のパスからpoints座標を抽出
+      const pointRegex = /([ML])\s*([0-9.eE+-]+)\s+([0-9.eE+-]+)/g
+      const points = []
+      let m
+      while ((m = pointRegex.exec(originalD)) !== null) {
+        points.push({ cmd: m[1], x: parseFloat(m[2]), y: parseFloat(m[3]) })
+      }
+      if (points.length < 2) return
+
+      // 始点と終点のインデックス
+      const srcIdx = 0
+      const tgtIdx = points.length - 1
+
+      // 各pointを補間オフセット: 始点に近いほどsource側の移動量、終点に近いほどtarget側の移動量
+      const sourceDx = isSource ? dx : otherDx
+      const sourceDy = isSource ? dy : otherDy
+      const targetDx = isTarget ? dx : otherDx
+      const targetDy = isTarget ? dy : otherDy
+
+      let newPath = ''
+      for (let pi = 0; pi < points.length; pi++) {
+        const t = points.length > 1 ? pi / (points.length - 1) : 0
+        const offsetX = sourceDx * (1 - t) + targetDx * t
+        const offsetY = sourceDy * (1 - t) + targetDy * t
+        newPath += `${points[pi].cmd} ${points[pi].x + offsetX} ${points[pi].y + offsetY} `
+      }
+
+      pathEl.attr('d', newPath.trim())
+
+      // ラベルも中点にオフセット
+      const textEl = edgeG.select('text')
+      if (!textEl.empty()) {
+        if (!textEl.attr('data-original-x')) {
+          textEl.attr('data-original-x', textEl.attr('x'))
+          textEl.attr('data-original-y', textEl.attr('y'))
         }
+        const origTx = parseFloat(textEl.attr('data-original-x'))
+        const origTy = parseFloat(textEl.attr('data-original-y'))
+        const midOffset = 0.5
+        textEl.attr('x', origTx + sourceDx * (1 - midOffset) + targetDx * midOffset)
+        textEl.attr('y', origTy + sourceDy * (1 - midOffset) + targetDy * midOffset)
       }
     })
   }

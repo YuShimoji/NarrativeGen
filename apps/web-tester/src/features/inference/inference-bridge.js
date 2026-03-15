@@ -9,6 +9,8 @@ import {
   findReachableNodes,
   buildDependencyGraph,
   getAffectedChoices,
+  applyChoice,
+  startSession,
   registerBuiltins,
 } from '../../../../../packages/engine-ts/dist/browser.js'
 
@@ -164,6 +166,71 @@ export class InferenceBridge {
       }
     }
     return [...keys].sort()
+  }
+
+  /**
+   * 選択肢を仮選択した場合の状態変化をシミュレートする (UC-5 What-if)。
+   * セッションのクローンに対して applyChoice を実行し、差分と到達可能ノードを返す。
+   * @param {object} session - 現在の SessionState
+   * @param {string} nodeId - 対象ノードID
+   * @param {string} choiceId - 選択肢ID
+   * @returns {{ before: object, after: object, diff: Array<{key: string, from: *, to: *}>, newReachable: string[] } | null}
+   */
+  simulateChoice(session, nodeId, choiceId) {
+    if (!this._model) return null
+    const node = this._model.nodes[nodeId]
+    if (!node) return null
+    const choice = (node.choices || []).find((c) => c.id === choiceId)
+    if (!choice) return null
+
+    try {
+      // 仮セッションを nodeId に移動して選択肢を適用
+      const simSession = { ...session, nodeId }
+      const after = applyChoice(simSession, this._model, choiceId)
+
+      // 状態差分を計算
+      const diff = []
+      // flags
+      for (const k of new Set([...Object.keys(session.flags || {}), ...Object.keys(after.flags || {})])) {
+        const from = (session.flags || {})[k]
+        const to = (after.flags || {})[k]
+        if (from !== to) diff.push({ key: `flag:${k}`, from: from ?? undefined, to })
+      }
+      // resources
+      for (const k of new Set([...Object.keys(session.resources || {}), ...Object.keys(after.resources || {})])) {
+        const from = (session.resources || {})[k]
+        const to = (after.resources || {})[k]
+        if (from !== to) diff.push({ key: `resource:${k}`, from: from ?? 0, to })
+      }
+      // variables
+      for (const k of new Set([...Object.keys(session.variables || {}), ...Object.keys(after.variables || {})])) {
+        const from = (session.variables || {})[k]
+        const to = (after.variables || {})[k]
+        if (from !== to) diff.push({ key: `variable:${k}`, from: from ?? undefined, to })
+      }
+      // inventory
+      const invBefore = new Set(session.inventory || [])
+      const invAfter = new Set(after.inventory || [])
+      for (const id of invAfter) {
+        if (!invBefore.has(id)) diff.push({ key: `item:${id}`, from: undefined, to: true })
+      }
+      for (const id of invBefore) {
+        if (!invAfter.has(id)) diff.push({ key: `item:${id}`, from: true, to: undefined })
+      }
+
+      // 新たに到達可能になるノード
+      const reachableBefore = findReachableNodes(this._model, session)
+      const reachableAfter = findReachableNodes(this._model, after)
+      const newReachable = []
+      for (const nodeKey of reachableAfter.keys()) {
+        if (!reachableBefore.has(nodeKey)) newReachable.push(nodeKey)
+      }
+
+      return { before: session, after, diff, newReachable }
+    } catch (e) {
+      console.warn('[InferenceBridge] simulateChoice error:', e)
+      return null
+    }
   }
 
   /**

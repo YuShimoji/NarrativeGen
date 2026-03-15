@@ -596,6 +596,7 @@ fileInput.addEventListener('change', async (e) => {
     setCurrentModelName(file.name)
     setStatus(`ファイル ${file.name} を実行中`, 'success')
     initStory()
+    startAutoSave() // Start auto-save when session begins
   } catch (err) {
     console.error(err)
     clearSession()
@@ -605,6 +606,7 @@ fileInput.addEventListener('change', async (e) => {
     setControlsEnabled(true)
     renderState()
     renderChoices()
+    renderStory()
     updateMermaidDiagramIfVisible()
   }
 })

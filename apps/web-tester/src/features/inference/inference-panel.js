@@ -28,6 +28,10 @@ export class InferencePanel {
     this._impactContent = null
     /** @type {HTMLElement | null} */
     this._stateKeysContent = null
+    /** @type {HTMLElement | null} */
+    this._whatIfContent = null
+    /** @type {object | null} - 現在のセッション状態（外部から設定） */
+    this._session = null
     /** @type {boolean} */
     this._collapsed = false
   }
@@ -92,6 +96,17 @@ export class InferencePanel {
     section.appendChild(stateKeysContent)
     this._stateKeysContent = stateKeysContent
 
+    // What-if シミュレーションセクション
+    const whatIfLabel = document.createElement('div')
+    whatIfLabel.className = 'inference-sub-label'
+    whatIfLabel.textContent = 'What-if シミュレーション'
+    section.appendChild(whatIfLabel)
+
+    const whatIfContent = document.createElement('div')
+    whatIfContent.className = 'inference-whatif-content'
+    section.appendChild(whatIfContent)
+    this._whatIfContent = whatIfContent
+
     this._container = section
     return section
   }
@@ -104,6 +119,15 @@ export class InferencePanel {
     this._updatePath(nodeId)
     this._updateImpact(nodeId)
     this._updateStateKeys(nodeId)
+    this._updateWhatIf(nodeId)
+  }
+
+  /**
+   * 外部からセッション状態を設定する。What-ifシミュレーションに必要。
+   * @param {object | null} session
+   */
+  setSession(session) {
+    this._session = session
   }
 
   /**
@@ -311,6 +335,92 @@ export class InferencePanel {
 
     this._stateKeysContent.innerHTML = ''
     this._stateKeysContent.appendChild(frag)
+  }
+
+  /**
+   * What-if シミュレーションを更新する (UC-5)。
+   * 選択ノードの各選択肢について、選択後の状態変化と新たに到達可能になるノードを表示する。
+   * @param {string | null} nodeId
+   * @private
+   */
+  _updateWhatIf(nodeId) {
+    if (!this._whatIfContent) return
+
+    if (!nodeId || !this._bridge.isReady || !this._bridge._model || !this._session) {
+      this._whatIfContent.innerHTML = this._session
+        ? ''
+        : '<div class="inference-empty">セッション未設定</div>'
+      return
+    }
+
+    const node = this._bridge._model.nodes[nodeId]
+    if (!node || !node.choices || node.choices.length === 0) {
+      this._whatIfContent.innerHTML =
+        '<div class="inference-empty">選択肢なし</div>'
+      return
+    }
+
+    const frag = document.createDocumentFragment()
+    let hasAnyResult = false
+
+    for (const choice of node.choices) {
+      const result = this._bridge.simulateChoice(this._session, nodeId, choice.id)
+      if (!result) continue
+
+      const hasDiff = result.diff.length > 0
+      const hasNewReachable = result.newReachable.length > 0
+      if (!hasDiff && !hasNewReachable) continue
+
+      hasAnyResult = true
+      const choiceDiv = document.createElement('div')
+      choiceDiv.className = 'inference-whatif-choice'
+
+      const choiceHeader = document.createElement('div')
+      choiceHeader.className = 'inference-whatif-choice-label'
+      choiceHeader.textContent = escapeHtml(choice.text || choice.id)
+      choiceDiv.appendChild(choiceHeader)
+
+      // 状態差分
+      if (hasDiff) {
+        const diffDiv = document.createElement('div')
+        diffDiv.className = 'inference-whatif-diff'
+        for (const d of result.diff) {
+          const line = document.createElement('div')
+          line.className = 'inference-whatif-diff-line'
+          const fromStr = d.from === undefined ? '(none)' : String(d.from)
+          const toStr = d.to === undefined ? '(none)' : String(d.to)
+          line.textContent = `${d.key}: ${fromStr} → ${toStr}`
+          diffDiv.appendChild(line)
+        }
+        choiceDiv.appendChild(diffDiv)
+      }
+
+      // 新たに到達可能なノード
+      if (hasNewReachable) {
+        const reachDiv = document.createElement('div')
+        reachDiv.className = 'inference-whatif-reachable'
+        const reachLabel = document.createElement('span')
+        reachLabel.className = 'inference-ref-label'
+        reachLabel.textContent = '新規到達可能: '
+        reachDiv.appendChild(reachLabel)
+        for (const rNodeId of result.newReachable) {
+          const nodeSpan = this._createNodeSpan(rNodeId)
+          reachDiv.appendChild(nodeSpan)
+          reachDiv.appendChild(document.createTextNode(' '))
+        }
+        choiceDiv.appendChild(reachDiv)
+      }
+
+      frag.appendChild(choiceDiv)
+    }
+
+    this._whatIfContent.innerHTML = ''
+    if (hasAnyResult) {
+      this._whatIfContent.appendChild(frag)
+    } else {
+      this._whatIfContent.innerHTML =
+        '<div class="inference-empty">状態変化なし</div>'
+    }
   }
 
   /**

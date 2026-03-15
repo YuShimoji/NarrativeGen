@@ -3,7 +3,7 @@
  * Handles all GUI-based story editing functionality
  */
 
-import { getCurrentModelName } from '../core/session.js'
+import { getCurrentModelName, getCurrentSession } from '../core/session.js'
 import { NODE_TEMPLATES, DRAFT_MODEL_STORAGE_KEY } from '../config/constants.js'
 import { NodeRenderer } from './node-renderer.js'
 import { ModelUpdater } from './model-updater.js'
@@ -64,6 +64,7 @@ export class GuiEditorManager {
     // Inference engine integration
     this.inferenceBridge = new InferenceBridge()
     this.inferencePanel = null
+    this.graphInferencePanel = null // ノードグラフタブ用
   }
 
   initialize(nodeListElement, guiEditModeElement, batchEditModalElement, quickNodeModalElement, batchChoiceModalElement, paraphraseModalElement, draftRestoreModalElement) {
@@ -162,10 +163,29 @@ export class GuiEditorManager {
       }
     }
 
+    // Initialize graph tab inference panel
+    const graphInferenceContainer = document.getElementById('graphInferencePanel')
+    if (graphInferenceContainer) {
+      this.graphInferencePanel = new InferencePanel({
+        bridge: this.inferenceBridge,
+        onNodeClick: (nodeId) => this.selectNode(nodeId),
+      })
+      graphInferenceContainer.appendChild(this.graphInferencePanel.createElement())
+    }
+
     // Initialize inference bridge with current model
     if (this.appState.model) {
       this.inferenceBridge.initialize(this.appState.model)
     }
+
+    // モデル変更時に推論ブリッジを自動更新
+    this.appState.on('model:changed', (model) => {
+      if (model) {
+        this.inferenceBridge.updateModel(model)
+      } else {
+        this.inferenceBridge.dispose()
+      }
+    })
   }
 
   /**
@@ -239,9 +259,15 @@ export class GuiEditorManager {
       }
     }
 
-    // Update inference analysis panel
+    // Update inference analysis panels (GUI editor + graph tab)
+    const session = getCurrentSession()
     if (this.inferencePanel) {
+      this.inferencePanel.setSession(session)
       this.inferencePanel.update(nodeId)
+    }
+    if (this.graphInferencePanel) {
+      this.graphInferencePanel.setSession(session)
+      this.graphInferencePanel.update(nodeId)
     }
   }
 
