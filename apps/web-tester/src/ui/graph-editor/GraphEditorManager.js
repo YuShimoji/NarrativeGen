@@ -503,7 +503,16 @@ export class GraphEditorManager {
           choiceId: edge.choiceId
         }
         this.selectedNodeId = null
-        this.render()
+        // render()を呼ばない: dagre再レイアウトでノード位置が崩壊するため
+        this._updateSelectionStyles()
+        // エッジのハイライトをインラインで更新
+        this.g.selectAll('g.edge').each((d, i, nodes) => {
+          const edgeData = graph.edge(d)
+          const isSelected = edgeData && edgeData.choiceId === this.selectedEdge.choiceId
+          d3.select(nodes[i]).select('path')
+            .attr('stroke', isSelected ? '#3b82f6' : '#999')
+            .attr('stroke-width', isSelected ? 3 : 2)
+        })
       })
       .on('contextmenu', (event, e) => {
         event.stopPropagation()
@@ -1558,7 +1567,7 @@ export class GraphEditorManager {
     // Panモード切り替え時にドラッグ状態などが残っている場合はリセット
     if (active) {
       this._clearSelection()
-      this.render() // 再描画してドラッグ動作フィルタを適用
+      this._updateSelectionStyles() // render()は不要: カーソルは上でcontainer.styleで設定済み、ドラッグフィルタはisPanModeフラグで制御。render()はdagre再レイアウトを引き起こしgraphPositionを破壊する。
     }
   }
 
@@ -2125,25 +2134,15 @@ export class GraphEditorManager {
     // D3のデータバインディングを使っているので、datum().x/y を更新して
     // attr('transform')を再設定するのが良い
 
+    // 各ノードの新しい位置を計算・DOM更新
+    const movedPositions = new Map() // nodeId → { x, y }
     this.selectedNodeIds.forEach(nodeId => {
       const nodeSelection = this.g.select(`g.node[data-node-id="${nodeId}"]`)
       if (nodeSelection.empty()) return
 
-      const d = nodeSelection.datum()
-      // D3のノードデータ(graph.node(d))は参照できないため、直接操作用のデータを保持する必要があるかもしれないが、
-      // ここでは、DAGREの計算結果が入っているわけではない。
-      // data()でバインドされているのは node ID (string) だけ。
-
-      // 仕方ないので、初期位置Mapを使用
       const initial = this.drag.multiSelectPositions.get(nodeId)
+      if (!initial) return
 
-      // ドラッグ開始時からの変位用
-      // event.x - event.subject.x は使えない（subjectがない）
-      // event.x : 現在のポインタX
-      // event.y : 現在のポインタY
-      // しかし、複数ノードの場合、個別の絶対座標は分からない。
-
-      // 解決策: ドラッグ開始時のポインタ位置(this.drag.startX/Y)との差分を使う
       const deltaX = event.x - this.drag.startX
       const deltaY = event.y - this.drag.startY
 
@@ -2159,10 +2158,11 @@ export class GraphEditorManager {
 
       // DOM更新
       nodeSelection.attr('transform', `translate(${newX},${newY})`)
-
-      // 接続されたエッジの更新
-      this._updateEdgesForNode(nodeId, newX, newY)
+      movedPositions.set(nodeId, { x: newX, y: newY })
     })
+
+    // 全エッジを一括更新（重複処理を防ぐ）
+    this._updateEdgesForMovedNodes(movedPositions)
   }
 
   /**
@@ -2272,21 +2272,22 @@ export class GraphEditorManager {
    * @param {number} x - New X coordinate
    * @param {number} y - New Y coordinate
    */
-  _updateEdgesForNode(nodeId, x, y) {
-    // このノードに接続するエッジについて、
-    // 元のdagreパスのpoints配列を移動差分でオフセットして再描画する。
-    // 直線化ではなく元のカーブ形状を維持する。
-
-    // ドラッグ開始時の位置
-    const initial = this.drag.multiSelectPositions.get(nodeId)
-    if (!initial) return
-    const dx = x - initial.initialX
-    const dy = y - initial.initialY
-
+  /**
+   * 移動済みノード群に接続するエッジを一括更新する。
+   * 各エッジを1回だけ処理し、元のdagreカーブ形状を維持したままオフセットする。
+   * @param {Map<string, {x: number, y: number}>} movedPositions - 移動後のノード位置
+   */
+  _updateEdgesForMovedNodes(movedPositions) {
     this.g.selectAll('g.edge').each((d, i, nodes) => {
       const edgeG = d3.select(nodes[i])
       const pathEl = edgeG.select('path')
       if (pathEl.empty()) return
+
+      const sourceId = d.v
+      const targetId = d.w
+      const sourceMoved = movedPositions.has(sourceId)
+      const targetMoved = movedPositions.has(targetId)
+      if (!sourceMoved && !targetMoved) return
 
       // 元のパスを保存（初回のみ）
       if (!pathEl.attr('data-original-d')) {
@@ -2295,25 +2296,24 @@ export class GraphEditorManager {
       const originalD = pathEl.attr('data-original-d')
       if (!originalD) return
 
-      let isSource = d.v === nodeId
-      let isTarget = d.w === nodeId
-      if (!isSource && !isTarget) return
+      // source/targetの移動差分を計算
+      let sourceDx = 0, sourceDy = 0
+      if (sourceMoved) {
+        const initial = this.drag.multiSelectPositions.get(sourceId)
+        const pos = movedPositions.get(sourceId)
+        if (initial && pos) {
+          sourceDx = pos.x - initial.initialX
+          sourceDy = pos.y - initial.initialY
+        }
+      }
 
-      // もう一方のノードも選択・移動中ならそのdxも取得
-      let otherDx = 0, otherDy = 0
-      const otherId = isSource ? d.w : d.v
-      if (this.selectedNodeIds.has(otherId)) {
-        const otherInitial = this.drag.multiSelectPositions.get(otherId)
-        if (otherInitial) {
-          const otherNode = this.g.select(`g.node[data-node-id="${otherId}"]`)
-          if (!otherNode.empty()) {
-            const otherTransform = otherNode.attr('transform')
-            const otherMatch = /translate\(([^,]+),([^)]+)\)/.exec(otherTransform)
-            if (otherMatch) {
-              otherDx = parseFloat(otherMatch[1]) - otherInitial.initialX
-              otherDy = parseFloat(otherMatch[2]) - otherInitial.initialY
-            }
-          }
+      let targetDx = 0, targetDy = 0
+      if (targetMoved) {
+        const initial = this.drag.multiSelectPositions.get(targetId)
+        const pos = movedPositions.get(targetId)
+        if (initial && pos) {
+          targetDx = pos.x - initial.initialX
+          targetDy = pos.y - initial.initialY
         }
       }
 
@@ -2326,24 +2326,14 @@ export class GraphEditorManager {
       }
       if (points.length < 2) return
 
-      // 始点と終点のインデックス
-      const srcIdx = 0
-      const tgtIdx = points.length - 1
-
-      // 各pointを補間オフセット: 始点に近いほどsource側の移動量、終点に近いほどtarget側の移動量
-      const sourceDx = isSource ? dx : otherDx
-      const sourceDy = isSource ? dy : otherDy
-      const targetDx = isTarget ? dx : otherDx
-      const targetDy = isTarget ? dy : otherDy
-
+      // 各pointを補間オフセット: 始点に近いほどsource側、終点に近いほどtarget側
       let newPath = ''
       for (let pi = 0; pi < points.length; pi++) {
-        const t = points.length > 1 ? pi / (points.length - 1) : 0
+        const t = pi / (points.length - 1)
         const offsetX = sourceDx * (1 - t) + targetDx * t
         const offsetY = sourceDy * (1 - t) + targetDy * t
         newPath += `${points[pi].cmd} ${points[pi].x + offsetX} ${points[pi].y + offsetY} `
       }
-
       pathEl.attr('d', newPath.trim())
 
       // ラベルも中点にオフセット
@@ -2355,9 +2345,8 @@ export class GraphEditorManager {
         }
         const origTx = parseFloat(textEl.attr('data-original-x'))
         const origTy = parseFloat(textEl.attr('data-original-y'))
-        const midOffset = 0.5
-        textEl.attr('x', origTx + sourceDx * (1 - midOffset) + targetDx * midOffset)
-        textEl.attr('y', origTy + sourceDy * (1 - midOffset) + targetDy * midOffset)
+        textEl.attr('x', origTx + (sourceDx + targetDx) * 0.5)
+        textEl.attr('y', origTy + (sourceDy + targetDy) * 0.5)
       }
     })
   }
@@ -2474,7 +2463,7 @@ export class GraphEditorManager {
       })
     }
 
-    this.render()
+    this._updateSelectionStyles()
 
     if (typeof window.setStatus === 'function') {
       window.setStatus(`${this.selectedNodeIds.size}個のノードを選択しました`, 'info')
