@@ -103,6 +103,7 @@
 | 2026-03-12 | E2E skip 36件整理完了 | 全削除 / 個別判断 / 保留 | theme-toggle 33件(UI未実装)を削除。undo-redo 5件(防御的skip)は正当として残存。22 passed / 5 skipped |
 | 2026-03-13 | origin/master統合方針: main正+手動cherry-pick | 直接マージ / cherry-pick / 並行運用 | masterは別セッションでweb-tester構造を巻き戻し(main.js 2371行復活)+推論UI/E2E削除。358ファイル差分で直接マージ不可。mainのweb-tester分離/推論UI/E2Eを維持しつつ、masterのEntity/Inventory統合+C# SDK推論パリティのみ手動取り込み |
 | 2026-03-13 | Entity/Inventory + C# SDK InferenceRegistryをmainに手動統合 | 手動 / 延期 | hasItem条件+addItem/removeItemエフェクト+modifyVariable推論登録+EntityDef型+brand→nameリネーム+C# SDK InferenceRegistry(条件8種/エフェクト7種)。73テスト全緑維持 |
+| 2026-03-16 | SP-INF-UI-001 Phase 3: グラフ視覚連携プラン承認 (T1-T4全件) | T1-T4全件 / T1-T3のみ / 色変更 / 再検討 | GraphEditorManager.applyInferenceHighlight()方式。パス=ゴールド、影響=コーラル、到達不能=opacity 0.4。デバッグクエリUIも含む |
 
 ## Project Context
 
@@ -113,10 +114,12 @@
 方針: 汎用インタラクティブ物語エンジン
 直近の状態 (2026-03-16):
 
-- main ブランチに統合完了 (master からの切替)
+- main ブランチ、origin/main より3コミット先行 (未push: UC-2パネル+CRLF正規化+What-ifエラー抑制)
 - 73テスト全緑、ビルド成功
-- 推論UI Phase 1-3 実装済み (SP-INF-UI-001: 75%)
+- 推論UI Phase 1-2 完了、Phase 3 一部実装 (SP-INF-UI-001: spec-index 85%)
+  - UC-1(到達パス), UC-2(到達可能ノード), UC-3(影響分析), UC-4(状態キー), UC-5(What-if): パネルUI完了
+  - Phase 3 残: グラフパスハイライト, 到達不能ノード半透明化, 影響範囲色分け, デバッグクエリUI
+  - Phase 3 実装プラン承認済み (T1-T4全件、色: ゴールド/コーラル、半透明0.4)
 - Entity/Inventory + C# SDK InferenceRegistry 統合済み
 - Web Tester: main.js分離完了、ハンドラー10モジュール、推論UI、XSS修正
-- 残課題: ミニマップ白化+テキスト重なり (TECHNICAL_DEBT #6 mostly done)、E2E拡充
 - 記録先: `docs/plans/DEVELOPMENT_PLAN.md`, `docs/TECHNICAL_DEBT.md`, `docs/governance/`
