@@ -1752,6 +1752,10 @@
   border-radius: var(--radius-sm);
 }
 
+.inference-whatif-unavailable {
+  opacity: 0.5;
+}
+
 .inference-whatif-choice-label {
   font-size: 0.75rem;
   font-weight: 500;

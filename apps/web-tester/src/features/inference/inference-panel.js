@@ -381,6 +381,19 @@ export class InferencePanel {
       const result = this._bridge.simulateChoice(this._session, nodeId, choice.id)
       if (!result) continue
 
+      // 条件未充足の選択肢はラベル付きで表示
+      if (result.unavailable) {
+        hasAnyResult = true
+        const choiceDiv = document.createElement('div')
+        choiceDiv.className = 'inference-whatif-choice inference-whatif-unavailable'
+        const choiceHeader = document.createElement('div')
+        choiceHeader.className = 'inference-whatif-choice-label'
+        choiceHeader.textContent = escapeHtml(choice.text || choice.id) + ' (条件未充足)'
+        choiceDiv.appendChild(choiceHeader)
+        frag.appendChild(choiceDiv)
+        continue
+      }
+
       const hasDiff = result.diff.length > 0
       const hasNewReachable = result.newReachable.length > 0
       if (!hasDiff && !hasNewReachable) continue

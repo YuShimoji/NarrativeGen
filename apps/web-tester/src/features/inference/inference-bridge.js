@@ -10,6 +10,7 @@ import {
   buildDependencyGraph,
   getAffectedChoices,
   applyChoice,
+  getAvailableChoices,
   startSession,
   registerBuiltins,
 } from '../../../../../packages/engine-ts/dist/browser.js'
@@ -186,6 +187,13 @@ export class InferenceBridge {
     try {
       // 仮セッションを nodeId に移動して選択肢を適用
       const simSession = { ...session, nodeId }
+
+      // 条件未充足の選択肢はスキップ（applyChoice は例外を投げる）
+      const available = getAvailableChoices(simSession, this._model)
+      if (!available.some((c) => c.id === choiceId)) {
+        return { before: session, after: session, diff: [], newReachable: [], unavailable: true }
+      }
+
       const after = applyChoice(simSession, this._model, choiceId)
 
       // 状態差分を計算
