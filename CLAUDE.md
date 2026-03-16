@@ -1,19 +1,37 @@
 # NarrativeGen
 
-ナラティブ生成システム。TypeScript / Node.js API バックエンド。
+インタラクティブ物語エンジン。TypeScript コアエンジン + Express API + Web Tester + Unity C# SDK のモノレポ構成。
 
 ## Key Paths
 
-- Source: `src/`
+- Engine (TS): `packages/engine-ts/` (src/, test/, dist/)
+- Backend (Express): `packages/backend/` (src/index.ts)
+- Web Tester: `apps/web-tester/` (main.js, src/, handlers/, utils/)
+- Unity SDK (C#): `packages/sdk-unity/` (Runtime/, Editor/)
+- C# Tests: `packages/tests/`
+- Model Schema: `models/schema/playthrough.schema.json`
+- Example Models: `models/examples/`
+- Specs: `docs/specs/`, `docs/spec-index.json`
+- Dev Plan: `docs/plans/DEVELOPMENT_PLAN.md`
+- Scripts: `scripts/`
 
 ## Rules
 
 - Respond in Japanese
 - No emoji
+- Keep responses concise
 - Do NOT read `docs/reports/`, `docs/inbox/` unless explicitly asked
-- Use Serena's symbolic tools (find_symbol, get_symbols_overview) instead of reading entire source files
-- When exploring code, start with get_symbols_overview, then read only the specific symbols needed
-- Keep responses concise -- avoid repeating file contents back to the user
+
+## Commands
+
+- Test (engine): `npm run test:engine`
+- Test (all): `npm run test`
+- Build (engine): `npm run build:engine`
+- Build (all): `npm run build:all`
+- Dev server: `npm run dev` (Vite, web-tester)
+- Validate models: `npm run validate`
+- Encoding safety: `npm run check:safety`
+- Doctor: `npm run doctor`
 
 ## Spec View
 
@@ -23,10 +41,43 @@
 - 閲覧: `docs/spec-viewer.html` (`npx serve docs` → `http://localhost:3000/spec-viewer.html`)
 - 仕様を追加・更新したら spec-index.json も併せて更新すること
 
+## Architecture
+
+### engine-ts
+
+- `index.ts`: Node.js エントリ (fs使用, Ajv schema validation)
+- `browser.ts`: ブラウザエントリ (fs不使用, インライン条件評価)
+- `session-ops.ts`: メモ化キャッシュ付きセッション操作
+- `condition-effect-ops.ts`: 条件評価・エフェクト適用の共通モジュール
+- `inference/`: 前方連鎖・後方連鎖推論、条件/エフェクトレジストリ
+- `resolver.ts`: ノードIDリゾルバ (グループスコープ対応)
+- `ai-provider.ts`: AI テキスト生成 (Mock + OpenAI stub)
+- `inventory.ts` / `entities.ts` / `game-session.ts`
+
+### web-tester (apps/web-tester)
+
+- `main.js`: 薄いエントリポイント (~469行)
+- `src/app-controller.js`: イベント処理・マネージャー初期化 (~1630行)
+- `handlers/`: DI パターンによるUI論理分離 (10モジュール)
+- `src/ui/graph-editor/`: SVGビジュアルエディタ (Dagre, minimap)
+- `src/features/inference/`: 推論UI (bridge + panel)
+- `src/features/export/`: 5形式エクスポート (CSV/Ink/Twine/JSON/Yarn)
+
+### backend
+
+- Express REST API (port 3001), インメモリストレージ
+
+### sdk-unity
+
+- UPM パッケージ形式
+- InferenceRegistry: 条件8種 / エフェクト7種 (TS パリティ)
+- Session: Flags, Resources, Variables, Inventory, Time
+
 ## Decision Log
 
 | 日付 | 決定事項 | 選択肢 | 決定理由 |
 |------|----------|--------|----------|
+| 2026-03-16 | ブランチ統合: ローカルをmaster→mainに切替 | main切替 / masterにマージ / 保留 | origin/mainが正。masterのEntity/Inventory変更は既にcherry-pick済み。337ファイル差分 |
 | 2026-03-07 | Ollama (ローカルLLM) プロバイダを完全削除 | A) OpenRouter統合 / B) Ollama改善 / C) 処理 / D) 完全削除 | 精度・リソース費用に難あり。非AIパラフレーズがオフライン対応済み。AIProviderインターフェースは拡張可能なため将来再実装可能 |
 | 2026-03-07 | レガシーDoc 7件をdocs/archive/に移動 | 移動 / 保留 | Windsurf AI Collab Rules x3 + ヒント集.md x3 + REPORT_CONFIG.yml。CLAUDE.md更新で不使用。移動スクリプト不在 |
 | 2026-03-07 | 旧計画Doc 4件削除。DEVELOPMENT_PLAN.mdで置換 | archive移動 / 部分統合 / 完全削除 | MID_TERM_TASKS, NEXT_PHASE_PROPOSAL, features-status, RESTART_ROADMAPはShared Workflows削除に伴いレガシー化。コード探索ベースの新プランで置換 |
@@ -56,8 +107,16 @@
 ## Project Context
 
 プロジェクト名: NarrativeGen
-環境: Node.js 20+ / TypeScript 5.x / Vite 5 / Vitest / Playwright
+環境: Node.js 22 / TypeScript 5.x / Vite 5 / Vitest / Playwright
 ブランチ戦略: trunk-based (main のみ)
 現フェーズ: 安定化完了 → 機能拡張フェーズ
-直近の状態 (2026-03-13): origin/masterからEntity/Inventory統合+C# SDK InferenceRegistryを手動cherry-pick完了。hasItem/addItem/removeItem条件エフェクト、modifyVariable推論登録、EntityDef型、brand→nameリネーム、例モデル2個(quest/trading)、C# SDK 9ファイル更新。73テスト全緑、ビルド全通過。推論UI Phase 2(UC-3/UC-4)は前回完了済み。ノードグラフのミニマップ白化+テキスト重なり問題は未着手。
-記録先: 文字コード運用は `docs/plans/DEVELOPMENT_PLAN.md`、インシデント記録は `docs/governance/encoding-safety-incident-2026-03-10.md`、残課題は `docs/TECHNICAL_DEBT.md` で管理。
+方針: 汎用インタラクティブ物語エンジン
+直近の状態 (2026-03-16):
+
+- main ブランチに統合完了 (master からの切替)
+- 73テスト全緑、ビルド成功
+- 推論UI Phase 1-3 実装済み (SP-INF-UI-001: 75%)
+- Entity/Inventory + C# SDK InferenceRegistry 統合済み
+- Web Tester: main.js分離完了、ハンドラー10モジュール、推論UI、XSS修正
+- 残課題: ミニマップ白化+テキスト重なり (TECHNICAL_DEBT #6 mostly done)、E2E拡充
+- 記録先: `docs/plans/DEVELOPMENT_PLAN.md`, `docs/TECHNICAL_DEBT.md`, `docs/governance/`

@@ -1775,9 +1775,55 @@
   font-size: 0.7rem;
 }
 
-/* Collapsed state: hide what-if content too */
-.inference-analysis-section.collapsed .inference-whatif-content {
+/* Collapsed state: hide what-if and reachable content too */
+.inference-analysis-section.collapsed .inference-whatif-content,
+.inference-analysis-section.collapsed .inference-reachable-content {
   display: none;
+}
+
+/* UC-2: Reachable nodes */
+.inference-reachable-content {
+  margin-top: 0.25rem;
+}
+
+.inference-reachable-summary {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #8e8e93);
+  margin-bottom: 0.25rem;
+}
+
+.inference-reachable-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.inference-reachable-node {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  background: var(--color-accent-subtle, rgba(10, 132, 255, 0.15));
+  color: var(--color-accent, #0a84ff);
+}
+
+.inference-reachable-node:hover {
+  background: var(--color-accent, #0a84ff);
+  color: #fff;
+}
+
+.inference-unreachable-node {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  background: var(--color-surface-secondary, rgba(72, 72, 74, 0.3));
+  color: var(--color-text-disabled, #636366);
+  opacity: 0.6;
+}
+
+.inference-unreachable-node:hover {
+  opacity: 1;
 }
 
 /* Graph tab floating inference panel */

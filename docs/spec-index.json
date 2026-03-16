@@ -29,11 +29,11 @@
   {
     "id": "SP-004",
     "title": "Design Improvements",
-    "status": "partial",
+    "status": "legacy",
     "pct": 60,
     "cat": "ui",
     "file": "docs/archive/legacy-specs/DESIGN_IMPROVEMENTS_SPEC.md",
-    "summary": "Ongoing UI color, readability, and layout improvements"
+    "summary": "Legacy: UI color, readability, layout improvements (2025-11). Mostly implemented."
   },
   {
     "id": "SP-005",
@@ -61,15 +61,6 @@
     "cat": "ui",
     "file": "docs/archive/legacy-status/PHASE2_GRAPH_EDITOR_DESIGN.md",
     "summary": "SVG visual editor, drag and drop, and minimap"
-  },
-  {
-    "id": "SP-008",
-    "title": "Node Feature Analysis",
-    "status": "legacy",
-    "pct": 0,
-    "cat": "system",
-    "file": "docs/archive/legacy-specs/Node_Feature_Analysis.md",
-    "summary": "Legacy NodeType analysis"
   },
   {
     "id": "SP-009",
@@ -156,9 +147,63 @@
     "id": "SP-INF-UI-001",
     "title": "Inference UI Integration",
     "status": "partial",
-    "pct": 75,
+    "pct": 85,
     "cat": "ui",
     "file": "docs/specs/inference-ui-integration.md",
-    "summary": "Inference engine visualization in editor (path analysis, impact, state key lookup)"
+    "summary": "Inference engine visualization: path (UC-1), impact (UC-3), state keys (UC-4), What-if (UC-5), reachable nodes (UC-2). Phase 1-2 complete, Phase 3 partial. Debug query UI + graph visual integration pending."
+  },
+  {
+    "id": "SP-ENGINE-001",
+    "title": "Engine Core API",
+    "status": "done",
+    "pct": 100,
+    "cat": "core",
+    "file": "docs/specs/engine-core.md",
+    "summary": "Core engine API: model loading, session management, condition evaluation (8 types), effect application (7 types), inventory, validation"
+  },
+  {
+    "id": "SP-SCHEMA-001",
+    "title": "Model Schema",
+    "status": "partial",
+    "pct": 80,
+    "cat": "data",
+    "file": "docs/specs/model-schema.md",
+    "summary": "Playthrough model JSON Schema. Structure + integrity validation. Strict entity/condition/effect schema TBD"
+  },
+  {
+    "id": "SP-API-001",
+    "title": "REST API (Backend)",
+    "status": "done",
+    "pct": 90,
+    "cat": "infra",
+    "file": "docs/specs/rest-api.md",
+    "summary": "Express REST API: model CRUD, session management, AI integration. In-memory storage"
+  },
+  {
+    "id": "SP-UNITY-001",
+    "title": "Unity SDK",
+    "status": "partial",
+    "pct": 85,
+    "cat": "system",
+    "file": "docs/specs/unity-sdk.md",
+    "summary": "Unity C# SDK (UPM): Engine API, InferenceRegistry (8 cond / 7 effect), Variables/Inventory. Serialize/test unverified"
+  },
+  {
+    "id": "SP-PARA-001",
+    "title": "Paraphrase System",
+    "status": "done",
+    "pct": 100,
+    "cat": "core",
+    "file": "docs/specs/paraphrase.md",
+    "summary": "Two-layer text paraphrase: local synonym dictionary (deterministic) + AI paraphrase (OpenAI/Mock)"
+  },
+  {
+    "id": "SP-ENTITY-001",
+    "title": "Entity / Inventory System",
+    "status": "partial",
+    "pct": 85,
+    "cat": "core",
+    "file": "docs/specs/entity-inventory.md",
+    "summary": "Entity definition and inventory management. TS/C# integrated (hasItem/addItem/removeItem). Web Tester UI and schema TBD"
   }
 ]

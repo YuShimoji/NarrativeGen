@@ -30,6 +30,8 @@ export class InferencePanel {
     this._stateKeysContent = null
     /** @type {HTMLElement | null} */
     this._whatIfContent = null
+    /** @type {HTMLElement | null} */
+    this._reachableContent = null
     /** @type {object | null} - 現在のセッション状態（外部から設定） */
     this._session = null
     /** @type {boolean} */
@@ -107,6 +109,17 @@ export class InferencePanel {
     section.appendChild(whatIfContent)
     this._whatIfContent = whatIfContent
 
+    // 到達可能ノードセクション (UC-2)
+    const reachableLabel = document.createElement('div')
+    reachableLabel.className = 'inference-sub-label'
+    reachableLabel.textContent = '到達可能ノード'
+    section.appendChild(reachableLabel)
+
+    const reachableContent = document.createElement('div')
+    reachableContent.className = 'inference-reachable-content'
+    section.appendChild(reachableContent)
+    this._reachableContent = reachableContent
+
     this._container = section
     return section
   }
@@ -120,6 +133,7 @@ export class InferencePanel {
     this._updateImpact(nodeId)
     this._updateStateKeys(nodeId)
     this._updateWhatIf(nodeId)
+    this._updateReachable()
   }
 
   /**
@@ -438,6 +452,62 @@ export class InferencePanel {
       if (this._onNodeClick) this._onNodeClick(nodeId)
     })
     return span
+  }
+
+  /**
+   * 到達可能ノード一覧を更新する (UC-2)。
+   * セッション状態が設定されている場合のみ表示。
+   * @private
+   */
+  _updateReachable() {
+    if (!this._reachableContent) return
+
+    if (!this._session || !this._bridge.isReady || !this._bridge._model) {
+      this._reachableContent.innerHTML = this._session
+        ? ''
+        : '<div class="inference-empty">セッション未設定</div>'
+      return
+    }
+
+    const reachable = this._bridge.getReachableNodes(this._session)
+    const allNodeIds = Object.keys(this._bridge._model.nodes)
+
+    if (allNodeIds.length === 0) {
+      this._reachableContent.innerHTML = ''
+      return
+    }
+
+    const frag = document.createDocumentFragment()
+
+    // 到達可能ノード
+    const reachableIds = new Set(reachable.keys())
+    const reachableCount = reachableIds.size
+    const totalCount = allNodeIds.length
+
+    const summary = document.createElement('div')
+    summary.className = 'inference-reachable-summary'
+    summary.textContent = `${reachableCount} / ${totalCount} ノード到達可能`
+    frag.appendChild(summary)
+
+    const list = document.createElement('div')
+    list.className = 'inference-reachable-list'
+
+    for (const nodeId of allNodeIds) {
+      const isReachable = reachableIds.has(nodeId)
+      const item = document.createElement('span')
+      item.className = isReachable
+        ? 'inference-reachable-node'
+        : 'inference-unreachable-node'
+      item.textContent = nodeId
+      item.addEventListener('click', () => {
+        if (this._onNodeClick) this._onNodeClick(nodeId)
+      })
+      list.appendChild(item)
+    }
+
+    frag.appendChild(list)
+    this._reachableContent.innerHTML = ''
+    this._reachableContent.appendChild(frag)
   }
 
   /** @private */
