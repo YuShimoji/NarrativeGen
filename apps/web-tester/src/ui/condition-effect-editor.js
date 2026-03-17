@@ -14,6 +14,8 @@ export const ConditionTypes = {
   RESOURCE: 'resource',   // リソース条件: resource:name>=value
   VARIABLE: 'variable',   // 変数条件: variable:name=value
   TIME_WINDOW: 'timeWindow', // 時間窓条件: time:start-end
+  HAS_ITEM: 'hasItem',   // アイテム所持条件
+  HAS_EVENT: 'hasEvent', // イベント存在条件
   VISITED: 'visited',     // 訪問条件: visited:nodeId
   NOT_VISITED: 'notVisited' // 未訪問条件: notVisited:nodeId
 }
@@ -26,6 +28,9 @@ export const EffectTypes = {
   ADD_RESOURCE: 'addResource', // リソース加算: addResource:name=value
   SET_VARIABLE: 'setVariable',  // 変数設定: setVariable:name=value
   MODIFY_VARIABLE: 'modifyVariable', // 変数演算: modifyVariable:name+value
+  ADD_ITEM: 'addItem',       // アイテム追加
+  REMOVE_ITEM: 'removeItem', // アイテム削除
+  CREATE_EVENT: 'createEvent', // イベント生成
   GOTO: 'goto' // 遷移: goto:target
 }
 
@@ -118,7 +123,8 @@ export class ConditionEffectEditor {
     const isFlag = parsed.type === 'flag'
     const isTimeWindow = parsed.type === 'timeWindow'
     const isHasItem = parsed.type === 'hasItem'
-    const operatorHidden = isRaw || isFlag || isTimeWindow || isHasItem
+    const isHasEvent = parsed.type === 'hasEvent'
+    const operatorHidden = isRaw || isFlag || isTimeWindow || isHasItem || isHasEvent
 
     const operatorOptions = (() => {
       if (parsed.type === 'resource') {
@@ -157,6 +163,7 @@ export class ConditionEffectEditor {
           <option value="variable" ${parsed.type === 'variable' ? 'selected' : ''}>変数</option>
           <option value="timeWindow" ${parsed.type === 'timeWindow' ? 'selected' : ''}>時間窓</option>
           <option value="hasItem" ${parsed.type === 'hasItem' ? 'selected' : ''}>アイテム所持</option>
+          <option value="hasEvent" ${parsed.type === 'hasEvent' ? 'selected' : ''}>イベント存在</option>
           <option value="raw" ${parsed.type === 'raw' ? 'selected' : ''}>カスタム</option>
         </select>
         <input type="text" class="condition-raw" placeholder="条件(生)" value="${this._escapeAttr(parsed.rawText)}" data-field="raw" ${isRaw ? '' : 'style="display:none"'}>
@@ -179,6 +186,7 @@ export class ConditionEffectEditor {
     const isRaw = parsed.type === 'raw'
     const isModifyVar = parsed.type === 'modifyVariable'
     const isItemEffect = parsed.type === 'addItem' || parsed.type === 'removeItem'
+    const isCreateEvent = parsed.type === 'createEvent'
 
     return `
       <div class="effect-item" data-effect-index="${effectIndex}">
@@ -189,6 +197,7 @@ export class ConditionEffectEditor {
           <option value="modifyVariable" ${parsed.type === 'modifyVariable' ? 'selected' : ''}>変数演算</option>
           <option value="addItem" ${parsed.type === 'addItem' ? 'selected' : ''}>アイテム追加</option>
           <option value="removeItem" ${parsed.type === 'removeItem' ? 'selected' : ''}>アイテム削除</option>
+          <option value="createEvent" ${parsed.type === 'createEvent' ? 'selected' : ''}>イベント生成</option>
           <option value="goto" ${parsed.type === 'goto' ? 'selected' : ''}>遷移</option>
           <option value="raw" ${parsed.type === 'raw' ? 'selected' : ''}>カスタム</option>
         </select>
@@ -200,8 +209,8 @@ export class ConditionEffectEditor {
           <option value="*" ${parsed.operator === '*' ? 'selected' : ''}>*</option>
           <option value="/" ${parsed.operator === '/' ? 'selected' : ''}>/</option>
         </select>
-        <span class="effect-equals" ${(isGoto || isRaw || isModifyVar || isItemEffect) ? 'style="display:none"' : ''}>=</span>
-        <input type="text" class="effect-value" placeholder="値" value="${this._escapeAttr(parsed.value)}" data-field="value" ${(isGoto || isRaw || isItemEffect) ? 'style="display:none"' : ''}>
+        <span class="effect-equals" ${(isGoto || isRaw || isModifyVar || isItemEffect || isCreateEvent) ? 'style="display:none"' : ''}>=</span>
+        <input type="text" class="effect-value" placeholder="${isCreateEvent ? 'イベント名' : '値'}" value="${this._escapeAttr(parsed.value)}" data-field="value" ${(isGoto || isRaw || isItemEffect) ? 'style="display:none"' : ''}>
         <button type="button" class="delete-effect-btn btn-icon" data-node-id="${nodeId}" data-choice-index="${choiceIndex}" data-effect-index="${effectIndex}">×</button>
       </div>
     `
@@ -234,6 +243,9 @@ export class ConditionEffectEditor {
       }
       if (type === 'hasItem') {
         return { type: 'hasItem', name: conditionStr.key ?? '', operator: '=', value: String(conditionStr.value ?? true), rawText: '' }
+      }
+      if (type === 'hasEvent') {
+        return { type: 'hasEvent', name: conditionStr.key ?? '', operator: '=', value: String(conditionStr.value ?? true), rawText: '' }
       }
 
       if (type === 'and' || type === 'or' || type === 'not') {
@@ -301,6 +313,9 @@ export class ConditionEffectEditor {
       }
       if (type === 'addItem' || type === 'removeItem') {
         return { type, name: effectStr.key ?? '', value: '', rawText: '' }
+      }
+      if (type === 'createEvent') {
+        return { type: 'createEvent', name: effectStr.id ?? '', value: effectStr.name ?? '', rawText: '' }
       }
       if (type === 'goto') {
         return { type: 'goto', name: effectStr.target ?? '', value: '', rawText: '' }
@@ -414,6 +429,10 @@ export class ConditionEffectEditor {
       return { type: 'hasItem', key: name, value: this._parseBoolean(value) }
     }
 
+    if (type === 'hasEvent') {
+      return { type: 'hasEvent', key: name, value: this._parseBoolean(value) }
+    }
+
     return this.buildConditionString(type, name, operator, value)
   }
 
@@ -446,6 +465,10 @@ export class ConditionEffectEditor {
 
     if (type === 'addItem' || type === 'removeItem') {
       return { type, key: String(name ?? '') }
+    }
+
+    if (type === 'createEvent') {
+      return { type: 'createEvent', id: String(name ?? ''), name: String(value ?? '') }
     }
 
     if (type === 'goto') {

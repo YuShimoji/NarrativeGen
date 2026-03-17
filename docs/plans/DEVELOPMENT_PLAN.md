@@ -204,6 +204,42 @@
 
 ---
 
+### 優先順位3.9: 原初ビジョン統合 [進行中]
+
+**完了日**: 進行中 (2026-03-17)
+
+原初ビジョン (ORIGINAL_DESIGN_PHILOSOPHY.md) の5つの構造的ギャップを段階的に解消する。
+
+**Phase 1 — Entity-Property System [完了]**: SP-PROP-001 done
+- PropertyDef 型 + 3層継承チェーン (resolveProperty / getEntityProperties / getInheritanceChain)
+- JSON Schema + GUI (parentEntity dropdown, property CRUD)
+
+**Phase 2 — Dynamic Text Engine [完了]**: SP-TEXT-001 done
+- `[entity.property]` 参照 + `{variable}` 展開 + `{?condition:text}` 条件セクション
+
+**Phase 3 — Property Anomaly Detection [完了]**: SP-ANOMALY-001 done
+- detectAnomaly / detectAllAnomalies + KnowledgeProfile (domain/accuracy/tolerance)
+
+**Phase 4.1 — Paraphrase Property Matching [完了]**: SP-PARA-002 done
+- ConditionalVariant + match条件 + UsageHistory + buildParaphraseContext
+
+**Phase 4.2 — Character Knowledge Model [完了]**: SP-KNOW-001 done
+- CharacterDef + findKnowledgeProfile + perceiveEntity (anomaly bridge)
+
+**Phase 5.2 — Dynamic Event Entity Generation [80%]**: SP-EVENT-001 partial
+- createEventEntity / hasEvent / createEventFromAnomaly
+- hasEvent 条件 + createEvent エフェクト + 推論レジストリ統合
+- テンプレート展開: session.events からの `[event_id.property]` 解決
+- テスト: 18件 (コア + integration + template)
+- 残: Web Tester GUI (condition-effect-editor 対応)
+
+**未着手**:
+- Phase 5.3: 動的ストーリー展開 (事象Entity参照による新展開生成)
+
+**テスト**: 167件全緑、11モデル検証通過
+
+---
+
 ### 優先順位4: レスポンシブデザイン + アクセシビリティ
 
 **現状**: デスクトップ向けのみ。モバイル非対応。アクセシビリティ未対応。

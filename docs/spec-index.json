@@ -250,5 +250,14 @@
     "cat": "core",
     "file": "docs/specs/event-entity.md",
     "summary": "Dynamic event entity creation during gameplay. createEvent effect + hasEvent condition + template expansion. Anomaly-to-event bridge. Engine + schema + tests complete. Web Tester UI pending."
+  },
+  {
+    "id": "SP-KNOW-001",
+    "title": "Character Knowledge Model",
+    "status": "done",
+    "pct": 100,
+    "cat": "core",
+    "file": "docs/specs/character-knowledge.md",
+    "summary": "Character knowledge profiles for perception simulation. CharacterDef with KnowledgeProfile[], findKnowledgeProfile (domain fallback), perceiveEntity (anomaly detection bridge). 7 tests."
   }
 ]
