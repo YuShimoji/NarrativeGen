@@ -7,6 +7,7 @@ import {
     setParaphraseLexicon,
 } from '../../../packages/engine-ts/dist/browser.js'
 import { expandTemplate } from '../../../packages/engine-ts/dist/template.js'
+import { findMatchingTemplates } from '../../../packages/engine-ts/dist/conversation-templates.js'
 import Logger from './core/logger.js'
 import {
     startNewSession,
@@ -48,8 +49,17 @@ export function resolveVariables(text, session, model) {
     resolved = resolved.replace(/\{time\}/g, String(session.time))
 
     // Entity property expansion: [entity_id] and [entity_id.property]
-    if (model?.entities) {
+    if (model?.entities || session?.events) {
         resolved = expandTemplate(resolved, model, session)
+    }
+
+    // Dynamic story expansion: conversationTemplates auto-insertion
+    if (model?.conversationTemplates?.length > 0 && session?.events) {
+        const matches = findMatchingTemplates(model.conversationTemplates, session, model)
+        if (matches.length > 0) {
+            const insertions = matches.map(m => m.expandedText).join(' ')
+            resolved = resolved + ' ' + insertions
+        }
     }
 
     return resolved

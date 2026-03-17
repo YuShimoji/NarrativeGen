@@ -272,10 +272,10 @@
   {
     "id": "SP-DYNAMIC-001",
     "title": "Dynamic Story Expansion",
-    "status": "partial",
-    "pct": 50,
+    "status": "done",
+    "pct": 100,
     "cat": "core",
     "file": "docs/specs/dynamic-story-expansion.md",
-    "summary": "3-layer responsibility separation (core state / display state / insertion mechanism). Phase 2 done: ConversationTemplate data model + findMatchingTemplates + TemplateUsageState. 9 tests. Phase A (template-driven) already works. Remaining: schema + Web Tester integration."
+    "summary": "3-layer responsibility separation. ConversationTemplate: trigger matching + priority + maxUses. Schema + Web Tester integrated (auto-insertion in resolveVariables). Model.conversationTemplates optional. 9 tests."
   }
 ]

@@ -1,6 +1,6 @@
 # SP-DYNAMIC-001: Dynamic Story Expansion
 
-**Status**: partial | **Pct**: 50 | **Cat**: core
+**Status**: done | **Pct**: 100 | **Cat**: core
 
 ## 概要
 

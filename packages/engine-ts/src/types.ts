@@ -69,6 +69,7 @@ export interface Model {
   resources?: ResourceState
   entities?: Record<string, EntityDef>
   nodes: Record<string, NodeDef>
+  conversationTemplates?: import('./conversation-templates.js').ConversationTemplate[]
 }
 
 export interface SessionState {

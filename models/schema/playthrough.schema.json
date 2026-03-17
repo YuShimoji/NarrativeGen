@@ -250,6 +250,48 @@
         },
         "additionalProperties": false
       }
+    },
+    "conversationTemplates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "trigger", "text"],
+        "properties": {
+          "id": { "type": "string" },
+          "trigger": {
+            "type": "object",
+            "required": ["eventMatch"],
+            "properties": {
+              "eventMatch": {
+                "type": "object",
+                "required": ["propertyChecks"],
+                "properties": {
+                  "propertyChecks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["key", "op", "value"],
+                      "properties": {
+                        "key": { "type": "string" },
+                        "op": { "type": "string", "enum": [">=", "<=", ">", "<", "==", "!="] },
+                        "value": { "oneOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "text": { "type": "string" },
+          "insertContext": { "type": "string" },
+          "priority": { "type": "number" },
+          "maxUses": { "type": "number" }
+        },
+        "additionalProperties": false
+      }
     }
   },
   "additionalProperties": false
