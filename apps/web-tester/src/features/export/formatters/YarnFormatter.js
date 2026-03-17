@@ -109,6 +109,8 @@ export class YarnFormatter {
                 return `(${c.conditions.map(sub => this._conditionToExpr(sub)).join(' or ')})`
             case 'not':
                 return `!(${this._conditionToExpr(c.condition)})`
+            case 'hasItem':
+                return c.value ? `$inventory_${c.key}` : `$inventory_${c.key} == false`
             case 'timeWindow':
                 return `$time >= ${c.start} and $time <= ${c.end}`
             default:
@@ -130,6 +132,10 @@ export class YarnFormatter {
                 return `<<set $${effect.key} to $${effect.key} ${effect.op} ${effect.value}>>`
             case 'goto':
                 return `<<jump ${this._sanitizeId(effect.target)}>>`
+            case 'addItem':
+                return `<<set $inventory_${effect.key} to true>>`
+            case 'removeItem':
+                return `<<set $inventory_${effect.key} to false>>`
             default:
                 return null
         }
@@ -145,6 +151,15 @@ export class YarnFormatter {
         if (model.resources) {
             for (const [key, value] of Object.entries(model.resources)) {
                 lines.push(`<<declare $${key} = ${typeof value === 'number' ? value : 0}>>`)
+            }
+        }
+        if (model.variables) {
+            for (const [key, value] of Object.entries(model.variables)) {
+                if (typeof value === 'number') {
+                    lines.push(`<<declare $${key} = ${value}>>`)
+                } else {
+                    lines.push(`<<declare $${key} = "${value}">>`)
+                }
             }
         }
         return lines.length > 0 ? lines.join('\n') : ''

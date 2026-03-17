@@ -96,16 +96,19 @@ model.flags, model.resources, model.variablesから自動生成:
 | `{type:'variable', key, op:'<=', value}` | `$key <= {value}` | 数値比較 |
 | `{type:'variable', key, op:'>', value}` | `$key > {value}` | 数値比較 |
 | `{type:'variable', key, op:'<', value}` | `$key < {value}` | 数値比較 |
-| `{type:'variable', key, op:'contains', value}` | *(非対応)* | Yarn Spinnerに直接的な文字列contains演算子なし |
-| `{type:'variable', key, op:'!contains', value}` | *(非対応)* | 同上 |
-| `{type:'timeWindow', start, end}` | *(非対応)* | Yarn Spinnerにtime変数概念なし |
+| `{type:'variable', key, op:'contains', value}` | `$key contains "{value}"` | best-effort出力 (Yarn非公式) |
+| `{type:'variable', key, op:'!contains', value}` | `$key !contains "{value}"` | best-effort出力 (Yarn非公式) |
+| `{type:'hasItem', key, value:true}` | `$inventory_{key}` | boolean変数として変換 |
+| `{type:'hasItem', key, value:false}` | `$inventory_{key} == false` | 同上 |
+| `{type:'timeWindow', start, end}` | `$time >= {start} and $time <= {end}` | best-effort出力 |
 | `{type:'and', conditions}` | `cond1 && cond2 && ...` | 論理積 |
 | `{type:'or', conditions}` | `cond1 || cond2 || ...` | 論理和 |
 | `{type:'not', condition}` | `!(cond)` | 論理否定 |
 
-**非対応条件の扱い:**
-- `contains` / `!contains`: 常に真として出力（`/* UNSUPPORTED: contains */`コメント付き）
-- `timeWindow`: 常に真として出力（`/* UNSUPPORTED: timeWindow */`コメント付き）
+**特殊条件の扱い:**
+- `contains` / `!contains`: best-effort 出力 (`$key contains "value"`)。Yarn Spinner 公式構文ではないが可読性を優先
+- `timeWindow`: best-effort 出力 (`$time >= start and $time <= end`)
+- `hasItem`: `$inventory_{key}` boolean 変数に変換。Yarn にはネイティブインベントリがないため
 
 ### 効果（Effect）のマッピング
 
@@ -116,6 +119,8 @@ model.flags, model.resources, model.variablesから自動生成:
 | `{type:'setVariable', key, value}` | `<<set $key = {value}>>` | 文字列は`""`で囲む |
 | `{type:'modifyVariable', key, op, value}` | `<<set $key = {$key} {op} {value}>>` | 四則演算 |
 | `{type:'goto', target}` | `<<jump {target}>>` | ノードジャンプ |
+| `{type:'addItem', key}` | `<<set $inventory_{key} to true>>` | boolean変数として変換 |
+| `{type:'removeItem', key}` | `<<set $inventory_{key} to false>>` | 同上 |
 
 **効果の配置:**
 - 選択肢に`effects`がある場合、選択肢リンクの直後（次の行）に`<<set>>`/`<<jump>>`を出力
@@ -139,8 +144,24 @@ NarrativeGenの`model.startNode`がモデル内ノードの場合:
 
 - **ParaphraseLexicon** / **ParaphraseStyle** -- 言い換え辞書・スタイル
 - **ChoiceOutcome** -- 選択肢選択後の追加テキスト
-- **timeWindow条件** -- 時間窓による条件分岐
-- **contains/!contains変数条件** -- 文字列包含判定
+
+## 変換方式（エンティティ/インベントリ）
+
+Yarn Spinner にはネイティブインベントリ概念がないため、以下の変換規則を適用:
+- `hasItem(key)` → `$inventory_{key}` (boolean)
+- `addItem(key)` → `<<set $inventory_{key} to true>>`
+- `removeItem(key)` → `<<set $inventory_{key} to false>>`
+
+## 実装との乖離（解消済み）
+
+| 項目 | 旧仕様 | 実装 | 解消 |
+|------|--------|------|------|
+| `flag:false` | `!$key` | `$key == false` | 動作等価、実装を正とする |
+| `contains` | `/* UNSUPPORTED */` コメント | best-effort出力 | 仕様を実装に合わせて更新 |
+| `timeWindow` | `/* UNSUPPORTED */` コメント | best-effort出力 | 同上 |
+| `hasItem` | 記載なし | `$inventory_{key}` 変換 | 2026-03-17 追加 |
+| `addItem`/`removeItem` | 記載なし | `<<set $inventory_{key} ...>>` | 2026-03-17 追加 |
+| `variables` 宣言 | 記載あり | 未実装だった | 2026-03-17 実装追加 |
 
 これらの情報は`.yarn`ファイルには含まれず、エクスポート形式の制約となる。
 
