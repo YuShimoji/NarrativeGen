@@ -114,20 +114,26 @@
 プロジェクト名: NarrativeGen
 環境: Node.js 22 / TypeScript 5.x / Vite 5 / Vitest / Playwright
 ブランチ戦略: trunk-based (main のみ)
-現フェーズ: 原初ビジョン統合完了 → Authoring/SDKパリティフェーズ
-方針: ライター向け体験整備 + Unity SDK パリティ
-直近の状態 (2026-03-17 session 5):
+現フェーズ: 統合検証 → エクスポート整備フェーズ
+方針: 統合モデルによる実戦検証 + エクスポート/SDK パリティ
+直近の状態 (2026-03-18 session 6):
 
-- main ブランチ、origin/main +4コミット先行
-- 198テスト全緑、12モデル検証通過、ビルド成功、doctor 25/25
-- E2E: 44件 (entity-panel 11件 + template-panel 10件)
+- main ブランチ、origin/main +3コミット先行 (push前)
+- 205テスト全緑、13モデル検証通過、ビルド成功
+- E2E: 44件
 - 31 specs: done 30 / partial 1 (SP-UNITY-001 85%)
-- 原初ビジョン全8スペック完了
-- Authoring体験逆算スライス完了
-- Doc sync完了: HANDOVER/TASKS/DEVELOPMENT_PLAN/TECHNICAL_DEBT最新化
-- Tech Debt: doctor警告解消、TEST_PROCEDURES→TEST_GUIDE参照修正
+- Session 5-6 の主な成果:
+  - 統合モデル full_integration.json (14ノード, 全機能横断)
+  - G1解消: playthrough.schema.json に and/or/not 条件 ($ref再帰定義)
+  - G2解消: ConversationTemplate trigger sessionConditions + eventMatch optional
+  - G3解消: Model.variables 初期値サポート
+  - and/or/not 複合条件 GUI (condition-effect-editor, 1階層ネスト)
+  - YarnFormatter: hasEvent/createEvent/property 条件・エフェクト対応
+  - index.ts export パリティ (paraphrase, AI, inference 追加)
+  - gui-editor.js const session 重複宣言バグ修正
 - 次回着手候補:
-  - Unity SDKパリティ (TS側7機能のC#移植) — HUMAN_AUTHORITY
-  - ライター向けオーサリングガイド / サンプルストーリー — HUMAN_AUTHORITY
-  - [entity~prop_pool] 構文 (DescriptionState統合) — 設計判断必要
-  - SP-009 Tech Debt残: CI統合、手動回帰テスト
+  - Web Tester で full_integration.json の手動プレビュー検証
+  - sessionConditions の GUI Editor 対応 (Template trigger 編集)
+  - Unity SDK パリティ — HUMAN_AUTHORITY
+  - G4: Model に characters — 設計判断必要
+  - G5: Model に paraphraseLexicon — 設計判断必要

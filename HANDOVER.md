@@ -2,10 +2,10 @@
 
 ## 最終更新
 
-- **日時**: 2026-03-17
+- **日時**: 2026-03-18
 - **ブランチ**: `main` (trunk-based)
-- **最新コミット**: `484fd6a` (docs: CLAUDE.md DECISION LOG — Authoring axis switch + session 4 handoff)
-- **origin/main**: 同期済み
+- **最新コミット**: `2dd02f2` (feat: align index.ts exports with browser.ts)
+- **origin/main**: +3 commits ahead (push前)
 
 ## プロジェクト概要
 
@@ -24,75 +24,49 @@ NarrativeGen/
   docs/                  # 仕様書・プラン・ガバナンス
 ```
 
-### エンジンの公開 API (`@narrativegen/engine-ts`)
-
-| エクスポート | 用途 |
-| ----------- | ---- |
-| `loadModel(data)` | JSON モデル読み込み + スキーマ/整合性検証 |
-| `startSession(model)` | セッション開始 → SessionState |
-| `getAvailableChoices(session, model)` | 現在ノードの選択可能な選択肢（条件評価済み） |
-| `applyChoice(session, model, choiceId)` | 選択肢適用 → 新 SessionState |
-| `serialize(session)` / `deserialize(payload)` | セッション永続化 |
-
-### 組み込み条件/エフェクト型
-
-**条件 (8種)**: `flag`, `resource`, `variable`（数値/文字列比較・演算）, `timeWindow`, `hasItem`, `and`, `or`, `not`
-**エフェクト (7種)**: `setFlag`, `addResource`, `setVariable`, `modifyVariable`（数値演算）, `addItem`, `removeItem`, `goto`
-
-### 原初ビジョン拡張 API
-
-| モジュール | 用途 |
-| ---------- | ---- |
-| `entities.ts` | EntityDef + PropertyDef 階層、resolveProperty / getEntityProperties / getInheritanceChain |
-| `template.ts` | Dynamic Text: `[entity.property]` / `{variable}` / `{?condition:text}` 展開 |
-| `paraphrase.ts` | ConditionalVariant + match条件 + UsageHistory + buildParaphraseContext |
-| `anomaly-detector.ts` | detectAnomaly / detectAllAnomalies (KnowledgeProfile ベース) |
-| `character-knowledge.ts` | CharacterDef + findKnowledgeProfile + perceiveEntity |
-| `description-tracker.ts` | DescriptionState: markDescribed / isDescribed / getUndescribedKeys |
-| `event-entity.ts` | createEventEntity / hasEvent / createEventFromAnomaly |
-| `conversation-templates.ts` | ConversationTemplate: trigger matching + priority + maxUses |
-
-詳細は `docs/specs/` 配下の各仕様書を参照。
-
 ## 現在の状態
 
 ### CI・テスト
 
-- **engine-ts**: 198 テスト全合格 (17 ファイル)
+- **engine-ts**: 205 テスト全合格 (17 ファイル)
 - **web-tester**: Vite ビルド成功
-- **E2E**: 44 件 (entity-panel 11件 + template-panel 10件 含む)
-- **モデル検証**: 12 モデル通過
+- **E2E**: 44 件
+- **モデル検証**: 13 モデル通過
 
 ### 仕様書
 
 - **spec-index.json**: 31 エントリ
 - **done**: 30 件
 - **partial**: 1 件 (SP-UNITY-001 Unity SDK 85%)
-- 原初ビジョン全8スペック完了 (SP-PROP-001 ~ SP-DYNAMIC-001 + SP-EVENT-001)
 
-### 直近完了 (session 4, 2026-03-17)
+### Session 5-6 の成果 (2026-03-17 ~ 2026-03-18)
 
-- 原初ビジョン コア実装 全8件完了
-- Authoring体験逆算スライス完了:
-  - Entity定義パネル (CRUD + inline edit + 11 E2E)
-  - ConversationTemplate GUI (Phase 4完了 + 10 E2E)
-  - Dynamic Text プレビュー (Live Preview expand Template)
-  - createEvent properties GUI
-  - テストモデル4件配置 (property/event/integration/inventory)
+- Doc sync: HANDOVER/TASKS/DEVELOPMENT_PLAN/TECHNICAL_DEBT 全最新化
+- Doctor: 25/25 pass (TEST_PROCEDURES→TEST_GUIDE fallback修正)
+- full_integration.json: 全機能横断統合モデル (14ノード, 5エンティティ, 3テンプレート)
+- G1解消: playthrough.schema.json に and/or/not 条件 ($ref 再帰定義)
+- G2解消: ConversationTemplate trigger sessionConditions + eventMatch optional
+- G3解消: Model.variables 初期値サポート
+- and/or/not 複合条件 GUI (condition-effect-editor, 1階層ネスト)
+- YarnFormatter: hasEvent/createEvent/property 条件・エフェクト対応
+- index.ts export パリティ (paraphrase, AI, inference 追加)
+- gui-editor.js: const session 重複宣言バグ修正
 
 ## 既知の課題
 
 - GUI Undo/Redo 手動回帰テスト未実施
 - Yarn Spinner 実運用検証未実施
-- Technical Debt (SP-009) 80% — CI統合・a11y・手動回帰が残
 - Unity SDK パリティ未完 (TS側7機能の移植)
+- G4: Model に characters (CharacterDef) 未対応 — 設計判断必要
+- G5: Model に paraphraseLexicon 未対応 — 設計判断必要
+- full_integration.json の Web Tester 手動プレビュー未実施
 
 ## 次の推奨作業
 
-1. **Unity SDK パリティ**: TS側7機能 (Entity-Property, Template, Anomaly, Knowledge, Event, Description, ConversationTemplate) の C# 移植
-2. **ライター向けオーサリングガイド / サンプルストーリー**: 原初ビジョン機能を使った実用例
-3. **Tech Debt 残消化**: CI spec-index/encoding check 統合、手動回帰テスト
-4. **[entity~prop_pool] 構文**: DescriptionState統合による重複回避テキスト生成
+1. **Web Tester 手動プレビュー**: full_integration.json を実際に動かして検証
+2. **sessionConditions GUI**: ConversationTemplate trigger の GUI 対応
+3. **Unity SDK パリティ**: TS側7機能の C# 移植
+4. **ライター向けガイド**: 原初ビジョン機能を使った実用サンプル
 
 ## 再開手順
 
