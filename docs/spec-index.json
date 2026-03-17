@@ -268,5 +268,14 @@
     "cat": "core",
     "file": "docs/specs/description-tracker.md",
     "summary": "Entity description tracking for repetition avoidance. markDescribed/isDescribed/getUndescribedKeys/getDescriptionCount/resetDescriptions. Immutable DescriptionState. 14 tests."
+  },
+  {
+    "id": "SP-DYNAMIC-001",
+    "title": "Dynamic Story Expansion",
+    "status": "partial",
+    "pct": 50,
+    "cat": "core",
+    "file": "docs/specs/dynamic-story-expansion.md",
+    "summary": "3-layer responsibility separation (core state / display state / insertion mechanism). Phase 2 done: ConversationTemplate data model + findMatchingTemplates + TemplateUsageState. 9 tests. Phase A (template-driven) already works. Remaining: schema + Web Tester integration."
   }
 ]

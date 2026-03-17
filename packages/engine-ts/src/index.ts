@@ -241,3 +241,5 @@ export { createEventEntity, hasEvent, createEventFromAnomaly } from './event-ent
 export type { CreateEventEffect } from './event-entity.js'
 export { markDescribed, isDescribed, getUndescribedKeys, getDescriptionCount, resetDescriptions } from './description-tracker.js'
 export type { DescriptionRecord, DescriptionState } from './description-tracker.js'
+export { findMatchingTemplates, recordTemplateUsage } from './conversation-templates.js'
+export type { ConversationTemplate, TemplateTrigger, EventMatchCondition, ExpandedTemplate, TemplateUsageState } from './conversation-templates.js'
