@@ -329,7 +329,7 @@ The Web Tester is now fully operational with:
 
 ## Testing
 
-See [`TEST_PROCEDURES.md`](TEST_PROCEDURES.md) for comprehensive testing procedures and expected results.
+See [`TEST_GUIDE.md`](TEST_GUIDE.md) for comprehensive testing procedures and expected results.
 
 ### Quick Test
 ```bash

@@ -1,6 +1,6 @@
 # 今後の開発タスク表
 
-**最終更新**: 2026-03-16
+**最終更新**: 2026-03-17
 
 ## 完了済みタスク
 
@@ -23,73 +23,74 @@
 | XSS Phase 1 修正 | 完了 | 2026-02 | html-utils 中央化 |
 | Spec Viewer 導入 | 完了 | 2026-03-09 | spec-index.json + spec-viewer.html |
 | feature/main-js-split-phase2 統合 | 完了 | 2026-03-11 | 85コミット、コンフリクト8件解決、テスト15→73件 |
-| 推論UI Phase 1 | 完了 | 2026-03-11 | Live Preview に推論セクション追加 (UC-1: 到達パス) |
-| 推論UI Phase 2 | 完了 | 2026-03-12 | UC-3 影響分析 + UC-4 状態キー使用。InferenceBridge 拡張 |
+| 推論UI Phase 1-3 | 完了 | 2026-03-17 | UC-1〜UC-5 + グラフ視覚統合 (パスハイライト/到達不能半透明化/影響色分け/デバッグクエリUI) |
 | validate キャッシュ汚染修正 | 完了 | 2026-03-12 | clearSessionCaches() 追加 |
-| E2E skip 36件整理 | 完了 | 2026-03-12 | theme-toggle 33件削除、22 passed / 5 skipped |
+| E2E skip 36件整理 | 完了 | 2026-03-12 | theme-toggle 33件削除 |
 | Entity/Inventory + C# SDK 統合 | 完了 | 2026-03-13 | hasItem/addItem/removeItem + InferenceRegistry |
-| ブランチ統合 (master→main) | 完了 | 2026-03-16 | ローカルを main に切替、origin/main に同期 |
-| 推論UI Phase 3 パネル | 完了 | 2026-03-16 | UC-2 到達可能ノード + UC-5 What-if パネルUI |
-| グラフエディタ安全化 | 完了 | 2026-03-16 | unsafe render() 全面排除 + minimap ダーク化 |
-| 推論UI Phase 3 グラフ視覚統合 | 完了 | 2026-03-17 | T1-T4: パスハイライト(ゴールド) + 到達不能半透明化 + 影響色分け(コーラル) + デバッグクエリUI |
+| ブランチ統合 (master→main) | 完了 | 2026-03-16 | ローカルを main に切替 |
 | Entity/Inventory condition-effect-editor UI | 完了 | 2026-03-17 | hasItem/addItem/removeItem ドロップダウン + スキーマ更新 |
+| Entity 定義管理 UI | 完了 | 2026-03-17 | コラプシブルパネル、CRUD、インライン編集、11 E2E |
+| 原初ビジョン全8スペック | 完了 | 2026-03-17 | SP-PROP-001 ~ SP-DYNAMIC-001 + SP-EVENT-001 |
+| Authoring体験逆算スライス | 完了 | 2026-03-17 | Entity定義/Template GUI/Dynamic Textプレビュー/createEvent GUI |
+| ConversationTemplate GUI | 完了 | 2026-03-17 | Phase 4完了、テンプレートCRUD + trigger条件編集 + 10 E2E |
+| チャンクサイズ最適化 | 完了 | 2026-03-17 | Dynamic import + manual chunking |
+| E2E root Vitest衝突解決 | 完了 | 2026-03-17 | test:e2e スクリプト追加 |
 
 ## 優先度順タスク一覧
 
-| 優先度 | タスク | 対象 | 難易度 | 見積時間 | 状態 |
-|--------|--------|------|--------|----------|------|
-| **高** | Entity 定義管理 UI (モデル内 entities の GUI 編集) | web-tester | 中 | 1日 | 進行中 |
-| **高** | Yarn Spinner エクスポート実運用検証 | web-tester | 低 | 0.5日 | 未着手 |
-| **高** | GUI Undo/Redo の手動回帰テスト | web-tester | 中 | 1日 | 未着手 |
-| **中** | チャンクサイズ警告解消 | web-tester | 中 | 1日 | 進行中 |
-| **中** | inference/ ディレクトリ方針決定 | engine-ts | 中 | 0.5日 | 未着手 |
-| **低** | アクセシビリティ改善（ARIA ラベル等） | web-tester | 低 | 1日 | 未着手 |
-| **低** | モバイル/タブレット対応 | web-tester | 高 | 2-3日 | 未着手 |
+| 優先度 | タスク | 対象 | 難易度 | 状態 |
+|--------|--------|------|--------|------|
+| **高** | Unity SDK パリティ (TS側7機能移植) | sdk-unity | 高 | 未着手 |
+| **高** | ライター向けオーサリングガイド / サンプルストーリー | docs + models | 中 | 未着手 |
+| **中** | Yarn Spinner エクスポート実運用検証 | web-tester | 低 | 未着手 |
+| **中** | GUI Undo/Redo の手動回帰テスト | web-tester | 中 | 未着手 |
+| **中** | CI統合 (spec-index/encoding-safety checks) | infra | 低 | 未着手 |
+| **中** | [entity~prop_pool] 構文 (DescriptionState統合) | engine-ts | 中 | 未着手 |
+| **低** | アクセシビリティ改善（ARIA ラベル等） | web-tester | 低 | 未着手 |
+| **低** | モバイル/タブレット対応 | web-tester | 高 | 未着手 |
 
 ## タスク詳細
 
 ### 高優先度
 
-#### Entity 定義管理 UI
+#### Unity SDK パリティ
 
-モデル内 `entities` マップの GUI 編集。エンティティの一覧表示・追加・編集・削除。
-condition-effect-editor の hasItem/addItem/removeItem は実装済み。残りは定義管理パネル。
+TS側の原初ビジョン7機能を C# SDK に移植:
+1. Entity-Property System (resolveProperty, getEntityProperties, getInheritanceChain)
+2. Dynamic Text Engine (template expansion)
+3. Property Anomaly Detection (detectAnomaly)
+4. Character Knowledge Model (perceiveEntity)
+5. Event Entity Generation (createEventEntity)
+6. Description Tracker (markDescribed, isDescribed)
+7. Conversation Templates (trigger matching)
 
-**完了条件**: SP-ENTITY-001 の pct を 100% に更新可能な状態
+**完了条件**: SP-UNITY-001 pct → 100%
 
-#### Yarn Spinner エクスポート実運用検証
+#### ライター向けオーサリングガイド
 
-**確認内容**:
-- `models/` 配下のサンプルモデルを Yarn 形式に出力
-- Yarn Spinner Dialogue System（Unity / Web Previewer）で読み込み確認
-- `docs/specs/yarn-spinner-export.md` との仕様整合チェック
-
-#### GUI Undo/Redo 手動回帰テスト
-
-**確認内容** (`docs/GUI_EDITOR_TEST_GUIDE.md` 参照):
-- ノード追加/削除/編集の Undo/Redo
-- 条件/エフェクト編集の Undo/Redo
-- 複数操作後の Redo の一貫性
+原初ビジョン機能 (Entity-Property, Dynamic Text, ConversationTemplate, Event等) を使った:
+- 実用的なサンプルストーリー (models/ に配置)
+- ライター向けガイドドキュメント (docs/ に配置)
+- Web Tester での操作手順
 
 ### 中優先度
 
-#### inference/ ディレクトリの方針
+#### Yarn Spinner エクスポート実運用検証
 
-推論UI Phase 3 完了済み。
+- `models/` のサンプルモデルを Yarn 形式に出力
+- Yarn Spinner で読込確認
+- `docs/specs/yarn-spinner-export.md` との仕様整合チェック
 
-**選択肢**:
-- A. `condition-effect-ops.ts` に forward/backward chaining も統合して `inference/` を削除
-- B. `inference/` を維持（API として外部公開）
-- C. 別パッケージ（`@narrativegen/engine-inference`）に分離
+#### [entity~prop_pool] 構文
 
-#### チャンクサイズ警告解消
-
-`build.rollupOptions.output.manualChunks` で分割。vendor-mermaid 1.79MB が主因。
+DescriptionState と Dynamic Text Engine の統合:
+- `[entity~prop_pool]` 構文で未描写プロパティから自動選択
+- 重複回避テキスト生成
 
 ## 進捗指標
 
-- **テスト**: engine-ts 73/73 合格。E2E 22 passed / 5 skipped
+- **テスト**: engine-ts 198/198 合格 (17ファイル)。E2E 44件
+- **モデル検証**: 12モデル通過
 - **ビルド**: engine-ts + web-tester ともに成功
-- **保守性**: main.js 469行（目標達成）
 - **エクスポート形式**: 5形式（CSV / Ink / Twine / JSON / Yarn）
-- **仕様書**: 23エントリ (done 18 / partial 4 / legacy 1)
+- **仕様書**: 31エントリ (done 30 / partial 1)

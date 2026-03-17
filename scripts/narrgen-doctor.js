@@ -508,18 +508,22 @@ function checkTestEnvironment(projectRoot, options = {}) {
   const warnings = [];
   const results = [];
 
-  // TEST_PROCEDURES.mdの確認
+  // テスト手順ドキュメントの確認 (TEST_GUIDE.md or TEST_PROCEDURES.md)
+  const testGuidePath = path.join(projectRoot, 'TEST_GUIDE.md');
   const testProceduresPath = path.join(projectRoot, 'TEST_PROCEDURES.md');
-  if (!fs.existsSync(testProceduresPath)) {
-    const msg = 'TEST_PROCEDURES.md not found';
+  const foundTestDoc = fs.existsSync(testGuidePath) ? testGuidePath
+    : fs.existsSync(testProceduresPath) ? testProceduresPath
+    : null;
+  if (!foundTestDoc) {
+    const msg = 'TEST_GUIDE.md not found';
     warnings.push(msg);
     results.push(createCheckResult('test.procedures-file', 'WARN', msg));
     return { issues, warnings, results };
   }
 
-  results.push(createCheckResult('test.procedures-file', 'OK', 'TEST_PROCEDURES.md exists'));
+  results.push(createCheckResult('test.procedures-file', 'OK', `${path.basename(foundTestDoc)} exists`));
 
-  const testProcedures = readFileSafe(testProceduresPath) || '';
+  const testProcedures = readFileSafe(foundTestDoc) || '';
   
   // Node.jsバージョンの確認（TEST_PROCEDURES.mdから要件を抽出）
   const nodeVersionMatch = testProcedures.match(/Node\.js\s+(\d+)\+/i);

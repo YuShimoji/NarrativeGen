@@ -73,9 +73,9 @@
 
 | 種類 | 件数 |
 |------|------|
-| ユニットテスト (Vitest) | 73テスト (10ファイル) |
-| E2Eテスト (Playwright) | 22 passed / 5 skipped (undo-redo 防御的ガード) |
-| モデル検証 (CLI) | 6モデル |
+| ユニットテスト (Vitest) | 198テスト (17ファイル) |
+| E2Eテスト (Playwright) | 44件 (entity-panel 11 + template-panel 10 含む) |
+| モデル検証 (CLI) | 12モデル |
 
 ---
 
@@ -180,7 +180,7 @@
 - modifyVariable 推論レジストリ登録
 - EntityDef 型 + brand→name リネーム
 - C# SDK InferenceRegistry (条件 8 種 / エフェクト 7 種)
-- 73 テスト全緑維持
+- 198 テスト全緑維持
 
 **condition-effect-editor UI 完了**: 2026-03-17
 - hasItem 条件タイプ + addItem/removeItem エフェクトタイプをドロップダウンに追加

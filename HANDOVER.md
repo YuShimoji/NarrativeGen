@@ -2,9 +2,9 @@
 
 ## 最終更新
 
-- **日時**: 2026-03-16
+- **日時**: 2026-03-17
 - **ブランチ**: `main` (trunk-based)
-- **最新コミット**: `353a0f9` (inference UI Phase 3 graph visual + Entity/Inventory editor UI)
+- **最新コミット**: `484fd6a` (docs: CLAUDE.md DECISION LOG — Authoring axis switch + session 4 handoff)
 - **origin/main**: 同期済み
 
 ## プロジェクト概要
@@ -39,60 +39,60 @@ NarrativeGen/
 **条件 (8種)**: `flag`, `resource`, `variable`（数値/文字列比較・演算）, `timeWindow`, `hasItem`, `and`, `or`, `not`
 **エフェクト (7種)**: `setFlag`, `addResource`, `setVariable`, `modifyVariable`（数値演算）, `addItem`, `removeItem`, `goto`
 
-詳細は `docs/specs/variable-system.md`, `docs/specs/entity-inventory.md` を参照。
+### 原初ビジョン拡張 API
 
-## 直近の作業 (2026-03-16 〜 2026-03-17)
+| モジュール | 用途 |
+| ---------- | ---- |
+| `entities.ts` | EntityDef + PropertyDef 階層、resolveProperty / getEntityProperties / getInheritanceChain |
+| `template.ts` | Dynamic Text: `[entity.property]` / `{variable}` / `{?condition:text}` 展開 |
+| `paraphrase.ts` | ConditionalVariant + match条件 + UsageHistory + buildParaphraseContext |
+| `anomaly-detector.ts` | detectAnomaly / detectAllAnomalies (KnowledgeProfile ベース) |
+| `character-knowledge.ts` | CharacterDef + findKnowledgeProfile + perceiveEntity |
+| `description-tracker.ts` | DescriptionState: markDescribed / isDescribed / getUndescribedKeys |
+| `event-entity.ts` | createEventEntity / hasEvent / createEventFromAnomaly |
+| `conversation-templates.ts` | ConversationTemplate: trigger matching + priority + maxUses |
 
-### 推論UI Phase 3 グラフ視覚統合 完了 (2026-03-17)
-
-- GraphEditorManager: applyInferenceHighlight/clearInferenceHighlight API
-- パスハイライト (ゴールド #d4a017)、影響ノード (コーラル #e07050)、到達不能ノード半透明化 (opacity 0.4)
-- InferencePanel._syncGraphHighlight でパネル→グラフ同期
-- デバッグクエリUI (ノードID入力 + analyze/clear ボタン)
-- SP-INF-UI-001 → done (100%)
-
-### Entity/Inventory condition-effect-editor UI (2026-03-17)
-
-- hasItem 条件タイプをエディタドロップダウンに追加
-- addItem/removeItem エフェクトタイプをエディタドロップダウンに追加
-- 構造化オブジェクトのパース/ビルド対応
-- playthrough.schema.json: entities/inventory/hasItem/addItem/removeItem スキーマ追加
-
-### グラフエディタ修正 (2026-03-16)
-
-- unsafe render() 呼出を全面排除
-- minimap ダークテーマ + テキスト overflow clip 対応
+詳細は `docs/specs/` 配下の各仕様書を参照。
 
 ## 現在の状態
 
 ### CI・テスト
 
-- **engine-ts**: 73 テスト全合格 (10 ファイル)
-- **web-tester**: Vite ビルド成功 (チャンクサイズ警告は既知)
-- **E2E**: 22 passed / 5 skipped (undo-redo 防御的ガード)
+- **engine-ts**: 198 テスト全合格 (17 ファイル)
+- **web-tester**: Vite ビルド成功
+- **E2E**: 44 件 (entity-panel 11件 + template-panel 10件 含む)
+- **モデル検証**: 12 モデル通過
 
 ### 仕様書
 
-- **spec-index.json**: 23 エントリ
-- **done**: 18 件 (engine-core, variable-system, yarn-export, inference-engine, inference-ui, hierarchy, search, xss, paraphrase 等)
-- **partial**: 4 件 (entity-inventory 95%, model-schema 95%, unity-sdk 85%, ai-features 80%)
-- **legacy**: 1 件 (Design Improvements)
+- **spec-index.json**: 31 エントリ
+- **done**: 30 件
+- **partial**: 1 件 (SP-UNITY-001 Unity SDK 85%)
+- 原初ビジョン全8スペック完了 (SP-PROP-001 ~ SP-DYNAMIC-001 + SP-EVENT-001)
+
+### 直近完了 (session 4, 2026-03-17)
+
+- 原初ビジョン コア実装 全8件完了
+- Authoring体験逆算スライス完了:
+  - Entity定義パネル (CRUD + inline edit + 11 E2E)
+  - ConversationTemplate GUI (Phase 4完了 + 10 E2E)
+  - Dynamic Text プレビュー (Live Preview expand Template)
+  - createEvent properties GUI
+  - テストモデル4件配置 (property/event/integration/inventory)
 
 ## 既知の課題
 
-- Entity 定義管理 UI 未実装 (モデル内 entities マップの GUI 編集)
-- チャンクサイズ警告 (vendor-mermaid 1.79MB)
 - GUI Undo/Redo 手動回帰テスト未実施
 - Yarn Spinner 実運用検証未実施
-- Technical Debt (SP-009) 40% — 残債あり
-- E2E ルート実行時の Vitest 衝突 (web-tester ディレクトリからは正常)
+- Technical Debt (SP-009) 80% — CI統合・a11y・手動回帰が残
+- Unity SDK パリティ未完 (TS側7機能の移植)
 
 ## 次の推奨作業
 
-1. **Entity 定義管理 UI** (SP-ENTITY-001 95%→100%): エンティティの一覧表示・追加・編集・削除
-2. **Yarn Spinner 実運用検証**: サンプルモデル → Yarn 出力 → Unity/Web Previewer 読込確認
-3. **Technical Debt** (SP-009): チャンクサイズ最適化、inference/ ディレクトリ方針
-4. **GUI Undo/Redo 回帰テスト**: 手動検証
+1. **Unity SDK パリティ**: TS側7機能 (Entity-Property, Template, Anomaly, Knowledge, Event, Description, ConversationTemplate) の C# 移植
+2. **ライター向けオーサリングガイド / サンプルストーリー**: 原初ビジョン機能を使った実用例
+3. **Tech Debt 残消化**: CI spec-index/encoding check 統合、手動回帰テスト
+4. **[entity~prop_pool] 構文**: DescriptionState統合による重複回避テキスト生成
 
 ## 再開手順
 
@@ -108,6 +108,5 @@ npm run dev
 
 ---
 
-SSOT: `docs/WORKFLOW_STATE_SSOT.md`
 技術的負債: `docs/TECHNICAL_DEBT.md`
 仕様書一覧: `docs/spec-viewer.html`（`npx serve docs` → http://localhost:3000/spec-viewer.html）
