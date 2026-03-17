@@ -13,7 +13,21 @@ import {
   applyEffect,
 } from './condition-effect-ops.js'
 
-export { chooseParaphrase, paraphraseJa, getParaphraseLexicon, setParaphraseLexicon } from './paraphrase.js'
+export {
+  chooseParaphrase,
+  paraphraseJa,
+  getParaphraseLexicon,
+  setParaphraseLexicon,
+  createUsageHistory,
+  recordUsage,
+  buildParaphraseContext,
+  type ConditionalVariant,
+  type ParaphraseEntry,
+  type PropertyAwareLexicon,
+  type ParaphraseLexicon,
+  type UsageHistory,
+  type ParaphraseContext,
+} from './paraphrase.js'
 export {
   createAIProvider,
   MockAIProvider,

@@ -225,6 +225,15 @@
     "summary": "Template expansion engine. [entity.property] refs via inheritance, {variable} expansion, {?condition:text} conditional sections (flag/resource/inventory). Web Tester integrated. 31 unit tests."
   },
   {
+    "id": "SP-PARA-002",
+    "title": "Paraphrase Property Matching",
+    "status": "done",
+    "pct": 100,
+    "cat": "core",
+    "file": "docs/specs/paraphrase-property-matching.md",
+    "summary": "Property-aware paraphrase selection. ConditionalVariant with match conditions, UsageHistory for repetition avoidance, buildParaphraseContext helper. Backward compatible with SP-PARA-001. 13 new tests."
+  },
+  {
     "id": "SP-ANOMALY-001",
     "title": "Property Anomaly Detection",
     "status": "done",
