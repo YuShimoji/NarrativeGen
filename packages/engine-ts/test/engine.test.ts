@@ -75,6 +75,26 @@ describe('NarrativeGen Engine', () => {
     expect(endChoices).toHaveLength(0)
   })
 
+  it('should initialize session with model variables', () => {
+    const modelWithVars = {
+      ...linearModel,
+      variables: { player_name: 'Hero', score: 0 },
+    }
+    const model = loadModel(modelWithVars)
+    const session = startSession(model)
+    expect(session.variables).toEqual({ player_name: 'Hero', score: 0 })
+  })
+
+  it('should merge initial variables over model variables', () => {
+    const modelWithVars = {
+      ...linearModel,
+      variables: { player_name: 'Hero', score: 0 },
+    }
+    const model = loadModel(modelWithVars)
+    const session = startSession(model, { variables: { player_name: 'Custom' } })
+    expect(session.variables).toEqual({ player_name: 'Custom', score: 0 })
+  })
+
   it('should handle invalid choice gracefully', () => {
     const model = loadModel(linearModel)
     const session = startSession(model)

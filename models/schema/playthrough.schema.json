@@ -122,6 +122,7 @@
     "startNode": { "type": "string" },
     "flags": { "type": "object", "additionalProperties": { "type": "boolean" } },
     "resources": { "type": "object", "additionalProperties": { "type": "number" } },
+    "variables": { "type": "object", "additionalProperties": { "oneOf": [{ "type": "string" }, { "type": "number" }] } },
     "entities": {
       "type": "object",
       "additionalProperties": {

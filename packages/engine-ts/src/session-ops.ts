@@ -53,7 +53,7 @@ export function startSession(model: Model, initial?: Partial<SessionState>): Ses
     nodeId: initial?.nodeId ?? model.startNode,
     flags: { ...(model.flags ?? {}), ...(initial?.flags ?? {}) },
     resources: { ...(model.resources ?? {}), ...(initial?.resources ?? {}) },
-    variables: initial?.variables ?? {},
+    variables: { ...(model.variables ?? {}), ...(initial?.variables ?? {}) },
     inventory: initial?.inventory ?? [],
     time: initial?.time ?? 0,
     events: initial?.events ?? {},

@@ -11,6 +11,10 @@
     "knowledge": 0,
     "reputation": 50
   },
+  "variables": {
+    "last_visited": "none",
+    "noted_smell": ""
+  },
   "entities": {
     "substance": {
       "id": "substance",

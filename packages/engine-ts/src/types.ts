@@ -67,6 +67,7 @@ export interface Model {
   startNode: string
   flags?: FlagState
   resources?: ResourceState
+  variables?: VariableState
   entities?: Record<string, EntityDef>
   nodes: Record<string, NodeDef>
   conversationTemplates?: import('./conversation-templates.js').ConversationTemplate[]

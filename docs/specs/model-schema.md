@@ -22,6 +22,7 @@ NarrativeGen のプレイスルーモデルの JSON Schema 仕様。`models/sche
 |-----------|---|------|
 | `flags` | `Record<string, boolean>` | 初期フラグ状態 |
 | `resources` | `Record<string, number>` | 初期リソース値 |
+| `variables` | `Record<string, string\|number>` | 初期変数値 (startSession でマージ) |
 | `entities` | `Record<string, EntityDef>` | エンティティ定義 (id, name, description, cost) |
 
 ### NodeDef
