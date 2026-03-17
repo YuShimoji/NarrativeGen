@@ -7,6 +7,7 @@ import {
   hasItemEvaluator,
   timeWindowEvaluator,
   propertyEvaluator,
+  hasEventEvaluator,
   andEvaluator,
   orEvaluator,
   notEvaluator,
@@ -20,6 +21,7 @@ import {
   addItemApplicator,
   removeItemApplicator,
   gotoApplicator,
+  createEventApplicator,
 } from './effects/index.js'
 
 class InferenceRegistry {
@@ -77,6 +79,7 @@ export function registerBuiltins(): void {
   registry.registerCondition(hasItemEvaluator)
   registry.registerCondition(timeWindowEvaluator)
   registry.registerCondition(propertyEvaluator)
+  registry.registerCondition(hasEventEvaluator)
   registry.registerCondition(andEvaluator)
   registry.registerCondition(orEvaluator)
   registry.registerCondition(notEvaluator)
@@ -88,6 +91,7 @@ export function registerBuiltins(): void {
   registry.registerEffect(addItemApplicator)
   registry.registerEffect(removeItemApplicator)
   registry.registerEffect(gotoApplicator)
+  registry.registerEffect(createEventApplicator)
 
   // Wire up logical evaluators to use registry-based evaluation
   setLogicalResolver((cond: Condition, ctx: EvaluationContext): boolean => {

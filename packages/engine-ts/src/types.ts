@@ -26,6 +26,7 @@ export type Condition =
   | { type: 'variable'; key: string; op: '==' | '!=' | 'contains' | '!contains' | '>=' | '<=' | '>' | '<'; value: string | number }
   | { type: 'hasItem'; key: string; value: boolean }
   | { type: 'property'; entity: string; key: string; op: '>=' | '<=' | '>' | '<' | '==' | '!='; value: string | number | boolean }
+  | { type: 'hasEvent'; key: string; value: boolean }
   | { type: 'timeWindow'; start: number; end: number }
   | { type: 'and'; conditions: Condition[] }
   | { type: 'or'; conditions: Condition[] }
@@ -39,6 +40,7 @@ export type Effect =
   | { type: 'addItem'; key: string }
   | { type: 'removeItem'; key: string }
   | { type: 'goto'; target: string }
+  | { type: 'createEvent'; id: string; name: string; properties?: Record<string, { defaultValue: string | number | boolean }> }
 
 export interface ChoiceOutcome {
   type: string
@@ -76,4 +78,5 @@ export interface SessionState {
   variables: VariableState
   inventory: string[]
   time: number
+  events: Record<string, EntityDef>
 }

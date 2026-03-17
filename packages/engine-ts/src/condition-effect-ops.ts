@@ -5,11 +5,14 @@
 import type {
   Condition,
   Effect,
+  EntityDef,
   FlagState,
   ResourceState,
   SessionState,
   VariableState,
 } from './types'
+import { createEventEntity } from './event-entity.js'
+import type { CreateEventEffect } from './event-entity.js'
 
 export function cmp(op: '>=' | '<=' | '>' | '<' | '==', a: number, b: number): boolean {
   switch (op) {
@@ -33,7 +36,12 @@ export function evalCondition(
   variables: VariableState,
   time: number,
   inventory: string[] = [],
+  events: Record<string, EntityDef> = {},
 ): boolean {
+  if (cond.type === 'hasEvent') {
+    const has = cond.key in events
+    return has === cond.value
+  }
   if (cond.type === 'flag') {
     return (flags[cond.key] ?? false) === cond.value
   }
@@ -75,13 +83,13 @@ export function evalCondition(
     return time >= cond.start && time <= cond.end
   }
   if (cond.type === 'and') {
-    return cond.conditions.every(c => evalCondition(c, flags, resources, variables, time, inventory))
+    return cond.conditions.every(c => evalCondition(c, flags, resources, variables, time, inventory, events))
   }
   if (cond.type === 'or') {
-    return cond.conditions.some(c => evalCondition(c, flags, resources, variables, time, inventory))
+    return cond.conditions.some(c => evalCondition(c, flags, resources, variables, time, inventory, events))
   }
   if (cond.type === 'not') {
-    return !evalCondition(cond.condition, flags, resources, variables, time, inventory)
+    return !evalCondition(cond.condition, flags, resources, variables, time, inventory, events)
   }
   return true
 }
