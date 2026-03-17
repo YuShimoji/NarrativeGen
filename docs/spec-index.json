@@ -47,11 +47,11 @@
   {
     "id": "SP-006",
     "title": "AI Features",
-    "status": "partial",
-    "pct": 80,
+    "status": "done",
+    "pct": 100,
     "cat": "system",
     "file": "docs/ai-features.md",
-    "summary": "AI paraphrase and provider behavior (Mock/OpenAI)"
+    "summary": "Non-AI deterministic paraphrase (synonym/style/seed) + AI provider (Mock/OpenAI). Batch AI and Ollama removed from scope (2026-03-07). GUI integration complete."
   },
   {
     "id": "SP-007",

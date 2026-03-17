@@ -1,4 +1,6 @@
-﻿# 言い換え・バリアント生成 機能設計（非AI中心）
+﻿# SP-006: AI Features
+
+**Status**: done | **Pct**: 100 | **Cat**: system
 
 ## 概要
 
@@ -172,10 +174,10 @@ export function chooseParaphrase(text: string, options?: ParaphraseOptions): str
 
 ### 実装フェーズ
 
-- ✅ 非AIバリアント生成（同義語置換・文体変換・決定的乱数）
-- ✅ GUI統合（ノード/選択肢の「言い換え」ボタン）
-- ⏳ バッチ言い換え（全ノード一括変換）
-- ◇ オプション: AIアダプタ（OpenAI）。未設定でも全機能利用可能。
+- 完了: 非AIバリアント生成（同義語置換・文体変換・決定的乱数）
+- 完了: GUI統合（ノード/選択肢の「言い換え」ボタン）
+- スコープ外: バッチ言い換え（全ノード一括変換） — 2026-03-07 削除決定
+- 完了: AIアダプタ（OpenAI）。未設定でも全機能利用可能。
 
 ## セキュリティ・プライバシー考慮
 
@@ -198,13 +200,20 @@ export function chooseParaphrase(text: string, options?: ParaphraseOptions): str
 - 非AI言い換え機能がオフライン動作を保証
 - AIProviderインターフェース経由で将来新プロバイダ追加可能
 
-## 実装優先度
+## 実装状況
 
-1. **Phase 1 (完了)**: モック実装
-2. **Phase 2 (完了)**: OpenAI API 統合
-3. **Phase 3**: バッチ処理・履歴管理
+1. **Phase 1 (完了)**: モック実装 (MockAIProvider)
+2. **Phase 2 (完了)**: OpenAI API 統合 (OpenAIProvider)
+3. **非AI言い換え (完了)**: 同義語置換・文体変換・決定的バリアント生成
+
+## スコープ外
+
+- **AIバッチ校閲 (全ノード一括AI言い換え)**: 2026-03-07 に削除決定 (コスト対効果疑問)
+- **Ollama (ローカルLLM)**: 2026-03-07 に削除決定 (精度・リソース負荷)
+- **AI Provider パッケージ分離**: 将来検討 (`packages/ai-adapter/`)
 
 ## 参考実装
 
-- `apps/web-tester/src/` 配下の AI関連モジュール（旧 `main.js` は `bootstrap.js`, `session-controller.js`, `ui-bindings.js` に分割済み）
-- 将来: `packages/ai-adapter/` に AI Provider を抽象化して配置
+- AI Provider: `packages/engine-ts/src/ai-provider.ts` (Mock + OpenAI)
+- 非AI言い換え: `packages/engine-ts/src/paraphrase.ts`
+- Web Tester UI: `apps/web-tester/src/ui/ai.js`, 各ノードの「言い換え」ボタン
