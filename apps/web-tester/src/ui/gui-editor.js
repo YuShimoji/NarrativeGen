@@ -105,6 +105,9 @@ export class GuiEditorManager {
     // Initialize entity panel
     this._initializeEntityPanel()
 
+    // Initialize conversation template panel
+    this._initializeTemplatePanel()
+
     // モデル変更時にマルチエンディング可視化を更新
     if (this.appState.model) {
       this._updateEndingVisualization()
@@ -931,6 +934,7 @@ export class GuiEditorManager {
   // Main rendering function
   renderNodeList() {
     this._renderEntities()
+    this._renderTemplates()
     const result = this.nodeRenderer.renderNodeList()
     // ノードリスト更新時にマルチエンディング可視化を更新
     this._updateEndingVisualization()
@@ -2392,6 +2396,196 @@ export class GuiEditorManager {
       } else {
         prop.defaultValue = val
       }
+    }
+  }
+
+  // ========================================================================
+  //  ConversationTemplate Panel
+  // ========================================================================
+
+  _initializeTemplatePanel() {
+    const panel = document.getElementById('templatePanel')
+    const header = panel?.querySelector('.entity-panel-header')
+    const addBtn = document.getElementById('addTemplateBtn')
+    const tbody = document.getElementById('templateTableBody')
+
+    if (header) {
+      header.addEventListener('click', () => {
+        const isCollapsed = panel.classList.toggle('collapsed')
+        header.setAttribute('aria-expanded', String(!isCollapsed))
+      })
+      header.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          header.click()
+        }
+      })
+    }
+
+    if (addBtn) {
+      addBtn.addEventListener('click', () => this._addTemplate())
+    }
+
+    if (tbody) {
+      tbody.addEventListener('change', (e) => {
+        if (e.target.dataset.templateField) {
+          this._updateTemplateField(e.target)
+        }
+        if (e.target.dataset.checkField) {
+          this._updateCheckField(e.target)
+        }
+      })
+      tbody.addEventListener('click', (e) => {
+        if (e.target.classList.contains('template-delete-btn')) {
+          this._deleteTemplate(Number(e.target.dataset.templateIdx))
+        }
+        if (e.target.classList.contains('template-check-add-btn')) {
+          this._addPropertyCheck(Number(e.target.dataset.templateIdx))
+        }
+        if (e.target.classList.contains('template-check-delete-btn')) {
+          this._deletePropertyCheck(
+            Number(e.target.dataset.templateIdx),
+            Number(e.target.dataset.checkIdx)
+          )
+        }
+      })
+    }
+  }
+
+  _renderTemplates() {
+    const model = this.appState.model
+    if (!model) return
+    const templates = model.conversationTemplates || []
+    const tbody = document.getElementById('templateTableBody')
+    const countEl = document.getElementById('templateCount')
+    if (!tbody) return
+
+    if (countEl) countEl.textContent = `(${templates.length})`
+
+    if (templates.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="entity-empty-hint">テンプレートが定義されていません</td></tr>'
+      return
+    }
+
+    const OP_OPTIONS = ['>=' , '<=' , '>' , '<' , '==' , '!='].map(o =>
+      `<option value="${o}">${o}</option>`
+    ).join('')
+
+    tbody.innerHTML = templates.map((t, idx) => {
+      const checks = t.trigger?.eventMatch?.propertyChecks || []
+      const checksHtml = checks.map((c, ci) => {
+        const opOptions = ['>=' , '<=' , '>' , '<' , '==' , '!='].map(o =>
+          `<option value="${o}"${c.op === o ? ' selected' : ''}>${o}</option>`
+        ).join('')
+        return `<tr class="template-check-row">
+          <td><input type="text" value="${c.key || ''}" data-check-field="key" data-template-idx="${idx}" data-check-idx="${ci}" placeholder="キー"></td>
+          <td><select data-check-field="op" data-template-idx="${idx}" data-check-idx="${ci}">${opOptions}</select></td>
+          <td><input type="text" value="${c.value ?? ''}" data-check-field="value" data-template-idx="${idx}" data-check-idx="${ci}" placeholder="値"></td>
+          <td><button class="template-check-delete-btn entity-prop-delete-btn" data-template-idx="${idx}" data-check-idx="${ci}" title="削除">x</button></td>
+        </tr>`
+      }).join('')
+
+      return `<tr data-template-idx="${idx}">
+        <td><input type="text" value="${t.id || ''}" data-template-field="id" data-template-idx="${idx}"></td>
+        <td><input type="text" value="${t.text || ''}" data-template-field="text" data-template-idx="${idx}" style="width:100%"></td>
+        <td><input type="number" value="${t.priority ?? 0}" data-template-field="priority" data-template-idx="${idx}" step="1" style="width:50px"></td>
+        <td><input type="number" value="${t.maxUses ?? ''}" data-template-field="maxUses" data-template-idx="${idx}" step="1" style="width:50px" placeholder="∞"></td>
+        <td><button class="template-delete-btn entity-delete-btn" data-template-idx="${idx}" title="削除">x</button></td>
+      </tr>
+      <tr class="entity-props-row"><td colspan="5">
+        <details class="entity-props-details">
+          <summary>トリガー条件 (${checks.length})</summary>
+          <table class="entity-props-table">
+            <thead><tr><th>キー</th><th>演算子</th><th>値</th><th></th></tr></thead>
+            <tbody>${checksHtml || '<tr><td colspan="4" class="entity-empty-hint">なし</td></tr>'}</tbody>
+          </table>
+          <button class="template-check-add-btn entity-prop-add-btn" data-template-idx="${idx}">+ 条件追加</button>
+        </details>
+      </td></tr>`
+    }).join('')
+  }
+
+  _addTemplate() {
+    const model = this.appState.model
+    if (!model) return
+    if (!model.conversationTemplates) model.conversationTemplates = []
+    const idx = model.conversationTemplates.length + 1
+    model.conversationTemplates.push({
+      id: `template_${idx}`,
+      trigger: { eventMatch: { propertyChecks: [] } },
+      text: '',
+      priority: 0,
+    })
+    this._renderTemplates()
+
+    const panel = document.getElementById('templatePanel')
+    if (panel && panel.classList.contains('collapsed')) {
+      panel.classList.remove('collapsed')
+      panel.querySelector('.entity-panel-header')?.setAttribute('aria-expanded', 'true')
+    }
+  }
+
+  _deleteTemplate(idx) {
+    const templates = this.appState.model?.conversationTemplates
+    if (!templates || idx < 0 || idx >= templates.length) return
+    templates.splice(idx, 1)
+    if (templates.length === 0) delete this.appState.model.conversationTemplates
+    this._renderTemplates()
+  }
+
+  _updateTemplateField(input) {
+    const field = input.dataset.templateField
+    const idx = Number(input.dataset.templateIdx)
+    const t = this.appState.model?.conversationTemplates?.[idx]
+    if (!t || !field) return
+
+    if (field === 'priority') {
+      const num = Number(input.value)
+      t.priority = Number.isFinite(num) ? num : 0
+    } else if (field === 'maxUses') {
+      const val = input.value.trim()
+      if (val === '') {
+        delete t.maxUses
+      } else {
+        const num = Number(val)
+        t.maxUses = Number.isFinite(num) && num > 0 ? num : undefined
+        if (t.maxUses === undefined) delete t.maxUses
+      }
+    } else {
+      t[field] = input.value
+    }
+  }
+
+  _addPropertyCheck(templateIdx) {
+    const t = this.appState.model?.conversationTemplates?.[templateIdx]
+    if (!t) return
+    if (!t.trigger) t.trigger = { eventMatch: { propertyChecks: [] } }
+    if (!t.trigger.eventMatch) t.trigger.eventMatch = { propertyChecks: [] }
+    if (!t.trigger.eventMatch.propertyChecks) t.trigger.eventMatch.propertyChecks = []
+    t.trigger.eventMatch.propertyChecks.push({ key: '', op: '==', value: '' })
+    this._renderTemplates()
+  }
+
+  _deletePropertyCheck(templateIdx, checkIdx) {
+    const checks = this.appState.model?.conversationTemplates?.[templateIdx]?.trigger?.eventMatch?.propertyChecks
+    if (!checks || checkIdx < 0 || checkIdx >= checks.length) return
+    checks.splice(checkIdx, 1)
+    this._renderTemplates()
+  }
+
+  _updateCheckField(input) {
+    const field = input.dataset.checkField
+    const templateIdx = Number(input.dataset.templateIdx)
+    const checkIdx = Number(input.dataset.checkIdx)
+    const check = this.appState.model?.conversationTemplates?.[templateIdx]?.trigger?.eventMatch?.propertyChecks?.[checkIdx]
+    if (!check || !field) return
+
+    if (field === 'value') {
+      const val = input.value
+      const num = Number(val)
+      check.value = Number.isFinite(num) ? num : val
+    } else {
+      check[field] = input.value
     }
   }
 }
