@@ -115,23 +115,21 @@
 ブランチ戦略: trunk-based (main のみ)
 現フェーズ: 機能拡張 → 原初ビジョン統合フェーズ
 方針: Entity-Property駆動ナラティブエンジンへの段階移行
-直近の状態 (2026-03-17 session 3):
+直近の状態 (2026-03-17 session 4):
 
-- main ブランチ、push済み
+- main ブランチ
 - 198テスト全緑、12モデル検証通過、ビルド成功 (警告0)
-- E2E: 23 passed / 4 skipped
-- 31 specs: done 29 / partial 2 (SP-UNITY-001 85%, SP-009 80%)
-- 原初ビジョン実装完了:
-  - SP-PROP-001 done: Entity-Property System (19+1テスト)
-  - SP-TEXT-001 done: Dynamic Text Engine (31テスト)
-  - SP-ANOMALY-001 done: Property Anomaly Detection (13テスト)
-  - SP-PARA-002 done: Paraphrase Property Matching (21テスト)
-  - SP-KNOW-001 done: Character Knowledge Model (7テスト)
-  - SP-DESC-001 done: Description Tracker (14テスト)
-  - SP-DYNAMIC-001 done: Dynamic Story Expansion (9テスト)
-  - SP-EVENT-001 done: Dynamic Event Entity (18テスト + properties GUI)
-- 原初ビジョン コア実装全完了 (SP-PROP-001 ~ SP-DYNAMIC-001)
+- E2E: 23 + 21 = 44件 (entity-panel 11件 + template-panel 10件追加)
+- 31 specs: done 30 / partial 1 (SP-UNITY-001 85%)
+- Authoring体験逆算スライス完了:
+  - Entity定義パネル: 手動検証 + bug修正 (renderNodeList呼び出し修正) + 11 E2E
+  - ConversationTemplate GUI: Phase 4完了 (テンプレートCRUD + trigger条件編集 + 10 E2E)
+  - Dynamic Text プレビュー: Live Previewでexpand Template結果表示
+  - createEvent properties GUI: 既存実装で完了確認
+  - テストモデル4件をweb-testerに配置 (property/event/integration/inventory)
+- 原初ビジョン全スペック完了 (SP-PROP-001 ~ SP-DYNAMIC-001 + SP-EVENT-001)
 - 次回着手候補:
-  - 手動検証: event_test + property_test + inventory_test のブラウザ確認
-  - WritingPage連携設計
-  - 統合テストモデル拡充
+  - Unity SDKパリティ (TS側7機能の移植)
+  - SP-009 Tech Debt残消化
+  - ライター向けオーサリングガイド / サンプルストーリー
+  - [entity~prop_pool] 構文 (DescriptionState統合)
