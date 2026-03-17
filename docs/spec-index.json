@@ -209,7 +209,7 @@
   {
     "id": "SP-PROP-001",
     "title": "Entity-Property System",
-    "status": "partial",
+    "status": "done",
     "pct": 100,
     "cat": "core",
     "file": "docs/specs/entity-property-system.md",
@@ -223,5 +223,14 @@
     "cat": "core",
     "file": "docs/specs/dynamic-text-engine.md",
     "summary": "Template expansion engine. [entity.property] refs via inheritance, {variable} expansion, {?condition:text} conditional sections (flag/resource/inventory). Web Tester integrated. 31 unit tests."
+  },
+  {
+    "id": "SP-ANOMALY-001",
+    "title": "Property Anomaly Detection",
+    "status": "done",
+    "pct": 100,
+    "cat": "core",
+    "file": "docs/specs/anomaly-detection.md",
+    "summary": "Anomaly detection via property comparison. KnowledgeProfile (domain/accuracy/tolerance) × Entity property. detectAnomaly/detectAllAnomalies with deviation scoring. 13 unit tests."
   }
 ]

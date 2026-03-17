@@ -228,3 +228,5 @@ export function deserialize(payload: string): SessionState {
 export type { Choice, Condition, Effect, EntityDef, FlagState, Model, NodeDef, PropertyDef, ResourceState, SessionState, VariableState } from './types'
 export { resolveProperty, getEntityProperties, getInheritanceChain } from './entities.js'
 export { expandTemplate } from './template.js'
+export { detectAnomaly, detectAllAnomalies } from './anomaly-detector.js'
+export type { KnowledgeProfile, AnomalyResult } from './anomaly-detector.js'
