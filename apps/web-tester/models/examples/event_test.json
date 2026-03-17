@@ -1,0 +1,95 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "start",
+  "flags": {},
+  "resources": {},
+  "entities": {
+    "character_a": {
+      "id": "character_a",
+      "name": "Alice",
+      "description": "A mysterious traveler",
+      "properties": {
+        "trust": { "key": "trust", "type": "number", "defaultValue": 50, "rangeMin": 0, "rangeMax": 100 }
+      }
+    }
+  },
+  "nodes": {
+    "start": {
+      "id": "start",
+      "text": "You meet [character_a] at the crossroads.",
+      "choices": [
+        {
+          "id": "c_help",
+          "text": "Help Alice",
+          "target": "helped",
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "event_helped_alice",
+              "name": "Helped Alice at the crossroads",
+              "properties": {
+                "kindness": { "defaultValue": 80 },
+                "location": { "defaultValue": "crossroads" },
+                "memorable": { "defaultValue": true }
+              }
+            },
+            { "type": "setFlag", "key": "alice_helped", "value": true }
+          ]
+        },
+        {
+          "id": "c_ignore",
+          "text": "Ignore Alice",
+          "target": "ignored",
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "event_ignored_alice",
+              "name": "Ignored Alice at the crossroads",
+              "properties": {
+                "coldness": { "defaultValue": 70 },
+                "location": { "defaultValue": "crossroads" }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "helped": {
+      "id": "helped",
+      "text": "Alice smiles. You recall [event_helped_alice] (kindness: [event_helped_alice.kindness]).",
+      "choices": [
+        {
+          "id": "c_continue_helped",
+          "text": "Continue together",
+          "target": "reunion",
+          "conditions": [
+            { "type": "hasEvent", "key": "event_helped_alice", "value": true }
+          ]
+        }
+      ]
+    },
+    "ignored": {
+      "id": "ignored",
+      "text": "You walk away. The memory of [event_ignored_alice] lingers.",
+      "choices": [
+        {
+          "id": "c_continue_ignored",
+          "text": "Continue alone",
+          "target": "reunion"
+        },
+        {
+          "id": "c_blocked",
+          "text": "This should not appear",
+          "target": "reunion",
+          "conditions": [
+            { "type": "hasEvent", "key": "event_helped_alice", "value": true }
+          ]
+        }
+      ]
+    },
+    "reunion": {
+      "id": "reunion",
+      "text": "You arrive at the town square."
+    }
+  }
+}

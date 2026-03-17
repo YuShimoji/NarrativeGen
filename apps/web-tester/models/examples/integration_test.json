@@ -1,0 +1,211 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "scene_start",
+  "flags": {
+    "met_detective": false,
+    "examined_burger": false
+  },
+  "resources": {
+    "suspicion": 0
+  },
+  "entities": {
+    "physical_object": {
+      "id": "physical_object",
+      "name": "Physical Object",
+      "properties": {
+        "weight": { "key": "weight", "type": "number", "defaultValue": 0 },
+        "material": { "key": "material", "type": "string", "defaultValue": "unknown" }
+      }
+    },
+    "food": {
+      "id": "food",
+      "name": "Food",
+      "parentEntity": "physical_object",
+      "properties": {
+        "calories": { "key": "calories", "type": "number", "defaultValue": 0 },
+        "taste": { "key": "taste", "type": "string", "defaultValue": "bland" }
+      }
+    },
+    "cheeseburger": {
+      "id": "cheeseburger",
+      "name": "Cheeseburger",
+      "description": "A suspiciously heavy cheeseburger from the crime scene",
+      "cost": 5,
+      "parentEntity": "food",
+      "properties": {
+        "weight": { "key": "weight", "type": "number", "defaultValue": 500, "rangeMin": 200, "rangeMax": 400 },
+        "calories": { "key": "calories", "type": "number", "defaultValue": 350 },
+        "taste": { "key": "taste", "type": "string", "defaultValue": "metallic" }
+      }
+    },
+    "detective_badge": {
+      "id": "detective_badge",
+      "name": "Detective Badge",
+      "description": "A worn leather badge",
+      "parentEntity": "physical_object",
+      "properties": {
+        "weight": { "key": "weight", "type": "number", "defaultValue": 50 },
+        "material": { "key": "material", "type": "string", "defaultValue": "leather and brass" }
+      }
+    }
+  },
+  "conversationTemplates": [
+    {
+      "id": "recall_anomaly",
+      "trigger": {
+        "eventMatch": {
+          "propertyChecks": [
+            { "key": "severity", "op": ">=", "value": 50 }
+          ]
+        }
+      },
+      "text": "Something about the evidence nags at you.",
+      "priority": 10,
+      "maxUses": 1
+    },
+    {
+      "id": "growing_suspicion",
+      "trigger": {
+        "eventMatch": {
+          "propertyChecks": [
+            { "key": "type", "op": "==", "value": "anomaly" }
+          ]
+        }
+      },
+      "text": "Your detective instincts are tingling.",
+      "priority": 5
+    }
+  ],
+  "nodes": {
+    "scene_start": {
+      "id": "scene_start",
+      "text": "You arrive at the diner. On the counter sits a [cheeseburger] ([cheeseburger.weight]g, normally [cheeseburger.calories] cal). {?!met_detective:A detective stands near the door.}{?met_detective:Detective Jones waves at you.}",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Talk to the detective",
+          "target": "meet_detective",
+          "conditions": [
+            { "type": "flag", "key": "met_detective", "value": false }
+          ],
+          "effects": [
+            { "type": "setFlag", "key": "met_detective", "value": true }
+          ]
+        },
+        {
+          "id": "c2",
+          "text": "Examine the cheeseburger",
+          "target": "examine_burger"
+        },
+        {
+          "id": "c3",
+          "text": "Check your badge",
+          "target": "check_badge",
+          "conditions": [
+            { "type": "hasItem", "key": "detective_badge", "value": true }
+          ]
+        },
+        {
+          "id": "c4",
+          "text": "Review the evidence",
+          "target": "review_evidence",
+          "conditions": [
+            { "type": "hasEvent", "key": "weight_anomaly", "value": true }
+          ]
+        }
+      ]
+    },
+    "meet_detective": {
+      "id": "meet_detective",
+      "text": "Detective Jones hands you a [detective_badge] made of [detective_badge.material]. 'Welcome to the case,' he says. The badge weighs [detective_badge.weight]g in your hand.",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Take the badge and examine the scene",
+          "target": "scene_start",
+          "effects": [
+            { "type": "addItem", "key": "detective_badge" }
+          ]
+        }
+      ]
+    },
+    "examine_burger": {
+      "id": "examine_burger",
+      "text": "You pick up the [cheeseburger]. It's [cheeseburger.taste] — unusual. At [cheeseburger.weight]g, it's much heavier than a normal burger. {?examined_burger:You've seen this before.}{?!examined_burger:This is your first close look.}",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Weigh it carefully (creates anomaly event)",
+          "target": "weigh_burger",
+          "conditions": [
+            { "type": "hasEvent", "key": "weight_anomaly", "value": false }
+          ],
+          "effects": [
+            { "type": "setFlag", "key": "examined_burger", "value": true },
+            { "type": "addResource", "key": "suspicion", "delta": 30 },
+            {
+              "type": "createEvent",
+              "id": "weight_anomaly",
+              "name": "Weight Anomaly Detected",
+              "properties": {
+                "severity": { "defaultValue": 75 },
+                "type": { "defaultValue": "anomaly" },
+                "description": { "defaultValue": "The cheeseburger weighs 500g, far above the expected 250g range" }
+              }
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "text": "Put it back",
+          "target": "scene_start"
+        }
+      ]
+    },
+    "weigh_burger": {
+      "id": "weigh_burger",
+      "text": "The scale reads [cheeseburger.weight]g. A standard [cheeseburger] should be around 250g. Something is hidden inside. Suspicion: {suspicion}.",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Return to the scene",
+          "target": "scene_start"
+        }
+      ]
+    },
+    "check_badge": {
+      "id": "check_badge",
+      "text": "Your [detective_badge] glints under the fluorescent lights. It's made of [detective_badge.material], weighing [detective_badge.weight]g. {?met_detective:Jones gave you this earlier.}",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Back to the scene",
+          "target": "scene_start"
+        }
+      ]
+    },
+    "review_evidence": {
+      "id": "review_evidence",
+      "text": "You review the evidence. The [cheeseburger] anomaly is clear: [cheeseburger.weight]g vs expected 250g. {?suspicion>=30:Your suspicion is high enough to make an arrest.}{?suspicion<30:You need more evidence.}",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Make the arrest",
+          "target": "conclusion",
+          "conditions": [
+            { "type": "resource", "key": "suspicion", "op": ">=", "value": 30 }
+          ]
+        },
+        {
+          "id": "c2",
+          "text": "Keep investigating",
+          "target": "scene_start"
+        }
+      ]
+    },
+    "conclusion": {
+      "id": "conclusion",
+      "text": "You crack open the [cheeseburger]. Inside, wrapped in foil, you find a stolen diamond necklace. The case is solved. Final suspicion: {suspicion}."
+    }
+  }
+}

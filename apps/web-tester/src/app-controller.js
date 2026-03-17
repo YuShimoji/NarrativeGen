@@ -1571,7 +1571,7 @@ if (guiEditBtn) {
       }
       guiEditBtn.textContent = '閲覧'
       guiEditBtn.innerHTML = '<svg class="icon icon-sm"><use href="#icon-eye"></use></svg>閲覧'
-      guiEditorManager.nodeRenderer.renderNodeList()
+      guiEditorManager.renderNodeList()
       setStatus('GUI編集モードを開始しました', 'success')
     }
   })

@@ -226,17 +226,22 @@
 **Phase 4.2 — Character Knowledge Model [完了]**: SP-KNOW-001 done
 - CharacterDef + findKnowledgeProfile + perceiveEntity (anomaly bridge)
 
-**Phase 5.2 — Dynamic Event Entity Generation [80%]**: SP-EVENT-001 partial
+**Phase 5.2 — Dynamic Event Entity Generation [完了]**: SP-EVENT-001 done
 - createEventEntity / hasEvent / createEventFromAnomaly
 - hasEvent 条件 + createEvent エフェクト + 推論レジストリ統合
 - テンプレート展開: session.events からの `[event_id.property]` 解決
+- Web Tester GUI: condition-effect-editor (hasEvent/createEvent + properties GUI)
 - テスト: 18件 (コア + integration + template)
-- 残: Web Tester GUI (condition-effect-editor 対応)
 
-**未着手**:
-- Phase 5.3: 動的ストーリー展開 (事象Entity参照による新展開生成)
+**Phase 5.3 — Dynamic Story Expansion [完了]**: SP-DYNAMIC-001 done
+- ConversationTemplate: trigger matching + priority + maxUses
+- 3-layer responsibility separation
+- Schema + Web Tester integrated (auto-insertion in resolveVariables)
+- テスト: 9件
 
-**テスト**: 167件全緑、11モデル検証通過
+**原初ビジョン コア実装: 全8件完了**
+
+**テスト**: 198件全緑、12モデル検証通過
 
 ---
 
