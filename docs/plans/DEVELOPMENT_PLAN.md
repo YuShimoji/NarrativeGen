@@ -148,7 +148,7 @@
 
 ---
 
-### 優先順位3.6: 推論UI統合 (Phase 1-3) [Phase 3 グラフ統合のみ残]
+### 優先順位3.6: 推論UI統合 (Phase 1-3) [完了]
 
 **Phase 1 完了**: 2026-03-11
 - Live Preview パネルに推論セクション追加 (UC-1: 到達パス表示)
@@ -164,27 +164,30 @@
 - グラフエディタ unsafe render() 全面排除
 - minimap ダークテーマ + テキスト overflow clip
 
-**Phase 3 グラフ視覚統合 (未実装、プラン承認済み)**:
-- T1: GraphEditorManager.applyInferenceHighlight() 追加
-- T2: パスハイライト (ゴールド) + 到達不能ノード半透明化 (opacity 0.4)
-- T3: 影響範囲色分け (コーラル)
-- T4: デバッグクエリUI
-- 仕様: SP-INF-UI-001 (現在 85% → 完了時 100%)
+**Phase 3 グラフ視覚統合 完了**: 2026-03-17
+- T1: GraphEditorManager.applyInferenceHighlight/clearInferenceHighlight API
+- T2: パスハイライト (ゴールド #d4a017) + 到達不能ノード半透明化 (opacity 0.4)
+- T3: 影響範囲色分け (コーラル #e07050)
+- T4: デバッグクエリUI (ノードID入力 + analyze/clear)
+- 仕様: SP-INF-UI-001 → done (100%)
 
 ---
 
-### 優先順位3.7: Entity/Inventory + C# SDK 統合 [エンジン層完了、UI未実装]
+### 優先順位3.7: Entity/Inventory + C# SDK 統合 [エンジン層+エディタUI完了、定義管理UI進行中]
 
-**完了日**: 2026-03-13
-
-**実装内容**:
+**エンジン層完了**: 2026-03-13
 - hasItem 条件 + addItem/removeItem エフェクト (engine-ts)
 - modifyVariable 推論レジストリ登録
 - EntityDef 型 + brand→name リネーム
 - C# SDK InferenceRegistry (条件 8 種 / エフェクト 7 種)
 - 73 テスト全緑維持
 
-**残作業**: Web Tester でのエンティティ定義・インベントリ操作 UI (SP-ENTITY-001: 85%)
+**condition-effect-editor UI 完了**: 2026-03-17
+- hasItem 条件タイプ + addItem/removeItem エフェクトタイプをドロップダウンに追加
+- 構造化オブジェクトのパース/ビルド対応
+- playthrough.schema.json にスキーマ追加
+
+**残作業**: Entity 定義管理 UI (モデル内 entities マップの GUI 編集) → SP-ENTITY-001: 95%
 
 ---
 

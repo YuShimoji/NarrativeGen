@@ -101,7 +101,10 @@ export class GuiEditorManager {
 
     // Initialize live preview
     this._initializeLivePreview()
-    
+
+    // Initialize entity panel
+    this._initializeEntityPanel()
+
     // モデル変更時にマルチエンディング可視化を更新
     if (this.appState.model) {
       this._updateEndingVisualization()
@@ -927,6 +930,7 @@ export class GuiEditorManager {
 
   // Main rendering function
   renderNodeList() {
+    this._renderEntities()
     const result = this.nodeRenderer.renderNodeList()
     // ノードリスト更新時にマルチエンディング可視化を更新
     this._updateEndingVisualization()
@@ -2148,5 +2152,133 @@ export class GuiEditorManager {
     setTimeout(() => {
       this.draftRestoreModal.style.display = 'none'
     }, 300)
+  }
+
+  // =========================================================================
+  // Entity Definition Panel
+  // =========================================================================
+
+  _initializeEntityPanel() {
+    const panel = document.getElementById('entityPanel')
+    const header = panel?.querySelector('.entity-panel-header')
+    const addBtn = document.getElementById('addEntityBtn')
+    const tbody = document.getElementById('entityTableBody')
+
+    if (header) {
+      header.addEventListener('click', () => {
+        const isCollapsed = panel.classList.toggle('collapsed')
+        header.setAttribute('aria-expanded', String(!isCollapsed))
+      })
+      header.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          header.click()
+        }
+      })
+    }
+
+    if (addBtn) {
+      addBtn.addEventListener('click', () => this._addEntity())
+    }
+
+    if (tbody) {
+      tbody.addEventListener('click', (e) => {
+        if (e.target.classList.contains('entity-delete-btn')) {
+          this._deleteEntity(e.target.dataset.entityId)
+        }
+      })
+      tbody.addEventListener('change', (e) => {
+        if (e.target.dataset.entityField) {
+          this._updateEntityField(e.target)
+        }
+      })
+    }
+  }
+
+  _renderEntities() {
+    const model = this.appState.model
+    if (!model) return
+    const entities = model.entities || {}
+    const keys = Object.keys(entities)
+    const tbody = document.getElementById('entityTableBody')
+    const countEl = document.getElementById('entityCount')
+    if (!tbody) return
+
+    if (countEl) countEl.textContent = `(${keys.length})`
+
+    if (keys.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="entity-empty-hint">エンティティが定義されていません</td></tr>'
+      return
+    }
+
+    tbody.innerHTML = keys.map(id => {
+      const e = entities[id]
+      return `<tr data-entity-id="${id}">
+        <td><input type="text" value="${id}" data-entity-field="id" data-entity-old-id="${id}"></td>
+        <td><input type="text" value="${e.name || ''}" data-entity-field="name" data-entity-id="${id}"></td>
+        <td><input type="text" value="${e.description || ''}" data-entity-field="description" data-entity-id="${id}"></td>
+        <td><input type="number" value="${e.cost ?? 0}" data-entity-field="cost" data-entity-id="${id}" step="1"></td>
+        <td><button class="entity-delete-btn" data-entity-id="${id}" title="削除">x</button></td>
+      </tr>`
+    }).join('')
+  }
+
+  _addEntity() {
+    const model = this.appState.model
+    if (!model) return
+    if (!model.entities) model.entities = {}
+    let idx = Object.keys(model.entities).length + 1
+    let newId = `item_${idx}`
+    while (model.entities[newId]) { idx++; newId = `item_${idx}` }
+    model.entities[newId] = { id: newId, name: `アイテム${idx}`, description: '', cost: 0 }
+    this._renderEntities()
+
+    // Expand panel if collapsed
+    const panel = document.getElementById('entityPanel')
+    if (panel && panel.classList.contains('collapsed')) {
+      panel.classList.remove('collapsed')
+      panel.querySelector('.entity-panel-header')?.setAttribute('aria-expanded', 'true')
+    }
+  }
+
+  _deleteEntity(entityId) {
+    const model = this.appState.model
+    if (!model?.entities?.[entityId]) return
+    delete model.entities[entityId]
+    this._renderEntities()
+  }
+
+  _updateEntityField(input) {
+    const field = input.dataset.entityField
+    if (!field) return
+    const model = this.appState.model
+    if (!model?.entities) return
+
+    if (field === 'id') {
+      const oldId = input.dataset.entityOldId
+      const newId = input.value.trim()
+      if (!newId || newId === oldId) return
+      if (model.entities[newId]) {
+        input.value = oldId
+        return
+      }
+      const entity = model.entities[oldId]
+      delete model.entities[oldId]
+      entity.id = newId
+      model.entities[newId] = entity
+      this._renderEntities()
+      return
+    }
+
+    const entityId = input.dataset.entityId
+    const entity = model.entities[entityId]
+    if (!entity) return
+
+    if (field === 'cost') {
+      const num = Number(input.value)
+      entity.cost = Number.isFinite(num) ? num : 0
+    } else {
+      entity[field] = input.value
+    }
   }
 }

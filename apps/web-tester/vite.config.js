@@ -12,6 +12,9 @@ export default defineConfig({
     },
   },
   build: {
+    // Mermaid core (~1.27MB) is lazy-loaded via dynamic import.
+    // Suppress warning for vendor chunks that don't affect initial load.
+    chunkSizeWarningLimit: 1300,
     rollupOptions: {
       output: {
         manualChunks(id) {

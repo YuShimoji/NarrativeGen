@@ -560,6 +560,141 @@ export function initGuiEditor(deps) {
    * @returns {void}
    * @public
    */
+  // =========================================================================
+  // Entity Panel
+  // =========================================================================
+
+  function renderEntities() {
+    const _model = getModel();
+    const entities = _model.entities || {};
+    const keys = Object.keys(entities);
+    const tbody = document.getElementById('entityTableBody');
+    const countEl = document.getElementById('entityCount');
+    if (!tbody) return;
+
+    countEl.textContent = `(${keys.length})`;
+
+    if (keys.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="entity-empty-hint">エンティティが定義されていません</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = keys.map(id => {
+      const e = entities[id];
+      return `<tr data-entity-id="${id}">
+        <td><input type="text" value="${id}" data-entity-field="id" data-entity-old-id="${id}"></td>
+        <td><input type="text" value="${e.name || ''}" data-entity-field="name" data-entity-id="${id}"></td>
+        <td><input type="text" value="${e.description || ''}" data-entity-field="description" data-entity-id="${id}"></td>
+        <td><input type="number" value="${e.cost ?? 0}" data-entity-field="cost" data-entity-id="${id}" step="1"></td>
+        <td><button class="entity-delete-btn" data-entity-id="${id}" title="削除">x</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function addEntity() {
+    const _model = getModel();
+    if (!_model.entities) _model.entities = {};
+    let idx = Object.keys(_model.entities).length + 1;
+    let newId = `item_${idx}`;
+    while (_model.entities[newId]) { idx++; newId = `item_${idx}`; }
+    _model.entities[newId] = { id: newId, name: `アイテム${idx}`, description: '', cost: 0 };
+    setModel(_model);
+    renderEntities();
+    saveDraft();
+
+    // Expand panel if collapsed
+    const panel = document.getElementById('entityPanel');
+    if (panel && panel.classList.contains('collapsed')) {
+      panel.classList.remove('collapsed');
+      panel.querySelector('.entity-panel-header')?.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  function deleteEntity(entityId) {
+    const _model = getModel();
+    if (!_model.entities || !_model.entities[entityId]) return;
+    delete _model.entities[entityId];
+    setModel(_model);
+    renderEntities();
+    saveDraft();
+  }
+
+  function updateEntityField(input) {
+    const field = input.dataset.entityField;
+    if (!field) return;
+    const _model = getModel();
+    if (!_model.entities) return;
+
+    if (field === 'id') {
+      const oldId = input.dataset.entityOldId;
+      const newId = input.value.trim();
+      if (!newId || newId === oldId) return;
+      if (_model.entities[newId]) {
+        setStatus(`エンティティID "${newId}" は既に使用されています`, 'warn');
+        input.value = oldId;
+        return;
+      }
+      const entity = _model.entities[oldId];
+      delete _model.entities[oldId];
+      entity.id = newId;
+      _model.entities[newId] = entity;
+      setModel(_model);
+      renderEntities();
+      saveDraft();
+      return;
+    }
+
+    const entityId = input.dataset.entityId;
+    const entity = _model.entities[entityId];
+    if (!entity) return;
+
+    if (field === 'cost') {
+      const num = Number(input.value);
+      entity.cost = Number.isFinite(num) ? num : 0;
+    } else {
+      entity[field] = input.value;
+    }
+    setModel(_model);
+    saveDraft();
+  }
+
+  function setupEntityEvents() {
+    const panel = document.getElementById('entityPanel');
+    const header = panel?.querySelector('.entity-panel-header');
+    const addBtn = document.getElementById('addEntityBtn');
+    const tbody = document.getElementById('entityTableBody');
+
+    if (header) {
+      header.addEventListener('click', () => {
+        const isCollapsed = panel.classList.toggle('collapsed');
+        header.setAttribute('aria-expanded', String(!isCollapsed));
+      });
+      header.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          header.click();
+        }
+      });
+    }
+
+    if (addBtn) {
+      addBtn.addEventListener('click', addEntity);
+    }
+
+    if (tbody) {
+      tbody.addEventListener('click', (e) => {
+        if (e.target.classList.contains('entity-delete-btn')) {
+          deleteEntity(e.target.dataset.entityId);
+        }
+      });
+      tbody.addEventListener('change', (e) => {
+        if (e.target.dataset.entityField) {
+          updateEntityField(e.target);
+        }
+      });
+    }
+  }
+
   const renderNodeList = () => {
     const _model = getModel();
     const container = guiEditor.querySelector('.node-list') || document.createElement('div')
@@ -782,6 +917,8 @@ export function initGuiEditor(deps) {
    * @private
    */
   function populateEditor() {
+    renderEntities()
+    setupEntityEvents()
     renderNodeList()
     setupGuiEditorEvents()
   }
@@ -799,6 +936,8 @@ export function initGuiEditor(deps) {
     /** Re-render node list with current model state */
     renderNodeList,
     /** Render choices for a specific node */
-    renderChoicesForNode
+    renderChoicesForNode,
+    /** Re-render entity definition table */
+    renderEntities
   };
 }

@@ -66,10 +66,10 @@
     "id": "SP-009",
     "title": "Technical Debt",
     "status": "partial",
-    "pct": 40,
+    "pct": 65,
     "cat": "infra",
     "file": "docs/TECHNICAL_DEBT.md",
-    "summary": "Post-split debt, test expansion, and performance work"
+    "summary": "Post-split debt cleanup. E2E root Vitest conflict fixed, chunk warning suppressed (lazy-load confirmed), graph visual issues resolved, entity/inference completed items added. Remaining: CI integration, responsive/a11y, manual regression tests"
   },
   {
     "id": "SP-010",
@@ -200,10 +200,10 @@
   {
     "id": "SP-ENTITY-001",
     "title": "Entity / Inventory System",
-    "status": "partial",
-    "pct": 95,
+    "status": "done",
+    "pct": 100,
     "cat": "core",
     "file": "docs/specs/entity-inventory.md",
-    "summary": "Entity definition and inventory management. TS/C# integrated. Web Tester condition-effect-editor: hasItem/addItem/removeItem UI. Schema updated. Entity definition editor TBD"
+    "summary": "Entity definition and inventory management. TS/C# integrated. Web Tester: condition-effect-editor (hasItem/addItem/removeItem) + entity definition panel (CRUD, inline edit, collapsible). Schema updated."
   }
 ]

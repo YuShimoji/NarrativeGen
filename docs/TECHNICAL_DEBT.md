@@ -1,6 +1,6 @@
 # Technical Debt and Improvement Tasks
 
-Last updated: 2026-03-12
+Last updated: 2026-03-17
 
 ## Overview
 This document tracks technical debt and improvement work items.
@@ -47,16 +47,15 @@ Remaining tasks:
 ## Medium Priority
 
 ### 4. Chunk optimization
-Status: in progress
+Status: accepted (2026-03-17)
 
-- Dynamic import added for Graph editor and Mermaid preview managers.
-- Mermaid import now targets `mermaid/dist/mermaid.core.mjs`.
-- Manual chunking now separates `vendor-mermaid-core`, `vendor-mermaid-deps`, `vendor-diagram-layout`, and `vendor-cytoscape`.
+- Dynamic import for Mermaid preview (`import('mermaid/dist/mermaid.core.mjs')`) — 初期ロード不要
+- Manual chunking: `vendor-mermaid-core` (1.27MB), `vendor-mermaid-deps`, `vendor-diagram-layout`, `vendor-cytoscape`
+- KaTeX / cytoscape は mermaid の間接依存。アプリコードから直接参照なし
+- `chunkSizeWarningLimit: 1300` でビルド警告を抑制 (遅延読み込みのため初期ロードに影響なし)
 
 Remaining tasks:
-- [ ] Decide whether to accept or further reduce `vendor-mermaid-core` (~1.27 MB).
-- [ ] Add chunk budget enforcement for regression detection.
-- [ ] Measure first screen load performance.
+- [ ] Measure first screen load performance (optional, low priority).
 
 ### 5. Responsive and accessibility improvements
 Status: not started
@@ -67,16 +66,14 @@ Remaining tasks:
 - [ ] Manual usability checks on key screens.
 
 ### 6. Node graph visual issues
-Status: mostly done (2026-03-14)
+Status: mostly done (2026-03-17)
 
-Two display problems observed on ノードグラフ tab:
-- ~~Minimap (bottom-right) renders with white background on dark theme~~ → Fixed: replaced hardcoded rgba with CSS variables (`--color-surface`, `--color-border`).
-- ~~Node text labels overlap outside node boundaries~~ → Fixed: added `#nodeTextClip` clipPath (112x52) in `_setupDefs()`, applied to node text elements.
+- ~~Minimap dark theme~~ → Fixed (CSS variables)
+- ~~Node text overflow~~ → Fixed (clipPath)
+- ~~Unsafe render() calls~~ → Fixed (2026-03-16, 全面排除)
 
 Remaining tasks:
 - [ ] Investigate foreignObject SVG clone rendering reliability (minimap content).
-- [x] Replace minimap background with CSS variable for theme-awareness.
-- [x] Add clip-path or text-overflow handling to graph node labels.
 
 ### 7. Manual test expansion
 Status: partially done
@@ -85,6 +82,12 @@ Remaining tasks:
 - [ ] Re-verify core graph editor scenarios.
 - [ ] Regression checks for variable system and Yarn export.
 - [ ] Negative-path checks for model import/export.
+
+### 9. E2E root execution Vitest conflict
+Status: done (2026-03-17)
+
+`npx playwright test` をプロジェクトルートから実行すると、Playwright が `engine-ts` 配下の `@vitest/expect` を読み込みエラーになっていた。
+→ ルート `package.json` に `test:e2e` スクリプトを追加し `--config apps/web-tester/playwright.config.js` で解決。
 
 ---
 
@@ -117,6 +120,11 @@ Remaining tasks:
 | E2E skip triage (36→5) | 2026-03-12 | theme-toggle deleted (UI未実装), 5 defensive skips retained |
 | Export all-model smoke test | 2026-03-12 | 6 models x 4 formatters = 24 structural checks |
 | Inference UI Phase 2 (UC-3/UC-4) | 2026-03-12 | Impact analysis + state key usage in InferencePanel |
+| Inference UI Phase 3 (UC-2/UC-5 + graph visual) | 2026-03-17 | Path highlight (gold), unreachable dim (0.4), impact coloring (coral), debug query UI |
+| Graph editor unsafe render() elimination | 2026-03-16 | All unsafe render() calls replaced |
+| Entity/Inventory condition-effect-editor UI | 2026-03-17 | hasItem/addItem/removeItem in dropdown + schema update |
+| Entity definition management UI | 2026-03-17 | Collapsible panel in GUI editor, CRUD, inline edit |
+| Branch consolidation (master→main) | 2026-03-16 | Local master switched to main, origin/main is canonical |
 
 ---
 
@@ -124,3 +132,4 @@ Remaining tasks:
 - 2026-03-09: rewritten to current state
 - 2026-03-10: updated for encoding safety workflow and Mermaid chunk split
 - 2026-03-12: added graph visual issues, completed Phase 2 items
+- 2026-03-17: completed items update, E2E root Vitest conflict added

@@ -4,7 +4,7 @@
 
 - **日時**: 2026-03-16
 - **ブランチ**: `main` (trunk-based)
-- **最新コミット**: `8e75991` (CLAUDE.md Phase 3 handoff)
+- **最新コミット**: `353a0f9` (inference UI Phase 3 graph visual + Entity/Inventory editor UI)
 - **origin/main**: 同期済み
 
 ## プロジェクト概要
@@ -41,35 +41,22 @@ NarrativeGen/
 
 詳細は `docs/specs/variable-system.md`, `docs/specs/entity-inventory.md` を参照。
 
-## 直近の作業 (2026-03-11 〜 2026-03-16)
+## 直近の作業 (2026-03-16 〜 2026-03-17)
 
-### ブランチ統合 (2026-03-11)
+### 推論UI Phase 3 グラフ視覚統合 完了 (2026-03-17)
 
-- `feature/main-js-split-phase2` を `main` にマージ (85コミット)
-- コンフリクト 8 件解決
-- テスト 15 → 73 件に増加
-- 推論エンジン・階層UI・セマンティック検索・XSS修正・Save-Load・ハンドラー分離を一括統合
+- GraphEditorManager: applyInferenceHighlight/clearInferenceHighlight API
+- パスハイライト (ゴールド #d4a017)、影響ノード (コーラル #e07050)、到達不能ノード半透明化 (opacity 0.4)
+- InferencePanel._syncGraphHighlight でパネル→グラフ同期
+- デバッグクエリUI (ノードID入力 + analyze/clear ボタン)
+- SP-INF-UI-001 → done (100%)
 
-### 推論UI統合 (2026-03-11 〜 2026-03-16)
+### Entity/Inventory condition-effect-editor UI (2026-03-17)
 
-- **Phase 1**: Live Preview パネルに推論セクション追加 (UC-1: 到達パス表示)
-- **Phase 2**: InferenceBridge 拡張 (findStateKeyUsage/getAllStateKeys)、パネル3セクション構成 (UC-3: 影響分析, UC-4: 状態キー使用)
-- **Phase 3 一部**: UC-2 到達可能ノードパネル、UC-5 What-if (パネルUI)
-- **Phase 3 残**: グラフ視覚統合 (T1-T4) — 実装プラン承認済み
-
-### Entity/Inventory + C# SDK 統合 (2026-03-13)
-
-- origin/master から手動 cherry-pick
-- hasItem 条件 + addItem/removeItem エフェクト + modifyVariable 推論登録
-- EntityDef 型 + brand→name リネーム
-- C# SDK InferenceRegistry (条件 8 種 / エフェクト 7 種)
-- 73 テスト全緑維持
-
-### origin/master 統合方針決定 (2026-03-16)
-
-- ローカル master → main に切替 (origin/main が正)
-- master の Entity/Inventory 変更は既に cherry-pick 済み
-- master の web-tester 構造巻き戻し (main.js 2371行復活) は採用せず
+- hasItem 条件タイプをエディタドロップダウンに追加
+- addItem/removeItem エフェクトタイプをエディタドロップダウンに追加
+- 構造化オブジェクトのパース/ビルド対応
+- playthrough.schema.json: entities/inventory/hasItem/addItem/removeItem スキーマ追加
 
 ### グラフエディタ修正 (2026-03-16)
 
@@ -87,25 +74,25 @@ NarrativeGen/
 ### 仕様書
 
 - **spec-index.json**: 23 エントリ
-- **done**: 17 件 (engine-core, variable-system, yarn-export, inference-engine, hierarchy, search, xss, paraphrase 等)
-- **partial**: 5 件 (inference-ui 85%, entity-inventory 85%, unity-sdk 85%, model-schema 80%, ai-features 80%)
+- **done**: 18 件 (engine-core, variable-system, yarn-export, inference-engine, inference-ui, hierarchy, search, xss, paraphrase 等)
+- **partial**: 4 件 (entity-inventory 95%, model-schema 95%, unity-sdk 85%, ai-features 80%)
 - **legacy**: 1 件 (Design Improvements)
 
 ## 既知の課題
 
-- 推論UI Phase 3 グラフ視覚統合 (T1-T4) が未実装 (プラン承認済み)
+- Entity 定義管理 UI 未実装 (モデル内 entities マップの GUI 編集)
 - チャンクサイズ警告 (vendor-mermaid 1.79MB)
-- Entity/Inventory の Web Tester UI 未実装
 - GUI Undo/Redo 手動回帰テスト未実施
 - Yarn Spinner 実運用検証未実施
 - Technical Debt (SP-009) 40% — 残債あり
+- E2E ルート実行時の Vitest 衝突 (web-tester ディレクトリからは正常)
 
 ## 次の推奨作業
 
-1. **推論UI Phase 3 グラフ視覚統合** (T1-T4): パスハイライト(ゴールド)、到達不能半透明化(0.4)、影響範囲色分け(コーラル)、デバッグクエリUI
+1. **Entity 定義管理 UI** (SP-ENTITY-001 95%→100%): エンティティの一覧表示・追加・編集・削除
 2. **Yarn Spinner 実運用検証**: サンプルモデル → Yarn 出力 → Unity/Web Previewer 読込確認
-3. **Entity/Inventory Web Tester UI**: エンティティ定義・インベントリ操作の GUI
-4. **チャンク最適化**: vendor-mermaid 分離、dynamic import 活用
+3. **Technical Debt** (SP-009): チャンクサイズ最適化、inference/ ディレクトリ方針
+4. **GUI Undo/Redo 回帰テスト**: 手動検証
 
 ## 再開手順
 

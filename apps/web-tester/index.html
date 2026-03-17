@@ -648,7 +648,30 @@
               </div>
             </div>
             <div class="gui-edit-content">
-              <div id="nodeList" class="gui-node-list"></div>
+              <div class="gui-left-column">
+                <div id="entityPanel" class="entity-panel collapsed">
+                  <div class="entity-panel-header" role="button" tabindex="0" aria-expanded="false">
+                    <h4>エンティティ定義 <span id="entityCount" class="entity-count">(0)</span></h4>
+                    <span class="entity-toggle-icon">&#9654;</span>
+                  </div>
+                  <div class="entity-panel-body">
+                    <table class="entity-table">
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>名前</th>
+                          <th>説明</th>
+                          <th>コスト</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody id="entityTableBody"></tbody>
+                    </table>
+                    <button id="addEntityBtn" class="secondary">+ エンティティ追加</button>
+                  </div>
+                </div>
+                <div id="nodeList" class="gui-node-list"></div>
+              </div>
               <div id="livePreviewPanel" class="live-preview-panel">
                 <div class="preview-header">
                   <h3>リアルタイムプレビュー</h3>

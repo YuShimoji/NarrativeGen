@@ -50,6 +50,7 @@
     "test": "npm run test:engine && npm run test:tester",
     "test:engine": "npm run test -w @narrativegen/engine-ts",
     "test:tester": "npm run test -w @narrativegen/web-tester",
+    "test:e2e": "npx playwright test --config apps/web-tester/playwright.config.js",
     "test:watch": "npm run test -w @narrativegen/engine-ts -- --watch",
     "validate": "npm run validate:engine",
     "validate:engine": "npm run validate:models -w @narrativegen/engine-ts",

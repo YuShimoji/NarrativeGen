@@ -31,15 +31,16 @@
 | ブランチ統合 (master→main) | 完了 | 2026-03-16 | ローカルを main に切替、origin/main に同期 |
 | 推論UI Phase 3 パネル | 完了 | 2026-03-16 | UC-2 到達可能ノード + UC-5 What-if パネルUI |
 | グラフエディタ安全化 | 完了 | 2026-03-16 | unsafe render() 全面排除 + minimap ダーク化 |
+| 推論UI Phase 3 グラフ視覚統合 | 完了 | 2026-03-17 | T1-T4: パスハイライト(ゴールド) + 到達不能半透明化 + 影響色分け(コーラル) + デバッグクエリUI |
+| Entity/Inventory condition-effect-editor UI | 完了 | 2026-03-17 | hasItem/addItem/removeItem ドロップダウン + スキーマ更新 |
 
 ## 優先度順タスク一覧
 
 | 優先度 | タスク | 対象 | 難易度 | 見積時間 | 状態 |
 |--------|--------|------|--------|----------|------|
-| **高** | 推論UI Phase 3 グラフ視覚統合 (T1-T4) | web-tester | 中 | 1-2日 | プラン承認済み |
+| **高** | Entity 定義管理 UI (モデル内 entities の GUI 編集) | web-tester | 中 | 1日 | 進行中 |
 | **高** | Yarn Spinner エクスポート実運用検証 | web-tester | 低 | 0.5日 | 未着手 |
 | **高** | GUI Undo/Redo の手動回帰テスト | web-tester | 中 | 1日 | 未着手 |
-| **中** | Entity/Inventory Web Tester UI | web-tester | 中 | 1-2日 | 未着手 |
 | **中** | チャンクサイズ警告解消 | web-tester | 中 | 1日 | 進行中 |
 | **中** | inference/ ディレクトリ方針決定 | engine-ts | 中 | 0.5日 | 未着手 |
 | **低** | アクセシビリティ改善（ARIA ラベル等） | web-tester | 低 | 1日 | 未着手 |
@@ -49,15 +50,12 @@
 
 ### 高優先度
 
-#### 推論UI Phase 3 グラフ視覚統合 (T1-T4)
+#### Entity 定義管理 UI
 
-**実装プラン** (Decision Log 2026-03-16 承認済み):
-- T1: `GraphEditorManager.applyInferenceHighlight()` 追加
-- T2: パスハイライト (ゴールド)、到達不能ノード半透明化 (opacity 0.4)
-- T3: 影響範囲色分け (コーラル)
-- T4: デバッグクエリUI
+モデル内 `entities` マップの GUI 編集。エンティティの一覧表示・追加・編集・削除。
+condition-effect-editor の hasItem/addItem/removeItem は実装済み。残りは定義管理パネル。
 
-**完了条件**: SP-INF-UI-001 の pct を 100% に更新可能な状態
+**完了条件**: SP-ENTITY-001 の pct を 100% に更新可能な状態
 
 #### Yarn Spinner エクスポート実運用検証
 
@@ -75,15 +73,9 @@
 
 ### 中優先度
 
-#### Entity/Inventory Web Tester UI
-
-エンジン側は hasItem/addItem/removeItem 統合済み。Web Tester での:
-- エンティティ定義の表示・編集UI
-- インベントリ操作のプレビュー・テスト
-
 #### inference/ ディレクトリの方針
 
-推論UI Phase 3 が完了後に判断。Phase 3 実装で必要性が明確化される。
+推論UI Phase 3 完了済み。
 
 **選択肢**:
 - A. `condition-effect-ops.ts` に forward/backward chaining も統合して `inference/` を削除
@@ -100,4 +92,4 @@
 - **ビルド**: engine-ts + web-tester ともに成功
 - **保守性**: main.js 469行（目標達成）
 - **エクスポート形式**: 5形式（CSV / Ink / Twine / JSON / Yarn）
-- **仕様書**: 23エントリ (done 17 / partial 5 / legacy 1)
+- **仕様書**: 23エントリ (done 18 / partial 4 / legacy 1)

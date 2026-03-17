@@ -1,6 +1,6 @@
 # SP-008: Entity / Inventory System
 
-**Status**: partial | **Pct**: 85 | **Cat**: core
+**Status**: done | **Pct**: 100 | **Cat**: core
 
 ## 概要
 
@@ -98,10 +98,30 @@ ID比較は case-insensitive (`normalizeId` で trim + toLowerCase)。
 | `inventory.spec.ts` | 5 | add/remove/has/list/toJSON |
 | `inference.test.ts` | 2 | hasItem/addItem/removeItem の registry 登録確認 |
 
-## 未実装・検討事項
+## Web Tester Entity 定義管理 UI (実装済み)
 
-- [x] ~~`playthrough.schema.json` に entities フィールドのスキーマ追加~~ → entities/inventory/hasItem/addItem/removeItem 追加済み
-- [x] ~~condition-effect-editor に hasItem/addItem/removeItem UI 追加~~ → ドロップダウン選択 + パース/ビルド対応
-- [ ] web-tester に entity 定義エディタ追加 (モデル内 entities マップの GUI 編集)
-- [ ] CSV入力は維持するか、JSON定義のみにするか
-- [x] ~~C# SDK の条件/エフェクト統合~~ → InferenceRegistry 導入で完了
+GUI モデル編集画面にエンティティ定義パネルを搭載。
+
+### 配置
+- `.gui-edit-content` 内の左カラム先頭 (ノードリストの上)
+- 折りたたみ可能 (デフォルト閉じ)
+
+### 操作
+- テーブル形式: ID / 名前 / 説明 / コスト
+- インライン編集: フィールドを直接クリックして編集 (change イベントで反映)
+- 追加: 「+ エンティティ追加」ボタン (一意 ID 自動生成)
+- 削除: 行末の x ボタン
+- ID 変更: 重複チェック付き rename (旧キー削除 → 新キー追加)
+
+### データフロー
+- `model.entities` を直接編集 (`setModel()` 経由)
+- 保存: SaveManager (auto-save) / JSON ダウンロード (`buildExportModel` スプレッド) で自動包含
+- draft: `ng_model_draft` (localStorage) で永続化
+
+## 完了・検討済み事項
+
+- [x] `playthrough.schema.json` に entities フィールドのスキーマ追加
+- [x] condition-effect-editor に hasItem/addItem/removeItem UI 追加
+- [x] web-tester に entity 定義エディタ追加
+- [x] C# SDK の条件/エフェクト統合 → InferenceRegistry 導入で完了
+- CSV 入力 (`Entities.csv`) は別経路として残存。model.entities (JSON) が正典
