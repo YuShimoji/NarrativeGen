@@ -16,10 +16,14 @@ export class InferencePanel {
    * @param {object} options
    * @param {import('./inference-bridge.js').InferenceBridge} options.bridge
    * @param {function(string): void} options.onNodeClick - ノードIDクリック時のコールバック
+   * @param {function(object): void} [options.onGraphHighlight] - グラフハイライト要求コールバック
+   *   引数: { pathNodeIds?: string[], impactNodeIds?: string[], unreachableNodeIds?: string[] }
+   *   null を渡すとハイライトクリア
    */
-  constructor({ bridge, onNodeClick }) {
+  constructor({ bridge, onNodeClick, onGraphHighlight }) {
     this._bridge = bridge
     this._onNodeClick = onNodeClick
+    this._onGraphHighlight = onGraphHighlight || null
     /** @type {HTMLElement | null} */
     this._container = null
     /** @type {HTMLElement | null} */
@@ -120,6 +124,51 @@ export class InferencePanel {
     section.appendChild(reachableContent)
     this._reachableContent = reachableContent
 
+    // デバッグクエリセクション
+    const queryLabel = document.createElement('div')
+    queryLabel.className = 'inference-sub-label'
+    queryLabel.textContent = 'クエリ'
+    section.appendChild(queryLabel)
+
+    const queryRow = document.createElement('div')
+    queryRow.className = 'inference-query-row'
+
+    const queryInput = document.createElement('input')
+    queryInput.type = 'text'
+    queryInput.className = 'inference-query-input'
+    queryInput.placeholder = 'ノードIDを入力...'
+    queryRow.appendChild(queryInput)
+
+    const queryBtn = document.createElement('button')
+    queryBtn.className = 'inference-query-btn'
+    queryBtn.textContent = '分析'
+    queryBtn.addEventListener('click', () => {
+      const nodeId = queryInput.value.trim()
+      if (nodeId) {
+        this.update(nodeId)
+        if (this._onNodeClick) this._onNodeClick(nodeId)
+      }
+    })
+    queryRow.appendChild(queryBtn)
+
+    const clearBtn = document.createElement('button')
+    clearBtn.className = 'inference-query-btn inference-query-clear'
+    clearBtn.textContent = 'クリア'
+    clearBtn.addEventListener('click', () => {
+      queryInput.value = ''
+      this.update(null)
+    })
+    queryRow.appendChild(clearBtn)
+
+    // Enter キーで分析実行
+    queryInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        queryBtn.click()
+      }
+    })
+
+    section.appendChild(queryRow)
+
     this._container = section
     return section
   }
@@ -134,6 +183,7 @@ export class InferencePanel {
     this._updateStateKeys(nodeId)
     this._updateWhatIf(nodeId)
     this._updateReachable()
+    this._syncGraphHighlight(nodeId)
   }
 
   /**
@@ -521,6 +571,73 @@ export class InferencePanel {
     frag.appendChild(list)
     this._reachableContent.innerHTML = ''
     this._reachableContent.appendChild(frag)
+  }
+
+  /**
+   * グラフハイライトを同期する。
+   * 到達パス・影響範囲・到達不能ノードをまとめてGraphEditorManagerへ通知する。
+   * @param {string | null} nodeId
+   * @private
+   */
+  _syncGraphHighlight(nodeId) {
+    if (!this._onGraphHighlight) return
+
+    if (!nodeId || !this._bridge.isReady) {
+      this._onGraphHighlight(null)
+      return
+    }
+
+    const pathNodeIds = []
+    const impactNodeIds = []
+    const unreachableNodeIds = []
+
+    // UC-1: 到達パスからノードID列を抽出
+    const { path, startNode } = this._bridge.findPath(nodeId)
+    if (path && path.length > 0) {
+      pathNodeIds.push(startNode)
+      for (const step of path) {
+        pathNodeIds.push(step.target)
+      }
+    } else if (path && path.length === 0) {
+      // ゴール=スタートノード
+      pathNodeIds.push(startNode)
+    }
+
+    // UC-3: 影響範囲のノードIDを抽出
+    const model = this._bridge._model
+    if (model) {
+      const node = model.nodes[nodeId]
+      if (node && node.choices) {
+        const impactSet = new Set()
+        for (const choice of node.choices) {
+          if (!choice.effects || choice.effects.length === 0) continue
+          const affected = this._bridge.getAffectedByChoice(nodeId, choice.id)
+          for (const key of affected) {
+            const [affNodeId] = key.split(':')
+            if (affNodeId) impactSet.add(affNodeId)
+          }
+        }
+        impactNodeIds.push(...impactSet)
+      }
+    }
+
+    // UC-2: 到達不能ノードを抽出
+    if (this._session && model) {
+      const reachable = this._bridge.getReachableNodes(this._session)
+      const reachableIds = new Set(reachable.keys())
+      for (const nid of Object.keys(model.nodes)) {
+        if (!reachableIds.has(nid)) {
+          unreachableNodeIds.push(nid)
+        }
+      }
+    }
+
+    // いずれかのデータがあればハイライト適用
+    if (pathNodeIds.length > 0 || impactNodeIds.length > 0 || unreachableNodeIds.length > 0) {
+      this._onGraphHighlight({ pathNodeIds, impactNodeIds, unreachableNodeIds })
+    } else {
+      this._onGraphHighlight(null)
+    }
   }
 
   /** @private */

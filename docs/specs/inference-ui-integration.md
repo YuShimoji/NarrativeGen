@@ -10,7 +10,7 @@ SP-INF-UI-001
 
 ## ステータス
 
-partial (Phase 1-2 実装完了、Phase 3 未着手)
+done (Phase 1-3 実装完了)
 
 ## 動機
 
@@ -29,13 +29,13 @@ partial (Phase 1-2 実装完了、Phase 3 未着手)
 **表示形式**: ステップリスト `start → [選択肢A] → node2 → [選択肢B] → 選択中ノード`
 **クリック**: 各ステップのノードIDをクリックでそのノードに移動
 
-### UC-2: 到達可能ノード一覧 [未実装]
+### UC-2: 到達可能ノード一覧 [実装済み]
 
-**操作**: Live Previewの「到達可能」セクション
+**操作**: Live Previewの「到達可能ノード」セクション
 **内容**: 現在のセッション状態から到達可能なノード一覧（`findReachableNodes`）
 **用途**: プレイスルー中にどのルートが開いているかを確認
-**表示**: ノードID + タイトルのリスト、到達不能ノードはグレーアウト
-**状態**: bridge側 `getReachableNodes()` は実装済み。パネルUI未接続。
+**表示**: サマリー（N / M ノード到達可能）+ ノードID一覧。到達不能ノードはグレーアウト。
+**グラフ連携**: 到達不能ノードはグラフビューで opacity 0.4 に半透明化。
 
 ### UC-3: 影響分析（Forward Chaining）[実装済み]
 
@@ -77,7 +77,9 @@ Live Preview Panel
     ├── 到達パス (UC-1)
     ├── 影響分析 (UC-3)
     ├── 状態キー使用状況 (UC-4)
-    └── What-if シミュレーション (UC-5)
+    ├── What-if シミュレーション (UC-5)
+    ├── 到達可能ノード (UC-2)
+    └── クエリ (デバッグ用)
 ```
 
 ### グラフタブ連携 [実装済み]
@@ -85,27 +87,33 @@ Live Preview Panel
 ノードグラフタブにも同一の推論パネルを配置。`#graphInferencePanel` に `InferencePanel` インスタンスを追加。
 Live Previewと同一の `InferenceBridge` を共有し、ノード選択に連動して更新される。
 
-### デバッグパネル拡張 [未実装]
+### デバッグクエリUI [実装済み]
 
-`#debugPanel`に推論クエリ用のインターフェースを追加する構想。
-`inference-query.js` として設計されていたが未作成。
+推論パネル内にクエリセクションを配置。ノードIDを入力して推論分析を発火できる。
 
 ```text
-Debug Panel
-├── [既存] バリデーション結果
-├── [未実装] 推論クエリ (#inferenceQuery)
-│   ├── クエリ種別セレクタ (到達パス / 到達可能ノード / 状態キー逆引き)
-│   ├── パラメータ入力 (ノードID / 状態キー名)
-│   └── 結果表示エリア
+推論分析パネル
+├── 到達パス (UC-1)
+├── 影響分析 (UC-3)
+├── 状態キー使用状況 (UC-4)
+├── What-if シミュレーション (UC-5)
+├── 到達可能ノード (UC-2)
+└── クエリ
+    ├── ノードID入力フィールド
+    ├── [分析] ボタン → update(nodeId) + onNodeClick(nodeId)
+    └── [クリア] ボタン → update(null) でハイライト解除
 ```
 
-### グラフエディタ視覚連携 [未実装]
+### グラフエディタ視覚連携 [実装済み]
 
-グラフビューでの視覚的フィードバック（Phase 3）：
+グラフビューでの視覚的フィードバック（Phase 3）。ノード選択時に自動的に適用される。
 
-- 到達パス上のノード・エッジをハイライト
-- 影響を受ける選択肢を色分け表示
-- 到達不能ノードの半透明化
+- **到達パスハイライト**: パス上のノード・エッジをゴールド (#d4a017) で強調、stroke-width 3
+- **影響範囲色分け**: 影響を受けるノードをコーラル (#e07050) で強調、stroke-width 3
+- **到達不能ノード半透明化**: セッション状態から到達不能なノードを opacity 0.4 に
+
+**実装**: `GraphEditorManager.applyInferenceHighlight({ pathNodeIds, impactNodeIds, unreachableNodeIds })` で render() を呼ばずにスタイルのみ更新。`clearInferenceHighlight()` でクリア。
+**連携**: `InferencePanel._syncGraphHighlight()` が update() のたびにハイライトデータを収集し、`onGraphHighlight` コールバック経由で `GraphEditorManager` に通知。
 
 ## 技術設計
 
@@ -153,10 +161,10 @@ class InferenceBridge {
 
 ```javascript
 class InferencePanel {
-  constructor({ bridge, onNodeClick })
+  constructor({ bridge, onNodeClick, onGraphHighlight })
   createElement()                  // DOM要素を生成
-  update(nodeId)                   // 全セクションを更新
-  setSession(session)              // セッション状態を設定 (UC-5に必要)
+  update(nodeId)                   // 全セクションを更新 + グラフハイライト同期
+  setSession(session)              // セッション状態を設定 (UC-2/UC-5に必要)
   setBridge(bridge)                // bridge参照を更新
 }
 ```
@@ -167,6 +175,24 @@ class InferencePanel {
 - `_updateImpact(nodeId)` — UC-3: 影響分析描画
 - `_updateStateKeys(nodeId)` — UC-4: 状態キー描画
 - `_updateWhatIf(nodeId)` — UC-5: What-if描画
+- `_updateReachable()` — UC-2: 到達可能ノード描画
+- `_syncGraphHighlight(nodeId)` — グラフハイライトデータ収集・通知
+
+### GraphEditorManager 推論ハイライトAPI [実装済み]
+
+```javascript
+// 推論ハイライトを適用 (render()を呼ばずにスタイルのみ更新)
+applyInferenceHighlight({ pathNodeIds, impactNodeIds, unreachableNodeIds })
+
+// 推論ハイライトをクリア
+clearInferenceHighlight()
+```
+
+色定義:
+- パスノード/エッジ: ゴールド (#d4a017), stroke-width 3
+- 影響範囲ノード: コーラル (#e07050), stroke-width 3
+- 到達不能ノード: opacity 0.4
+- 選択状態は推論ハイライトより優先される
 
 ### GUI統合 (`gui-editor.js`) [実装済み]
 
@@ -213,13 +239,15 @@ this.graphInferencePanel.update(nodeId)
 - [x] What-if シミュレーション（UC-5）— InferenceBridge.simulateChoice + InferencePanel._updateWhatIf
 - [x] グラフタブ用推論パネル — graphInferencePanel として gui-editor.js に統合
 
-### Phase 3（グラフ視覚連携 + 残機能）[一部実装]
+### Phase 3（グラフ視覚連携 + 残機能）[完了]
 
 - [x] 到達可能ノード一覧のパネルUI（UC-2）— InferencePanel._updateReachable + CSS追加
-- [ ] デバッグパネル推論クエリUI（inference-query.js）
-- [ ] グラフエディタでのパスハイライト
-- [ ] 到達不能ノードの視覚的表示
-- [ ] 影響範囲の色分け
+- [x] デバッグクエリUI — InferencePanel のクエリセクション (ノードID入力 + 分析/クリアボタン)
+- [x] グラフエディタでのパスハイライト — GraphEditorManager.applyInferenceHighlight (ゴールド #d4a017)
+- [x] 到達不能ノードの半透明化 — opacity 0.4
+- [x] 影響範囲の色分け — コーラル #e07050
+- [x] パネル→グラフ連携 — InferencePanel._syncGraphHighlight + onGraphHighlight コールバック
+- [x] gui-editor.js: setGraphManager() でグラフエディタ参照を注入
 
 ## 依存仕様
 
@@ -230,8 +258,9 @@ this.graphInferencePanel.update(nodeId)
 ## 制限事項
 
 - 推論はモデル構造に基づく静的分析が中心。動的分析（`findReachableNodes`）はプレイスルー中のみ有効
-- グラフエディタ連携（Phase 3）は既存のSVGレンダリングとの統合が必要で、設計が別途必要
+- グラフハイライトは render() を呼ばずに D3 attr で直接更新するため、dagre レイアウト再計算は発生しない
 - 大規模モデル（100ノード超）でのBFS探索は表示遅延の可能性あり
+- 到達不能ノード半透明化はセッション未設定時には適用されない
 
 ## 実装ファイル
 
@@ -249,6 +278,14 @@ this.graphInferencePanel.update(nodeId)
 - `apps/web-tester/src/features/inference/inference-panel.js` -- 影響分析(_updateImpact)/状態キー(_updateStateKeys)/What-if(_updateWhatIf)セクション追加
 - `apps/web-tester/src/ui/gui-editor.js` -- graphInferencePanel 統合
 - `apps/web-tester/src/styles/gui-editor.css` -- 影響分析/状態キー/What-if UIスタイル追加
+
+### Phase 3（実装済み）
+
+- `apps/web-tester/src/ui/graph-editor/GraphEditorManager.js` -- applyInferenceHighlight/clearInferenceHighlight API追加、_updateSelectionStyles拡張
+- `apps/web-tester/src/features/inference/inference-panel.js` -- onGraphHighlight コールバック、_syncGraphHighlight、クエリUI、_updateReachable
+- `apps/web-tester/src/ui/gui-editor.js` -- setGraphManager()、graphInferencePanel に onGraphHighlight 接続
+- `apps/web-tester/src/app-controller.js` -- guiEditorManager.setGraphManager(graphManager) 呼出
+- `apps/web-tester/src/styles/gui-editor.css` -- クエリUI スタイル追加
 
 ## テスト
 

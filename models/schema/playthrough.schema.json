@@ -9,6 +9,20 @@
     "startNode": { "type": "string" },
     "flags": { "type": "object", "additionalProperties": { "type": "boolean" } },
     "resources": { "type": "object", "additionalProperties": { "type": "number" } },
+    "entities": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "cost": { "type": "number" }
+        },
+        "additionalProperties": false
+      }
+    },
     "nodes": {
       "type": "object",
       "additionalProperties": {
@@ -71,6 +85,16 @@
                           "end": { "type": "number" }
                         },
                         "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "required": ["type", "key", "value"],
+                        "properties": {
+                          "type": { "const": "hasItem" },
+                          "key": { "type": "string" },
+                          "value": { "type": "boolean" }
+                        },
+                        "additionalProperties": false
                       }
                     ]
                   }
@@ -126,6 +150,24 @@
                         "properties": {
                           "type": { "const": "goto" },
                           "target": { "type": "string" }
+                        },
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "required": ["type", "key"],
+                        "properties": {
+                          "type": { "const": "addItem" },
+                          "key": { "type": "string" }
+                        },
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "required": ["type", "key"],
+                        "properties": {
+                          "type": { "const": "removeItem" },
+                          "key": { "type": "string" }
                         },
                         "additionalProperties": false
                       }

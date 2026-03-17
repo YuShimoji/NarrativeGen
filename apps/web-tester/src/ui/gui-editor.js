@@ -65,6 +65,9 @@ export class GuiEditorManager {
     this.inferenceBridge = new InferenceBridge()
     this.inferencePanel = null
     this.graphInferencePanel = null // ノードグラフタブ用
+
+    /** @type {import('../ui/graph-editor/GraphEditorManager.js').GraphEditorManager | null} */
+    this._graphManager = null
   }
 
   initialize(nodeListElement, guiEditModeElement, batchEditModalElement, quickNodeModalElement, batchChoiceModalElement, paraphraseModalElement, draftRestoreModalElement) {
@@ -169,6 +172,14 @@ export class GuiEditorManager {
       this.graphInferencePanel = new InferencePanel({
         bridge: this.inferenceBridge,
         onNodeClick: (nodeId) => this.selectNode(nodeId),
+        onGraphHighlight: (hlData) => {
+          if (!this._graphManager) return
+          if (hlData) {
+            this._graphManager.applyInferenceHighlight(hlData)
+          } else {
+            this._graphManager.clearInferenceHighlight()
+          }
+        },
       })
       graphInferenceContainer.appendChild(this.graphInferencePanel.createElement())
     }
@@ -269,6 +280,14 @@ export class GuiEditorManager {
       this.graphInferencePanel.setSession(session)
       this.graphInferencePanel.update(nodeId)
     }
+  }
+
+  /**
+   * グラフエディタマネージャを設定する。推論ハイライト連携に使用。
+   * @param {import('../ui/graph-editor/GraphEditorManager.js').GraphEditorManager} manager
+   */
+  setGraphManager(manager) {
+    this._graphManager = manager
   }
 
   /**

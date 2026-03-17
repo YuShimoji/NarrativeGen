@@ -80,6 +80,20 @@ export class GraphEditorManager {
       showGrid: false // グリッド線の表示
     }
 
+    // 推論ハイライト状態
+    this._inferenceHighlight = {
+      /** @type {Set<string>} パス上のノードID */
+      pathNodes: new Set(),
+      /** @type {Set<string>} パス上のエッジキー "fromId->toId" */
+      pathEdges: new Set(),
+      /** @type {Set<string>} 影響範囲のノードID */
+      impactNodes: new Set(),
+      /** @type {Set<string>} 到達不能ノードID */
+      unreachableNodes: new Set(),
+      /** @type {boolean} ハイライトが有効か */
+      active: false,
+    }
+
     // History for Undo/Redo
     this.history = []
     this.redoStack = []
@@ -2249,21 +2263,96 @@ export class GraphEditorManager {
   }
 
   /**
+   * 推論ハイライトを適用する。render()を呼ばずにスタイルのみ更新。
+   * @param {object} options
+   * @param {string[]} [options.pathNodeIds] - パス上のノードID列（順序付き）
+   * @param {string[]} [options.impactNodeIds] - 影響範囲のノードID列
+   * @param {string[]} [options.unreachableNodeIds] - 到達不能ノードID列
+   */
+  applyInferenceHighlight({ pathNodeIds = [], impactNodeIds = [], unreachableNodeIds = [] } = {}) {
+    const hl = this._inferenceHighlight
+    hl.pathNodes = new Set(pathNodeIds)
+    hl.impactNodes = new Set(impactNodeIds)
+    hl.unreachableNodes = new Set(unreachableNodeIds)
+
+    // パスノード列から連続ペアをエッジキーに変換
+    hl.pathEdges = new Set()
+    for (let i = 0; i < pathNodeIds.length - 1; i++) {
+      hl.pathEdges.add(`${pathNodeIds[i]}->${pathNodeIds[i + 1]}`)
+    }
+
+    hl.active = hl.pathNodes.size > 0 || hl.impactNodes.size > 0 || hl.unreachableNodes.size > 0
+    this._updateSelectionStyles()
+  }
+
+  /**
+   * 推論ハイライトをクリアする。
+   */
+  clearInferenceHighlight() {
+    const hl = this._inferenceHighlight
+    hl.pathNodes.clear()
+    hl.pathEdges.clear()
+    hl.impactNodes.clear()
+    hl.unreachableNodes.clear()
+    hl.active = false
+    this._updateSelectionStyles()
+  }
+
+  /**
    * render()を呼ばずに選択状態のスタイルだけをDOM上で更新する。
    * ドラッグ開始時に render() を呼ぶとレイアウト再計算で位置が崩壊するため。
    * @private
    */
   _updateSelectionStyles() {
     if (!this.g) return
+    const hl = this._inferenceHighlight
     this.g.selectAll('g.node').each((d, i, nodes) => {
       const el = d3.select(nodes[i])
       const rect = el.select('rect')
       if (rect.empty()) return
       const isSelected = this.selectedNodeIds.has(d) || this.selectedNodeId === d
+
+      // 推論ハイライトの判定
+      const isPath = hl.active && hl.pathNodes.has(d)
+      const isImpact = hl.active && hl.impactNodes.has(d)
+      const isUnreachable = hl.active && hl.unreachableNodes.has(d)
+
+      // ストローク色: 選択 > パス > 影響 > デフォルト
+      let stroke = '#fff'
+      let strokeWidth = 2
+      if (isSelected) {
+        stroke = '#3b82f6'
+        strokeWidth = this.selectedNodeIds.has(d) ? 3 : 4
+      } else if (isPath) {
+        stroke = '#d4a017' // ゴールド
+        strokeWidth = 3
+      } else if (isImpact) {
+        stroke = '#e07050' // コーラル
+        strokeWidth = 3
+      }
+
       rect
-        .attr('stroke', isSelected ? '#3b82f6' : '#fff')
-        .attr('stroke-width', isSelected ? (this.selectedNodeIds.has(d) ? 3 : 4) : 2)
+        .attr('stroke', stroke)
+        .attr('stroke-width', strokeWidth)
+
+      // 到達不能ノードの半透明化
+      el.attr('opacity', isUnreachable ? 0.4 : 1)
     })
+
+    // エッジのハイライト
+    if (hl.active && hl.pathEdges.size > 0) {
+      this.g.selectAll('g.edge').each((d, i, nodes) => {
+        const edgeG = d3.select(nodes[i])
+        const pathEl = edgeG.select('path')
+        if (pathEl.empty()) return
+        const edgeKey = `${d.v}->${d.w}`
+        const isPathEdge = hl.pathEdges.has(edgeKey)
+        const isEdgeSelected = this.selectedEdge && this.selectedEdge.from === d.v && this.selectedEdge.to === d.w
+        pathEl
+          .attr('stroke', isEdgeSelected ? '#3b82f6' : isPathEdge ? '#d4a017' : '#999')
+          .attr('stroke-width', isEdgeSelected ? 3 : isPathEdge ? 3 : 2)
+      })
+    }
   }
 
   /**

@@ -112,14 +112,16 @@
 ブランチ戦略: trunk-based (main のみ)
 現フェーズ: 安定化完了 → 機能拡張フェーズ
 方針: 汎用インタラクティブ物語エンジン
-直近の状態 (2026-03-16):
+直近の状態 (2026-03-17):
 
-- main ブランチ、origin/main より3コミット先行 (未push: UC-2パネル+CRLF正規化+What-ifエラー抑制)
-- 73テスト全緑、ビルド成功
-- 推論UI Phase 1-2 完了、Phase 3 一部実装 (SP-INF-UI-001: spec-index 85%)
-  - UC-1(到達パス), UC-2(到達可能ノード), UC-3(影響分析), UC-4(状態キー), UC-5(What-if): パネルUI完了
-  - Phase 3 残: グラフパスハイライト, 到達不能ノード半透明化, 影響範囲色分け, デバッグクエリUI
-  - Phase 3 実装プラン承認済み (T1-T4全件、色: ゴールド/コーラル、半透明0.4)
-- Entity/Inventory + C# SDK InferenceRegistry 統合済み
-- Web Tester: main.js分離完了、ハンドラー10モジュール、推論UI、XSS修正
+- main ブランチ、origin/main 同期済み
+- 73テスト全緑、8モデル検証通過、ビルド成功
+- 推論UI Phase 1-3 全完了 (SP-INF-UI-001: done 100%)
+  - パネルUI: UC-1〜UC-5 全実装
+  - グラフ視覚統合: パスハイライト(ゴールド), 到達不能半透明化(0.4), 影響範囲色分け(コーラル), デバッグクエリUI
+  - 手動確認: パスハイライト動作OK。コーラル/到達不能はサンプルモデルに条件不足で未確認
+- Entity/Inventory: エンジン統合済み + condition-effect-editor UI追加 + スキーマ更新 (SP-ENTITY-001: 95%)
+  - 残: entity定義エディタ (モデル内 entities マップの GUI 編集)
+- 手動確認ガイド: `docs/GUI_INFERENCE_TEST_GUIDE.md` 作成済み
+- 既知: 条件/効果「+追加」でパネルが閉じる挙動 (既存のGUIエディタ再レンダリング問題、別タスク)
 - 記録先: `docs/plans/DEVELOPMENT_PLAN.md`, `docs/TECHNICAL_DEBT.md`, `docs/governance/`

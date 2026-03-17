@@ -100,7 +100,8 @@ ID比較は case-insensitive (`normalizeId` で trim + toLowerCase)。
 
 ## 未実装・検討事項
 
-- [ ] `playthrough.schema.json` に entities フィールドのスキーマ追加
-- [ ] web-tester に inventory パネル追加
+- [x] ~~`playthrough.schema.json` に entities フィールドのスキーマ追加~~ → entities/inventory/hasItem/addItem/removeItem 追加済み
+- [x] ~~condition-effect-editor に hasItem/addItem/removeItem UI 追加~~ → ドロップダウン選択 + パース/ビルド対応
+- [ ] web-tester に entity 定義エディタ追加 (モデル内 entities マップの GUI 編集)
 - [ ] CSV入力は維持するか、JSON定義のみにするか
 - [x] ~~C# SDK の条件/エフェクト統合~~ → InferenceRegistry 導入で完了

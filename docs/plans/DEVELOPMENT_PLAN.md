@@ -67,13 +67,14 @@
 |------|------|
 | MinimalNarrativeController | JSON TextAsset読込によるランタイム |
 | Inventory | add/remove/has/list/clear/toJSON (engine-tsからの移植) |
+| InferenceRegistry | 条件8種 / エフェクト7種 (TS パリティ) |
 
 ### テスト
 
 | 種類 | 件数 |
 |------|------|
 | ユニットテスト (Vitest) | 73テスト (10ファイル) |
-| E2Eテスト (Playwright) | 2ファイル (theme-toggle, undo-redo) ※Playwright版競合で要修正 |
+| E2Eテスト (Playwright) | 22 passed / 5 skipped (undo-redo 防御的ガード) |
 | モデル検証 (CLI) | 6モデル |
 
 ---
@@ -144,6 +145,59 @@
 - 仕様ドキュメント作成 (docs/specs/code-refactoring-condition-effect.md, SP-REFACTOR-001)
 
 **効果**: 保守性向上、コード削減計~90行、判定一貫性向上
+
+---
+
+### 優先順位3.6: 推論UI統合 (Phase 1-3) [Phase 3 グラフ統合のみ残]
+
+**Phase 1 完了**: 2026-03-11
+- Live Preview パネルに推論セクション追加 (UC-1: 到達パス表示)
+
+**Phase 2 完了**: 2026-03-12
+- InferenceBridge: findStateKeyUsage/getAllStateKeys 追加
+- InferencePanel: 3セクション構成 (UC-3: 影響分析, UC-4: 状態キー使用)
+- validate キャッシュ汚染バグ修正 (clearSessionCaches)
+
+**Phase 3 パネル完了**: 2026-03-16
+- UC-2: 到達可能ノードパネル
+- UC-5: What-if シミュレーション (simulateChoice エラー抑制含む)
+- グラフエディタ unsafe render() 全面排除
+- minimap ダークテーマ + テキスト overflow clip
+
+**Phase 3 グラフ視覚統合 (未実装、プラン承認済み)**:
+- T1: GraphEditorManager.applyInferenceHighlight() 追加
+- T2: パスハイライト (ゴールド) + 到達不能ノード半透明化 (opacity 0.4)
+- T3: 影響範囲色分け (コーラル)
+- T4: デバッグクエリUI
+- 仕様: SP-INF-UI-001 (現在 85% → 完了時 100%)
+
+---
+
+### 優先順位3.7: Entity/Inventory + C# SDK 統合 [エンジン層完了、UI未実装]
+
+**完了日**: 2026-03-13
+
+**実装内容**:
+- hasItem 条件 + addItem/removeItem エフェクト (engine-ts)
+- modifyVariable 推論レジストリ登録
+- EntityDef 型 + brand→name リネーム
+- C# SDK InferenceRegistry (条件 8 種 / エフェクト 7 種)
+- 73 テスト全緑維持
+
+**残作業**: Web Tester でのエンティティ定義・インベントリ操作 UI (SP-ENTITY-001: 85%)
+
+---
+
+### 優先順位3.8: ブランチ統合 [完了]
+
+**feature/main-js-split-phase2 → main 統合**: 2026-03-11
+- 85 コミット、コンフリクト 8 件解決
+- テスト 15 → 73 件
+
+**master → main 方針決定**: 2026-03-16
+- ローカルを master → main に切替 (origin/main が正)
+- master の Entity/Inventory 変更は cherry-pick 済み
+- master の web-tester 構造巻き戻しは不採用
 
 ---
 

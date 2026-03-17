@@ -1395,6 +1395,7 @@ guiEditorManager.initialize(
   nodeList, guiEditMode, batchEditModal, quickNodeModal,
   batchChoiceModal, paraphraseModal, draftRestoreModal
 )
+guiEditorManager.setGraphManager(graphManager)
 
 // Initialize reference manager
 referenceManager.initialize(referenceToc, referenceContent)
