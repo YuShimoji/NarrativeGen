@@ -246,10 +246,10 @@
     "id": "SP-EVENT-001",
     "title": "Dynamic Event Entity Generation",
     "status": "partial",
-    "pct": 80,
+    "pct": 90,
     "cat": "core",
     "file": "docs/specs/event-entity.md",
-    "summary": "Dynamic event entity creation during gameplay. createEvent effect + hasEvent condition + template expansion. Anomaly-to-event bridge. Engine + schema + tests complete. Web Tester UI pending."
+    "summary": "Dynamic event entity creation during gameplay. createEvent effect + hasEvent condition + template expansion. Anomaly-to-event bridge. Engine + schema + tests + GUI (condition-effect-editor) complete. Remaining: properties GUI in editor."
   },
   {
     "id": "SP-KNOW-001",
