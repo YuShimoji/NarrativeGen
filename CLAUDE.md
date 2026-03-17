@@ -114,23 +114,20 @@
 プロジェクト名: NarrativeGen
 環境: Node.js 22 / TypeScript 5.x / Vite 5 / Vitest / Playwright
 ブランチ戦略: trunk-based (main のみ)
-現フェーズ: 機能拡張 → 原初ビジョン統合フェーズ
-方針: Entity-Property駆動ナラティブエンジンへの段階移行
-直近の状態 (2026-03-17 session 4):
+現フェーズ: 原初ビジョン統合完了 → Authoring/SDKパリティフェーズ
+方針: ライター向け体験整備 + Unity SDK パリティ
+直近の状態 (2026-03-17 session 5):
 
-- main ブランチ
-- 198テスト全緑、12モデル検証通過、ビルド成功 (警告0)
-- E2E: 23 + 21 = 44件 (entity-panel 11件 + template-panel 10件追加)
+- main ブランチ、origin/main +4コミット先行
+- 198テスト全緑、12モデル検証通過、ビルド成功、doctor 25/25
+- E2E: 44件 (entity-panel 11件 + template-panel 10件)
 - 31 specs: done 30 / partial 1 (SP-UNITY-001 85%)
-- Authoring体験逆算スライス完了:
-  - Entity定義パネル: 手動検証 + bug修正 (renderNodeList呼び出し修正) + 11 E2E
-  - ConversationTemplate GUI: Phase 4完了 (テンプレートCRUD + trigger条件編集 + 10 E2E)
-  - Dynamic Text プレビュー: Live Previewでexpand Template結果表示
-  - createEvent properties GUI: 既存実装で完了確認
-  - テストモデル4件をweb-testerに配置 (property/event/integration/inventory)
-- 原初ビジョン全スペック完了 (SP-PROP-001 ~ SP-DYNAMIC-001 + SP-EVENT-001)
+- 原初ビジョン全8スペック完了
+- Authoring体験逆算スライス完了
+- Doc sync完了: HANDOVER/TASKS/DEVELOPMENT_PLAN/TECHNICAL_DEBT最新化
+- Tech Debt: doctor警告解消、TEST_PROCEDURES→TEST_GUIDE参照修正
 - 次回着手候補:
-  - Unity SDKパリティ (TS側7機能の移植)
-  - SP-009 Tech Debt残消化
-  - ライター向けオーサリングガイド / サンプルストーリー
-  - [entity~prop_pool] 構文 (DescriptionState統合)
+  - Unity SDKパリティ (TS側7機能のC#移植) — HUMAN_AUTHORITY
+  - ライター向けオーサリングガイド / サンプルストーリー — HUMAN_AUTHORITY
+  - [entity~prop_pool] 構文 (DescriptionState統合) — 設計判断必要
+  - SP-009 Tech Debt残: CI統合、手動回帰テスト
