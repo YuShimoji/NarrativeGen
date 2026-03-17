@@ -643,6 +643,7 @@ export class ConditionEffectEditor {
         const isRaw = e.target.value === 'raw'
         const isFlag = e.target.value === 'flag'
         const isTimeWindow = e.target.value === 'timeWindow'
+        const isHasEvent = e.target.value === 'hasEvent'
 
         if (rawEl) rawEl.style.display = isRaw ? '' : 'none'
         if (nameEl) nameEl.style.display = isRaw ? 'none' : ''
@@ -675,7 +676,7 @@ export class ConditionEffectEditor {
           const validOps = Array.from(operatorEl.querySelectorAll('option')).map((o) => o.value)
           operatorEl.value = validOps.includes(currentOp) ? currentOp : '='
 
-          operatorEl.style.display = (isRaw || isFlag || isTimeWindow) ? 'none' : ''
+          operatorEl.style.display = (isRaw || isFlag || isTimeWindow || isHasEvent) ? 'none' : ''
         }
         if (valueEl) valueEl.style.display = isRaw ? 'none' : ''
       }
@@ -690,12 +691,20 @@ export class ConditionEffectEditor {
         const isRaw = e.target.value === 'raw'
         const operatorEl = item.querySelector('.effect-operator')
         const isModifyVar = e.target.value === 'modifyVariable'
+        const isCreateEvent = e.target.value === 'createEvent'
+        const isItemEff = e.target.value === 'addItem' || e.target.value === 'removeItem'
 
         if (rawEl) rawEl.style.display = isRaw ? '' : 'none'
-        if (nameEl) nameEl.style.display = isRaw ? 'none' : ''
+        if (nameEl) {
+          nameEl.style.display = isRaw ? 'none' : ''
+          nameEl.placeholder = isCreateEvent ? 'イベントID' : '名前'
+        }
         if (operatorEl) operatorEl.style.display = isModifyVar ? '' : 'none'
-        if (equalsEl) equalsEl.style.display = (isGoto || isRaw || isModifyVar) ? 'none' : ''
-        if (valueEl) valueEl.style.display = (isGoto || isRaw) ? 'none' : ''
+        if (equalsEl) equalsEl.style.display = (isGoto || isRaw || isModifyVar || isItemEff || isCreateEvent) ? 'none' : ''
+        if (valueEl) {
+          valueEl.style.display = (isGoto || isRaw || isItemEff) ? 'none' : ''
+          valueEl.placeholder = isCreateEvent ? 'イベント名' : '値'
+        }
       }
     })
 
