@@ -10,7 +10,7 @@
 - TypeScriptエンジンのビルド可能性（Packages/engine-ts/）
 - Web Testerのビルド可能性（apps/web-tester/）
 - 依存関係の整合性（package.json、workspace設定）
-- テスト環境の準備可能性（TEST_PROCEDURES.mdの前提条件）
+- テスト環境の準備可能性（TEST_GUIDE.mdの前提条件）
 
 ## 実行方法
 
@@ -225,7 +225,7 @@ npm install
 **原因**: Node.jsのバージョンが要件を満たしていない
 
 **復旧手順**:
-1. `TEST_PROCEDURES.md`で必要なNode.jsバージョンを確認
+1. `TEST_GUIDE.md`で必要なNode.jsバージョンを確認
 2. Node.jsを更新:
    - [Node.js公式サイト](https://nodejs.org/)から最新のLTS版をダウンロード
    - または、nvmを使用:
@@ -234,15 +234,15 @@ npm install
      nvm use 20
      ```
 
-#### 警告: `TEST_PROCEDURES.md not found`
+#### 警告: `TEST_GUIDE.md not found`
 
 **原因**: テスト手順ドキュメントが存在しない
 
 **復旧手順**:
-1. プロジェクトルートに`TEST_PROCEDURES.md`が存在することを確認
+1. プロジェクトルートに`TEST_GUIDE.md`が存在することを確認
 2. 存在しない場合、Gitから取得:
    ```bash
-   git checkout TEST_PROCEDURES.md
+   git checkout TEST_GUIDE.md
    ```
 
 #### 警告: `Example models not found`
@@ -330,12 +330,12 @@ npm ls --workspaces
 
 **復旧手順**:
 1. CI環境のNode.jsバージョンを確認
-2. `TEST_PROCEDURES.md`の要件を満たしているか確認
+2. `TEST_GUIDE.md`の要件を満たしているか確認
 3. 必要に応じて`.github/workflows/`の設定を更新
 
 ## 関連ドキュメント
 
-- `TEST_PROCEDURES.md` - テスト環境の要件
+- `TEST_GUIDE.md` - テスト環境の要件
 - `package.json` - プロジェクトの依存関係とスクリプト
 - `.shared-workflows/docs/DOCTOR_OVERVIEW.md` - shared-workflowsのdoctorツールの概要
 
