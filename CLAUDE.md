@@ -107,6 +107,7 @@
 | 2026-03-17 | Entity-Property基盤着手を決定 | Entity-Property / 動的テキスト構文 / 現行深化 / 中断計画 | 原初ビジョン(ORIGINAL_DESIGN_PHILOSOPHY)との構造的ギャップを特定。現行フラットEntityDefからプロパティ階層・継承・範囲定義へ段階拡張。SP-PROP-001として仕様策定 |
 | 2026-03-17 | 原初ビジョンと現行実装の乖離を認識・記録 | N/A | レガシードキュメント分析で5つの高深刻度ギャップを特定 (Entity-Property, 動的テキスト構文, プロパティ比較推論, 事象Entity動的生成, 動的ストーリー展開)。段階的に基盤から積み上げる方針 |
 | 2026-03-17 | SP-PARA-002: 言い換え辞書プロパティマッチング拡張 | flat辞書維持 / ConditionalVariant拡張 / AI依存 | ConditionalVariant + match条件 + UsageHistory + buildParaphraseContextで原初ビジョン§4.2を実現。後方互換維持 |
+| 2026-03-17 | Runtime Core→Authoring体験逆算へ軸切替 | Authoring逆算 / 手動検証 / Unity SDK / 基盤続行 | 原初ビジョン8スペック完了でエンジンAPIは充実。しかしライターが使えるGUIが追いついていないためAuthoring軸へ。Entity定義パネルbug修正・ConversationTemplate GUI・Dynamic Textプレビュー完了 |
 
 ## Project Context
 
