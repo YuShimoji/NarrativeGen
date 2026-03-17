@@ -116,20 +116,22 @@
 方針: Entity-Property駆動ナラティブエンジンへの段階移行
 直近の状態 (2026-03-17):
 
-- main ブランチ、origin/main 同期済み (5コミット push)
-- 73テスト全緑、9モデル検証通過 (inventory_test.json追加)、ビルド成功 (警告0)
-- E2E: 22 passed / 5 skipped (test:e2eルート実行修正済み)
-- done 21/23 specs (残: SP-UNITY-001 85%, SP-009 65%, SP-004 legacy 60%)
-- 今回完了:
-  - SP-ENTITY-001 done: Entity定義管理UI (折りたたみパネル, CRUD, インライン編集)
-  - SP-SCHEMA-001 done: 実コードと照合し全面書き換え
-  - SP-006 done: AI Features仕様整合
-  - Yarn Spinner修正: hasItem/addItem/removeItem + variables宣言対応
-  - Tech Debt: E2Eルート修正, チャンク警告抑制 (SP-009 40%→65%)
-  - 手動検証手順書: GUI_EDITOR_TEST_GUIDE.md TC-EN-01~07
-- 原初ビジョン分析 (2026-03-17):
-  - レガシードキュメント3件分析で構造的ギャップ5件(高深刻度)を特定
-  - Entity-Property基盤から段階的に着手する方針を決定
-  - SP-PROP-001 (draft) 仕様策定済み
-- 次回着手: SP-PROP-001 Phase 1 (EntityDef拡張 + プロパティ解決エンジン)
-- 記録先: `docs/plans/DEVELOPMENT_PLAN.md`, `docs/TECHNICAL_DEBT.md`, `docs/specs/entity-property-system.md`
+- main ブランチ、origin/main 同期済み (計12コミット push: 前セッション6 + 本セッション6)
+- 123テスト全緑 (73→123, +50テスト)、10モデル検証通過、ビルド成功 (警告0)
+- E2E: 22 passed / 5 skipped
+- done 24/26 specs (残: SP-UNITY-001 85%, SP-009 65%, SP-004 legacy 60%)
+- 原初ビジョン基盤層 完了:
+  - SP-PROP-001 done: Entity-Property System (PropertyDef型 + 継承チェーン + resolveProperty/getEntityProperties/getInheritanceChain + スキーマ + GUI CRUD + propertyEvaluator推論条件)
+  - SP-TEXT-001 done: Dynamic Text Engine (expandTemplate: [entity.property] + {variable} + {?condition:text} 条件付きセクション + Web Tester統合)
+  - property_test.json: 3層継承テストモデル + テンプレート構文
+  - inventory_test.json: hasItem/addItem/removeItem 統合テスト
+- 前セッション完了分:
+  - SP-ENTITY-001 done, SP-SCHEMA-001 done, SP-006 done
+  - Yarn修正 (hasItem/addItem/removeItem/variables)
+  - Tech Debt (SP-009 40%→65%)
+- 次回着手候補:
+  - 原初ビジョン 5.1: プロパティ比較推論 + 違和感検出 (propertyEvaluator基盤の上に構築)
+  - 原初ビジョン 5.2: 事象Entityの動的生成
+  - 原初ビジョン 4.1: 言い換え辞書のプロパティマッチング拡張
+  - 手動検証: property_test + inventory_test のブラウザ確認
+- 記録先: `docs/specs/entity-property-system.md`, `docs/specs/dynamic-text-engine.md`
