@@ -1,0 +1,419 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "market_entrance",
+  "flags": {
+    "met_herbalist": false,
+    "examined_remedy": false,
+    "identified_poison": false,
+    "consulted_scholar": false
+  },
+  "resources": {
+    "knowledge": 0,
+    "reputation": 50
+  },
+  "entities": {
+    "substance": {
+      "id": "substance",
+      "name": "Substance",
+      "properties": {
+        "color": { "key": "color", "type": "string", "defaultValue": "unknown" },
+        "smell": { "key": "smell", "type": "string", "defaultValue": "neutral" },
+        "toxicity": { "key": "toxicity", "type": "number", "defaultValue": 0, "rangeMin": 0, "rangeMax": 100 }
+      }
+    },
+    "medicine": {
+      "id": "medicine",
+      "name": "Medicine",
+      "parentEntity": "substance",
+      "properties": {
+        "dosage": { "key": "dosage", "type": "number", "defaultValue": 1, "rangeMin": 1, "rangeMax": 10 },
+        "efficacy": { "key": "efficacy", "type": "number", "defaultValue": 50, "rangeMin": 0, "rangeMax": 100 }
+      }
+    },
+    "suspect_remedy": {
+      "id": "suspect_remedy",
+      "name": "Moonpetal Remedy",
+      "description": "A remedy sold by a travelling herbalist, claimed to cure all ailments",
+      "cost": 30,
+      "parentEntity": "medicine",
+      "properties": {
+        "color": { "key": "color", "type": "string", "defaultValue": "deep violet" },
+        "smell": { "key": "smell", "type": "string", "defaultValue": "bitter almond" },
+        "toxicity": { "key": "toxicity", "type": "number", "defaultValue": 72, "rangeMin": 0, "rangeMax": 30 },
+        "dosage": { "key": "dosage", "type": "number", "defaultValue": 3 },
+        "efficacy": { "key": "efficacy", "type": "number", "defaultValue": 15 }
+      }
+    },
+    "antidote_herb": {
+      "id": "antidote_herb",
+      "name": "Silverleaf",
+      "description": "A rare herb with natural detoxifying properties",
+      "cost": 10,
+      "parentEntity": "substance",
+      "properties": {
+        "color": { "key": "color", "type": "string", "defaultValue": "silver-green" },
+        "smell": { "key": "smell", "type": "string", "defaultValue": "fresh mint" },
+        "toxicity": { "key": "toxicity", "type": "number", "defaultValue": 0 }
+      }
+    },
+    "scholar_notes": {
+      "id": "scholar_notes",
+      "name": "Scholar's Notes",
+      "description": "Research notes on local poisons and their antidotes",
+      "properties": {
+        "detail_level": { "key": "detail_level", "type": "string", "defaultValue": "comprehensive" }
+      }
+    }
+  },
+  "conversationTemplates": [
+    {
+      "id": "toxicity_warning",
+      "trigger": {
+        "eventMatch": {
+          "propertyChecks": [
+            { "key": "severity", "op": ">=", "value": 50 }
+          ]
+        }
+      },
+      "text": "A chill runs through you. The toxicity levels are dangerously high.",
+      "priority": 10,
+      "maxUses": 1
+    },
+    {
+      "id": "growing_unease",
+      "trigger": {
+        "eventMatch": {
+          "propertyChecks": [
+            { "key": "category", "op": "==", "value": "poison" }
+          ]
+        }
+      },
+      "text": "Something about this remedy unsettles you deeply.",
+      "priority": 5
+    },
+    {
+      "id": "scholarly_insight",
+      "trigger": {
+        "eventMatch": {
+          "propertyChecks": [
+            { "key": "category", "op": "==", "value": "poison" }
+          ]
+        }
+      },
+      "text": "The scholar's words echo in your mind: 'Bitter almond scent is never benign.'",
+      "priority": 3,
+      "maxUses": 2
+    }
+  ],
+  "nodes": {
+    "market_entrance": {
+      "id": "market_entrance",
+      "text": "The morning market buzzes with life. A [suspect_remedy] with a [suspect_remedy.color] hue catches your eye at a herbalist's stall. {?!met_herbalist:A woman in green robes tends the bottles.}{?met_herbalist:The herbalist waves at you knowingly.} Your reputation in town: {reputation}.",
+      "choices": [
+        {
+          "id": "talk_herbalist",
+          "text": "Approach the herbalist",
+          "target": "herbalist_stall",
+          "conditions": [
+            { "type": "flag", "key": "met_herbalist", "value": false }
+          ],
+          "effects": [
+            { "type": "setFlag", "key": "met_herbalist", "value": true },
+            { "type": "setVariable", "key": "last_visited", "value": "herbalist" }
+          ]
+        },
+        {
+          "id": "examine_remedy",
+          "text": "Examine the remedy closely",
+          "target": "examine_remedy",
+          "conditions": [
+            { "type": "flag", "key": "met_herbalist", "value": true }
+          ]
+        },
+        {
+          "id": "visit_scholar",
+          "text": "Visit the scholar's library",
+          "target": "scholar_library"
+        },
+        {
+          "id": "check_evidence",
+          "text": "Review what you know",
+          "target": "evidence_review",
+          "conditions": [
+            { "type": "hasEvent", "key": "toxicity_anomaly", "value": true }
+          ]
+        }
+      ]
+    },
+    "herbalist_stall": {
+      "id": "herbalist_stall",
+      "text": "The herbalist smiles. 'My [suspect_remedy] cures fevers, aches, and restless sleep. Only [suspect_remedy.cost] coins.' The remedy smells of [suspect_remedy.smell].",
+      "choices": [
+        {
+          "id": "buy_remedy",
+          "text": "Buy the remedy",
+          "target": "bought_remedy",
+          "effects": [
+            { "type": "addItem", "key": "suspect_remedy" },
+            { "type": "addResource", "key": "reputation", "delta": 5 }
+          ]
+        },
+        {
+          "id": "decline",
+          "text": "Decline and look around",
+          "target": "market_entrance"
+        }
+      ]
+    },
+    "bought_remedy": {
+      "id": "bought_remedy",
+      "text": "You pocket the [suspect_remedy]. The [suspect_remedy.color] liquid sloshes gently in its vial. {?consulted_scholar:The scholar mentioned something about [suspect_remedy.smell] scents...}",
+      "choices": [
+        {
+          "id": "return_market",
+          "text": "Return to the market",
+          "target": "market_entrance"
+        }
+      ]
+    },
+    "examine_remedy": {
+      "id": "examine_remedy",
+      "text": "You lean closer. The [suspect_remedy] is [suspect_remedy.color] with a [suspect_remedy.smell] scent. {?!examined_remedy:This is your first careful look.}{?examined_remedy:You study it again with fresh eyes.} Its claimed efficacy: [suspect_remedy.efficacy]%.",
+      "choices": [
+        {
+          "id": "test_toxicity",
+          "text": "Test the toxicity level",
+          "target": "test_result",
+          "conditions": [
+            { "type": "hasEvent", "key": "toxicity_anomaly", "value": false }
+          ],
+          "effects": [
+            { "type": "setFlag", "key": "examined_remedy", "value": true },
+            { "type": "addResource", "key": "knowledge", "delta": 20 },
+            {
+              "type": "createEvent",
+              "id": "toxicity_anomaly",
+              "name": "Toxicity Anomaly Detected",
+              "properties": {
+                "severity": { "defaultValue": 72 },
+                "category": { "defaultValue": "poison" },
+                "description": { "defaultValue": "Toxicity 72 exceeds safe range 0-30 for medicine" },
+                "tested_entity": { "defaultValue": "suspect_remedy" }
+              }
+            }
+          ]
+        },
+        {
+          "id": "smell_test",
+          "text": "Note the unusual smell",
+          "target": "smell_analysis",
+          "effects": [
+            { "type": "addResource", "key": "knowledge", "delta": 10 },
+            { "type": "setVariable", "key": "noted_smell", "value": "bitter almond" }
+          ]
+        },
+        {
+          "id": "back_to_market",
+          "text": "Step back",
+          "target": "market_entrance"
+        }
+      ]
+    },
+    "test_result": {
+      "id": "test_result",
+      "text": "Your testing kit reads: toxicity [suspect_remedy.toxicity]. A safe [medicine] should be below 30. This [suspect_remedy] far exceeds the limit. Knowledge gained: {knowledge}.",
+      "choices": [
+        {
+          "id": "confront",
+          "text": "Confront the herbalist",
+          "target": "confrontation",
+          "conditions": [
+            { "type": "resource", "key": "knowledge", "op": ">=", "value": 30 }
+          ]
+        },
+        {
+          "id": "gather_more",
+          "text": "Gather more evidence first",
+          "target": "market_entrance"
+        }
+      ]
+    },
+    "smell_analysis": {
+      "id": "smell_analysis",
+      "text": "The [suspect_remedy.smell] scent is distinctive. You've noted it as '{noted_smell}'. {?consulted_scholar:The scholar's notes mention this exact scent as a marker for nightshade compounds.}{?!consulted_scholar:You should consult an expert about this smell.}",
+      "choices": [
+        {
+          "id": "continue",
+          "text": "Continue investigating",
+          "target": "market_entrance"
+        }
+      ]
+    },
+    "scholar_library": {
+      "id": "scholar_library",
+      "text": "The scholar looks up from [scholar_notes]. 'Ah, a visitor. I study the substances of our region.' {?met_herbalist:You mention the herbalist's stall.}{?!met_herbalist:The shelves are lined with botanical references.}",
+      "choices": [
+        {
+          "id": "ask_poisons",
+          "text": "Ask about common poisons",
+          "target": "poison_lecture",
+          "effects": [
+            { "type": "setFlag", "key": "consulted_scholar", "value": true },
+            { "type": "addResource", "key": "knowledge", "delta": 15 },
+            { "type": "addItem", "key": "scholar_notes" }
+          ]
+        },
+        {
+          "id": "ask_antidote",
+          "text": "Ask about the silverleaf herb",
+          "target": "antidote_info",
+          "conditions": [
+            { "type": "hasEvent", "key": "toxicity_anomaly", "value": true }
+          ],
+          "effects": [
+            { "type": "addResource", "key": "knowledge", "delta": 10 }
+          ]
+        },
+        {
+          "id": "leave_library",
+          "text": "Leave the library",
+          "target": "market_entrance"
+        }
+      ]
+    },
+    "poison_lecture": {
+      "id": "poison_lecture",
+      "text": "The scholar explains: 'A [suspect_remedy.smell] scent always signals danger. True [medicine] should have toxicity below [medicine.toxicity] — that is, near zero.' She hands you her [scholar_notes].",
+      "choices": [
+        {
+          "id": "thank_scholar",
+          "text": "Thank her and return to the market",
+          "target": "market_entrance"
+        }
+      ]
+    },
+    "antidote_info": {
+      "id": "antidote_info",
+      "text": "The scholar nods gravely. '[antidote_herb] is a natural detoxifier. Its [antidote_herb.color] leaves can neutralize most poisons. You can find it at the apothecary.' Detail level of her knowledge: [scholar_notes.detail_level].",
+      "choices": [
+        {
+          "id": "buy_antidote",
+          "text": "Buy silverleaf at the apothecary",
+          "target": "got_antidote",
+          "effects": [
+            { "type": "addItem", "key": "antidote_herb" },
+            { "type": "setFlag", "key": "identified_poison", "value": true }
+          ]
+        },
+        {
+          "id": "return",
+          "text": "Return to the market",
+          "target": "market_entrance"
+        }
+      ]
+    },
+    "got_antidote": {
+      "id": "got_antidote",
+      "text": "You acquire a bundle of [antidote_herb]. Its [antidote_herb.smell] is refreshing — the opposite of the [suspect_remedy.smell] remedy. Toxicity of the antidote: [antidote_herb.toxicity]. Knowledge: {knowledge}.",
+      "choices": [
+        {
+          "id": "to_confrontation",
+          "text": "Time to confront the herbalist",
+          "target": "confrontation",
+          "conditions": [
+            { "type": "resource", "key": "knowledge", "op": ">=", "value": 30 }
+          ]
+        },
+        {
+          "id": "more_prep",
+          "text": "Prepare more evidence",
+          "target": "market_entrance"
+        }
+      ]
+    },
+    "evidence_review": {
+      "id": "evidence_review",
+      "text": "Evidence summary: The [suspect_remedy] has toxicity [suspect_remedy.toxicity] (safe limit: 30), smells of [suspect_remedy.smell], and efficacy is only [suspect_remedy.efficacy]%. {?identified_poison:You've confirmed this is poison with [antidote_herb] as the antidote.}{?!identified_poison:The nature of the toxin is still unclear.} Total knowledge: {knowledge}. Reputation: {reputation}.",
+      "choices": [
+        {
+          "id": "confront_now",
+          "text": "Confront the herbalist with evidence",
+          "target": "confrontation",
+          "conditions": [
+            { "type": "and", "conditions": [
+              { "type": "resource", "key": "knowledge", "op": ">=", "value": 30 },
+              { "type": "flag", "key": "identified_poison", "value": true }
+            ]}
+          ]
+        },
+        {
+          "id": "confront_partial",
+          "text": "Confront with partial evidence",
+          "target": "confrontation",
+          "conditions": [
+            { "type": "resource", "key": "knowledge", "op": ">=", "value": 30 }
+          ]
+        },
+        {
+          "id": "keep_investigating",
+          "text": "Keep investigating",
+          "target": "market_entrance"
+        }
+      ]
+    },
+    "confrontation": {
+      "id": "confrontation",
+      "text": "You approach the herbalist. {?identified_poison:'I know what your [suspect_remedy] really is,' you say, holding up the [antidote_herb].}{?!identified_poison:'Your remedy has toxicity [suspect_remedy.toxicity]. Explain yourself.'} {?reputation>=60:The crowd murmurs in support.}{?reputation<60:The crowd watches uncertainly.}",
+      "choices": [
+        {
+          "id": "full_accusation",
+          "text": "Present full evidence (toxicity + antidote + scholar's testimony)",
+          "target": "resolution_full",
+          "conditions": [
+            { "type": "and", "conditions": [
+              { "type": "flag", "key": "identified_poison", "value": true },
+              { "type": "flag", "key": "consulted_scholar", "value": true },
+              { "type": "hasItem", "key": "scholar_notes", "value": true }
+            ]}
+          ],
+          "effects": [
+            { "type": "addResource", "key": "reputation", "delta": 30 },
+            {
+              "type": "createEvent",
+              "id": "herbalist_exposed",
+              "name": "Herbalist Exposed with Full Evidence",
+              "properties": {
+                "method": { "defaultValue": "full_evidence" },
+                "witnesses": { "defaultValue": "scholar_and_crowd" }
+              }
+            }
+          ]
+        },
+        {
+          "id": "partial_accusation",
+          "text": "Accuse with partial evidence",
+          "target": "resolution_partial",
+          "effects": [
+            { "type": "addResource", "key": "reputation", "delta": 10 },
+            {
+              "type": "createEvent",
+              "id": "herbalist_confronted",
+              "name": "Herbalist Confronted",
+              "properties": {
+                "method": { "defaultValue": "partial_evidence" }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "resolution_full": {
+      "id": "resolution_full",
+      "text": "The evidence is overwhelming. The [suspect_remedy] — [suspect_remedy.color], [suspect_remedy.smell], toxicity [suspect_remedy.toxicity] — was never a cure. The scholar's [scholar_notes] confirm every point. The herbalist is led away. Final reputation: {reputation}. Knowledge: {knowledge}. The [antidote_herb] with its [antidote_herb.smell] scent will save those already affected."
+    },
+    "resolution_partial": {
+      "id": "resolution_partial",
+      "text": "Your evidence shakes the herbalist, but without the scholar's backing, she disputes your claims. {?identified_poison:At least you have the [antidote_herb] to help the victims.}{?!identified_poison:You're not even sure what the poison is.} The [suspect_remedy] is confiscated, but the herbalist escapes. Reputation: {reputation}."
+    }
+  }
+}
