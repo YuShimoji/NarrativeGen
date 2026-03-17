@@ -173,7 +173,7 @@
 
 ---
 
-### 優先順位3.7: Entity/Inventory + C# SDK 統合 [エンジン層+エディタUI完了、定義管理UI進行中]
+### 優先順位3.7: Entity/Inventory + C# SDK 統合 [完了]
 
 **エンジン層完了**: 2026-03-13
 - hasItem 条件 + addItem/removeItem エフェクト (engine-ts)
@@ -187,7 +187,9 @@
 - 構造化オブジェクトのパース/ビルド対応
 - playthrough.schema.json にスキーマ追加
 
-**残作業**: Entity 定義管理 UI (モデル内 entities マップの GUI 編集) → SP-ENTITY-001: 95%
+**Entity 定義管理 UI 完了**: 2026-03-17
+- コラプシブルパネル、CRUD、インライン編集、11 E2E
+- SP-ENTITY-001 → done (100%)
 
 ---
 
@@ -204,9 +206,9 @@
 
 ---
 
-### 優先順位3.9: 原初ビジョン統合 [進行中]
+### 優先順位3.9: 原初ビジョン統合 [完了]
 
-**完了日**: 進行中 (2026-03-17)
+**完了日**: 2026-03-17
 
 原初ビジョン (ORIGINAL_DESIGN_PHILOSOPHY.md) の5つの構造的ギャップを段階的に解消する。
 
