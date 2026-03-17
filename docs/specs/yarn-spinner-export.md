@@ -101,14 +101,19 @@ model.flags, model.resources, model.variablesから自動生成:
 | `{type:'hasItem', key, value:true}` | `$inventory_{key}` | boolean変数として変換 |
 | `{type:'hasItem', key, value:false}` | `$inventory_{key} == false` | 同上 |
 | `{type:'timeWindow', start, end}` | `$time >= {start} and $time <= {end}` | best-effort出力 |
-| `{type:'and', conditions}` | `cond1 && cond2 && ...` | 論理積 |
-| `{type:'or', conditions}` | `cond1 || cond2 || ...` | 論理和 |
+| `{type:'hasEvent', key, value:true}` | `$event_{key}` | boolean変数として変換 |
+| `{type:'hasEvent', key, value:false}` | `$event_{key} == false` | 同上 |
+| `{type:'property', entity, key, op, value}` | `$entity_key {op} {value}` | 変数名にフラット化 |
+| `{type:'and', conditions}` | `(cond1 and cond2 and ...)` | 論理積 |
+| `{type:'or', conditions}` | `(cond1 or cond2 or ...)` | 論理和 |
 | `{type:'not', condition}` | `!(cond)` | 論理否定 |
 
 **特殊条件の扱い:**
 - `contains` / `!contains`: best-effort 出力 (`$key contains "value"`)。Yarn Spinner 公式構文ではないが可読性を優先
 - `timeWindow`: best-effort 出力 (`$time >= start and $time <= end`)
 - `hasItem`: `$inventory_{key}` boolean 変数に変換。Yarn にはネイティブインベントリがないため
+- `hasEvent`: `$event_{key}` boolean 変数に変換。`createEvent` 効果で `true` に設定
+- `property`: `$entity_key` 変数に変換。エンティティプロパティの静的な比較
 
 ### 効果（Effect）のマッピング
 
@@ -121,6 +126,7 @@ model.flags, model.resources, model.variablesから自動生成:
 | `{type:'goto', target}` | `<<jump {target}>>` | ノードジャンプ |
 | `{type:'addItem', key}` | `<<set $inventory_{key} to true>>` | boolean変数として変換 |
 | `{type:'removeItem', key}` | `<<set $inventory_{key} to false>>` | 同上 |
+| `{type:'createEvent', id, name}` | `<<set $event_{id} to true>>` | イベントフラグ + コメント |
 
 **効果の配置:**
 - 選択肢に`effects`がある場合、選択肢リンクの直後（次の行）に`<<set>>`/`<<jump>>`を出力
@@ -140,10 +146,14 @@ NarrativeGenの`model.startNode`がモデル内ノードの場合:
 
 ## 損失情報（NarrativeGen固有機能）
 
-以下の機能はYarn Spinnerに直接対応する概念がないため、エクスポート時に失われる:
+以下の機能はYarn Spinnerに直接対応する概念がないため、エクスポート時に失われるか変換される:
 
-- **ParaphraseLexicon** / **ParaphraseStyle** -- 言い換え辞書・スタイル
-- **ChoiceOutcome** -- 選択肢選択後の追加テキスト
+- **ParaphraseLexicon** / **ParaphraseStyle** -- 言い換え辞書・スタイル（完全消失）
+- **ChoiceOutcome** -- 選択肢選択後の追加テキスト（完全消失）
+- **Dynamic Text** `[entity.property]` / `{variable}` / `{?condition:text}` -- テンプレート構文がそのまま出力される（Yarn側では展開不可）
+- **ConversationTemplate** -- ランタイム挿入のため静的エクスポート不可（完全消失）
+- **Entity-Property 継承** -- プロパティ解決はランタイム機能（エクスポート時はフラット化された変数名に変換）
+- **createEvent プロパティ** -- イベントのプロパティ詳細は消失（フラグのみ保持）
 
 ## 変換方式（エンティティ/インベントリ）
 

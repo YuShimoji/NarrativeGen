@@ -104,13 +104,18 @@ export class YarnFormatter {
                 }
                 return `$${c.key} ${c.op} "${c.value}"`
             case 'and':
-                return `(${c.conditions.map(sub => this._conditionToExpr(sub)).join(' and ')})`
+                return `(${(c.conditions || []).map(sub => this._conditionToExpr(sub)).join(' and ')})`
             case 'or':
-                return `(${c.conditions.map(sub => this._conditionToExpr(sub)).join(' or ')})`
+                return `(${(c.conditions || []).map(sub => this._conditionToExpr(sub)).join(' or ')})`
             case 'not':
-                return `!(${this._conditionToExpr(c.condition)})`
+                return c.condition ? `!(${this._conditionToExpr(c.condition)})` : 'true'
             case 'hasItem':
                 return c.value ? `$inventory_${c.key}` : `$inventory_${c.key} == false`
+            case 'hasEvent':
+                return c.value ? `$event_${c.key}` : `$event_${c.key} == false`
+            case 'property':
+                // Property conditions mapped to $entity_key variables
+                return `$${c.entity}_${c.key} ${c.op} ${typeof c.value === 'string' ? `"${c.value}"` : c.value}`
             case 'timeWindow':
                 return `$time >= ${c.start} and $time <= ${c.end}`
             default:
@@ -136,6 +141,9 @@ export class YarnFormatter {
                 return `<<set $inventory_${effect.key} to true>>`
             case 'removeItem':
                 return `<<set $inventory_${effect.key} to false>>`
+            case 'createEvent':
+                // Events are runtime-only; emit flag marker + comment
+                return `<<set $event_${effect.id} to true>> // createEvent: ${effect.name || effect.id}`
             default:
                 return null
         }
@@ -162,7 +170,26 @@ export class YarnFormatter {
                 }
             }
         }
+        // Declare event flags (collected from createEvent effects)
+        const eventIds = this._collectEventIds(model)
+        for (const eventId of eventIds) {
+            lines.push(`<<declare $event_${eventId} = false>>`)
+        }
         return lines.length > 0 ? lines.join('\n') : ''
+    }
+
+    _collectEventIds(model) {
+        const ids = new Set()
+        for (const node of Object.values(model.nodes || {})) {
+            for (const choice of node.choices || []) {
+                for (const effect of choice.effects || []) {
+                    if (effect.type === 'createEvent' && effect.id) {
+                        ids.add(effect.id)
+                    }
+                }
+            }
+        }
+        return [...ids]
     }
 
     // --- Utilities ---
