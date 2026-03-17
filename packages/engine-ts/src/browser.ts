@@ -82,7 +82,25 @@ export function applyChoice(session: SessionState, model: Model, choiceId: strin
   return next
 }
 
-export type { Choice, Condition, Effect, EntityDef, FlagState, Model, NodeDef, ResourceState, SessionState, VariableState } from './types'
+export type { Choice, Condition, Effect, EntityDef, FlagState, Model, NodeDef, PropertyDef, ResourceState, SessionState, VariableState } from './types'
+
+// Entity-Property system
+export { resolveProperty, getEntityProperties, getInheritanceChain } from './entities.js'
+
+// Dynamic text engine
+export { expandTemplate } from './template.js'
+
+// Character knowledge model
+export { findKnowledgeProfile, perceiveEntity } from './character-knowledge.js'
+export type { CharacterDef, PerceptionResult } from './character-knowledge.js'
+
+// Description tracker
+export { markDescribed, isDescribed, getUndescribedKeys, getDescriptionCount, resetDescriptions } from './description-tracker.js'
+export type { DescriptionRecord, DescriptionState } from './description-tracker.js'
+
+// Conversation templates
+export { findMatchingTemplates, recordTemplateUsage } from './conversation-templates.js'
+export type { ConversationTemplate, TemplateTrigger, EventMatchCondition, ExpandedTemplate, TemplateUsageState } from './conversation-templates.js'
 
 // Inference engine
 export { findPathToGoal, findReachableNodes } from './inference/backward-chaining.js'

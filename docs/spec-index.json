@@ -66,10 +66,10 @@
     "id": "SP-009",
     "title": "Technical Debt",
     "status": "partial",
-    "pct": 65,
+    "pct": 80,
     "cat": "infra",
     "file": "docs/TECHNICAL_DEBT.md",
-    "summary": "Post-split debt cleanup. E2E root Vitest conflict fixed, chunk warning suppressed (lazy-load confirmed), graph visual issues resolved, entity/inference completed items added. Remaining: CI integration, responsive/a11y, manual regression tests"
+    "summary": "Post-split debt cleanup. Core debt resolved: E2E Vitest conflict, chunk optimization, graph visual issues, entity/inference, branch consolidation. Remaining: CI integration (spec-index/encoding-safety checks), responsive/a11y, manual regression tests"
   },
   {
     "id": "SP-010",
@@ -168,7 +168,7 @@
     "pct": 100,
     "cat": "data",
     "file": "docs/specs/model-schema.md",
-    "summary": "Playthrough model JSON Schema. Strict oneOf + additionalProperties:false for all 5 condition types and 7 effect types. EntityDef schema. Structure + integrity validation (Ajv + assertModelIntegrity). 8 example models validated."
+    "summary": "Playthrough model JSON Schema. Strict oneOf + additionalProperties:false for all condition/effect types. EntityDef + PropertyDef + EventEntity schema. Structure + integrity validation (Ajv + assertModelIntegrity). 12 example models validated."
   },
   {
     "id": "SP-API-001",
@@ -245,11 +245,11 @@
   {
     "id": "SP-EVENT-001",
     "title": "Dynamic Event Entity Generation",
-    "status": "partial",
-    "pct": 90,
+    "status": "done",
+    "pct": 100,
     "cat": "core",
     "file": "docs/specs/event-entity.md",
-    "summary": "Dynamic event entity creation during gameplay. createEvent effect + hasEvent condition + template expansion. Anomaly-to-event bridge. Engine + schema + tests + GUI (condition-effect-editor) complete. Remaining: properties GUI in editor."
+    "summary": "Dynamic event entity creation during gameplay. createEvent effect (with properties GUI) + hasEvent condition + template expansion. Anomaly-to-event bridge. Engine + schema + tests + GUI (condition-effect-editor with property key-value editor) complete."
   },
   {
     "id": "SP-KNOW-001",

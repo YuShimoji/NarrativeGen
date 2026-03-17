@@ -1,6 +1,6 @@
 # SP-EVENT-001: Dynamic Event Entity Generation
 
-**Status**: partial | **Pct**: 80 | **Cat**: core
+**Status**: done | **Pct**: 100 | **Cat**: core
 
 ## 概要
 
@@ -120,3 +120,14 @@ function createEventFromAnomaly(
 | 同一ID再create | 上書き | イベントの状態更新を自然に表現 (例: 怒り度の変化) |
 | PropertyDef 簡略化 | defaultValue のみ必須 | Effect 記述を軽くする。type は推論可能 |
 | event と entity の名前空間 | 分離 (session.events vs model.entities) | 静的定義と動的生成の混同を防ぐ。template展開時は entities → events の順で探索 |
+
+## Web Tester GUI 統合
+
+### condition-effect-editor.js
+
+- **hasEvent 条件**: ドロップダウン「イベント存在」→ キー入力 (イベントID) + 値 (true/false)
+- **createEvent 効果**: ドロップダウン「イベント生成」→ イベントID + イベント名
+  - **プロパティエディタ**: 折りたたみ式の key=value ペアリスト
+  - 各プロパティは `{ defaultValue }` として保存 (type は推論)
+  - +追加/×削除ボタンで動的編集
+  - 値の型自動判定: true/false → boolean, 数値 → number, その他 → string

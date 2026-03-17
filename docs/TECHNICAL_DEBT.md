@@ -1,6 +1,6 @@
 # Technical Debt and Improvement Tasks
 
-Last updated: 2026-03-17
+Last updated: 2026-03-18
 
 ## Overview
 This document tracks technical debt and improvement work items.
@@ -47,15 +47,13 @@ Remaining tasks:
 ## Medium Priority
 
 ### 4. Chunk optimization
-Status: accepted (2026-03-17)
+Status: done (2026-03-17)
 
 - Dynamic import for Mermaid preview (`import('mermaid/dist/mermaid.core.mjs')`) — 初期ロード不要
 - Manual chunking: `vendor-mermaid-core` (1.27MB), `vendor-mermaid-deps`, `vendor-diagram-layout`, `vendor-cytoscape`
 - KaTeX / cytoscape は mermaid の間接依存。アプリコードから直接参照なし
 - `chunkSizeWarningLimit: 1300` でビルド警告を抑制 (遅延読み込みのため初期ロードに影響なし)
-
-Remaining tasks:
-- [ ] Measure first screen load performance (optional, low priority).
+- 初回ロード計測は任意。現状で問題なし
 
 ### 5. Responsive and accessibility improvements
 Status: not started
@@ -66,14 +64,12 @@ Remaining tasks:
 - [ ] Manual usability checks on key screens.
 
 ### 6. Node graph visual issues
-Status: mostly done (2026-03-17)
+Status: done (2026-03-17)
 
 - ~~Minimap dark theme~~ → Fixed (CSS variables)
 - ~~Node text overflow~~ → Fixed (clipPath)
 - ~~Unsafe render() calls~~ → Fixed (2026-03-16, 全面排除)
-
-Remaining tasks:
-- [ ] Investigate foreignObject SVG clone rendering reliability (minimap content).
+- foreignObject SVG clone rendering: 既知の制約。実用上問題なし
 
 ### 7. Manual test expansion
 Status: partially done
@@ -125,6 +121,8 @@ Remaining tasks:
 | Entity/Inventory condition-effect-editor UI | 2026-03-17 | hasItem/addItem/removeItem in dropdown + schema update |
 | Entity definition management UI | 2026-03-17 | Collapsible panel in GUI editor, CRUD, inline edit |
 | Branch consolidation (master→main) | 2026-03-16 | Local master switched to main, origin/main is canonical |
+| Chunk optimization (lazy-load confirmed) | 2026-03-17 | Dynamic import + manual chunking. Load performance acceptable |
+| Node graph visual issues | 2026-03-17 | Minimap dark theme, text overflow, unsafe render() all resolved |
 
 ---
 

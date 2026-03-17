@@ -191,32 +191,65 @@ export class ConditionEffectEditor {
     const isItemEffect = parsed.type === 'addItem' || parsed.type === 'removeItem'
     const isCreateEvent = parsed.type === 'createEvent'
 
+    const propsHtml = isCreateEvent ? this._renderEventProperties(parsed.properties ?? {}, nodeId, choiceIndex, effectIndex) : ''
+
     return `
       <div class="effect-item" data-effect-index="${effectIndex}">
-        <select class="effect-type" data-field="type">
-          <option value="setFlag" ${parsed.type === 'setFlag' ? 'selected' : ''}>フラグ設定</option>
-          <option value="addResource" ${parsed.type === 'addResource' ? 'selected' : ''}>リソース加算</option>
-          <option value="setVariable" ${parsed.type === 'setVariable' ? 'selected' : ''}>変数設定</option>
-          <option value="modifyVariable" ${parsed.type === 'modifyVariable' ? 'selected' : ''}>変数演算</option>
-          <option value="addItem" ${parsed.type === 'addItem' ? 'selected' : ''}>アイテム追加</option>
-          <option value="removeItem" ${parsed.type === 'removeItem' ? 'selected' : ''}>アイテム削除</option>
-          <option value="createEvent" ${parsed.type === 'createEvent' ? 'selected' : ''}>イベント生成</option>
-          <option value="goto" ${parsed.type === 'goto' ? 'selected' : ''}>遷移</option>
-          <option value="raw" ${parsed.type === 'raw' ? 'selected' : ''}>カスタム</option>
-        </select>
-        <input type="text" class="effect-raw" placeholder="効果(生)" value="${this._escapeAttr(parsed.rawText)}" data-field="raw" ${isRaw ? '' : 'style="display:none"'}>
-        <input type="text" class="effect-name" placeholder="名前" value="${this._escapeAttr(parsed.name)}" data-field="name" ${isRaw ? 'style="display:none"' : ''}>
-        <select class="effect-operator" data-field="operator" ${isModifyVar ? '' : 'style="display:none"'}>
-          <option value="+" ${parsed.operator === '+' ? 'selected' : ''}>+</option>
-          <option value="-" ${parsed.operator === '-' ? 'selected' : ''}>-</option>
-          <option value="*" ${parsed.operator === '*' ? 'selected' : ''}>*</option>
-          <option value="/" ${parsed.operator === '/' ? 'selected' : ''}>/</option>
-        </select>
-        <span class="effect-equals" ${(isGoto || isRaw || isModifyVar || isItemEffect || isCreateEvent) ? 'style="display:none"' : ''}>=</span>
-        <input type="text" class="effect-value" placeholder="${isCreateEvent ? 'イベント名' : '値'}" value="${this._escapeAttr(parsed.value)}" data-field="value" ${(isGoto || isRaw || isItemEffect) ? 'style="display:none"' : ''}>
-        <button type="button" class="delete-effect-btn btn-icon" data-node-id="${nodeId}" data-choice-index="${choiceIndex}" data-effect-index="${effectIndex}">×</button>
+        <div class="effect-main-row">
+          <select class="effect-type" data-field="type">
+            <option value="setFlag" ${parsed.type === 'setFlag' ? 'selected' : ''}>フラグ設定</option>
+            <option value="addResource" ${parsed.type === 'addResource' ? 'selected' : ''}>リソース加算</option>
+            <option value="setVariable" ${parsed.type === 'setVariable' ? 'selected' : ''}>変数設定</option>
+            <option value="modifyVariable" ${parsed.type === 'modifyVariable' ? 'selected' : ''}>変数演算</option>
+            <option value="addItem" ${parsed.type === 'addItem' ? 'selected' : ''}>アイテム追加</option>
+            <option value="removeItem" ${parsed.type === 'removeItem' ? 'selected' : ''}>アイテム削除</option>
+            <option value="createEvent" ${parsed.type === 'createEvent' ? 'selected' : ''}>イベント生成</option>
+            <option value="goto" ${parsed.type === 'goto' ? 'selected' : ''}>遷移</option>
+            <option value="raw" ${parsed.type === 'raw' ? 'selected' : ''}>カスタム</option>
+          </select>
+          <input type="text" class="effect-raw" placeholder="効果(生)" value="${this._escapeAttr(parsed.rawText)}" data-field="raw" ${isRaw ? '' : 'style="display:none"'}>
+          <input type="text" class="effect-name" placeholder="名前" value="${this._escapeAttr(parsed.name)}" data-field="name" ${isRaw ? 'style="display:none"' : ''}>
+          <select class="effect-operator" data-field="operator" ${isModifyVar ? '' : 'style="display:none"'}>
+            <option value="+" ${parsed.operator === '+' ? 'selected' : ''}>+</option>
+            <option value="-" ${parsed.operator === '-' ? 'selected' : ''}>-</option>
+            <option value="*" ${parsed.operator === '*' ? 'selected' : ''}>*</option>
+            <option value="/" ${parsed.operator === '/' ? 'selected' : ''}>/</option>
+          </select>
+          <span class="effect-equals" ${(isGoto || isRaw || isModifyVar || isItemEffect || isCreateEvent) ? 'style="display:none"' : ''}>=</span>
+          <input type="text" class="effect-value" placeholder="${isCreateEvent ? 'イベント名' : '値'}" value="${this._escapeAttr(parsed.value)}" data-field="value" ${(isGoto || isRaw || isItemEffect) ? 'style="display:none"' : ''}>
+          <button type="button" class="delete-effect-btn btn-icon" data-node-id="${nodeId}" data-choice-index="${choiceIndex}" data-effect-index="${effectIndex}">×</button>
+        </div>
+        ${propsHtml}
       </div>
     `
+  }
+
+  /**
+   * イベントプロパティエディタのHTMLを生成
+   */
+  _renderEventProperties(properties, nodeId, choiceIndex, effectIndex) {
+    const entries = Object.entries(properties || {})
+    const propItems = entries.map(([key, def], i) => {
+      const val = def && typeof def === 'object' ? (def.defaultValue ?? '') : def
+      return `
+        <div class="event-property-item" data-prop-index="${i}">
+          <input type="text" class="prop-key" placeholder="キー" value="${this._escapeAttr(key)}">
+          <span class="prop-eq">=</span>
+          <input type="text" class="prop-value" placeholder="値" value="${this._escapeAttr(val)}">
+          <button type="button" class="delete-prop-btn btn-icon">×</button>
+        </div>`
+    }).join('')
+
+    return `
+      <div class="event-properties" data-node-id="${nodeId}" data-choice-index="${choiceIndex}" data-effect-index="${effectIndex}">
+        <div class="event-properties-header">
+          <span class="props-label">プロパティ</span>
+          <button type="button" class="add-event-property-btn btn-small">+ 追加</button>
+        </div>
+        <div class="event-properties-list">
+          ${propItems || '<span class="empty-hint">プロパティなし</span>'}
+        </div>
+      </div>`
   }
 
   /**
@@ -322,7 +355,7 @@ export class ConditionEffectEditor {
         return { type, name: effectStr.key ?? '', value: '', rawText: '' }
       }
       if (type === 'createEvent') {
-        return { type: 'createEvent', name: effectStr.id ?? '', value: effectStr.name ?? '', rawText: '' }
+        return { type: 'createEvent', name: effectStr.id ?? '', value: effectStr.name ?? '', rawText: '', properties: effectStr.properties ?? {} }
       }
       if (type === 'goto') {
         return { type: 'goto', name: effectStr.target ?? '', value: '', rawText: '' }
@@ -485,7 +518,11 @@ export class ConditionEffectEditor {
     }
 
     if (type === 'createEvent') {
-      return { type: 'createEvent', id: String(name ?? ''), name: String(value ?? '') }
+      const result = { type: 'createEvent', id: String(name ?? ''), name: String(value ?? '') }
+      if (this._pendingProperties && Object.keys(this._pendingProperties).length > 0) {
+        result.properties = this._pendingProperties
+      }
+      return result
     }
 
     if (type === 'goto') {
@@ -493,6 +530,27 @@ export class ConditionEffectEditor {
     }
 
     return this.buildEffectString(type, name, value)
+  }
+
+  /**
+   * DOM要素からイベントプロパティを読み取る
+   */
+  _readPropertiesFromElement(itemElement) {
+    const propsContainer = itemElement.querySelector('.event-properties-list')
+    if (!propsContainer) return {}
+    const props = {}
+    const propItems = propsContainer.querySelectorAll('.event-property-item')
+    for (const propItem of propItems) {
+      const key = propItem.querySelector('.prop-key')?.value?.trim()
+      const val = propItem.querySelector('.prop-value')?.value ?? ''
+      if (key) {
+        const numVal = Number(val)
+        const boolVal = val === 'true' ? true : val === 'false' ? false : null
+        const defaultValue = boolVal !== null ? boolVal : (val !== '' && Number.isFinite(numVal) ? numVal : val)
+        props[key] = { defaultValue }
+      }
+    }
+    return props
   }
 
   parseConditionInput(input) {
@@ -640,6 +698,13 @@ export class ConditionEffectEditor {
     const value = itemElement.querySelector('.effect-value')?.value || ''
     const operator = itemElement.querySelector('.effect-operator')?.value || '+'
 
+    // Read event properties from DOM if present
+    if (type === 'createEvent') {
+      this._pendingProperties = this._readPropertiesFromElement(itemElement)
+    } else {
+      this._pendingProperties = null
+    }
+
     return this.buildEffectObject(type, name, value, operator)
   }
 
@@ -722,6 +787,18 @@ export class ConditionEffectEditor {
           valueEl.style.display = (isGoto || isRaw || isItemEff) ? 'none' : ''
           valueEl.placeholder = isCreateEvent ? 'イベント名' : '値'
         }
+
+        // Show/hide event properties section
+        let propsSection = item.querySelector('.event-properties')
+        if (isCreateEvent && !propsSection) {
+          // Create empty properties section
+          const propsDiv = document.createElement('div')
+          propsDiv.innerHTML = this._renderEventProperties({}, '', '', '')
+          const newSection = propsDiv.firstElementChild
+          item.appendChild(newSection)
+        } else if (propsSection) {
+          propsSection.style.display = isCreateEvent ? '' : 'none'
+        }
       }
     })
 
@@ -758,6 +835,36 @@ export class ConditionEffectEditor {
         const effectIndex = parseInt(e.target.dataset.effectIndex)
         if (callbacks.onDeleteEffect) {
           callbacks.onDeleteEffect(nodeId, choiceIndex, effectIndex)
+        }
+      }
+
+      // Event property: add
+      if (e.target.classList.contains('add-event-property-btn')) {
+        const propsList = e.target.closest('.event-properties')?.querySelector('.event-properties-list')
+        if (propsList) {
+          const hint = propsList.querySelector('.empty-hint')
+          if (hint) hint.remove()
+          const idx = propsList.querySelectorAll('.event-property-item').length
+          const newProp = document.createElement('div')
+          newProp.className = 'event-property-item'
+          newProp.dataset.propIndex = idx
+          newProp.innerHTML = `
+            <input type="text" class="prop-key" placeholder="キー" value="">
+            <span class="prop-eq">=</span>
+            <input type="text" class="prop-value" placeholder="値" value="">
+            <button type="button" class="delete-prop-btn btn-icon">×</button>`
+          propsList.appendChild(newProp)
+          newProp.querySelector('.prop-key').focus()
+          if (callbacks.onValueChange) callbacks.onValueChange(e)
+        }
+      }
+
+      // Event property: delete
+      if (e.target.classList.contains('delete-prop-btn')) {
+        const propItem = e.target.closest('.event-property-item')
+        if (propItem) {
+          propItem.remove()
+          if (callbacks.onValueChange) callbacks.onValueChange(e)
         }
       }
     })
