@@ -45,6 +45,7 @@ export function startSession(model: Model, initial?: Partial<SessionState>): Ses
     variables: initial?.variables ?? {},
     inventory: initial?.inventory ?? [],
     time: initial?.time ?? 0,
+    events: initial?.events ?? {},
   }
 }
 
@@ -54,7 +55,7 @@ export function getAvailableChoices(session: SessionState, model: Model): Choice
   const choices = node.choices ?? []
   return choices.filter((c) =>
     (c.conditions ?? []).every((cond) =>
-      evalCondition(cond, session.flags, session.resources, session.variables, session.time, session.inventory),
+      evalCondition(cond, session.flags, session.resources, session.variables, session.time, session.inventory, session.events ?? {}),
     ),
   )
 }

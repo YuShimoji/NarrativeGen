@@ -1,4 +1,4 @@
-import type { Choice, Condition, Model, SessionState } from './types.js'
+import type { Choice, Condition, EntityDef, Model, SessionState } from './types.js'
 import {
   evalCondition as evalConditionCore,
   applyEffect,
@@ -16,11 +16,11 @@ export function clearSessionCaches(): void {
 
 // Cache key generation for session state
 function getSessionKey(session: SessionState): string {
-  return `${session.nodeId}:${session.time}:${JSON.stringify(session.flags)}:${JSON.stringify(session.resources)}:${JSON.stringify(session.variables)}:${JSON.stringify(session.inventory)}`
+  return `${session.nodeId}:${session.time}:${JSON.stringify(session.flags)}:${JSON.stringify(session.resources)}:${JSON.stringify(session.variables)}:${JSON.stringify(session.inventory)}:${JSON.stringify(session.events ?? {})}`
 }
 
-function getConditionKey(cond: Condition, flags: Record<string, boolean>, resources: Record<string, number>, variables: Record<string, string | number>, time: number, inventory: string[]): string {
-  return `${JSON.stringify(cond)}:${JSON.stringify(flags)}:${JSON.stringify(resources)}:${JSON.stringify(variables)}:${time}:${JSON.stringify(inventory)}`
+function getConditionKey(cond: Condition, flags: Record<string, boolean>, resources: Record<string, number>, variables: Record<string, string | number>, time: number, inventory: string[], events: Record<string, EntityDef>): string {
+  return `${JSON.stringify(cond)}:${JSON.stringify(flags)}:${JSON.stringify(resources)}:${JSON.stringify(variables)}:${time}:${JSON.stringify(inventory)}:${JSON.stringify(events)}`
 }
 
 function evalCondition(
@@ -30,13 +30,14 @@ function evalCondition(
   variables: Record<string, string | number>,
   time: number,
   inventory: string[] = [],
+  events: Record<string, EntityDef> = {},
 ): boolean {
-  const key = getConditionKey(cond, flags, resources, variables, time, inventory)
+  const key = getConditionKey(cond, flags, resources, variables, time, inventory, events)
   if (conditionCache.has(key)) {
     return conditionCache.get(key)!
   }
 
-  const result = evalConditionCore(cond, flags, resources, variables, time, inventory)
+  const result = evalConditionCore(cond, flags, resources, variables, time, inventory, events)
 
   // Cache result (limit cache size to prevent memory leaks)
   if (conditionCache.size > 10000) {
@@ -55,6 +56,7 @@ export function startSession(model: Model, initial?: Partial<SessionState>): Ses
     variables: initial?.variables ?? {},
     inventory: initial?.inventory ?? [],
     time: initial?.time ?? 0,
+    events: initial?.events ?? {},
   }
 }
 
@@ -72,7 +74,7 @@ export function getAvailableChoices(session: SessionState, model: Model): Choice
   const choices = node.choices ?? []
   const available = choices.filter((c) =>
     (c.conditions ?? []).every((cond) =>
-      evalCondition(cond, session.flags, session.resources, session.variables, session.time, session.inventory),
+      evalCondition(cond, session.flags, session.resources, session.variables, session.time, session.inventory, session.events ?? {}),
     ),
   )
 
@@ -142,6 +144,10 @@ export function serialize(session: SessionState): string {
 }
 
 export function deserialize(payload: string): SessionState {
-  const parsed: unknown = JSON.parse(payload)
-  return parsed as SessionState
+  const parsed = JSON.parse(payload) as SessionState
+  // Backward compatibility: ensure events field exists
+  if (!parsed.events) {
+    parsed.events = {}
+  }
+  return parsed
 }

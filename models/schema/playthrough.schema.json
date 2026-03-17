@@ -124,6 +124,16 @@
                           "value": { "oneOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] }
                         },
                         "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "required": ["type", "key", "value"],
+                        "properties": {
+                          "type": { "const": "hasEvent" },
+                          "key": { "type": "string" },
+                          "value": { "type": "boolean" }
+                        },
+                        "additionalProperties": false
                       }
                     ]
                   }
@@ -197,6 +207,27 @@
                         "properties": {
                           "type": { "const": "removeItem" },
                           "key": { "type": "string" }
+                        },
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "required": ["type", "id", "name"],
+                        "properties": {
+                          "type": { "const": "createEvent" },
+                          "id": { "type": "string" },
+                          "name": { "type": "string" },
+                          "properties": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "object",
+                              "required": ["defaultValue"],
+                              "properties": {
+                                "defaultValue": { "oneOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] }
+                              },
+                              "additionalProperties": false
+                            }
+                          }
                         },
                         "additionalProperties": false
                       }

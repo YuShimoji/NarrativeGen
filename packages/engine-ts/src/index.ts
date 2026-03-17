@@ -222,7 +222,12 @@ export function deserialize(payload: string): SessionState {
   if (!isSessionState(parsed)) {
     throw new Error('Invalid session payload')
   }
-  return parsed
+  const session = parsed as SessionState
+  // Backward compatibility: ensure events field exists
+  if (!session.events) {
+    session.events = {}
+  }
+  return session
 }
 
 export type { Choice, Condition, Effect, EntityDef, FlagState, Model, NodeDef, PropertyDef, ResourceState, SessionState, VariableState } from './types'

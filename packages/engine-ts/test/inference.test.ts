@@ -294,7 +294,8 @@ describe('Capabilities', () => {
     expect(conditions).toContain('or')
     expect(conditions).toContain('not')
     expect(conditions).toContain('property')
-    expect(conditions.length).toBe(9)
+    expect(conditions).toContain('hasEvent')
+    expect(conditions.length).toBe(10)
   })
 
   it('should list all registered effect types', () => {
@@ -306,6 +307,7 @@ describe('Capabilities', () => {
     expect(effects).toContain('addItem')
     expect(effects).toContain('removeItem')
     expect(effects).toContain('goto')
-    expect(effects.length).toBe(7)
+    expect(effects).toContain('createEvent')
+    expect(effects.length).toBe(8)
   })
 })

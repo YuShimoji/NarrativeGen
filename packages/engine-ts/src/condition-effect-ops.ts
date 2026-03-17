@@ -136,5 +136,8 @@ export function applyEffect(effect: Effect, session: SessionState): SessionState
   if (effect.type === 'goto') {
     return { ...session, nodeId: effect.target }
   }
+  if (effect.type === 'createEvent') {
+    return createEventEntity(effect as CreateEventEffect, session)
+  }
   return session
 }

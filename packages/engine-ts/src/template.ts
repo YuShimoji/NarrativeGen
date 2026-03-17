@@ -66,17 +66,19 @@ export function expandTemplate(
   })
 
   // Phase 1: Entity references [entity_id] and [entity_id.property]
+  // Lookup order: model.entities (static) → session.events (dynamic)
+  const events = session.events ?? {}
   result = result.replace(/\[([^\]]+)\]/g, (_match, ref: string) => {
     const dotIndex = ref.indexOf('.')
     if (dotIndex === -1) {
       // [entity_id] → name
-      const entity = model.entities?.[ref]
+      const entity = model.entities?.[ref] ?? events[ref]
       return entity ? entity.name : `[${ref}]`
     }
 
     const entityId = ref.substring(0, dotIndex)
     const propKey = ref.substring(dotIndex + 1)
-    const entity = model.entities?.[entityId]
+    const entity = model.entities?.[entityId] ?? events[entityId]
     if (!entity) return `[${ref}]`
 
     // Built-in fields
@@ -85,12 +87,16 @@ export function expandTemplate(
     if (propKey === 'cost') return String(entity.cost ?? 0)
     if (propKey === 'id') return entity.id
 
-    // Property resolution (with inheritance)
-    if (model.entities) {
+    // Property resolution (with inheritance from model.entities, then direct from events)
+    if (model.entities && model.entities[entityId]) {
       const prop = resolveProperty(entityId, propKey, model.entities)
       if (prop && prop.defaultValue !== undefined) {
         return String(prop.defaultValue)
       }
+    }
+    // Fallback: resolve from event entity's own properties (no inheritance)
+    if (events[entityId]?.properties?.[propKey]?.defaultValue !== undefined) {
+      return String(events[entityId].properties![propKey].defaultValue!)
     }
 
     return `[${ref}]`
