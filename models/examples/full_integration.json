@@ -98,7 +98,10 @@
           "propertyChecks": [
             { "key": "category", "op": "==", "value": "poison" }
           ]
-        }
+        },
+        "sessionConditions": [
+          { "type": "flag", "key": "consulted_scholar", "value": true }
+        ]
       },
       "text": "The scholar's words echo in your mind: 'Bitter almond scent is never benign.'",
       "priority": 3,

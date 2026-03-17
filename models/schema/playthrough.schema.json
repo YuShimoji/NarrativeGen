@@ -296,7 +296,6 @@
           "id": { "type": "string" },
           "trigger": {
             "type": "object",
-            "required": ["eventMatch"],
             "properties": {
               "eventMatch": {
                 "type": "object",
@@ -317,6 +316,10 @@
                   }
                 },
                 "additionalProperties": false
+              },
+              "sessionConditions": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/condition" }
               }
             },
             "additionalProperties": false

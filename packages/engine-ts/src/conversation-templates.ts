@@ -1,4 +1,5 @@
 import type { Condition, EntityDef, Model, SessionState } from './types'
+import { evalCondition } from './condition-effect-ops.js'
 import { expandTemplate } from './template.js'
 
 /**
@@ -15,7 +16,7 @@ export interface ConversationTemplate {
 }
 
 export interface TemplateTrigger {
-  eventMatch: EventMatchCondition
+  eventMatch?: EventMatchCondition
   sessionConditions?: Condition[]
 }
 
@@ -75,11 +76,25 @@ function matchesEventTrigger(
   trigger: TemplateTrigger,
   events: Record<string, EntityDef>
 ): boolean {
+  if (!trigger.eventMatch) return true  // no event requirement
   const checks = trigger.eventMatch.propertyChecks
   if (checks.length === 0) return false
 
   return Object.values(events).some(entity =>
     checks.every(check => checkProperty(entity, check))
+  )
+}
+
+/**
+ * Check if all session conditions in the trigger are satisfied.
+ */
+function matchesSessionConditions(
+  trigger: TemplateTrigger,
+  session: SessionState
+): boolean {
+  if (!trigger.sessionConditions || trigger.sessionConditions.length === 0) return true
+  return trigger.sessionConditions.every(cond =>
+    evalCondition(cond, session.flags, session.resources, session.variables, session.time, session.inventory, session.events ?? {})
   )
 }
 
@@ -94,7 +109,6 @@ export function findMatchingTemplates(
   usageState?: TemplateUsageState
 ): ExpandedTemplate[] {
   const events = session.events ?? {}
-  if (Object.keys(events).length === 0) return []
 
   const usage = usageState ?? {}
   const results: ExpandedTemplate[] = []
@@ -109,8 +123,12 @@ export function findMatchingTemplates(
       if (used >= template.maxUses) continue
     }
 
-    // Check event match
+    // Check event match (skip if eventMatch required but no events)
+    if (template.trigger.eventMatch && Object.keys(events).length === 0) continue
     if (!matchesEventTrigger(template.trigger, events)) continue
+
+    // Check session conditions (flags, resources, variables, etc.)
+    if (!matchesSessionConditions(template.trigger, session)) continue
 
     // Expand template text
     const expandedText = expandTemplate(template.text, model, session)

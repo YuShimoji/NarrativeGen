@@ -62,11 +62,17 @@ interface ConversationTemplate {
 }
 
 interface TemplateTrigger {
-  /** 必須: 事象Entity のタイプまたはプロパティ条件 */
-  eventMatch: EventMatchCondition
-  /** オプション: 追加のセッション状態条件 */
+  /** オプション: 事象Entity のプロパティ条件 (省略時はイベント不問) */
+  eventMatch?: EventMatchCondition
+  /** オプション: セッション状態条件 (flag, resource, variable, hasItem 等) */
   sessionConditions?: Condition[]
 }
+
+// eventMatch と sessionConditions は AND 関係。
+// 少なくとも一方は指定すること。
+// eventMatch のみ: イベントプロパティで発火
+// sessionConditions のみ: セッション状態で発火 (イベント不要)
+// 両方指定: 両方を満たす場合に発火
 
 interface EventMatchCondition {
   /** 事象Entity にこのプロパティが存在し、値が条件を満たす */

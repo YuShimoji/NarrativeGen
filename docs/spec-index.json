@@ -276,6 +276,6 @@
     "pct": 100,
     "cat": "core",
     "file": "docs/specs/dynamic-story-expansion.md",
-    "summary": "3-layer responsibility separation. ConversationTemplate: trigger matching + priority + maxUses. Schema + Web Tester integrated (auto-insertion in resolveVariables). Phase 4: GUI editor (template CRUD + trigger condition editing). Model.conversationTemplates optional. 9 tests + 10 E2E."
+    "summary": "3-layer responsibility separation. ConversationTemplate: trigger matching + priority + maxUses. eventMatch optional + sessionConditions (flag/resource/variable/hasItem) support. Schema + Web Tester integrated. Phase 4: GUI editor (template CRUD + trigger condition editing). 14 tests + 10 E2E."
   }
 ]

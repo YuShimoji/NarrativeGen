@@ -168,6 +168,90 @@ describe('Conversation Templates', () => {
     })
   })
 
+  describe('sessionConditions trigger', () => {
+    it('should match template with flag-only trigger (no eventMatch)', () => {
+      const session = makeSession({ flags: { quest_started: true } })
+      const tpl: ConversationTemplate[] = [{
+        id: 'flag_trigger',
+        trigger: {
+          sessionConditions: [{ type: 'flag', key: 'quest_started', value: true }],
+        },
+        text: 'Your quest has begun.',
+      }]
+      const results = findMatchingTemplates(tpl, session, model)
+      expect(results).toHaveLength(1)
+      expect(results[0].templateId).toBe('flag_trigger')
+    })
+
+    it('should not match when session condition fails', () => {
+      const session = makeSession({ flags: { quest_started: false } })
+      const tpl: ConversationTemplate[] = [{
+        id: 'flag_trigger',
+        trigger: {
+          sessionConditions: [{ type: 'flag', key: 'quest_started', value: true }],
+        },
+        text: 'Your quest has begun.',
+      }]
+      const results = findMatchingTemplates(tpl, session, model)
+      expect(results).toHaveLength(0)
+    })
+
+    it('should match template with resource condition trigger', () => {
+      const session = makeSession({ resources: { gold: 100 } })
+      const tpl: ConversationTemplate[] = [{
+        id: 'rich_trigger',
+        trigger: {
+          sessionConditions: [{ type: 'resource', key: 'gold', op: '>=', value: 50 }],
+        },
+        text: 'You feel wealthy.',
+      }]
+      const results = findMatchingTemplates(tpl, session, model)
+      expect(results).toHaveLength(1)
+    })
+
+    it('should require both eventMatch AND sessionConditions when both present', () => {
+      const session = makeSession({
+        flags: { investigated: true },
+        events: {
+          ev1: {
+            id: 'ev1', name: 'Clue',
+            properties: { severity: { key: 'severity', type: 'number', defaultValue: 80 } },
+          },
+        },
+      })
+      const tpl: ConversationTemplate[] = [{
+        id: 'combined',
+        trigger: {
+          eventMatch: { propertyChecks: [{ key: 'severity', op: '>=', value: 50 }] },
+          sessionConditions: [{ type: 'flag', key: 'investigated', value: true }],
+        },
+        text: 'The evidence clicks into place.',
+      }]
+      // Both match
+      expect(findMatchingTemplates(tpl, session, model)).toHaveLength(1)
+
+      // Event matches but flag fails
+      const session2 = makeSession({
+        flags: { investigated: false },
+        events: session.events,
+      })
+      expect(findMatchingTemplates(tpl, session2, model)).toHaveLength(0)
+    })
+
+    it('should match hasItem session condition', () => {
+      const session = makeSession({ inventory: ['magic_sword'] })
+      const tpl: ConversationTemplate[] = [{
+        id: 'item_trigger',
+        trigger: {
+          sessionConditions: [{ type: 'hasItem', key: 'magic_sword', value: true }],
+        },
+        text: 'The sword hums with power.',
+      }]
+      const results = findMatchingTemplates(tpl, session, model)
+      expect(results).toHaveLength(1)
+    })
+  })
+
   describe('recordTemplateUsage', () => {
     it('should increment usage count', () => {
       let state: TemplateUsageState = {}
