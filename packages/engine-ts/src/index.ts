@@ -231,7 +231,43 @@ export function deserialize(payload: string): SessionState {
 }
 
 export type { Choice, Condition, Effect, EntityDef, FlagState, Model, NodeDef, PropertyDef, ResourceState, SessionState, VariableState } from './types'
+
+// Paraphrase system
+export {
+  chooseParaphrase,
+  paraphraseJa,
+  getParaphraseLexicon,
+  setParaphraseLexicon,
+  createUsageHistory,
+  recordUsage,
+  buildParaphraseContext,
+  type ConditionalVariant,
+  type ParaphraseEntry,
+  type PropertyAwareLexicon,
+  type ParaphraseLexicon,
+  type UsageHistory,
+  type ParaphraseContext,
+} from './paraphrase.js'
+
+// AI provider
+export {
+  createAIProvider,
+  MockAIProvider,
+  type AIProvider,
+  type AIConfig,
+  type StoryContext,
+  type ParaphraseOptions,
+} from './ai-provider.js'
 export { resolveProperty, getEntityProperties, getInheritanceChain } from './entities.js'
+
+// Inference engine
+export { findPathToGoal, findReachableNodes } from './inference/backward-chaining.js'
+export { buildDependencyGraph, getAffectedChoices } from './inference/forward-chaining.js'
+export { getSupportedConditions, getSupportedEffects } from './inference/capabilities.js'
+export { registry, registerBuiltins } from './inference/registry.js'
+export type { Goal, PathStep } from './inference/backward-chaining.js'
+export type { DependencyGraph, ForwardChainingResult } from './inference/forward-chaining.js'
+export type { ConditionEvaluator, EffectApplicator, EvaluationContext, DependencyInfo } from './inference/types.js'
 export { expandTemplate } from './template.js'
 export { detectAnomaly, detectAllAnomalies } from './anomaly-detector.js'
 export type { KnowledgeProfile, AnomalyResult } from './anomaly-detector.js'
