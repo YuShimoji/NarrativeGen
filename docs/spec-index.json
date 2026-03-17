@@ -218,10 +218,10 @@
   {
     "id": "SP-TEXT-001",
     "title": "Dynamic Text Engine",
-    "status": "partial",
-    "pct": 40,
+    "status": "done",
+    "pct": 100,
     "cat": "core",
     "file": "docs/specs/dynamic-text-engine.md",
-    "summary": "Template expansion engine for node text. [entity.property] references resolved via Entity-Property inheritance. {variable} expansion for session state. Phase 1 done: expandTemplate() + 23 unit tests. Remaining: Web Tester integration, conditional sections."
+    "summary": "Template expansion engine. [entity.property] refs via inheritance, {variable} expansion, {?condition:text} conditional sections (flag/resource/inventory). Web Tester integrated. 31 unit tests."
   }
 ]

@@ -176,4 +176,48 @@ describe('expandTemplate', () => {
       expect(expandTemplate('[[sword]]', model, session)).toBe('[[sword]]')
     })
   })
+
+  describe('Conditional sections {?condition:text}', () => {
+    it('should show text when flag is true', () => {
+      expect(expandTemplate('{?has_key:You have the key.}', model, session)).toBe('You have the key.')
+    })
+
+    it('should hide text when flag is false', () => {
+      expect(expandTemplate('{?door_open:The door is open.}', model, session)).toBe('')
+    })
+
+    it('should negate with !', () => {
+      expect(expandTemplate('{?!door_open:The door is closed.}', model, session)).toBe('The door is closed.')
+      expect(expandTemplate('{?!has_key:No key.}', model, session)).toBe('')
+    })
+
+    it('should handle resource comparison', () => {
+      // gold = 100
+      expect(expandTemplate('{?gold>=50:Rich enough.}', model, session)).toBe('Rich enough.')
+      expect(expandTemplate('{?gold>=200:Very rich.}', model, session)).toBe('')
+      expect(expandTemplate('{?health>50:Healthy.}', model, session)).toBe('Healthy.')
+    })
+
+    it('should handle inventory check', () => {
+      const withInventory = makeSession({
+        ...session,
+        inventory: ['sword', 'shield'],
+      })
+      expect(expandTemplate('{?sword:You have a sword.}', model, withInventory)).toBe('You have a sword.')
+      expect(expandTemplate('{?!potion:No potion.}', model, withInventory)).toBe('No potion.')
+    })
+
+    it('should expand entity refs inside conditional body', () => {
+      expect(expandTemplate('{?has_key:The [sword] glows.}', model, session)).toBe('The Magic Sword glows.')
+    })
+
+    it('should handle multiple conditionals', () => {
+      const text = '{?has_key:Key found. }{?!door_open:Door locked. }{?gold>=50:Rich.}'
+      expect(expandTemplate(text, model, session)).toBe('Key found. Door locked. Rich.')
+    })
+
+    it('should leave unknown condition as empty', () => {
+      expect(expandTemplate('{?unknown_flag:text}', model, session)).toBe('')
+    })
+  })
 })

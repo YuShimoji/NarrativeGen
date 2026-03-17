@@ -1,6 +1,6 @@
 # SP-TEXT-001: Dynamic Text Engine
 
-**Status**: partial | **Pct**: 40 | **Cat**: core
+**Status**: done | **Pct**: 100 | **Cat**: core
 
 ## 概要
 
