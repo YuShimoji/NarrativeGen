@@ -106,6 +106,7 @@
 | 2026-03-16 | SP-INF-UI-001 Phase 3: グラフ視覚連携プラン承認 (T1-T4全件) | T1-T4全件 / T1-T3のみ / 色変更 / 再検討 | GraphEditorManager.applyInferenceHighlight()方式。パス=ゴールド、影響=コーラル、到達不能=opacity 0.4。デバッグクエリUIも含む |
 | 2026-03-17 | Entity-Property基盤着手を決定 | Entity-Property / 動的テキスト構文 / 現行深化 / 中断計画 | 原初ビジョン(ORIGINAL_DESIGN_PHILOSOPHY)との構造的ギャップを特定。現行フラットEntityDefからプロパティ階層・継承・範囲定義へ段階拡張。SP-PROP-001として仕様策定 |
 | 2026-03-17 | 原初ビジョンと現行実装の乖離を認識・記録 | N/A | レガシードキュメント分析で5つの高深刻度ギャップを特定 (Entity-Property, 動的テキスト構文, プロパティ比較推論, 事象Entity動的生成, 動的ストーリー展開)。段階的に基盤から積み上げる方針 |
+| 2026-03-17 | SP-PARA-002: 言い換え辞書プロパティマッチング拡張 | flat辞書維持 / ConditionalVariant拡張 / AI依存 | ConditionalVariant + match条件 + UsageHistory + buildParaphraseContextで原初ビジョン§4.2を実現。後方互換維持 |
 
 ## Project Context
 
@@ -114,24 +115,21 @@
 ブランチ戦略: trunk-based (main のみ)
 現フェーズ: 機能拡張 → 原初ビジョン統合フェーズ
 方針: Entity-Property駆動ナラティブエンジンへの段階移行
-直近の状態 (2026-03-17):
+直近の状態 (2026-03-17 夜間自走):
 
-- main ブランチ、origin/main 同期済み (計12コミット push: 前セッション6 + 本セッション6)
-- 123テスト全緑 (73→123, +50テスト)、10モデル検証通過、ビルド成功 (警告0)
+- main ブランチ、4コミット未push (3860327..ab2b139)
+- 149テスト全緑 (123→149, +26テスト)、ビルド成功 (警告0)
 - E2E: 22 passed / 5 skipped
-- done 24/26 specs (残: SP-UNITY-001 85%, SP-009 65%, SP-004 legacy 60%)
-- 原初ビジョン基盤層 完了:
-  - SP-PROP-001 done: Entity-Property System (PropertyDef型 + 継承チェーン + resolveProperty/getEntityProperties/getInheritanceChain + スキーマ + GUI CRUD + propertyEvaluator推論条件)
-  - SP-TEXT-001 done: Dynamic Text Engine (expandTemplate: [entity.property] + {variable} + {?condition:text} 条件付きセクション + Web Tester統合)
-  - property_test.json: 3層継承テストモデル + テンプレート構文
-  - inventory_test.json: hasItem/addItem/removeItem 統合テスト
-- 前セッション完了分:
-  - SP-ENTITY-001 done, SP-SCHEMA-001 done, SP-006 done
-  - Yarn修正 (hasItem/addItem/removeItem/variables)
-  - Tech Debt (SP-009 40%→65%)
+- done 26/28 specs (残: SP-UNITY-001 85%, SP-009 65%)
+- 原初ビジョン実装進捗:
+  - SP-PROP-001 done: Entity-Property System
+  - SP-TEXT-001 done: Dynamic Text Engine
+  - SP-ANOMALY-001 done: Property Anomaly Detection (KnowledgeProfile + deviation scoring)
+  - SP-PARA-002 done: Paraphrase Property Matching (ConditionalVariant + UsageHistory + buildParaphraseContext)
+  - Event Entity System: hasEvent条件 + createEvent効果 + SessionState.events + event_test.json
+  - hasEvent/createEvent: 推論レジストリ統合済み、スキーマ更新済み
 - 次回着手候補:
-  - 原初ビジョン 5.1: プロパティ比較推論 + 違和感検出 (propertyEvaluator基盤の上に構築)
-  - 原初ビジョン 5.2: 事象Entityの動的生成
-  - 原初ビジョン 4.1: 言い換え辞書のプロパティマッチング拡張
-  - 手動検証: property_test + inventory_test のブラウザ確認
-- 記録先: `docs/specs/entity-property-system.md`, `docs/specs/dynamic-text-engine.md`
+  - Web Tester GUI: hasEvent/createEvent のcondition-effect-editor対応
+  - 手動検証: event_test + property_test + inventory_test のブラウザ確認
+  - 原初ビジョン 5.2 残: 事象Entity動的生成の完成度評価
+  - SP-009 Tech Debt 65%→残作業特定
