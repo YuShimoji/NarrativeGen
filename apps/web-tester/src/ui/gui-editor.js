@@ -2182,14 +2182,23 @@ export class GuiEditorManager {
     }
 
     if (tbody) {
+      tbody.addEventListener('change', (e) => {
+        if (e.target.dataset.entityField) {
+          this._updateEntityField(e.target)
+        }
+        if (e.target.dataset.propField) {
+          this._updatePropertyField(e.target)
+        }
+      })
       tbody.addEventListener('click', (e) => {
         if (e.target.classList.contains('entity-delete-btn')) {
           this._deleteEntity(e.target.dataset.entityId)
         }
-      })
-      tbody.addEventListener('change', (e) => {
-        if (e.target.dataset.entityField) {
-          this._updateEntityField(e.target)
+        if (e.target.classList.contains('entity-prop-add-btn')) {
+          this._addProperty(e.target.dataset.entityId)
+        }
+        if (e.target.classList.contains('entity-prop-delete-btn')) {
+          this._deleteProperty(e.target.dataset.entityId, e.target.dataset.propKey)
         }
       })
     }
@@ -2221,27 +2230,44 @@ export class GuiEditorManager {
       return opts.join('')
     }
 
-    const renderProps = (id) => {
+    const renderPropsSection = (id) => {
       const e = entities[id]
       const props = e.properties || {}
       const propKeys = Object.keys(props)
-      if (propKeys.length === 0) return ''
-      return propKeys.map(pk => {
+      const rows = propKeys.map(pk => {
         const p = props[pk]
-        return `<span class="entity-prop-badge" title="${pk}: ${p.type}, default=${p.defaultValue ?? ''}${p.rangeMin != null ? `, range=${p.rangeMin}-${p.rangeMax}` : ''}">${pk}=${p.defaultValue ?? ''}</span>`
-      }).join(' ')
+        return `<tr class="entity-prop-row" data-entity-id="${id}" data-prop-key="${pk}">
+          <td><input type="text" value="${pk}" data-prop-field="key" data-prop-old-key="${pk}" data-entity-id="${id}"></td>
+          <td><select data-prop-field="type" data-prop-key="${pk}" data-entity-id="${id}">
+            <option value="string"${p.type === 'string' ? ' selected' : ''}>string</option>
+            <option value="number"${p.type === 'number' ? ' selected' : ''}>number</option>
+            <option value="boolean"${p.type === 'boolean' ? ' selected' : ''}>boolean</option>
+          </select></td>
+          <td><input type="text" value="${p.defaultValue ?? ''}" data-prop-field="defaultValue" data-prop-key="${pk}" data-entity-id="${id}"></td>
+          <td><button class="entity-prop-delete-btn" data-entity-id="${id}" data-prop-key="${pk}" title="削除">x</button></td>
+        </tr>`
+      }).join('')
+      return `<tr class="entity-props-row"><td colspan="5">
+        <details class="entity-props-details">
+          <summary>プロパティ (${propKeys.length})</summary>
+          <table class="entity-props-table">
+            <thead><tr><th>キー</th><th>型</th><th>既定値</th><th></th></tr></thead>
+            <tbody>${rows || '<tr><td colspan="4" class="entity-empty-hint">なし</td></tr>'}</tbody>
+          </table>
+          <button class="entity-prop-add-btn" data-entity-id="${id}">+ プロパティ追加</button>
+        </details>
+      </td></tr>`
     }
 
     tbody.innerHTML = keys.map(id => {
       const e = entities[id]
-      const propDisplay = renderProps(id)
       return `<tr data-entity-id="${id}">
         <td><input type="text" value="${id}" data-entity-field="id" data-entity-old-id="${id}"></td>
         <td><input type="text" value="${e.name || ''}" data-entity-field="name" data-entity-id="${id}"></td>
         <td><select data-entity-field="parentEntity" data-entity-id="${id}">${parentOptions(id)}</select></td>
         <td><input type="number" value="${e.cost ?? 0}" data-entity-field="cost" data-entity-id="${id}" step="1"></td>
         <td><button class="entity-delete-btn" data-entity-id="${id}" title="削除">x</button></td>
-      </tr>${propDisplay ? `<tr class="entity-props-row"><td colspan="5"><span class="entity-props-label">props:</span> ${propDisplay}</td></tr>` : ''}`
+      </tr>${renderPropsSection(id)}`
     }).join('')
   }
 
@@ -2308,6 +2334,64 @@ export class GuiEditorManager {
       }
     } else {
       entity[field] = input.value
+    }
+  }
+
+  _addProperty(entityId) {
+    const model = this.appState.model
+    const entity = model?.entities?.[entityId]
+    if (!entity) return
+    if (!entity.properties) entity.properties = {}
+    let idx = Object.keys(entity.properties).length + 1
+    let key = `prop_${idx}`
+    while (entity.properties[key]) { idx++; key = `prop_${idx}` }
+    entity.properties[key] = { key, type: 'string', defaultValue: '' }
+    this._renderEntities()
+  }
+
+  _deleteProperty(entityId, propKey) {
+    const entity = this.appState.model?.entities?.[entityId]
+    if (!entity?.properties?.[propKey]) return
+    delete entity.properties[propKey]
+    if (Object.keys(entity.properties).length === 0) delete entity.properties
+    this._renderEntities()
+  }
+
+  _updatePropertyField(input) {
+    const entityId = input.dataset.entityId
+    const field = input.dataset.propField
+    const entity = this.appState.model?.entities?.[entityId]
+    if (!entity?.properties || !field) return
+
+    if (field === 'key') {
+      const oldKey = input.dataset.propOldKey
+      const newKey = input.value.trim()
+      if (!newKey || newKey === oldKey) return
+      if (entity.properties[newKey]) { input.value = oldKey; return }
+      const prop = entity.properties[oldKey]
+      delete entity.properties[oldKey]
+      prop.key = newKey
+      entity.properties[newKey] = prop
+      this._renderEntities()
+      return
+    }
+
+    const propKey = input.dataset.propKey
+    const prop = entity.properties[propKey]
+    if (!prop) return
+
+    if (field === 'type') {
+      prop.type = input.value
+    } else if (field === 'defaultValue') {
+      const val = input.value
+      if (prop.type === 'number') {
+        const num = Number(val)
+        prop.defaultValue = Number.isFinite(num) ? num : 0
+      } else if (prop.type === 'boolean') {
+        prop.defaultValue = val === 'true'
+      } else {
+        prop.defaultValue = val
+      }
     }
   }
 }

@@ -235,15 +235,84 @@
   text-transform: uppercase;
 }
 
-.entity-prop-badge {
-  display: inline-block;
-  font-size: 0.7rem;
-  padding: 0.1rem 0.35rem;
-  margin: 0.1rem;
-  border-radius: 3px;
-  background: rgba(91, 141, 239, 0.12);
+.entity-props-details {
+  margin-top: 0.25rem;
+}
+
+.entity-props-details summary {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0.2rem 0;
+}
+
+.entity-props-details summary:hover {
   color: var(--color-primary);
-  font-family: var(--font-mono, monospace);
+}
+
+.entity-props-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+  margin: 0.25rem 0;
+}
+
+.entity-props-table th {
+  text-align: left;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.entity-props-table td {
+  padding: 0.15rem 0.4rem;
+}
+
+.entity-props-table input,
+.entity-props-table select {
+  width: 100%;
+  padding: 0.15rem 0.25rem;
+  font-size: 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--color-text);
+}
+
+.entity-props-table input:hover,
+.entity-props-table select:hover {
+  border-color: var(--color-border);
+}
+
+.entity-props-table input:focus,
+.entity-props-table select:focus {
+  border-color: var(--color-primary);
+  background: var(--color-bg);
+  outline: none;
+}
+
+.entity-prop-add-btn {
+  margin-top: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.7rem;
+}
+
+.entity-prop-delete-btn {
+  padding: 0.1rem 0.3rem;
+  font-size: 0.65rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.entity-prop-delete-btn:hover {
+  background: rgba(244, 67, 54, 0.15);
+  color: #f44336;
 }
 
 /* ==========================================================================
