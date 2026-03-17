@@ -205,5 +205,14 @@
     "cat": "core",
     "file": "docs/specs/entity-inventory.md",
     "summary": "Entity definition and inventory management. TS/C# integrated. Web Tester: condition-effect-editor (hasItem/addItem/removeItem) + entity definition panel (CRUD, inline edit, collapsible). Schema updated."
+  },
+  {
+    "id": "SP-PROP-001",
+    "title": "Entity-Property System",
+    "status": "draft",
+    "pct": 0,
+    "cat": "core",
+    "file": "docs/specs/entity-property-system.md",
+    "summary": "Extended EntityDef with property hierarchy, inheritance chain, range definitions. Foundation for dynamic text generation, property-based inference, and pattern-matching paraphrase."
   }
 ]

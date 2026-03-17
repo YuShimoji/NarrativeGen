@@ -1,0 +1,217 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "entrance",
+  "flags": {
+    "door_unlocked": false
+  },
+  "resources": {
+    "health": 100
+  },
+  "entities": {
+    "rusty_key": {
+      "id": "rusty_key",
+      "name": "Rusty Key",
+      "description": "An old rusty key found in the garden.",
+      "cost": 0
+    },
+    "health_potion": {
+      "id": "health_potion",
+      "name": "Health Potion",
+      "description": "Restores 30 health points.",
+      "cost": 10
+    },
+    "torch": {
+      "id": "torch",
+      "name": "Torch",
+      "description": "Illuminates dark passages.",
+      "cost": 5
+    }
+  },
+  "nodes": {
+    "entrance": {
+      "id": "entrance",
+      "text": "You stand before an old mansion. The front door is locked. A garden path leads to the side.",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Search the garden",
+          "target": "garden"
+        },
+        {
+          "id": "c2",
+          "text": "Try the front door",
+          "target": "front_door"
+        },
+        {
+          "id": "c3",
+          "text": "Use the rusty key on the door",
+          "target": "door_unlocked",
+          "conditions": [
+            { "type": "hasItem", "key": "rusty_key", "value": true }
+          ],
+          "effects": [
+            { "type": "setFlag", "key": "door_unlocked", "value": true }
+          ]
+        }
+      ]
+    },
+    "garden": {
+      "id": "garden",
+      "text": "The garden is overgrown. Among the weeds, you spot something glinting.",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Pick up the rusty key",
+          "target": "entrance",
+          "conditions": [
+            { "type": "hasItem", "key": "rusty_key", "value": false }
+          ],
+          "effects": [
+            { "type": "addItem", "key": "rusty_key" }
+          ]
+        },
+        {
+          "id": "c2",
+          "text": "Search further",
+          "target": "garden_deep"
+        },
+        {
+          "id": "c3",
+          "text": "Go back",
+          "target": "entrance"
+        }
+      ]
+    },
+    "garden_deep": {
+      "id": "garden_deep",
+      "text": "Behind the shed, you find a chest with supplies.",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Take the torch",
+          "target": "garden",
+          "conditions": [
+            { "type": "hasItem", "key": "torch", "value": false }
+          ],
+          "effects": [
+            { "type": "addItem", "key": "torch" }
+          ]
+        },
+        {
+          "id": "c2",
+          "text": "Take the health potion",
+          "target": "garden",
+          "conditions": [
+            { "type": "hasItem", "key": "health_potion", "value": false }
+          ],
+          "effects": [
+            { "type": "addItem", "key": "health_potion" }
+          ]
+        },
+        {
+          "id": "c3",
+          "text": "Go back to the garden",
+          "target": "garden"
+        }
+      ]
+    },
+    "front_door": {
+      "id": "front_door",
+      "text": "The door is firmly locked. You'll need a key.",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Go back",
+          "target": "entrance"
+        }
+      ]
+    },
+    "door_unlocked": {
+      "id": "door_unlocked",
+      "text": "The rusty key turns in the lock with a grinding sound. The door swings open.",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Enter the dark hallway",
+          "target": "dark_hallway"
+        }
+      ]
+    },
+    "dark_hallway": {
+      "id": "dark_hallway",
+      "text": "The hallway is pitch black. You can barely see anything.",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Use the torch to light the way",
+          "target": "lit_hallway",
+          "conditions": [
+            { "type": "hasItem", "key": "torch", "value": true }
+          ],
+          "effects": [
+            { "type": "removeItem", "key": "torch" }
+          ]
+        },
+        {
+          "id": "c2",
+          "text": "Stumble forward in the dark",
+          "target": "trap",
+          "effects": [
+            { "type": "addResource", "key": "health", "delta": -30 }
+          ]
+        },
+        {
+          "id": "c3",
+          "text": "Go back outside",
+          "target": "entrance"
+        }
+      ]
+    },
+    "lit_hallway": {
+      "id": "lit_hallway",
+      "text": "The torch reveals a grand hallway with paintings on the walls. A staircase leads upward.",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Climb the stairs",
+          "target": "victory"
+        }
+      ]
+    },
+    "trap": {
+      "id": "trap",
+      "text": "You stumble into a trap! Sharp spikes scrape your leg. You lose 30 health.",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Drink a health potion",
+          "target": "dark_hallway",
+          "conditions": [
+            { "type": "hasItem", "key": "health_potion", "value": true }
+          ],
+          "effects": [
+            { "type": "removeItem", "key": "health_potion" },
+            { "type": "addResource", "key": "health", "delta": 30 }
+          ]
+        },
+        {
+          "id": "c2",
+          "text": "Press on despite the injury",
+          "target": "lit_hallway",
+          "conditions": [
+            { "type": "resource", "key": "health", "op": ">", "value": 0 }
+          ]
+        },
+        {
+          "id": "c3",
+          "text": "Retreat outside",
+          "target": "entrance"
+        }
+      ]
+    },
+    "victory": {
+      "id": "victory",
+      "text": "At the top of the stairs, you find the mansion's treasure room. Ancient artifacts gleam in the torchlight. You've conquered the mansion!"
+    }
+  }
+}

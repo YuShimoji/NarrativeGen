@@ -104,24 +104,32 @@
 | 2026-03-13 | origin/master統合方針: main正+手動cherry-pick | 直接マージ / cherry-pick / 並行運用 | masterは別セッションでweb-tester構造を巻き戻し(main.js 2371行復活)+推論UI/E2E削除。358ファイル差分で直接マージ不可。mainのweb-tester分離/推論UI/E2Eを維持しつつ、masterのEntity/Inventory統合+C# SDK推論パリティのみ手動取り込み |
 | 2026-03-13 | Entity/Inventory + C# SDK InferenceRegistryをmainに手動統合 | 手動 / 延期 | hasItem条件+addItem/removeItemエフェクト+modifyVariable推論登録+EntityDef型+brand→nameリネーム+C# SDK InferenceRegistry(条件8種/エフェクト7種)。73テスト全緑維持 |
 | 2026-03-16 | SP-INF-UI-001 Phase 3: グラフ視覚連携プラン承認 (T1-T4全件) | T1-T4全件 / T1-T3のみ / 色変更 / 再検討 | GraphEditorManager.applyInferenceHighlight()方式。パス=ゴールド、影響=コーラル、到達不能=opacity 0.4。デバッグクエリUIも含む |
+| 2026-03-17 | Entity-Property基盤着手を決定 | Entity-Property / 動的テキスト構文 / 現行深化 / 中断計画 | 原初ビジョン(ORIGINAL_DESIGN_PHILOSOPHY)との構造的ギャップを特定。現行フラットEntityDefからプロパティ階層・継承・範囲定義へ段階拡張。SP-PROP-001として仕様策定 |
+| 2026-03-17 | 原初ビジョンと現行実装の乖離を認識・記録 | N/A | レガシードキュメント分析で5つの高深刻度ギャップを特定 (Entity-Property, 動的テキスト構文, プロパティ比較推論, 事象Entity動的生成, 動的ストーリー展開)。段階的に基盤から積み上げる方針 |
 
 ## Project Context
 
 プロジェクト名: NarrativeGen
 環境: Node.js 22 / TypeScript 5.x / Vite 5 / Vitest / Playwright
 ブランチ戦略: trunk-based (main のみ)
-現フェーズ: 安定化完了 → 機能拡張フェーズ
-方針: 汎用インタラクティブ物語エンジン
+現フェーズ: 機能拡張 → 原初ビジョン統合フェーズ
+方針: Entity-Property駆動ナラティブエンジンへの段階移行
 直近の状態 (2026-03-17):
 
-- main ブランチ、origin/main 同期済み
-- 73テスト全緑、8モデル検証通過、ビルド成功
-- 推論UI Phase 1-3 全完了 (SP-INF-UI-001: done 100%)
-  - パネルUI: UC-1〜UC-5 全実装
-  - グラフ視覚統合: パスハイライト(ゴールド), 到達不能半透明化(0.4), 影響範囲色分け(コーラル), デバッグクエリUI
-  - 手動確認: パスハイライト動作OK。コーラル/到達不能はサンプルモデルに条件不足で未確認
-- Entity/Inventory: エンジン統合済み + condition-effect-editor UI追加 + スキーマ更新 (SP-ENTITY-001: 95%)
-  - 残: entity定義エディタ (モデル内 entities マップの GUI 編集)
-- 手動確認ガイド: `docs/GUI_INFERENCE_TEST_GUIDE.md` 作成済み
-- 既知: 条件/効果「+追加」でパネルが閉じる挙動 (既存のGUIエディタ再レンダリング問題、別タスク)
-- 記録先: `docs/plans/DEVELOPMENT_PLAN.md`, `docs/TECHNICAL_DEBT.md`, `docs/governance/`
+- main ブランチ、origin/main 同期済み (5コミット push)
+- 73テスト全緑、9モデル検証通過 (inventory_test.json追加)、ビルド成功 (警告0)
+- E2E: 22 passed / 5 skipped (test:e2eルート実行修正済み)
+- done 21/23 specs (残: SP-UNITY-001 85%, SP-009 65%, SP-004 legacy 60%)
+- 今回完了:
+  - SP-ENTITY-001 done: Entity定義管理UI (折りたたみパネル, CRUD, インライン編集)
+  - SP-SCHEMA-001 done: 実コードと照合し全面書き換え
+  - SP-006 done: AI Features仕様整合
+  - Yarn Spinner修正: hasItem/addItem/removeItem + variables宣言対応
+  - Tech Debt: E2Eルート修正, チャンク警告抑制 (SP-009 40%→65%)
+  - 手動検証手順書: GUI_EDITOR_TEST_GUIDE.md TC-EN-01~07
+- 原初ビジョン分析 (2026-03-17):
+  - レガシードキュメント3件分析で構造的ギャップ5件(高深刻度)を特定
+  - Entity-Property基盤から段階的に着手する方針を決定
+  - SP-PROP-001 (draft) 仕様策定済み
+- 次回着手: SP-PROP-001 Phase 1 (EntityDef拡張 + プロパティ解決エンジン)
+- 記録先: `docs/plans/DEVELOPMENT_PLAN.md`, `docs/TECHNICAL_DEBT.md`, `docs/specs/entity-property-system.md`
