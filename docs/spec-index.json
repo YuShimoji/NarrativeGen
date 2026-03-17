@@ -259,5 +259,14 @@
     "cat": "core",
     "file": "docs/specs/character-knowledge.md",
     "summary": "Character knowledge profiles for perception simulation. CharacterDef with KnowledgeProfile[], findKnowledgeProfile (domain fallback), perceiveEntity (anomaly detection bridge). 7 tests."
+  },
+  {
+    "id": "SP-DESC-001",
+    "title": "Description Tracker",
+    "status": "done",
+    "pct": 100,
+    "cat": "core",
+    "file": "docs/specs/description-tracker.md",
+    "summary": "Entity description tracking for repetition avoidance. markDescribed/isDescribed/getUndescribedKeys/getDescriptionCount/resetDescriptions. Immutable DescriptionState. 14 tests."
   }
 ]
