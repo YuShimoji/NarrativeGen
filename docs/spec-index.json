@@ -164,11 +164,11 @@
   {
     "id": "SP-SCHEMA-001",
     "title": "Model Schema",
-    "status": "partial",
-    "pct": 95,
+    "status": "done",
+    "pct": 100,
     "cat": "data",
     "file": "docs/specs/model-schema.md",
-    "summary": "Playthrough model JSON Schema. Structure + integrity validation. entities/inventory/hasItem/addItem/removeItem schema added"
+    "summary": "Playthrough model JSON Schema. Strict oneOf + additionalProperties:false for all 5 condition types and 7 effect types. EntityDef schema. Structure + integrity validation (Ajv + assertModelIntegrity). 8 example models validated."
   },
   {
     "id": "SP-API-001",
