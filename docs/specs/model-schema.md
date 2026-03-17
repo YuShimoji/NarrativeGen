@@ -43,7 +43,7 @@ NarrativeGen のプレイスルーモデルの JSON Schema 仕様。`models/sche
 | `effects` | いいえ | `Effect[]` | 効果配列 |
 | `outcome` | いいえ | `Outcome` | 選択結果 (type, value) |
 
-### Condition 型 (5種、全て additionalProperties: false)
+### Condition 型 (10種、全て additionalProperties: false、$ref 再帰定義)
 
 | type | 必須フィールド | 説明 |
 |------|--------------|------|
@@ -52,6 +52,11 @@ NarrativeGen のプレイスルーモデルの JSON Schema 仕様。`models/sche
 | `variable` | `key: string, op: enum, value: string\|number` | 変数比較 (==, !=, contains, !contains, >=, <=, >, <) |
 | `timeWindow` | `start: number, end: number` | 時間帯条件 |
 | `hasItem` | `key: string, value: boolean` | インベントリ所持判定 |
+| `property` | `entity: string, key: string, op: enum, value: string\|number\|boolean` | エンティティプロパティ比較 |
+| `hasEvent` | `key: string, value: boolean` | イベント存在判定 |
+| `and` | `conditions: Condition[]` | 全条件を満たす (論理AND) |
+| `or` | `conditions: Condition[]` | いずれかの条件を満たす (論理OR) |
+| `not` | `condition: Condition` | 条件の否定 (論理NOT) |
 
 ### Effect 型 (7種、全て additionalProperties: false)
 
@@ -95,7 +100,7 @@ JSON Schema 通過後に実行されるロジカルバリデーション:
 - goto エフェクトの参照先存在
 - 循環参照検出 (オプション)
 
-## 例モデル (8件、全て検証合格)
+## 例モデル (13件、全て検証合格)
 
 | ファイル | ノード数 | 特徴 |
 |---------|---------|------|
@@ -107,6 +112,11 @@ JSON Schema 通過後に実行されるロジカルバリデーション:
 | `resource_management.json` | - | リソース管理 |
 | `time_gated.json` | - | 時間帯条件 |
 | `tutorial.json` | - | チュートリアル構造 |
+| `property_test.json` | - | Entity-Property 継承 + rangeMin/rangeMax |
+| `event_test.json` | - | createEvent + hasEvent |
+| `inventory_test.json` | - | addItem/removeItem + hasItem |
+| `integration_test.json` | - | Entity + Dynamic Text + ConversationTemplate + Event + Inventory |
+| `full_integration.json` | 14 | 全機能横断: Entity継承 + Dynamic Text + ConversationTemplate + Event + Inventory + Variables + and条件 |
 
 ## スコープ外
 
