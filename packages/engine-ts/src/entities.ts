@@ -1,10 +1,87 @@
 import fs from 'fs'
+import type { EntityDef, PropertyDef } from './types'
 
+/** Flat entity for CSV import (legacy compatibility) */
 export interface Entity {
   id: string
   name: string
   description: string
   cost: number
+}
+
+/**
+ * Resolve a single property by walking the inheritance chain.
+ * Child properties override parent. Circular inheritance returns undefined.
+ */
+export function resolveProperty(
+  entityId: string,
+  propertyKey: string,
+  entities: Record<string, EntityDef>,
+  visited?: Set<string>
+): PropertyDef | undefined {
+  const seen = visited ?? new Set<string>()
+  if (seen.has(entityId)) return undefined
+  seen.add(entityId)
+
+  const entity = entities[entityId]
+  if (!entity) return undefined
+
+  const prop = entity.properties?.[propertyKey]
+  if (prop) return prop
+
+  if (entity.parentEntity) {
+    return resolveProperty(entity.parentEntity, propertyKey, entities, seen)
+  }
+  return undefined
+}
+
+/**
+ * Get all resolved properties for an entity, merging inherited ones.
+ * Child properties override parent properties with the same key.
+ */
+export function getEntityProperties(
+  entityId: string,
+  entities: Record<string, EntityDef>,
+  visited?: Set<string>
+): Record<string, PropertyDef> {
+  const seen = visited ?? new Set<string>()
+  if (seen.has(entityId)) return {}
+  seen.add(entityId)
+
+  const entity = entities[entityId]
+  if (!entity) return {}
+
+  let result: Record<string, PropertyDef> = {}
+  if (entity.parentEntity) {
+    result = getEntityProperties(entity.parentEntity, entities, seen)
+  }
+  if (entity.properties) {
+    for (const [key, prop] of Object.entries(entity.properties)) {
+      result[key] = prop
+    }
+  }
+  return result
+}
+
+/**
+ * Get the full inheritance chain for an entity (self → parent → grandparent → ...).
+ * Stops at circular references.
+ */
+export function getInheritanceChain(
+  entityId: string,
+  entities: Record<string, EntityDef>
+): string[] {
+  const chain: string[] = []
+  const seen = new Set<string>()
+  let current: string | undefined = entityId
+  while (current && !seen.has(current)) {
+    seen.add(current)
+    const entity: EntityDef | undefined = entities[current]
+    if (!entity) break
+    chain.push(current)
+    current = entity.parentEntity
+  }
+  return chain
 }
 
 function parseCsvRow(row: string): string[] {

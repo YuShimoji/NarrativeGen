@@ -2,11 +2,22 @@ export type FlagState = Record<string, boolean>
 export type ResourceState = Record<string, number>
 export type VariableState = Record<string, string | number>
 
+export interface PropertyDef {
+  key: string
+  type: 'string' | 'number' | 'boolean'
+  defaultValue?: string | number | boolean
+  rangeMin?: number
+  rangeMax?: number
+  labels?: string[]
+}
+
 export interface EntityDef {
   id: string
   name: string
-  description: string
-  cost: number
+  description?: string
+  cost?: number
+  parentEntity?: string
+  properties?: Record<string, PropertyDef>
 }
 
 export type Condition =

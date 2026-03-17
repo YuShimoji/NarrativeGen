@@ -209,10 +209,19 @@
   {
     "id": "SP-PROP-001",
     "title": "Entity-Property System",
-    "status": "draft",
-    "pct": 0,
+    "status": "partial",
+    "pct": 40,
     "cat": "core",
     "file": "docs/specs/entity-property-system.md",
-    "summary": "Extended EntityDef with property hierarchy, inheritance chain, range definitions. Foundation for dynamic text generation, property-based inference, and pattern-matching paraphrase."
+    "summary": "Extended EntityDef with PropertyDef hierarchy + inheritance. Phase 1 done: types.ts/entities.ts (resolveProperty/getEntityProperties/getInheritanceChain), schema updated, 19 unit tests, 9 models backward compat. Remaining: Web Tester UI, inference integration."
+  },
+  {
+    "id": "SP-TEXT-001",
+    "title": "Dynamic Text Engine",
+    "status": "partial",
+    "pct": 40,
+    "cat": "core",
+    "file": "docs/specs/dynamic-text-engine.md",
+    "summary": "Template expansion engine for node text. [entity.property] references resolved via Entity-Property inheritance. {variable} expansion for session state. Phase 1 done: expandTemplate() + 23 unit tests. Remaining: Web Tester integration, conditional sections."
   }
 ]

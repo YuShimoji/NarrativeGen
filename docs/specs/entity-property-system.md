@@ -1,6 +1,6 @@
 # SP-PROP-001: Entity-Property System
 
-**Status**: draft | **Pct**: 0 | **Cat**: core
+**Status**: partial | **Pct**: 40 | **Cat**: core
 
 ## 概要
 

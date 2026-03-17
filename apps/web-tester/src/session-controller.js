@@ -6,6 +6,7 @@
 import {
     setParaphraseLexicon,
 } from '../../../packages/engine-ts/dist/browser.js'
+import { expandTemplate } from '../../../packages/engine-ts/dist/template.js'
 import Logger from './core/logger.js'
 import {
     startNewSession,
@@ -45,6 +46,11 @@ export function resolveVariables(text, session, model) {
 
     // Replace time variable: {time}
     resolved = resolved.replace(/\{time\}/g, String(session.time))
+
+    // Entity property expansion: [entity_id] and [entity_id.property]
+    if (model?.entities) {
+        resolved = expandTemplate(resolved, model, session)
+    }
 
     return resolved
 }

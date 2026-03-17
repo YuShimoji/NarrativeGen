@@ -225,4 +225,6 @@ export function deserialize(payload: string): SessionState {
   return parsed
 }
 
-export type { Choice, Condition, Effect, EntityDef, FlagState, Model, NodeDef, ResourceState, SessionState, VariableState } from './types'
+export type { Choice, Condition, Effect, EntityDef, FlagState, Model, NodeDef, PropertyDef, ResourceState, SessionState, VariableState } from './types'
+export { resolveProperty, getEntityProperties, getInheritanceChain } from './entities.js'
+export { expandTemplate } from './template.js'

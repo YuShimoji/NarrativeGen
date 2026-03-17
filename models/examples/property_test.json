@@ -1,0 +1,137 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "kitchen",
+  "flags": {
+    "tasted_burger": false
+  },
+  "resources": {
+    "hunger": 80,
+    "gold": 50
+  },
+  "entities": {
+    "physical_object": {
+      "id": "physical_object",
+      "name": "Physical Object",
+      "properties": {
+        "weight": { "key": "weight", "type": "number", "defaultValue": 0, "rangeMin": 0, "rangeMax": 10000 },
+        "material": { "key": "material", "type": "string", "defaultValue": "unknown" }
+      }
+    },
+    "food": {
+      "id": "food",
+      "name": "Food",
+      "parentEntity": "physical_object",
+      "properties": {
+        "calories": { "key": "calories", "type": "number", "defaultValue": 0, "rangeMin": 0, "rangeMax": 5000 },
+        "taste": { "key": "taste", "type": "string", "defaultValue": "bland" }
+      }
+    },
+    "cheeseburger": {
+      "id": "cheeseburger",
+      "name": "Cheeseburger",
+      "description": "A classic fast-food cheeseburger with melted cheese",
+      "cost": 5,
+      "parentEntity": "food",
+      "properties": {
+        "weight": { "key": "weight", "type": "number", "defaultValue": 250, "rangeMin": 200, "rangeMax": 400 },
+        "calories": { "key": "calories", "type": "number", "defaultValue": 350 },
+        "taste": { "key": "taste", "type": "string", "defaultValue": "savory" }
+      }
+    },
+    "apple": {
+      "id": "apple",
+      "name": "Apple",
+      "description": "A fresh red apple from the orchard",
+      "cost": 2,
+      "parentEntity": "food",
+      "properties": {
+        "weight": { "key": "weight", "type": "number", "defaultValue": 180 },
+        "calories": { "key": "calories", "type": "number", "defaultValue": 95 },
+        "taste": { "key": "taste", "type": "string", "defaultValue": "sweet and crisp" }
+      }
+    },
+    "kitchen_knife": {
+      "id": "kitchen_knife",
+      "name": "Kitchen Knife",
+      "description": "A sharp stainless steel kitchen knife",
+      "cost": 15,
+      "parentEntity": "physical_object",
+      "properties": {
+        "weight": { "key": "weight", "type": "number", "defaultValue": 200 },
+        "material": { "key": "material", "type": "string", "defaultValue": "stainless steel" },
+        "sharpness": { "key": "sharpness", "type": "number", "defaultValue": 8, "rangeMin": 0, "rangeMax": 10 }
+      }
+    }
+  },
+  "nodes": {
+    "kitchen": {
+      "id": "kitchen",
+      "text": "You're in the kitchen. On the counter sits a [cheeseburger] ([cheeseburger.calories] cal, [cheeseburger.weight]g) and an [apple] ([apple.calories] cal). A [kitchen_knife] made of [kitchen_knife.material] rests nearby. You have {gold} gold.",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Eat the cheeseburger",
+          "target": "ate_burger",
+          "effects": [
+            { "type": "addItem", "key": "cheeseburger" },
+            { "type": "addResource", "key": "hunger", "delta": -50 },
+            { "type": "setFlag", "key": "tasted_burger", "value": true }
+          ]
+        },
+        {
+          "id": "c2",
+          "text": "Eat the apple",
+          "target": "ate_apple",
+          "effects": [
+            { "type": "addItem", "key": "apple" },
+            { "type": "addResource", "key": "hunger", "delta": -20 }
+          ]
+        },
+        {
+          "id": "c3",
+          "text": "Pick up the knife",
+          "target": "took_knife",
+          "conditions": [
+            { "type": "hasItem", "key": "kitchen_knife", "value": false }
+          ],
+          "effects": [
+            { "type": "addItem", "key": "kitchen_knife" }
+          ]
+        }
+      ]
+    },
+    "ate_burger": {
+      "id": "ate_burger",
+      "text": "You bite into the [cheeseburger]. It tastes [cheeseburger.taste]. The [cheeseburger.description]. Your hunger is now {hunger}.",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Go back",
+          "target": "kitchen"
+        }
+      ]
+    },
+    "ate_apple": {
+      "id": "ate_apple",
+      "text": "You crunch into the [apple]. It's [apple.taste]. Only [apple.calories] calories! Your hunger: {hunger}.",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Go back",
+          "target": "kitchen"
+        }
+      ]
+    },
+    "took_knife": {
+      "id": "took_knife",
+      "text": "You pick up the [kitchen_knife]. It weighs [kitchen_knife.weight]g and is made of [kitchen_knife.material]. Sharpness: [kitchen_knife.sharpness]/10.",
+      "choices": [
+        {
+          "id": "c1",
+          "text": "Go back",
+          "target": "kitchen"
+        }
+      ]
+    }
+  }
+}
