@@ -93,7 +93,8 @@ Status: done (2026-03-17)
 Status: ongoing
 
 Remaining tasks:
-- [ ] Simplify workflow to prevent doc/spec update leaks.
+- [x] HANDOVER.md / TASKS.md / DEVELOPMENT_PLAN.md を最新状態に同期 (2026-03-17)
+- [x] TEST_PROCEDURES.md → TEST_GUIDE.md 参照を doctor / README / troubleshooting で修正 (2026-03-17)
 - [ ] Periodic legacy document review.
 - [ ] Normalize mojibake-affected legacy planning documents.
 
@@ -123,6 +124,8 @@ Remaining tasks:
 | Branch consolidation (master→main) | 2026-03-16 | Local master switched to main, origin/main is canonical |
 | Chunk optimization (lazy-load confirmed) | 2026-03-17 | Dynamic import + manual chunking. Load performance acceptable |
 | Node graph visual issues | 2026-03-17 | Minimap dark theme, text overflow, unsafe render() all resolved |
+| Doctor warning fix (TEST_PROCEDURES→TEST_GUIDE) | 2026-03-17 | doctor 25/25 pass, troubleshooting/README参照修正 |
+| Doc sync (HANDOVER/TASKS/DEVELOPMENT_PLAN) | 2026-03-17 | テスト数198, spec 31, 原初ビジョン完了反映 |
 
 ---
 
