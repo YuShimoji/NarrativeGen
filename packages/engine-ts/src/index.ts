@@ -235,3 +235,5 @@ export { resolveProperty, getEntityProperties, getInheritanceChain } from './ent
 export { expandTemplate } from './template.js'
 export { detectAnomaly, detectAllAnomalies } from './anomaly-detector.js'
 export type { KnowledgeProfile, AnomalyResult } from './anomaly-detector.js'
+export { createEventEntity, hasEvent, createEventFromAnomaly } from './event-entity.js'
+export type { CreateEventEffect } from './event-entity.js'

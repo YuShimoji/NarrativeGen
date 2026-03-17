@@ -92,3 +92,9 @@ export { registry, registerBuiltins } from './inference/registry.js'
 export type { Goal, PathStep } from './inference/backward-chaining.js'
 export type { DependencyGraph, ForwardChainingResult } from './inference/forward-chaining.js'
 export type { ConditionEvaluator, EffectApplicator, EvaluationContext, DependencyInfo } from './inference/types.js'
+
+// Event entity system
+export { createEventEntity, hasEvent, createEventFromAnomaly } from './event-entity.js'
+export type { CreateEventEffect } from './event-entity.js'
+export { detectAnomaly, detectAllAnomalies } from './anomaly-detector.js'
+export type { KnowledgeProfile, AnomalyResult } from './anomaly-detector.js'
