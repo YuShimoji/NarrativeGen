@@ -2211,15 +2211,37 @@ export class GuiEditorManager {
       return
     }
 
+    const parentOptions = (currentId) => {
+      const opts = ['<option value="">(なし)</option>']
+      for (const k of keys) {
+        if (k === currentId) continue
+        const sel = entities[currentId]?.parentEntity === k ? ' selected' : ''
+        opts.push(`<option value="${k}"${sel}>${entities[k].name} (${k})</option>`)
+      }
+      return opts.join('')
+    }
+
+    const renderProps = (id) => {
+      const e = entities[id]
+      const props = e.properties || {}
+      const propKeys = Object.keys(props)
+      if (propKeys.length === 0) return ''
+      return propKeys.map(pk => {
+        const p = props[pk]
+        return `<span class="entity-prop-badge" title="${pk}: ${p.type}, default=${p.defaultValue ?? ''}${p.rangeMin != null ? `, range=${p.rangeMin}-${p.rangeMax}` : ''}">${pk}=${p.defaultValue ?? ''}</span>`
+      }).join(' ')
+    }
+
     tbody.innerHTML = keys.map(id => {
       const e = entities[id]
+      const propDisplay = renderProps(id)
       return `<tr data-entity-id="${id}">
         <td><input type="text" value="${id}" data-entity-field="id" data-entity-old-id="${id}"></td>
         <td><input type="text" value="${e.name || ''}" data-entity-field="name" data-entity-id="${id}"></td>
-        <td><input type="text" value="${e.description || ''}" data-entity-field="description" data-entity-id="${id}"></td>
+        <td><select data-entity-field="parentEntity" data-entity-id="${id}">${parentOptions(id)}</select></td>
         <td><input type="number" value="${e.cost ?? 0}" data-entity-field="cost" data-entity-id="${id}" step="1"></td>
         <td><button class="entity-delete-btn" data-entity-id="${id}" title="削除">x</button></td>
-      </tr>`
+      </tr>${propDisplay ? `<tr class="entity-props-row"><td colspan="5"><span class="entity-props-label">props:</span> ${propDisplay}</td></tr>` : ''}`
     }).join('')
   }
 
@@ -2277,6 +2299,13 @@ export class GuiEditorManager {
     if (field === 'cost') {
       const num = Number(input.value)
       entity.cost = Number.isFinite(num) ? num : 0
+    } else if (field === 'parentEntity') {
+      const val = input.value.trim()
+      if (val) {
+        entity.parentEntity = val
+      } else {
+        delete entity.parentEntity
+      }
     } else {
       entity[field] = input.value
     }

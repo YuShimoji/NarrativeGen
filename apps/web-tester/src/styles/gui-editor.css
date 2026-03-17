@@ -203,6 +203,49 @@
   font-style: italic;
 }
 
+.entity-table select {
+  width: 100%;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.entity-table select:hover {
+  border-color: var(--color-border);
+}
+
+.entity-table select:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+.entity-props-row td {
+  padding: 0.15rem 0.5rem 0.4rem !important;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.25) !important;
+}
+
+.entity-props-label {
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.entity-prop-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.35rem;
+  margin: 0.1rem;
+  border-radius: 3px;
+  background: rgba(91, 141, 239, 0.12);
+  color: var(--color-primary);
+  font-family: var(--font-mono, monospace);
+}
+
 /* ==========================================================================
    Node List
    ========================================================================== */
