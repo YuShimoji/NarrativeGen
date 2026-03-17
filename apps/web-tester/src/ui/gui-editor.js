@@ -4,6 +4,7 @@
  */
 
 import { getCurrentModelName, getCurrentSession } from '../core/session.js'
+import { expandTemplate } from '../../../../packages/engine-ts/dist/template.js'
 import { NODE_TEMPLATES, DRAFT_MODEL_STORAGE_KEY } from '../config/constants.js'
 import { NodeRenderer } from './node-renderer.js'
 import { ModelUpdater } from './model-updater.js'
@@ -222,10 +223,28 @@ export class GuiEditorManager {
       return
     }
 
-    // Display node content
+    // Display node content with template expansion
+    const rawText = node.text || '(テキストなし)'
+    const model = this.appState.model
+    const session = getCurrentSession()
+    let expandedText = rawText
+    let hasTemplateRefs = false
+    try {
+      if (session && (rawText.includes('[') || rawText.includes('{')) && (model.entities || session.events)) {
+        expandedText = expandTemplate(rawText, model, session)
+        hasTemplateRefs = expandedText !== rawText
+      }
+    } catch (_) { /* ignore expansion errors */ }
+
+    const expandedHtml = hasTemplateRefs
+      ? `<div class="preview-expanded-label">展開後:</div>
+         <div class="preview-expanded-text">${this._escapeHtml(expandedText)}</div>`
+      : ''
+
     this.previewNodeDisplay.innerHTML = `
       <div class="preview-node-id">${nodeId}</div>
-      <div class="preview-node-text">${this._escapeHtml(node.text || '(テキストなし)')}</div>
+      <div class="preview-node-text">${this._escapeHtml(rawText)}</div>
+      ${expandedHtml}
     `
 
     // Display choices

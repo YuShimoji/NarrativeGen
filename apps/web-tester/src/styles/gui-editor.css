@@ -798,6 +798,26 @@
   white-space: pre-wrap;
 }
 
+.preview-expanded-label {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  margin-top: 0.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.preview-expanded-text {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  background: rgba(59, 130, 246, 0.06);
+  border-left: 3px solid var(--color-primary);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-top: 0.25rem;
+}
+
 .preview-choices {
   margin-bottom: 1rem;
 }
