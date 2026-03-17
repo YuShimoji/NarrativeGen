@@ -16,6 +16,7 @@ export const ConditionTypes = {
   TIME_WINDOW: 'timeWindow', // 時間窓条件: time:start-end
   HAS_ITEM: 'hasItem',   // アイテム所持条件
   HAS_EVENT: 'hasEvent', // イベント存在条件
+  PROPERTY: 'property',  // プロパティ比較条件: entity.key op value
   VISITED: 'visited',     // 訪問条件: visited:nodeId
   NOT_VISITED: 'notVisited' // 未訪問条件: notVisited:nodeId
 }
@@ -124,6 +125,7 @@ export class ConditionEffectEditor {
     const isTimeWindow = parsed.type === 'timeWindow'
     const isHasItem = parsed.type === 'hasItem'
     const isHasEvent = parsed.type === 'hasEvent'
+    const isProperty = parsed.type === 'property'
     const operatorHidden = isRaw || isFlag || isTimeWindow || isHasItem || isHasEvent
 
     const operatorOptions = (() => {
@@ -137,7 +139,7 @@ export class ConditionEffectEditor {
         `
       }
 
-      if (parsed.type === 'variable') {
+      if (parsed.type === 'variable' || parsed.type === 'property') {
         return `
           <option value="=" ${parsed.operator === '=' ? 'selected' : ''}>=</option>
           <option value="!=" ${parsed.operator === '!=' ? 'selected' : ''}>!=</option>
@@ -164,6 +166,7 @@ export class ConditionEffectEditor {
           <option value="timeWindow" ${parsed.type === 'timeWindow' ? 'selected' : ''}>時間窓</option>
           <option value="hasItem" ${parsed.type === 'hasItem' ? 'selected' : ''}>アイテム所持</option>
           <option value="hasEvent" ${parsed.type === 'hasEvent' ? 'selected' : ''}>イベント存在</option>
+          <option value="property" ${parsed.type === 'property' ? 'selected' : ''}>プロパティ比較</option>
           <option value="raw" ${parsed.type === 'raw' ? 'selected' : ''}>カスタム</option>
         </select>
         <input type="text" class="condition-raw" placeholder="条件(生)" value="${this._escapeAttr(parsed.rawText)}" data-field="raw" ${isRaw ? '' : 'style="display:none"'}>
@@ -246,6 +249,10 @@ export class ConditionEffectEditor {
       }
       if (type === 'hasEvent') {
         return { type: 'hasEvent', name: conditionStr.key ?? '', operator: '=', value: String(conditionStr.value ?? true), rawText: '' }
+      }
+      if (type === 'property') {
+        const op = conditionStr.op === '==' ? '=' : (conditionStr.op ?? '==')
+        return { type: 'property', name: `${conditionStr.entity ?? ''}.${conditionStr.key ?? ''}`, operator: op, value: String(conditionStr.value ?? ''), rawText: '' }
       }
 
       if (type === 'and' || type === 'or' || type === 'not') {
@@ -431,6 +438,16 @@ export class ConditionEffectEditor {
 
     if (type === 'hasEvent') {
       return { type: 'hasEvent', key: name, value: this._parseBoolean(value) }
+    }
+
+    if (type === 'property') {
+      const parts = (name || '').split('.')
+      const entity = parts[0] || ''
+      const key = parts.slice(1).join('.') || ''
+      const op = operator === '=' ? '==' : operator
+      const numVal = Number(value)
+      const parsedValue = value !== '' && Number.isFinite(numVal) ? numVal : String(value ?? '')
+      return { type: 'property', entity, key, op, value: parsedValue }
     }
 
     return this.buildConditionString(type, name, operator, value)
@@ -657,7 +674,7 @@ export class ConditionEffectEditor {
               <option value="<">&lt;</option>
               <option value="<=">&lt;=</option>
             `
-          } else if (e.target.value === 'variable') {
+          } else if (e.target.value === 'variable' || e.target.value === 'property') {
             operatorEl.innerHTML = `
               <option value="=">=</option>
               <option value="!=">!=</option>
