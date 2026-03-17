@@ -1,6 +1,6 @@
 # SP-EVENT-001: Dynamic Event Entity Generation
 
-**Status**: partial | **Pct**: 0 | **Cat**: core
+**Status**: partial | **Pct**: 80 | **Cat**: core
 
 ## 概要
 

@@ -115,21 +115,26 @@
 ブランチ戦略: trunk-based (main のみ)
 現フェーズ: 機能拡張 → 原初ビジョン統合フェーズ
 方針: Entity-Property駆動ナラティブエンジンへの段階移行
-直近の状態 (2026-03-17 夜間自走):
+直近の状態 (2026-03-17 夜間自走 #2):
 
-- main ブランチ、4コミット未push (3860327..ab2b139)
-- 149テスト全緑 (123→149, +26テスト)、ビルド成功 (警告0)
+- main ブランチ、5コミット未push
+- 167テスト全緑 (149→167, +18テスト)、11モデル検証通過、ビルド成功 (警告0)
 - E2E: 22 passed / 5 skipped
-- done 26/28 specs (残: SP-UNITY-001 85%, SP-009 65%)
+- done 26/29 specs (残: SP-UNITY-001 85%, SP-009 65%, SP-EVENT-001 80%)
 - 原初ビジョン実装進捗:
   - SP-PROP-001 done: Entity-Property System
   - SP-TEXT-001 done: Dynamic Text Engine
-  - SP-ANOMALY-001 done: Property Anomaly Detection (KnowledgeProfile + deviation scoring)
-  - SP-PARA-002 done: Paraphrase Property Matching (ConditionalVariant + UsageHistory + buildParaphraseContext)
-  - Event Entity System: hasEvent条件 + createEvent効果 + SessionState.events + event_test.json
-  - hasEvent/createEvent: 推論レジストリ統合済み、スキーマ更新済み
+  - SP-ANOMALY-001 done: Property Anomaly Detection
+  - SP-PARA-002 done: Paraphrase Property Matching
+  - SP-EVENT-001 partial/80%: Dynamic Event Entity Generation
+    - Engine: createEventEntity/hasEvent/createEventFromAnomaly
+    - 推論レジストリ: hasEventEvaluator + createEventApplicator
+    - テンプレート: session.events からの [event_id.property] 展開
+    - スキーマ: hasEvent条件 + createEvent効果
+    - テスト: 18件 (コア + integration + template)
+    - 残: Web Tester GUI (condition-effect-editor対応)
 - 次回着手候補:
   - Web Tester GUI: hasEvent/createEvent のcondition-effect-editor対応
   - 手動検証: event_test + property_test + inventory_test のブラウザ確認
-  - 原初ビジョン 5.2 残: 事象Entity動的生成の完成度評価
+  - 原初ビジョン 5.3: 動的ストーリー展開 (事象Entity参照による新展開生成)
   - SP-009 Tech Debt 65%→残作業特定
