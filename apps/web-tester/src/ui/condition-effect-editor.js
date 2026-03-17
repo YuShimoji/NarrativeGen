@@ -17,6 +17,9 @@ export const ConditionTypes = {
   HAS_ITEM: 'hasItem',   // アイテム所持条件
   HAS_EVENT: 'hasEvent', // イベント存在条件
   PROPERTY: 'property',  // プロパティ比較条件: entity.key op value
+  AND: 'and',             // 複合条件 (全て満たす)
+  OR: 'or',               // 複合条件 (いずれか満たす)
+  NOT: 'not',             // 否定条件
   VISITED: 'visited',     // 訪問条件: visited:nodeId
   NOT_VISITED: 'notVisited' // 未訪問条件: notVisited:nodeId
 }
@@ -126,7 +129,9 @@ export class ConditionEffectEditor {
     const isHasItem = parsed.type === 'hasItem'
     const isHasEvent = parsed.type === 'hasEvent'
     const isProperty = parsed.type === 'property'
-    const operatorHidden = isRaw || isFlag || isTimeWindow || isHasItem || isHasEvent
+    const isComposite = parsed.type === 'and' || parsed.type === 'or'
+    const isNot = parsed.type === 'not'
+    const operatorHidden = isRaw || isFlag || isTimeWindow || isHasItem || isHasEvent || isComposite || isNot
 
     const operatorOptions = (() => {
       if (parsed.type === 'resource') {
@@ -157,25 +162,38 @@ export class ConditionEffectEditor {
       `
     })()
     
+    const mainFieldsHidden = isComposite || isNot
+    const subConditionsHtml = isComposite
+      ? this._renderSubConditions(parsed.subConditions ?? [], nodeId, choiceIndex, condIndex)
+      : isNot
+        ? this._renderSubConditions(parsed.subCondition ? [parsed.subCondition] : [], nodeId, choiceIndex, condIndex, true)
+        : ''
+
     return `
-      <div class="condition-item" data-condition-index="${condIndex}">
-        <select class="condition-type" data-field="type">
-          <option value="flag" ${parsed.type === 'flag' ? 'selected' : ''}>フラグ</option>
-          <option value="resource" ${parsed.type === 'resource' ? 'selected' : ''}>リソース</option>
-          <option value="variable" ${parsed.type === 'variable' ? 'selected' : ''}>変数</option>
-          <option value="timeWindow" ${parsed.type === 'timeWindow' ? 'selected' : ''}>時間窓</option>
-          <option value="hasItem" ${parsed.type === 'hasItem' ? 'selected' : ''}>アイテム所持</option>
-          <option value="hasEvent" ${parsed.type === 'hasEvent' ? 'selected' : ''}>イベント存在</option>
-          <option value="property" ${parsed.type === 'property' ? 'selected' : ''}>プロパティ比較</option>
-          <option value="raw" ${parsed.type === 'raw' ? 'selected' : ''}>カスタム</option>
-        </select>
-        <input type="text" class="condition-raw" placeholder="条件(生)" value="${this._escapeAttr(parsed.rawText)}" data-field="raw" ${isRaw ? '' : 'style="display:none"'}>
-        <input type="text" class="condition-name" placeholder="名前" value="${this._escapeAttr(parsed.name)}" data-field="name" ${isRaw ? 'style="display:none"' : ''}>
-        <select class="condition-operator" data-field="operator" ${operatorHidden ? 'style="display:none"' : ''}>
-          ${operatorOptions}
-        </select>
-        <input type="text" class="condition-value" placeholder="値" value="${this._escapeAttr(parsed.value)}" data-field="value" ${isRaw ? 'style="display:none"' : ''}>
-        <button type="button" class="delete-condition-btn btn-icon" data-node-id="${nodeId}" data-choice-index="${choiceIndex}" data-condition-index="${condIndex}">×</button>
+      <div class="condition-item ${isComposite || isNot ? 'composite-condition' : ''}" data-condition-index="${condIndex}">
+        <div class="condition-main-row">
+          <select class="condition-type" data-field="type">
+            <option value="flag" ${parsed.type === 'flag' ? 'selected' : ''}>フラグ</option>
+            <option value="resource" ${parsed.type === 'resource' ? 'selected' : ''}>リソース</option>
+            <option value="variable" ${parsed.type === 'variable' ? 'selected' : ''}>変数</option>
+            <option value="timeWindow" ${parsed.type === 'timeWindow' ? 'selected' : ''}>時間窓</option>
+            <option value="hasItem" ${parsed.type === 'hasItem' ? 'selected' : ''}>アイテム所持</option>
+            <option value="hasEvent" ${parsed.type === 'hasEvent' ? 'selected' : ''}>イベント存在</option>
+            <option value="property" ${parsed.type === 'property' ? 'selected' : ''}>プロパティ比較</option>
+            <option value="and" ${parsed.type === 'and' ? 'selected' : ''}>AND (全て)</option>
+            <option value="or" ${parsed.type === 'or' ? 'selected' : ''}>OR (いずれか)</option>
+            <option value="not" ${parsed.type === 'not' ? 'selected' : ''}>NOT (否定)</option>
+            <option value="raw" ${parsed.type === 'raw' ? 'selected' : ''}>カスタム</option>
+          </select>
+          <input type="text" class="condition-raw" placeholder="条件(生)" value="${this._escapeAttr(parsed.rawText)}" data-field="raw" ${isRaw ? '' : 'style="display:none"'}>
+          <input type="text" class="condition-name" placeholder="名前" value="${this._escapeAttr(parsed.name)}" data-field="name" ${(isRaw || mainFieldsHidden) ? 'style="display:none"' : ''}>
+          <select class="condition-operator" data-field="operator" ${operatorHidden ? 'style="display:none"' : ''}>
+            ${operatorOptions}
+          </select>
+          <input type="text" class="condition-value" placeholder="値" value="${this._escapeAttr(parsed.value)}" data-field="value" ${(isRaw || mainFieldsHidden) ? 'style="display:none"' : ''}>
+          <button type="button" class="delete-condition-btn btn-icon" data-node-id="${nodeId}" data-choice-index="${choiceIndex}" data-condition-index="${condIndex}">×</button>
+        </div>
+        ${subConditionsHtml}
       </div>
     `
   }
@@ -222,6 +240,58 @@ export class ConditionEffectEditor {
         ${propsHtml}
       </div>
     `
+  }
+
+  /**
+   * 複合条件のサブ条件UIを生成 (1階層のみ)
+   */
+  _renderSubConditions(subConditions, nodeId, choiceIndex, parentCondIndex, isNot = false) {
+    const items = (subConditions ?? []).map((sub, i) => {
+      const parsed = this._parseCondition(sub)
+      const isSubRaw = parsed.type === 'raw'
+      const subOperatorHidden = isSubRaw || parsed.type === 'flag' || parsed.type === 'timeWindow' || parsed.type === 'hasItem' || parsed.type === 'hasEvent'
+
+      const subOperatorOptions = (() => {
+        if (parsed.type === 'resource') {
+          return ['=', '>', '>=', '<', '<='].map(op => `<option value="${op}" ${parsed.operator === op ? 'selected' : ''}>${this._escapeAttr(op)}</option>`).join('')
+        }
+        if (parsed.type === 'variable' || parsed.type === 'property') {
+          return ['=', '!=', 'contains', '!contains', '>', '>=', '<', '<='].map(op => `<option value="${op}" ${parsed.operator === op ? 'selected' : ''}>${this._escapeAttr(op)}</option>`).join('')
+        }
+        return '<option value="=">=</option>'
+      })()
+
+      return `
+        <div class="sub-condition-item" data-sub-index="${i}">
+          <select class="sub-condition-type" data-field="type">
+            <option value="flag" ${parsed.type === 'flag' ? 'selected' : ''}>フラグ</option>
+            <option value="resource" ${parsed.type === 'resource' ? 'selected' : ''}>リソース</option>
+            <option value="variable" ${parsed.type === 'variable' ? 'selected' : ''}>変数</option>
+            <option value="hasItem" ${parsed.type === 'hasItem' ? 'selected' : ''}>アイテム所持</option>
+            <option value="hasEvent" ${parsed.type === 'hasEvent' ? 'selected' : ''}>イベント存在</option>
+            <option value="property" ${parsed.type === 'property' ? 'selected' : ''}>プロパティ</option>
+            <option value="raw" ${parsed.type === 'raw' ? 'selected' : ''}>カスタム</option>
+          </select>
+          <input type="text" class="sub-condition-raw" placeholder="条件(生)" value="${this._escapeAttr(parsed.rawText)}" ${isSubRaw ? '' : 'style="display:none"'}>
+          <input type="text" class="sub-condition-name" placeholder="名前" value="${this._escapeAttr(parsed.name)}" ${isSubRaw ? 'style="display:none"' : ''}>
+          <select class="sub-condition-operator" ${subOperatorHidden ? 'style="display:none"' : ''}>
+            ${subOperatorOptions}
+          </select>
+          <input type="text" class="sub-condition-value" placeholder="値" value="${this._escapeAttr(parsed.value)}" ${isSubRaw ? 'style="display:none"' : ''}>
+          <button type="button" class="delete-sub-condition-btn btn-icon">×</button>
+        </div>`
+    }).join('')
+
+    return `
+      <div class="sub-conditions" data-parent-index="${parentCondIndex}" data-is-not="${isNot}">
+        <div class="sub-conditions-header">
+          <span class="sub-label">${isNot ? '否定対象' : 'サブ条件'}</span>
+          ${isNot ? '' : '<button type="button" class="add-sub-condition-btn btn-small">+ 追加</button>'}
+        </div>
+        <div class="sub-conditions-list">
+          ${items || '<span class="empty-hint">条件なし</span>'}
+        </div>
+      </div>`
   }
 
   /**
@@ -288,8 +358,11 @@ export class ConditionEffectEditor {
         return { type: 'property', name: `${conditionStr.entity ?? ''}.${conditionStr.key ?? ''}`, operator: op, value: String(conditionStr.value ?? ''), rawText: '' }
       }
 
-      if (type === 'and' || type === 'or' || type === 'not') {
-        return { type: 'raw', name: '', operator: '=', value: '', rawText: JSON.stringify(conditionStr) }
+      if (type === 'and' || type === 'or') {
+        return { type, name: '', operator: '=', value: '', rawText: '', subConditions: conditionStr.conditions ?? [] }
+      }
+      if (type === 'not') {
+        return { type: 'not', name: '', operator: '=', value: '', rawText: '', subCondition: conditionStr.condition ?? null }
       }
 
       // Unknown object type
@@ -486,6 +559,21 @@ export class ConditionEffectEditor {
     return this.buildConditionString(type, name, operator, value)
   }
 
+  /**
+   * サブ条件DOM要素からサブ条件オブジェクトを読み取る
+   */
+  _readSubConditionFromElement(subItem) {
+    const type = subItem.querySelector('.sub-condition-type')?.value || 'flag'
+    if (type === 'raw') {
+      const raw = subItem.querySelector('.sub-condition-raw')?.value || ''
+      return this.parseConditionInput(raw)
+    }
+    const name = subItem.querySelector('.sub-condition-name')?.value || ''
+    const operator = subItem.querySelector('.sub-condition-operator')?.value || '='
+    const value = subItem.querySelector('.sub-condition-value')?.value || ''
+    return this.buildConditionObject(type, name, operator, value)
+  }
+
   buildEffectObject(type, name, value, operator) {
     if (!name) return null
 
@@ -678,10 +766,26 @@ export class ConditionEffectEditor {
       const raw = itemElement.querySelector('.condition-raw')?.value || ''
       return this.parseConditionInput(raw)
     }
+
+    // Handle composite conditions (and/or/not)
+    if (type === 'and' || type === 'or') {
+      const subItems = itemElement.querySelectorAll('.sub-conditions-list > .sub-condition-item')
+      const conditions = Array.from(subItems).map(sub => this._readSubConditionFromElement(sub)).filter(Boolean)
+      return { type, conditions }
+    }
+    if (type === 'not') {
+      const subItems = itemElement.querySelectorAll('.sub-conditions-list > .sub-condition-item')
+      if (subItems.length > 0) {
+        const condition = this._readSubConditionFromElement(subItems[0])
+        return condition ? { type: 'not', condition } : null
+      }
+      return null
+    }
+
     const name = itemElement.querySelector('.condition-name')?.value || ''
     const operator = itemElement.querySelector('.condition-operator')?.value || '='
     const value = itemElement.querySelector('.condition-value')?.value || ''
-    
+
     return this.buildConditionObject(type, name, operator, value)
   }
 
@@ -727,8 +831,29 @@ export class ConditionEffectEditor {
         const isTimeWindow = e.target.value === 'timeWindow'
         const isHasEvent = e.target.value === 'hasEvent'
 
+        const isComposite = e.target.value === 'and' || e.target.value === 'or'
+        const isNot = e.target.value === 'not'
+        const mainFieldsHidden = isComposite || isNot
+
         if (rawEl) rawEl.style.display = isRaw ? '' : 'none'
-        if (nameEl) nameEl.style.display = isRaw ? 'none' : ''
+        if (nameEl) nameEl.style.display = (isRaw || mainFieldsHidden) ? 'none' : ''
+
+        // Show/hide sub-conditions section for composite types
+        let subSection = item.querySelector('.sub-conditions')
+        if ((isComposite || isNot) && !subSection) {
+          const div = document.createElement('div')
+          div.innerHTML = this._renderSubConditions(
+            isNot ? [{ type: 'flag', key: 'newFlag', value: true }] : [],
+            '', '', item.dataset.conditionIndex, isNot
+          )
+          item.appendChild(div.firstElementChild)
+          item.classList.add('composite-condition')
+        } else if (subSection) {
+          subSection.style.display = (isComposite || isNot) ? '' : 'none'
+          if (!isComposite && !isNot) item.classList.remove('composite-condition')
+          else item.classList.add('composite-condition')
+        }
+
         if (operatorEl) {
           const currentOp = operatorEl.value || '='
           if (e.target.value === 'resource') {
@@ -758,9 +883,38 @@ export class ConditionEffectEditor {
           const validOps = Array.from(operatorEl.querySelectorAll('option')).map((o) => o.value)
           operatorEl.value = validOps.includes(currentOp) ? currentOp : '='
 
-          operatorEl.style.display = (isRaw || isFlag || isTimeWindow || isHasEvent) ? 'none' : ''
+          operatorEl.style.display = (isRaw || isFlag || isTimeWindow || isHasEvent || mainFieldsHidden) ? 'none' : ''
         }
-        if (valueEl) valueEl.style.display = isRaw ? 'none' : ''
+        if (valueEl) valueEl.style.display = (isRaw || mainFieldsHidden) ? 'none' : ''
+      }
+
+      // Sub-condition type change
+      if (e.target.classList.contains('sub-condition-type')) {
+        const subItem = e.target.closest('.sub-condition-item')
+        const subRawEl = subItem.querySelector('.sub-condition-raw')
+        const subNameEl = subItem.querySelector('.sub-condition-name')
+        const subOpEl = subItem.querySelector('.sub-condition-operator')
+        const subValueEl = subItem.querySelector('.sub-condition-value')
+        const isSubRaw = e.target.value === 'raw'
+        const isSubFlag = e.target.value === 'flag'
+        const isSubHasItem = e.target.value === 'hasItem'
+        const isSubHasEvent = e.target.value === 'hasEvent'
+        const subOpHidden = isSubRaw || isSubFlag || isSubHasItem || isSubHasEvent
+
+        if (subRawEl) subRawEl.style.display = isSubRaw ? '' : 'none'
+        if (subNameEl) subNameEl.style.display = isSubRaw ? 'none' : ''
+        if (subValueEl) subValueEl.style.display = isSubRaw ? 'none' : ''
+        if (subOpEl) {
+          if (e.target.value === 'resource') {
+            subOpEl.innerHTML = ['=', '>', '>=', '<', '<='].map(op => `<option value="${op}">${op}</option>`).join('')
+          } else if (e.target.value === 'variable' || e.target.value === 'property') {
+            subOpEl.innerHTML = ['=', '!=', 'contains', '!contains', '>', '>=', '<', '<='].map(op => `<option value="${op}">${op}</option>`).join('')
+          } else {
+            subOpEl.innerHTML = '<option value="=">=</option>'
+          }
+          subOpEl.style.display = subOpHidden ? 'none' : ''
+        }
+        if (callbacks.onValueChange) callbacks.onValueChange(e)
       }
 
       if (e.target.classList.contains('effect-type')) {
@@ -835,6 +989,46 @@ export class ConditionEffectEditor {
         const effectIndex = parseInt(e.target.dataset.effectIndex)
         if (callbacks.onDeleteEffect) {
           callbacks.onDeleteEffect(nodeId, choiceIndex, effectIndex)
+        }
+      }
+
+      // Sub-condition: add
+      if (e.target.classList.contains('add-sub-condition-btn')) {
+        const subList = e.target.closest('.sub-conditions')?.querySelector('.sub-conditions-list')
+        if (subList) {
+          const hint = subList.querySelector('.empty-hint')
+          if (hint) hint.remove()
+          const idx = subList.querySelectorAll('.sub-condition-item').length
+          const div = document.createElement('div')
+          div.className = 'sub-condition-item'
+          div.dataset.subIndex = idx
+          div.innerHTML = `
+            <select class="sub-condition-type" data-field="type">
+              <option value="flag" selected>フラグ</option>
+              <option value="resource">リソース</option>
+              <option value="variable">変数</option>
+              <option value="hasItem">アイテム所持</option>
+              <option value="hasEvent">イベント存在</option>
+              <option value="property">プロパティ</option>
+              <option value="raw">カスタム</option>
+            </select>
+            <input type="text" class="sub-condition-raw" placeholder="条件(生)" style="display:none">
+            <input type="text" class="sub-condition-name" placeholder="名前" value="">
+            <select class="sub-condition-operator" style="display:none"><option value="=">=</option></select>
+            <input type="text" class="sub-condition-value" placeholder="値" value="true">
+            <button type="button" class="delete-sub-condition-btn btn-icon">×</button>`
+          subList.appendChild(div)
+          div.querySelector('.sub-condition-name').focus()
+          if (callbacks.onValueChange) callbacks.onValueChange(e)
+        }
+      }
+
+      // Sub-condition: delete
+      if (e.target.classList.contains('delete-sub-condition-btn')) {
+        const subItem = e.target.closest('.sub-condition-item')
+        if (subItem) {
+          subItem.remove()
+          if (callbacks.onValueChange) callbacks.onValueChange(e)
         }
       }
 

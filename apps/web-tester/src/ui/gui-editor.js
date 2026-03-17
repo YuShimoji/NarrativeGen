@@ -296,13 +296,13 @@ export class GuiEditorManager {
     }
 
     // Update inference analysis panels (GUI editor + graph tab)
-    const session = getCurrentSession()
+    const inferenceSession = getCurrentSession()
     if (this.inferencePanel) {
-      this.inferencePanel.setSession(session)
+      this.inferencePanel.setSession(inferenceSession)
       this.inferencePanel.update(nodeId)
     }
     if (this.graphInferencePanel) {
-      this.graphInferencePanel.setSession(session)
+      this.graphInferencePanel.setSession(inferenceSession)
       this.graphInferencePanel.update(nodeId)
     }
   }
