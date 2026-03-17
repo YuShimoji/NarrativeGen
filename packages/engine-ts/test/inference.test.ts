@@ -293,7 +293,8 @@ describe('Capabilities', () => {
     expect(conditions).toContain('and')
     expect(conditions).toContain('or')
     expect(conditions).toContain('not')
-    expect(conditions.length).toBe(8)
+    expect(conditions).toContain('property')
+    expect(conditions.length).toBe(9)
   })
 
   it('should list all registered effect types', () => {

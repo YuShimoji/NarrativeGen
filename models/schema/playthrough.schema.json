@@ -112,6 +112,18 @@
                           "value": { "type": "boolean" }
                         },
                         "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "required": ["type", "entity", "key", "op", "value"],
+                        "properties": {
+                          "type": { "const": "property" },
+                          "entity": { "type": "string" },
+                          "key": { "type": "string" },
+                          "op": { "type": "string", "enum": [">=", "<=", ">", "<", "==", "!="] },
+                          "value": { "oneOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] }
+                        },
+                        "additionalProperties": false
                       }
                     ]
                   }

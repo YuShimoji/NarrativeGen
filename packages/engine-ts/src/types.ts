@@ -25,6 +25,7 @@ export type Condition =
   | { type: 'resource'; key: string; op: '>=' | '<=' | '>' | '<' | '=='; value: number }
   | { type: 'variable'; key: string; op: '==' | '!=' | 'contains' | '!contains' | '>=' | '<=' | '>' | '<'; value: string | number }
   | { type: 'hasItem'; key: string; value: boolean }
+  | { type: 'property'; entity: string; key: string; op: '>=' | '<=' | '>' | '<' | '==' | '!='; value: string | number | boolean }
   | { type: 'timeWindow'; start: number; end: number }
   | { type: 'and'; conditions: Condition[] }
   | { type: 'or'; conditions: Condition[] }

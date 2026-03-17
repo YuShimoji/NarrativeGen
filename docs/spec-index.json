@@ -210,10 +210,10 @@
     "id": "SP-PROP-001",
     "title": "Entity-Property System",
     "status": "partial",
-    "pct": 85,
+    "pct": 100,
     "cat": "core",
     "file": "docs/specs/entity-property-system.md",
-    "summary": "Extended EntityDef with PropertyDef hierarchy + inheritance. Phase 1-4: engine (resolveProperty/getEntityProperties/getInheritanceChain) + schema + Entity panel UI (parentEntity dropdown, property CRUD with details/summary). 19 tests. Remaining: inference integration."
+    "summary": "Extended EntityDef with PropertyDef hierarchy + inheritance. Engine: resolveProperty/getEntityProperties/getInheritanceChain. Schema: PropertyDef + parentEntity + property condition. Inference: propertyEvaluator (9 condition types). GUI: parentEntity dropdown, property CRUD. 19+1 tests."
   },
   {
     "id": "SP-TEXT-001",
