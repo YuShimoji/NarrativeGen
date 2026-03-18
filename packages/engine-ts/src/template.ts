@@ -1,5 +1,7 @@
 import type { Model, SessionState } from './types'
-import { resolveProperty } from './entities.js'
+import { resolveProperty, getEntityProperties } from './entities.js'
+import type { DescriptionState } from './description-tracker.js'
+import { getUndescribedKeys, markDescribed } from './description-tracker.js'
 
 /**
  * Expand template references in text.
@@ -120,4 +122,90 @@ export function expandTemplate(
   })
 
   return result
+}
+
+/**
+ * Result of template expansion with description tracking.
+ */
+export interface ExpandWithTrackingResult {
+  text: string
+  descriptionState: DescriptionState
+}
+
+/**
+ * Expand template references with description tracking.
+ *
+ * Adds support for `[entity~]` syntax:
+ * - `[entity~]` → picks a random undescribed property value and marks it as described.
+ *   If all properties are described, picks any property.
+ *   Format: "key: value" for the selected property.
+ *
+ * All other syntax is handled by `expandTemplate`.
+ *
+ * @param text - Template text
+ * @param model - The model
+ * @param session - Current session state
+ * @param descState - Current description tracking state
+ * @param seed - Random seed for deterministic property selection
+ * @returns Expanded text and updated description state
+ */
+export function expandTemplateWithTracking(
+  text: string,
+  model: Model,
+  session: SessionState,
+  descState: DescriptionState = {},
+  seed: number = 0
+): ExpandWithTrackingResult {
+  if (!text) return { text, descriptionState: descState }
+
+  let state = { ...descState }
+  let seedCounter = seed
+
+  // Process [entity~] patterns before standard expansion
+  const processed = text.replace(/\[(\w+)~\]/g, (_match, entityId: string) => {
+    const entities = { ...(model.entities ?? {}), ...(session.events ?? {}) }
+    const entity = entities[entityId]
+    if (!entity) return `[${entityId}~]`
+
+    // Get all property keys (with inheritance for static entities)
+    let allProps: Record<string, import('./types').PropertyDef>
+    if (model.entities && model.entities[entityId]) {
+      allProps = getEntityProperties(entityId, model.entities)
+    } else {
+      // Event entity: direct properties only
+      allProps = {}
+      if (entity.properties) {
+        for (const [k, p] of Object.entries(entity.properties)) {
+          allProps[k] = p
+        }
+      }
+    }
+
+    const allKeys = Object.keys(allProps)
+    if (allKeys.length === 0) return entity.name
+
+    // Get undescribed keys
+    let candidateKeys = getUndescribedKeys(state, entityId, allKeys)
+    if (candidateKeys.length === 0) {
+      // All described — allow any key
+      candidateKeys = allKeys
+    }
+
+    // Deterministic selection using seed
+    const selectedKey = candidateKeys[seedCounter % candidateKeys.length]
+    seedCounter++
+
+    // Mark as described
+    state = markDescribed(state, entityId, selectedKey)
+
+    // Resolve property value
+    const prop = allProps[selectedKey]
+    const value = prop?.defaultValue !== undefined ? String(prop.defaultValue) : 'unknown'
+    return `${selectedKey}: ${value}`
+  })
+
+  // Run standard expansion on the processed text
+  const expanded = expandTemplate(processed, model, session)
+
+  return { text: expanded, descriptionState: state }
 }

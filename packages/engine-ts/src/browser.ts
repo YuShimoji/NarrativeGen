@@ -88,7 +88,8 @@ export type { Choice, Condition, Effect, EntityDef, FlagState, Model, NodeDef, P
 export { resolveProperty, getEntityProperties, getInheritanceChain } from './entities.js'
 
 // Dynamic text engine
-export { expandTemplate } from './template.js'
+export { expandTemplate, expandTemplateWithTracking } from './template.js'
+export type { ExpandWithTrackingResult } from './template.js'
 
 // Character knowledge model
 export { findKnowledgeProfile, perceiveEntity } from './character-knowledge.js'

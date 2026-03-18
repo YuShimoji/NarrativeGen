@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { expandTemplate } from '../src/template'
+import { expandTemplate, expandTemplateWithTracking } from '../src/template'
 import type { Model, SessionState } from '../src/types'
 
 function makeSession(overrides: Partial<SessionState> = {}): SessionState {
@@ -218,6 +218,91 @@ describe('expandTemplate', () => {
 
     it('should leave unknown condition as empty', () => {
       expect(expandTemplate('{?unknown_flag:text}', model, session)).toBe('')
+    })
+  })
+
+  describe('[entity~] prop_pool syntax', () => {
+    const poolModel = makeModel({
+      entities: {
+        sword: {
+          id: 'sword',
+          name: 'Iron Sword',
+          properties: {
+            damage: { key: 'damage', type: 'number', defaultValue: 25 },
+            weight: { key: 'weight', type: 'number', defaultValue: 3.5 },
+            material: { key: 'material', type: 'string', defaultValue: 'iron' }
+          }
+        }
+      }
+    })
+    const poolSession = makeSession()
+
+    it('should pick an undescribed property', () => {
+      const result = expandTemplateWithTracking('The sword: [sword~]', poolModel, poolSession, {}, 0)
+      // seed=0 → index 0 of ['damage','weight','material'] → 'damage'
+      expect(result.text).toContain('damage: 25')
+      expect(result.descriptionState.sword.describedKeys).toContain('damage')
+    })
+
+    it('should track described properties across calls', () => {
+      const r1 = expandTemplateWithTracking('[sword~]', poolModel, poolSession, {}, 0)
+      // First call describes one key
+      expect(r1.descriptionState.sword.describedKeys).toHaveLength(1)
+
+      const r2 = expandTemplateWithTracking('[sword~]', poolModel, poolSession, r1.descriptionState, 0)
+      // Second call should pick a different key
+      expect(r2.descriptionState.sword.describedKeys).toHaveLength(2)
+      expect(r2.text).not.toBe(r1.text)
+    })
+
+    it('should cycle back when all properties are described', () => {
+      let state = {}
+      // Describe all 3 properties
+      for (let i = 0; i < 3; i++) {
+        const r = expandTemplateWithTracking('[sword~]', poolModel, poolSession, state, i)
+        state = r.descriptionState
+      }
+      expect(Object.keys(state).length).toBe(1)
+      expect(state['sword'].describedKeys).toHaveLength(3)
+
+      // Next call should still work (cycles back)
+      const r = expandTemplateWithTracking('[sword~]', poolModel, poolSession, state, 0)
+      expect(r.text).toBeTruthy()
+      expect(r.text).not.toContain('[sword~]')
+    })
+
+    it('should leave unknown entity as-is', () => {
+      const r = expandTemplateWithTracking('[unknown~]', poolModel, poolSession, {}, 0)
+      expect(r.text).toBe('[unknown~]')
+    })
+
+    it('should handle entity with no properties', () => {
+      const noPropsModel = makeModel({
+        entities: { npc: { id: 'npc', name: 'Guard' } }
+      })
+      const r = expandTemplateWithTracking('[npc~]', noPropsModel, poolSession, {}, 0)
+      expect(r.text).toBe('Guard')
+    })
+
+    it('should combine with standard template syntax', () => {
+      const r = expandTemplateWithTracking(
+        'You see [sword~]. {?flag:flagged}',
+        poolModel,
+        makeSession({ flags: { flag: true } }),
+        {},
+        0
+      )
+      expect(r.text).toContain('damage: 25')
+      expect(r.text).toContain('flagged')
+    })
+
+    it('should use deterministic seed', () => {
+      const r0 = expandTemplateWithTracking('[sword~]', poolModel, poolSession, {}, 0)
+      const r1 = expandTemplateWithTracking('[sword~]', poolModel, poolSession, {}, 1)
+      const r2 = expandTemplateWithTracking('[sword~]', poolModel, poolSession, {}, 2)
+      // Different seeds pick different properties
+      const texts = new Set([r0.text, r1.text, r2.text])
+      expect(texts.size).toBe(3)
     })
   })
 })
