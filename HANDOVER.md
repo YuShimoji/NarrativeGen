@@ -4,8 +4,8 @@
 
 - **日時**: 2026-03-18
 - **ブランチ**: `main` (trunk-based)
-- **最新コミット**: `2dd02f2` (feat: align index.ts exports with browser.ts)
-- **origin/main**: +3 commits ahead (push前)
+- **最新コミット**: `358a8b3` (feat: SP-PLAY-001 play immersion MVP)
+- **origin/main**: +1 commit ahead (push前)
 
 ## プロジェクト概要
 
@@ -28,39 +28,41 @@ NarrativeGen/
 
 ### CI・テスト
 
-- **engine-ts**: 237 テスト全合格 (19 ファイル)
+- **engine-ts**: 250 テスト全合格 (20 ファイル)
 - **web-tester**: Vite ビルド成功
 - **E2E**: 44 件
 - **モデル検証**: 14 モデル通過
 
 ### 仕様書
 
-- **spec-index.json**: 31 エントリ
+- **spec-index.json**: 32 エントリ
 - **done**: 30 件
-- **partial**: 1 件 (SP-UNITY-001 Unity SDK 85%)
+- **partial**: 2 件 (SP-UNITY-001 Unity SDK 85%, SP-PLAY-001 Play Immersion 75%)
 
-### Session 7 の成果 (2026-03-18)
+### Session 10 の成果 (2026-03-18)
 
-- AUTHORING_GUIDE.md: 16セクション、全機能ステップバイステップガイド
-- writer_tutorial.json: 12ノード/4エンティティ/3テンプレート/2キャラクター/3語辞書
-- writer-tutorial.spec.ts (14件) + full-integration.spec.ts (11件): 全ルートセッション検証
-- GUI改善: condition-effect-editor datalistサジェスト + Dynamic Textインラインプレビュー
-- G4解消: Model.characters (CharacterDef + KnowledgeProfile) スキーマ追加
-- G5解消: Model.paraphraseLexicon (PropertyAwareLexicon) スキーマ追加
-- [entity~] prop_pool構文: expandTemplateWithTracking + DescriptionState連動 + 7テスト
-- Yarn検証: writer_tutorial構造出力OK (Dynamic Text構文のYarn変換は将来課題)
+- SP-PLAY-001 プレイ没入感 MVP 実装
+  - TransitionRegistry: Strategy パターンでノード遷移方式を登録・切替
+  - CrossfadeTransition / AppendScrollTransition: 2つの組み込み遷移
+  - PlayRenderer: 段落フェードイン + インライン選択肢 + エンディング表示
+  - play.css: CSS アニメーション (fadeIn/fadeOut, stagger, ending, mode toggle)
+  - app-controller.js: PlayRenderer 統合 (全セッション開始点で初期化)
+  - playthrough.schema.json: settings.presentation + nodes.*.presentation 追加
 
 ## 既知の課題
 
 - GUI Undo/Redo 手動回帰テスト未実施
 - Unity SDK パリティ未完 (TS側7機能の移植)
 - Dynamic Text構文のYarnネイティブ変換 (`{variable}`→`{$variable}`, `{?cond:text}`→`<<if>>`/`<<endif>>`)
+- SP-PLAY-001 E2E テスト未作成
 
 ## 次の推奨作業
 
-1. **Unity SDK パリティ**: TS側7機能の C# 移植 (別セッション推奨)
-2. **Dynamic Text Yarn変換**: {variable}→{$variable}, {?cond:text}→<<if>>/<<endif>>
-3. **CI統合**: spec-index/encoding-safety checks in PR/CI
+1. **SP-PLAY-001 E2E テスト**: 段落フェードイン・インライン選択肢・モード切替の自動テスト
+2. **SP-PLAY-001 手動確認**: crossfade/append-scroll の操作感、エンディング表示
+3. **Unity SDK パリティ**: TS側7機能の C# 移植 (別セッション推奨)
+4. **Dynamic Text Yarn変換**: {variable}→{$variable}, {?cond:text}→<<if>>/<<endif>>
+5. **CI統合**: spec-index/encoding-safety checks in PR/CI
 
 ## 再開手順
 

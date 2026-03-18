@@ -123,27 +123,22 @@
 ブランチ戦略: trunk-based (main のみ)
 現フェーズ: 体験逆算 → プレイ品質向上フェーズ
 方針: 最終体験からの逆算で基盤能力の空白を埋める
-直近の状態 (2026-03-18 session 9):
+直近の状態 (2026-03-18 session 10):
 
 - main ブランチ
 - 250テスト全緑 (20ファイル)、14モデル検証通過、ビルド成功
-- E2E: 42件 (36 + 6新規) — serial実行で安定
-- 32 specs: done 30 / partial 2 (SP-UNITY-001 85%, SP-PLAY-001 0%)
-- Session 9 の主な成果:
-  - REFRESH実施: プレイ品質向上を掲げながらプレイ体験未着手の乖離を検出
-  - SP-PLAY-001 プレイ没入感MVP仕様策定完了 (docs/specs/play-immersion.md)
-    - 段落フェードイン + インライン選択肢 + crossfade/append-scroll切替
-    - TransitionRegistry (Strategy pattern) による拡張可能な遷移アーキテクチャ
-    - モデルJSON拡張 (settings.presentation / nodes.*.presentation)
-  - 設計判断4件確定 (テキスト表示/選択肢配置/ノード遷移/スコープ)
-- 次回着手: SP-PLAY-001 実装 (仕様承認済み、未実装)
-  - TransitionRegistry + PlayRenderer
-  - 段落フェードイン CSS/JS
-  - インライン選択肢 (サイドバーから移動)
-  - crossfade / append-scroll 遷移モード切替
-  - 没入感デモ用サンプルモデル
-  - E2Eテスト
-- 次回着手候補 (SP-PLAY-001完了後):
+- E2E: 44件 — serial実行で安定
+- 32 specs: done 30 / partial 2 (SP-UNITY-001 85%, SP-PLAY-001 75%)
+- Session 10 の主な成果:
+  - SP-PLAY-001 プレイ没入感MVP 実装完了
+    - TransitionRegistry (Strategy pattern) + CrossfadeTransition + AppendScrollTransition
+    - PlayRenderer: 段落フェードイン + インライン選択肢 + エンディング表示
+    - play.css: CSS アニメーション + モード切替トグル
+    - app-controller.js 統合 (全セッション開始点)
+    - playthrough.schema.json: settings.presentation + nodes.*.presentation
+  - HANDOVER.md / TASKS.md / spec-index.json 同期
+- 次回着手: SP-PLAY-001 仕上げ (E2E テスト、手動確認)
+- 次回着手候補:
   - WritingPage連携仕様策定 (DECISION LOG 2026-03-08 双方向、未仕様)
   - Dynamic Text Yarn変換 (NarrativeGen構文 → Yarn Spinnerネイティブ)
   - insertContext によるテンプレート挿入位置制御

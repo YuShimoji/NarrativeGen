@@ -282,9 +282,9 @@
     "id": "SP-PLAY-001",
     "title": "Play Immersion MVP",
     "status": "partial",
-    "pct": 0,
+    "pct": 75,
     "cat": "ui",
     "file": "docs/specs/play-immersion.md",
-    "summary": "Web Tester play experience: paragraph fade-in, inline choices, crossfade/append-scroll transitions (switchable), extensible TransitionRegistry architecture. Phase 1: text effects only."
+    "summary": "Web Tester play experience: paragraph fade-in, inline choices, crossfade/append-scroll transitions (switchable), extensible TransitionRegistry architecture. Phase 1: text effects only. TransitionRegistry + PlayRenderer + CSS animations implemented. Schema extended. E2E pending."
   }
 ]

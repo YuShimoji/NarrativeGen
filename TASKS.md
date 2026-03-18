@@ -1,6 +1,6 @@
 # 今後の開発タスク表
 
-**最終更新**: 2026-03-17
+**最終更新**: 2026-03-18
 
 ## 完了済みタスク
 
@@ -35,6 +35,7 @@
 | ConversationTemplate GUI | 完了 | 2026-03-17 | Phase 4完了、テンプレートCRUD + trigger条件編集 + 10 E2E |
 | チャンクサイズ最適化 | 完了 | 2026-03-17 | Dynamic import + manual chunking |
 | E2E root Vitest衝突解決 | 完了 | 2026-03-17 | test:e2e スクリプト追加 |
+| SP-PLAY-001 プレイ没入感 MVP | 進行中 | 2026-03-18 | TransitionRegistry + PlayRenderer + CSS animations + schema拡張。E2E・手動確認残 |
 
 ## 優先度順タスク一覧
 
@@ -89,9 +90,9 @@ DescriptionState と Dynamic Text Engine の統合:
 
 ## 進捗指標
 
-- **テスト**: engine-ts 237/237 合格 (19ファイル)。E2E 44件
+- **テスト**: engine-ts 250/250 合格 (20ファイル)。E2E 44件
 - **モデル検証**: 14モデル通過
 - **ビルド**: engine-ts + web-tester ともに成功
 - **エクスポート形式**: 5形式（CSV / Ink / Twine / JSON / Yarn）
-- **仕様書**: 31エントリ (done 30 / partial 1)
+- **仕様書**: 32エントリ (done 30 / partial 2)
 - **ドキュメント**: AUTHORING_GUIDE.md (ライター向けステップバイステップガイド)
