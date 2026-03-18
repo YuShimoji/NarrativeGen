@@ -162,6 +162,7 @@
         "properties": {
           "id": { "type": "string" },
           "text": { "type": "string" },
+          "speaker": { "type": "string" },
           "choices": {
             "type": "array",
             "items": {

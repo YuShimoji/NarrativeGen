@@ -21,6 +21,10 @@ describe('writer_tutorial.json - session routes', () => {
     expect(Object.keys(model.characters!)).toHaveLength(2)
     expect(model.characters!.detective.knowledgeProfiles).toHaveLength(2)
     expect(Object.keys(model.paraphraseLexicon!)).toHaveLength(3)
+    // speaker field
+    expect(model.nodes.manager_response_polite.speaker).toBe('Mr. Tanaka')
+    expect(model.nodes.manager_reveals.speaker).toBe('Mr. Tanaka')
+    expect(model.nodes.apartment.speaker).toBeUndefined()
   })
 
   it('starts at apartment with 2 choices', () => {

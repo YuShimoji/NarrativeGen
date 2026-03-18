@@ -59,6 +59,7 @@ export interface Choice {
 export interface NodeDef {
   id: string
   text?: string
+  speaker?: string
   choices?: Choice[]
 }
 

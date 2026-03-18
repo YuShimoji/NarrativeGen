@@ -198,6 +198,7 @@
     },
     "manager_response_polite": {
       "id": "manager_response_polite",
+      "speaker": "Mr. Tanaka",
       "text": "\"Room 404? It's... vacant. Has been for months,\" [manager] says, fidgeting.\n\n\"The previous tenant moved out suddenly. That's all I know.\"\n\n{?clues>=2:Something about his tone doesn't match his words. He knows more.}",
       "choices": [
         {
@@ -258,6 +259,7 @@
     },
     "manager_reveals": {
       "id": "manager_reveals",
+      "speaker": "Mr. Tanaka",
       "text": "[manager] sighs heavily.\n\n\"The tenant in Room 404 was {suspect_name}. A researcher. They were working on something... controversial.\n\nOne night, they just vanished. Left everything behind. Then people started asking questions — people I didn't want to meet.\"\n\n{?hasEvent:manager_panicked:His hands are still shaking from grabbing the letter earlier.}",
       "choices": [
         {

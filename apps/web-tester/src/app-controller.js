@@ -1029,7 +1029,11 @@ function appendStoryFromCurrentNode() {
   const node = appState.model?.nodes?.[currentSession?.nodeId]
   if (node?.text && currentSession) {
     const resolvedText = resolveVariables(node.text, currentSession, appState.model)
-    appState.storyLog.push(resolvedText)
+    if (node.speaker) {
+      appState.storyLog.push(`**${node.speaker}:** ${resolvedText}`)
+    } else {
+      appState.storyLog.push(resolvedText)
+    }
   }
 }
 
@@ -1051,7 +1055,23 @@ function renderStory() {
     visibleEntries = appState.storyLog
   }
 
-  storyView.textContent = visibleEntries.join('\n\n')
+  // Render with simple Markdown (bold, italic) and HTML escaping
+  const rawHtml = visibleEntries
+    .map(entry => {
+      // Escape HTML first
+      let safe = entry
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+      // Then apply Markdown
+      safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      safe = safe.replace(/\*(.+?)\*/g, '<em>$1</em>')
+      // Preserve newlines
+      safe = safe.replace(/\n/g, '<br>')
+      return `<div class="story-entry">${safe}</div>`
+    })
+    .join('')
+  storyView.innerHTML = rawHtml
 
   // Add virtualization indicator
   if (shouldVirtualize) {

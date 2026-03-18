@@ -55,6 +55,7 @@ export class NodeRenderer {
           <label>ID: <input type="text" value="${nodeId}" data-node-id="${nodeId}" data-field="id"></label>
           <button class="rename-node-btn" data-node-id="${nodeId}">ID変更</button>
         </div>
+        <label>発話者: <input type="text" value="${(node.speaker || '').replace(/"/g, '&quot;')}" data-node-id="${nodeId}" data-field="speaker" placeholder="(ナレーション)" style="width: 120px;"></label>
         <label>テキスト: <input type="text" value="${(node.text || '').replace(/"/g, '&quot;')}" data-node-id="${nodeId}" data-field="text"></label>
         <div class="text-preview" data-node-id="${nodeId}" title="Dynamic Text プレビュー (初期状態)">${this._expandPreview(node.text || '')}</div>
         <h4>選択肢</h4>
