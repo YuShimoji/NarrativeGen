@@ -118,24 +118,20 @@
 ブランチ戦略: trunk-based (main のみ)
 現フェーズ: 体験逆算 → プレイ品質向上フェーズ
 方針: 最終体験からの逆算で基盤能力の空白を埋める
-直近の状態 (2026-03-18 session 7):
+直近の状態 (2026-03-18 session 8):
 
 - main ブランチ
 - 250テスト全緑 (20ファイル)、14モデル検証通過、ビルド成功
-- E2E: 44件
+- E2E: 42件 (36 + 6新規) — serial実行で安定
 - 31 specs: done 30 / partial 1 (SP-UNITY-001 85%)
-- Session 7 の主な成果:
-  - AUTHORING_GUIDE.md: 16セクションのステップバイステップガイド
-  - writer_tutorial.json: 12ノード/4エンティティ/3テンプレート/2キャラクター/3語辞書
-  - 統合テスト: writer-tutorial.spec.ts (14件) + full-integration.spec.ts (11件)
-  - GUI改善: datalistサジェスト + Dynamic Textプレビュー + speaker入力欄
-  - G4/G5解消: Model.characters + Model.paraphraseLexicon
-  - [entity~] prop_pool構文: expandTemplateWithTracking + 7テスト
-  - SessionHistory: セッション巻き戻し + 状態変化フィードバック + 13テスト
-  - speaker フィールド: NodeDef.speaker + Story UI + GUI Editor
-  - Yarn構造検証: 全機能の出力構造OK (Dynamic Text Yarn変換は将来課題)
+- Session 8 の主な成果:
+  - 新規モデル作成UI: 「新規」ボタン + 空モデル生成 (startNode + 空flags/resources/variables/entities)
+  - writer_tutorial.json: modelSelect追加 + web-tester/models/配置
+  - E2E一気通貫テスト: 新規作成→ノード追加→選択肢設定→テストプレイ→ダウンロード保存 (6件)
+  - window.appState露出: E2Eテスト用グローバルアクセス
 - 次回着手候補:
-  - Unity SDK パリティ (7機能移植) — 別セッション推奨
+  - WritingPage連携仕様策定 (DECISION LOG 2026-03-08 双方向、未仕様)
   - Dynamic Text Yarn変換 (NarrativeGen構文 → Yarn Spinnerネイティブ)
-  - 新規モデル作成UI (空モデルからの開始)
+  - プレイ体験没入感設計 (画像/BGM/タイプライター/画面遷移演出)
+  - Unity SDK パリティ (7機能移植) — 別セッション推奨
   - insertContext によるテンプレート挿入位置制御
