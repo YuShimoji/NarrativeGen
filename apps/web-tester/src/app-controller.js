@@ -109,7 +109,8 @@ export function initializeApp({ appState, managers, keyBindingManager, exportMan
   customTemplateGroup, runValidationBtn, validationContainer,
   referenceToc, referenceContent, csvImportModal, csvExportModal,
   aiSettings, keyBindingSettings, aiActions, lexiconEditor,
-  paraphraseModal, cancelParaphraseBtn
+  paraphraseModal, cancelParaphraseBtn,
+  newModelBtn
   } = getUIElements()
 
   // AI configuration
@@ -651,6 +652,37 @@ fileInput.addEventListener('change', async (e) => {
     renderStory()
     updateMermaidDiagramIfVisible()
   }
+})
+
+// --- New Model Creation ---
+newModelBtn.addEventListener('click', () => {
+  const emptyModel = {
+    modelType: 'adventure-playthrough',
+    startNode: 'start',
+    flags: {},
+    resources: {},
+    variables: {},
+    entities: {},
+    nodes: {
+      start: {
+        id: 'start',
+        text: '',
+        choices: []
+      }
+    }
+  }
+
+  applyModelParaphraseLexicon(emptyModel)
+  appState.model = emptyModel
+  startNewSession(appState.model)
+  setCurrentModelName('新規モデル')
+  setStatus('新しいモデルを作成しました — 編集モードで内容を追加してください', 'success')
+  initStory()
+  startAutoSave()
+  renderState()
+  renderChoices()
+  renderStory()
+  updateMermaidDiagramIfVisible()
 })
 
 dropZone.addEventListener('dragover', (e) => {

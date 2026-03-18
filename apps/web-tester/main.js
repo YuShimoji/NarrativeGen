@@ -35,6 +35,7 @@ import { initializeApp } from './src/app-controller.js'
 
 // Create core state
 const appState = new AppState()
+window.appState = appState // E2E テスト用
 
 // Create export infrastructure
 const keyBindingManager = new KeyBindingManager()

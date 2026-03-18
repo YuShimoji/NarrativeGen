@@ -1,0 +1,402 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "apartment",
+  "flags": {
+    "found_letter": false,
+    "talked_to_manager": false,
+    "examined_envelope": false,
+    "discovered_truth": false
+  },
+  "resources": {
+    "clues": 0,
+    "trust": 50
+  },
+  "variables": {
+    "suspect_name": "unknown",
+    "letter_content": ""
+  },
+  "characters": {
+    "detective": {
+      "id": "detective",
+      "name": "You (the detective)",
+      "knowledgeProfiles": [
+        { "domain": "forensics", "accuracy": 0.8, "tolerance": 15 },
+        { "domain": "general", "accuracy": 0.5, "tolerance": 30 }
+      ]
+    },
+    "manager_char": {
+      "id": "manager_char",
+      "name": "Mr. Tanaka",
+      "knowledgeProfiles": [
+        { "domain": "building", "accuracy": 0.9, "tolerance": 5 },
+        { "domain": "general", "accuracy": 0.3, "tolerance": 50 }
+      ]
+    }
+  },
+  "paraphraseLexicon": {
+    "investigate": ["examine", "look into", "inspect", "scrutinize"],
+    "nervous": [
+      "anxious",
+      { "text": "terrified", "match": { "fear_level": 80 }, "weight": 2.0 },
+      { "text": "uneasy", "weight": 1.0 }
+    ],
+    "letter": ["note", "message", "correspondence"]
+  },
+  "entities": {
+    "evidence_base": {
+      "id": "evidence_base",
+      "name": "Evidence",
+      "properties": {
+        "reliability": { "key": "reliability", "type": "number", "defaultValue": 0, "rangeMin": 0, "rangeMax": 100 },
+        "category": { "key": "category", "type": "string", "defaultValue": "unknown" }
+      }
+    },
+    "letter": {
+      "id": "letter",
+      "name": "Mysterious Letter",
+      "description": "A letter found under the door, written in unfamiliar handwriting",
+      "parentEntity": "evidence_base",
+      "properties": {
+        "reliability": { "key": "reliability", "type": "number", "defaultValue": 60 },
+        "category": { "key": "category", "type": "string", "defaultValue": "document" },
+        "ink_color": { "key": "ink_color", "type": "string", "defaultValue": "dark blue" },
+        "paper_quality": { "key": "paper_quality", "type": "string", "defaultValue": "expensive" },
+        "has_watermark": { "key": "has_watermark", "type": "boolean", "defaultValue": true }
+      }
+    },
+    "pen": {
+      "id": "pen",
+      "name": "Fountain Pen",
+      "description": "An antique fountain pen with dark blue ink",
+      "cost": 150,
+      "properties": {
+        "ink_color": { "key": "ink_color", "type": "string", "defaultValue": "dark blue" },
+        "brand": { "key": "brand", "type": "string", "defaultValue": "Montblanc" }
+      }
+    },
+    "manager": {
+      "id": "manager",
+      "name": "Mr. Tanaka",
+      "description": "The apartment building manager, nervous and evasive",
+      "properties": {
+        "cooperativeness": { "key": "cooperativeness", "type": "number", "defaultValue": 30, "rangeMin": 0, "rangeMax": 100 },
+        "knows_truth": { "key": "knows_truth", "type": "boolean", "defaultValue": true }
+      }
+    }
+  },
+  "nodes": {
+    "apartment": {
+      "id": "apartment",
+      "text": "You wake up to find a letter slipped under your apartment door. The envelope is sealed with no return address.\n\nClues: {clues} | Trust: {trust}",
+      "choices": [
+        {
+          "id": "pick_up_letter",
+          "text": "Pick up the letter",
+          "target": "examine_letter",
+          "effects": [
+            { "type": "setFlag", "key": "found_letter", "value": true },
+            { "type": "addItem", "key": "letter" }
+          ]
+        },
+        {
+          "id": "ignore_letter",
+          "text": "Ignore it and go to work",
+          "target": "work_regret"
+        }
+      ]
+    },
+    "work_regret": {
+      "id": "work_regret",
+      "text": "You head to work, but something nags at you all day. When you return, the letter is still there.\n\n{?!found_letter:The letter seems to be waiting for you.}",
+      "choices": [
+        {
+          "id": "finally_pick_up",
+          "text": "Pick up the letter",
+          "target": "examine_letter",
+          "effects": [
+            { "type": "setFlag", "key": "found_letter", "value": true },
+            { "type": "addItem", "key": "letter" }
+          ]
+        }
+      ]
+    },
+    "examine_letter": {
+      "id": "examine_letter",
+      "text": "The envelope is made of [letter.paper_quality] paper. You notice it {?examined_envelope:again — }has a subtle watermark.\n\nInside, you find a cryptic message: \"The truth about Room 404 must not die with me.\"\n\nThe ink is [letter.ink_color]. The handwriting is shaky but elegant.",
+      "choices": [
+        {
+          "id": "examine_envelope",
+          "text": "Examine the envelope closely",
+          "target": "envelope_details",
+          "effects": [
+            { "type": "setFlag", "key": "examined_envelope", "value": true },
+            { "type": "addResource", "key": "clues", "delta": 1 },
+            { "type": "setVariable", "key": "letter_content", "value": "Room 404 warning" }
+          ]
+        },
+        {
+          "id": "visit_room_404",
+          "text": "Go to Room 404 immediately",
+          "target": "hallway"
+        },
+        {
+          "id": "ask_manager",
+          "text": "Ask the building manager about Room 404",
+          "target": "manager_office"
+        }
+      ]
+    },
+    "envelope_details": {
+      "id": "envelope_details",
+      "text": "You hold the envelope up to the light. The watermark reads \"Sakura Grand Hotel\" — an upscale establishment across town.\n\nThe paper quality is [letter.paper_quality]. This is not ordinary stationery.\n\nClues gathered: {clues}",
+      "choices": [
+        {
+          "id": "to_hallway",
+          "text": "Head to Room 404",
+          "target": "hallway"
+        },
+        {
+          "id": "to_manager",
+          "text": "Talk to the building manager",
+          "target": "manager_office"
+        }
+      ]
+    },
+    "manager_office": {
+      "id": "manager_office",
+      "text": "[manager] is behind the front desk, shuffling papers nervously.\n\n{?talked_to_manager:He looks even more nervous seeing you again.}\n{?!talked_to_manager:\"Oh, good morning,\" he says, avoiding eye contact.}\n\nCooperativeness level: [manager.cooperativeness]%",
+      "choices": [
+        {
+          "id": "ask_politely",
+          "text": "Ask politely about Room 404",
+          "target": "manager_response_polite",
+          "effects": [
+            { "type": "setFlag", "key": "talked_to_manager", "value": true },
+            { "type": "addResource", "key": "trust", "delta": 10 },
+            { "type": "addResource", "key": "clues", "delta": 1 }
+          ]
+        },
+        {
+          "id": "show_letter",
+          "text": "Show the letter and demand answers",
+          "target": "manager_response_confronted",
+          "conditions": [
+            { "type": "hasItem", "key": "letter", "value": true }
+          ],
+          "effects": [
+            { "type": "setFlag", "key": "talked_to_manager", "value": true },
+            { "type": "addResource", "key": "trust", "delta": -20 },
+            { "type": "addResource", "key": "clues", "delta": 2 }
+          ]
+        },
+        {
+          "id": "leave_manager",
+          "text": "Leave without asking",
+          "target": "hallway"
+        }
+      ]
+    },
+    "manager_response_polite": {
+      "id": "manager_response_polite",
+      "speaker": "Mr. Tanaka",
+      "text": "\"Room 404? It's... vacant. Has been for months,\" [manager] says, fidgeting.\n\n\"The previous tenant moved out suddenly. That's all I know.\"\n\n{?clues>=2:Something about his tone doesn't match his words. He knows more.}",
+      "choices": [
+        {
+          "id": "press_further",
+          "text": "Press for more details",
+          "target": "manager_reveals",
+          "conditions": [
+            { "type": "and", "conditions": [
+              { "type": "resource", "key": "trust", "op": ">=", "value": 50 },
+              { "type": "resource", "key": "clues", "op": ">=", "value": 2 }
+            ]}
+          ],
+          "effects": [
+            { "type": "addResource", "key": "clues", "delta": 2 },
+            { "type": "setVariable", "key": "suspect_name", "value": "Dr. Hayashi" }
+          ]
+        },
+        {
+          "id": "accept_answer",
+          "text": "Accept his answer and investigate on your own",
+          "target": "hallway"
+        }
+      ]
+    },
+    "manager_response_confronted": {
+      "id": "manager_response_confronted",
+      "text": "[manager] goes pale when he sees the letter.\n\n\"Where did you get that?!\" He snatches it from your hands, then catches himself.\n\n\"I... I shouldn't have done that. Please, just forget about Room 404.\"\n\nHis reaction tells you more than words could. He's afraid.",
+      "choices": [
+        {
+          "id": "demand_letter_back",
+          "text": "Demand the letter back",
+          "target": "manager_reveals",
+          "effects": [
+            { "type": "addResource", "key": "clues", "delta": 2 },
+            { "type": "setVariable", "key": "suspect_name", "value": "Dr. Hayashi" },
+            { "type": "removeItem", "key": "letter" },
+            { "type": "createEvent", "id": "manager_panicked", "name": "Manager's Panic", "properties": {
+              "location": { "defaultValue": "manager_office" },
+              "reaction": { "defaultValue": "grabbed letter" },
+              "fear_level": { "defaultValue": 80 }
+            }}
+          ]
+        },
+        {
+          "id": "let_him_keep",
+          "text": "Let him keep it — you've seen enough",
+          "target": "hallway",
+          "effects": [
+            { "type": "removeItem", "key": "letter" },
+            { "type": "addResource", "key": "trust", "delta": 20 },
+            { "type": "createEvent", "id": "showed_mercy", "name": "Showed Mercy to Manager", "properties": {
+              "target": { "defaultValue": "manager" },
+              "impact": { "defaultValue": "gained trust" }
+            }}
+          ]
+        }
+      ]
+    },
+    "manager_reveals": {
+      "id": "manager_reveals",
+      "speaker": "Mr. Tanaka",
+      "text": "[manager] sighs heavily.\n\n\"The tenant in Room 404 was {suspect_name}. A researcher. They were working on something... controversial.\n\nOne night, they just vanished. Left everything behind. Then people started asking questions — people I didn't want to meet.\"\n\n{?hasEvent:manager_panicked:His hands are still shaking from grabbing the letter earlier.}",
+      "choices": [
+        {
+          "id": "investigate_room",
+          "text": "Ask for the key to Room 404",
+          "target": "room_404",
+          "effects": [
+            { "type": "addItem", "key": "room_key" },
+            { "type": "addResource", "key": "clues", "delta": 1 }
+          ]
+        }
+      ]
+    },
+    "hallway": {
+      "id": "hallway",
+      "text": "You stand in the hallway on the 4th floor. Room 404 is at the end of the corridor.\n\nClues: {clues} | Trust: {trust}\nSuspect: {suspect_name}\n\n{?found_letter:The letter's words echo in your mind: \"The truth about Room 404 must not die with me.\"}\n{?!found_letter:Something draws you to Room 404.}",
+      "choices": [
+        {
+          "id": "enter_room_key",
+          "text": "Unlock Room 404",
+          "target": "room_404",
+          "conditions": [
+            { "type": "hasItem", "key": "room_key", "value": true }
+          ]
+        },
+        {
+          "id": "knock_door",
+          "text": "Knock on the door",
+          "target": "room_404_locked",
+          "conditions": [
+            { "type": "not", "condition": { "type": "hasItem", "key": "room_key", "value": true } }
+          ]
+        },
+        {
+          "id": "go_back_manager",
+          "text": "Go back to the manager's office",
+          "target": "manager_office",
+          "conditions": [
+            { "type": "not", "condition": { "type": "hasItem", "key": "room_key", "value": true } }
+          ]
+        }
+      ]
+    },
+    "room_404_locked": {
+      "id": "room_404_locked",
+      "text": "The door is locked. No one answers.\n\nYou need a key to get inside.",
+      "choices": [
+        {
+          "id": "back_to_hallway",
+          "text": "Go back to the hallway",
+          "target": "hallway"
+        }
+      ]
+    },
+    "room_404": {
+      "id": "room_404",
+      "text": "Room 404 looks like it was abandoned in a hurry. Papers are scattered across the desk. A [pen] sits next to an unfinished note.\n\nThe ink color of the pen matches the letter — [pen.ink_color].\n\n{?clues>=4:With everything you've gathered, the pieces are falling into place.}\n{?clues<4:You feel like you're missing something. Maybe you should investigate more.}",
+      "choices": [
+        {
+          "id": "read_papers",
+          "text": "Read the scattered papers",
+          "target": "conclusion",
+          "conditions": [
+            { "type": "resource", "key": "clues", "op": ">=", "value": 4 }
+          ],
+          "effects": [
+            { "type": "setFlag", "key": "discovered_truth", "value": true },
+            { "type": "addResource", "key": "clues", "delta": 3 },
+            { "type": "addItem", "key": "pen" },
+            { "type": "createEvent", "id": "truth_discovered", "name": "Truth Discovered", "properties": {
+              "location": { "defaultValue": "room_404" },
+              "method": { "defaultValue": "paper analysis" },
+              "completeness": { "defaultValue": 90 }
+            }}
+          ]
+        },
+        {
+          "id": "take_pen",
+          "text": "Take the pen as evidence",
+          "target": "hallway",
+          "effects": [
+            { "type": "addItem", "key": "pen" },
+            { "type": "addResource", "key": "clues", "delta": 1 }
+          ]
+        },
+        {
+          "id": "leave_room",
+          "text": "Leave the room",
+          "target": "hallway"
+        }
+      ]
+    },
+    "conclusion": {
+      "id": "conclusion",
+      "text": "The papers reveal the truth: {suspect_name} discovered evidence of corporate fraud and was forced to flee.\n\nThe letter was their final attempt to pass on what they knew — to anyone brave enough to listen.\n\n{?discovered_truth:You now hold the truth about Room 404.}\n\nFinal report:\n- Clues gathered: {clues}\n- Trust level: {trust}\n- Suspect identified: {suspect_name}\n- Letter status: {?found_letter:Found}{?!found_letter:Missed}\n- Pen collected: [pen.brand] with [pen.ink_color] ink\n{?hasEvent:manager_panicked:- Manager's panic was a key turning point}\n{?hasEvent:showed_mercy:- Your mercy toward the manager opened doors}\n{?hasEvent:truth_discovered:- The full truth has been uncovered}",
+      "choices": []
+    }
+  },
+  "conversationTemplates": [
+    {
+      "id": "tmpl_manager_nervous",
+      "trigger": {
+        "sessionConditions": [
+          { "type": "flag", "key": "talked_to_manager", "value": true },
+          { "type": "resource", "key": "trust", "op": "<", "value": 40 }
+        ]
+      },
+      "text": "[manager] seems to be watching you from behind the curtain. He clearly regrets talking to you.",
+      "insertContext": "atmosphere",
+      "priority": 1,
+      "maxUses": 2
+    },
+    {
+      "id": "tmpl_evidence_mounting",
+      "trigger": {
+        "sessionConditions": [
+          { "type": "resource", "key": "clues", "op": ">=", "value": 3 }
+        ]
+      },
+      "text": "The pieces of the puzzle are coming together. You have {clues} clues pointing to the same conclusion.",
+      "insertContext": "progress",
+      "priority": 2,
+      "maxUses": 1
+    },
+    {
+      "id": "tmpl_event_reaction",
+      "trigger": {
+        "eventMatch": {
+          "propertyChecks": [
+            { "key": "fear_level", "op": ">=", "value": 70 }
+          ]
+        }
+      },
+      "text": "Someone in this building is very afraid. Fear at that level means you're close to something big.",
+      "insertContext": "insight",
+      "priority": 3,
+      "maxUses": 1
+    }
+  ]
+}

@@ -17,6 +17,7 @@ export function getUIElements() {
         modelSelect: document.getElementById('modelSelect'),
         fileInput: document.getElementById('fileInput'),
         uploadBtn: document.getElementById('uploadBtn'),
+        newModelBtn: document.getElementById('newModelBtn'),
         dropZone: document.getElementById('dropZone'),
         previewTopBtn: document.getElementById('previewTopBtn'),
         downloadTopBtn: document.getElementById('downloadTopBtn'),
