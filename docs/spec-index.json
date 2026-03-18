@@ -277,5 +277,14 @@
     "cat": "core",
     "file": "docs/specs/dynamic-story-expansion.md",
     "summary": "3-layer responsibility separation. ConversationTemplate: trigger matching + priority + maxUses. eventMatch optional + sessionConditions (flag/resource/variable/hasItem) support. Schema + Web Tester integrated. Phase 4: GUI editor (template CRUD + trigger condition editing). 14 tests + 10 E2E."
+  },
+  {
+    "id": "SP-PLAY-001",
+    "title": "Play Immersion MVP",
+    "status": "partial",
+    "pct": 0,
+    "cat": "ui",
+    "file": "docs/specs/play-immersion.md",
+    "summary": "Web Tester play experience: paragraph fade-in, inline choices, crossfade/append-scroll transitions (switchable), extensible TransitionRegistry architecture. Phase 1: text effects only."
   }
 ]

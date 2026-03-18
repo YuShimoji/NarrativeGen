@@ -110,6 +110,11 @@
 | 2026-03-17 | Runtime Core→Authoring体験逆算へ軸切替 | Authoring逆算 / 手動検証 / Unity SDK / 基盤続行 | 原初ビジョン8スペック完了でエンジンAPIは充実。しかしライターが使えるGUIが追いついていないためAuthoring軸へ。Entity定義パネルbug修正・ConversationTemplate GUI・Dynamic Textプレビュー完了 |
 | 2026-03-18 | G4: Model.characters (CharacterDef) をスキーマに追加 | 追加 / 保留 | モデルJSON内でキャラクター知識プロファイルを完結させる。perceiveEntity APIとの接続を可能に。任意フィールドでリスク低 |
 | 2026-03-18 | G5: Model.paraphraseLexicon (PropertyAwareLexicon) をスキーマに追加 | 追加 / 保留 | モデルJSON内で言い換え辞書を完結させる。ConditionalVariant+match対応。任意フィールドでリスク低 |
+| 2026-03-18 | SP-PLAY-001: テキスト表示は段落フェードイン方式 | タイプライター / 段落フェードイン / 即座表示維持 | 段落単位のstagger表示で読みやすさと没入感を両立。タイプライターより軽量 |
+| 2026-03-18 | SP-PLAY-001: 選択肢はストーリー内インライン配置 | インライン / サイドバー維持 / モード切替 | 小説/ゲームブック的な一体感。サイドバーは状態表示のみに |
+| 2026-03-18 | SP-PLAY-001: ノード遷移はcrossfade+append-scroll両対応 | crossfadeのみ / append-scrollのみ / 両方切替 | 用途に応じて切替可能にする。拡張可能なTransitionRegistry設計で将来のAnimation追加も受容 |
+| 2026-03-18 | SP-PLAY-001: Phase 1はテキスト演出のみ | テキストのみ / 画像含む / 画像+BGM | スコープを絞りプレイ基盤を先に確立。画像/BGMはPhase 2 |
+| 2026-03-18 | UI設計はマウス操作主体 (NarrativeGenにも適用) | マウス主体 / キーボード主体 | WritingPageでの決定をNarrativeGenにも適用 |
 
 ## Project Context
 
@@ -118,20 +123,28 @@
 ブランチ戦略: trunk-based (main のみ)
 現フェーズ: 体験逆算 → プレイ品質向上フェーズ
 方針: 最終体験からの逆算で基盤能力の空白を埋める
-直近の状態 (2026-03-18 session 8):
+直近の状態 (2026-03-18 session 9):
 
 - main ブランチ
 - 250テスト全緑 (20ファイル)、14モデル検証通過、ビルド成功
 - E2E: 42件 (36 + 6新規) — serial実行で安定
-- 31 specs: done 30 / partial 1 (SP-UNITY-001 85%)
-- Session 8 の主な成果:
-  - 新規モデル作成UI: 「新規」ボタン + 空モデル生成 (startNode + 空flags/resources/variables/entities)
-  - writer_tutorial.json: modelSelect追加 + web-tester/models/配置
-  - E2E一気通貫テスト: 新規作成→ノード追加→選択肢設定→テストプレイ→ダウンロード保存 (6件)
-  - window.appState露出: E2Eテスト用グローバルアクセス
-- 次回着手候補:
+- 32 specs: done 30 / partial 2 (SP-UNITY-001 85%, SP-PLAY-001 0%)
+- Session 9 の主な成果:
+  - REFRESH実施: プレイ品質向上を掲げながらプレイ体験未着手の乖離を検出
+  - SP-PLAY-001 プレイ没入感MVP仕様策定完了 (docs/specs/play-immersion.md)
+    - 段落フェードイン + インライン選択肢 + crossfade/append-scroll切替
+    - TransitionRegistry (Strategy pattern) による拡張可能な遷移アーキテクチャ
+    - モデルJSON拡張 (settings.presentation / nodes.*.presentation)
+  - 設計判断4件確定 (テキスト表示/選択肢配置/ノード遷移/スコープ)
+- 次回着手: SP-PLAY-001 実装 (仕様承認済み、未実装)
+  - TransitionRegistry + PlayRenderer
+  - 段落フェードイン CSS/JS
+  - インライン選択肢 (サイドバーから移動)
+  - crossfade / append-scroll 遷移モード切替
+  - 没入感デモ用サンプルモデル
+  - E2Eテスト
+- 次回着手候補 (SP-PLAY-001完了後):
   - WritingPage連携仕様策定 (DECISION LOG 2026-03-08 双方向、未仕様)
   - Dynamic Text Yarn変換 (NarrativeGen構文 → Yarn Spinnerネイティブ)
-  - プレイ体験没入感設計 (画像/BGM/タイプライター/画面遷移演出)
-  - Unity SDK パリティ (7機能移植) — 別セッション推奨
   - insertContext によるテンプレート挿入位置制御
+  - Unity SDK パリティ (7機能移植) — 別セッション推奨
