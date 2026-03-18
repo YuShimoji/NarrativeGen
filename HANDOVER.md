@@ -2,10 +2,10 @@
 
 ## 最終更新
 
-- **日時**: 2026-03-18
+- **日時**: 2026-03-19
 - **ブランチ**: `main` (trunk-based)
-- **最新コミット**: `358a8b3` (feat: SP-PLAY-001 play immersion MVP)
-- **origin/main**: +1 commit ahead (push前)
+- **最新コミット**: `f4448f2` (docs: sync DEVELOPMENT_PLAN.md)
+- **origin/main**: +5 commits ahead (push前) + 作業中の変更あり
 
 ## プロジェクト概要
 
@@ -30,7 +30,7 @@ NarrativeGen/
 
 - **engine-ts**: 250 テスト全合格 (20 ファイル)
 - **web-tester**: Vite ビルド成功
-- **E2E**: 44 件
+- **E2E**: 44 件 (SP-PLAY-001: 8件含む)
 - **モデル検証**: 14 モデル通過
 
 ### 仕様書
@@ -49,17 +49,26 @@ NarrativeGen/
   - app-controller.js: PlayRenderer 統合 (全セッション開始点で初期化)
   - playthrough.schema.json: settings.presentation + nodes.*.presentation 追加
 
+### Session 11 の成果 (2026-03-19)
+
+- SP-PLAY-001 E2E テスト修正: ローカルモデル二重管理問題を発見・解決
+  - `apps/web-tester/models/examples/` がルート `models/examples/` と乖離していた
+  - linear.json 含む6ファイルを同期、E2E 8/8 通過
+- SP-PLAY-001 E2E 8件全通過 (単独実行時)
+  - AC-1〜AC-6b + append-scroll + sidebar summary
+
 ## 既知の課題
 
 - GUI Undo/Redo 手動回帰テスト未実施
 - Unity SDK パリティ未完 (TS側7機能の移植)
 - Dynamic Text構文のYarnネイティブ変換 (`{variable}`→`{$variable}`, `{?cond:text}`→`<<if>>`/`<<endif>>`)
-- SP-PLAY-001 E2E テスト未作成
+- E2E 全テスト一括実行時に状態汚染で3-5件不安定 (個別実行時は全通過)
+- `apps/web-tester/models/examples/` と `models/examples/` の二重管理 (同期スクリプト未整備)
 
 ## 次の推奨作業
 
-1. **SP-PLAY-001 E2E テスト**: 段落フェードイン・インライン選択肢・モード切替の自動テスト
-2. **SP-PLAY-001 手動確認**: crossfade/append-scroll の操作感、エンディング表示
+1. **SP-PLAY-001 手動確認**: crossfade/append-scroll の操作感、エンディング表示 → pct 100% 化
+2. **SP-PLAY-001 Phase 2 仕様策定**: 画像/BGM 対応
 3. **Unity SDK パリティ**: TS側7機能の C# 移植 (別セッション推奨)
 4. **Dynamic Text Yarn変換**: {variable}→{$variable}, {?cond:text}→<<if>>/<<endif>>
 5. **CI統合**: spec-index/encoding-safety checks in PR/CI

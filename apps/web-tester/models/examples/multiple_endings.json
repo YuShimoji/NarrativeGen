@@ -1,117 +1,87 @@
 {
+  "modelType": "adventure-playthrough",
+  "startNode": "village",
+  "flags": {
+    "hasSword": false,
+    "helpedVillager": false,
+    "defeatedDragon": false
+  },
+  "resources": {
+    "health": 100,
+    "gold": 50
+  },
   "nodes": {
-    "start": {
-      "text": "あなたは探偵です。連続殺人事件を解決しなければなりません。3つの容疑者がいます。",
+    "village": {
+      "id": "village",
+      "text": "あなたは小さな村に到着しました。村人たちが困っているようです。",
       "choices": [
-        {
-          "text": "調査を開始する",
-          "target": "investigation_start",
-          "effects": [
-            {"type": "setFlag", "key": "investigation_started", "value": true}
-          ]
-        }
+        { "id": "talkToVillager", "text": "村人に話しかける", "target": "villagerQuest" },
+        { "id": "goToShop", "text": "武器屋に行く", "target": "shop" },
+        { "id": "exploreForest", "text": "森を探検する", "target": "forest" }
       ]
     },
-    "investigation_start": {
-      "text": "3人の容疑者: Aさん (ビジネスマン), Bさん (医者), Cさん (教師)",
+    "villagerQuest": {
+      "id": "villagerQuest",
+      "text": "村人「ドラゴンが山に住み着いて困っています。倒してくれませんか？」",
       "choices": [
-        {
-          "text": "Aさんを調べる",
-          "target": "investigate_a",
-          "effects": [
-            {"type": "setFlag", "key": "investigated_a", "value": true}
-          ]
-        },
-        {
-          "text": "Bさんを調べる",
-          "target": "investigate_b",
-          "effects": [
-            {"type": "setFlag", "key": "investigated_b", "value": true}
-          ]
-        },
-        {
-          "text": "Cさんを調べる",
-          "target": "investigate_c",
-          "effects": [
-            {"type": "setFlag", "key": "investigated_c", "value": true}
-          ]
-        }
+        { "id": "acceptQuest", "text": "クエストを受ける", "target": "mountain", "effects": [{ "type": "setFlag", "key": "helpedVillager", "value": true }] },
+        { "id": "declineQuest", "text": "断る", "target": "village" }
       ]
     },
-    "investigate_a": {
-      "text": "Aさんのアリバイを確認しました。彼には完璧なアリバイがありました。",
+    "shop": {
+      "id": "shop",
+      "text": "武器屋の店主「良い剣がありますよ。50ゴールドです。」",
       "choices": [
-        {
-          "text": "他の容疑者を調べる",
-          "target": "investigation_start"
-        },
-        {
-          "text": "Aさんを犯人だと断定する",
-          "target": "accuse_a"
-        }
+        { "id": "buySword", "text": "剣を買う", "target": "village", "conditions": [{ "type": "resource", "key": "gold", "op": ">=", "value": 50 }], "effects": [{ "type": "setFlag", "key": "hasSword", "value": true }, { "type": "addResource", "key": "gold", "delta": -50 }] },
+        { "id": "noBuy", "text": "買わない", "target": "village" }
       ]
     },
-    "investigate_b": {
-      "text": "Bさんのアリバイに矛盾が見つかりました。彼の動機も判明しました。",
+    "forest": {
+      "id": "forest",
+      "text": "森の中で狼に襲われました！",
       "choices": [
-        {
-          "text": "他の容疑者を調べる",
-          "target": "investigation_start"
-        },
-        {
-          "text": "Bさんを犯人だと断定する",
-          "target": "accuse_b"
-        }
+        { "id": "fightWolf", "text": "戦う", "target": "fightWolfResult" },
+        { "id": "runAway", "text": "逃げる", "target": "village", "effects": [{ "type": "addResource", "key": "health", "delta": -20 }] }
       ]
     },
-    "investigate_c": {
-      "text": "Cさんの証言にいくつかの矛盾がありました。彼の過去に秘密がありそうです。",
+    "fightWolfResult": {
+      "id": "fightWolfResult",
+      "text": "あなたは狼と戦いました。",
       "choices": [
-        {
-          "text": "他の容疑者を調べる",
-          "target": "investigation_start"
-        },
-        {
-          "text": "Cさんを犯人だと断定する",
-          "target": "accuse_c"
-        }
+        { "id": "winFight", "text": "勝つ", "target": "village", "conditions": [{ "type": "flag", "key": "hasSword", "value": true }], "effects": [{ "type": "addResource", "key": "health", "delta": -10 }] },
+        { "id": "loseFight", "text": "負ける", "target": "village", "effects": [{ "type": "addResource", "key": "health", "delta": -50 }] }
       ]
     },
-    "accuse_a": {
-      "text": "Aさんを犯人だと告発しました。しかし彼は本当に無実でした。あなたは解雇されました。",
+    "mountain": {
+      "id": "mountain",
+      "text": "山頂に到着しました。巨大なドラゴンがいます！",
       "choices": [
-        {
-          "text": "ゲームオーバー",
-          "target": "game_over_wrong"
-        }
+        { "id": "fightDragon", "text": "ドラゴンと戦う", "target": "dragonFight", "conditions": [{ "type": "resource", "key": "health", "op": ">", "value": 30 }] },
+        { "id": "retreat", "text": "引き返す", "target": "village" }
       ]
     },
-    "accuse_b": {
-      "text": "Bさんを犯人だと告発しました。彼は自白しました！事件は解決しました。",
+    "dragonFight": {
+      "id": "dragonFight",
+      "text": "激しい戦いの末...",
       "choices": [
-        {
-          "text": "エンディング: 事件解決",
-          "target": "ending_solved"
-        }
+        { "id": "defeatDragon", "text": "ドラゴンを倒す", "target": "victoryEnding", "conditions": [{ "type": "flag", "key": "hasSword", "value": true }, { "type": "resource", "key": "health", "op": ">", "value": 50 }], "effects": [{ "type": "setFlag", "key": "defeatedDragon", "value": true }, { "type": "addResource", "key": "health", "delta": -40 }] },
+        { "id": "dragonWins", "text": "ドラゴンに負ける", "target": "defeatEnding", "effects": [{ "type": "addResource", "key": "health", "delta": -100 }] }
       ]
     },
-    "accuse_c": {
-      "text": "Cさんを犯人だと告発しました。しかし彼は無実でした。あなたは訴えられました。",
-      "choices": [
-        {
-          "text": "ゲームオーバー",
-          "target": "game_over_wrong"
-        }
-      ]
-    },
-    "game_over_wrong": {
-      "text": "間違った容疑者を告発したため、あなたの探偵人生は終わりました。",
+    "victoryEnding": {
+      "id": "victoryEnding",
+      "text": "英雄として村に迎えられました。ドラゴンを倒し、村を救ったのです！\n\n【GOOD ENDING】",
       "choices": []
     },
-    "ending_solved": {
-      "text": "おめでとうございます！事件を解決しました。あなたは英雄となりました。",
+    "defeatEnding": {
+      "id": "defeatEnding",
+      "text": "ドラゴンに敗北しました。村はドラゴンの脅威にさらされています。\n\n【BAD ENDING】",
+      "choices": []
+    },
+    "neutralEnding": {
+      "id": "neutralEnding",
+      "text": "あなたは村を後にしました。冒険はまだ続くかもしれません。\n\n【NEUTRAL ENDING】",
       "choices": []
     }
-  },
-  "startNode": "start"
+  }
 }
