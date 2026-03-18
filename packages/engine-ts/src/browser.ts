@@ -117,3 +117,7 @@ export { createEventEntity, hasEvent, createEventFromAnomaly } from './event-ent
 export type { CreateEventEffect } from './event-entity.js'
 export { detectAnomaly, detectAllAnomalies } from './anomaly-detector.js'
 export type { KnowledgeProfile, AnomalyResult } from './anomaly-detector.js'
+
+// Session history (undo/back navigation)
+export { createSessionHistory, pushHistory, popHistory, canUndo, historyDepth, clearHistory, diffSessionState } from './session-history.js'
+export type { SessionHistory } from './session-history.js'

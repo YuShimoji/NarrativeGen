@@ -280,3 +280,5 @@ export { markDescribed, isDescribed, getUndescribedKeys, getDescriptionCount, re
 export type { DescriptionRecord, DescriptionState } from './description-tracker.js'
 export { findMatchingTemplates, recordTemplateUsage } from './conversation-templates.js'
 export type { ConversationTemplate, TemplateTrigger, EventMatchCondition, ExpandedTemplate, TemplateUsageState } from './conversation-templates.js'
+export { createSessionHistory, pushHistory, popHistory, canUndo, historyDepth, clearHistory, diffSessionState } from './session-history.js'
+export type { SessionHistory } from './session-history.js'

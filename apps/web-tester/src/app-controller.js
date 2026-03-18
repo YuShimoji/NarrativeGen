@@ -21,6 +21,11 @@ import {
   applyChoice,
   getParaphraseLexicon,
   setParaphraseLexicon,
+  createSessionHistory,
+  pushHistory,
+  popHistory,
+  canUndo,
+  diffSessionState,
 } from '../../../packages/engine-ts/dist/browser.js'
 
 // Theme setup
@@ -308,8 +313,19 @@ function renderChoices() {
       try {
         const currentSession = getCurrentSession()
         if (currentSession) {
-          setCurrentSession(applyChoice(currentSession, appState.model, choice.id))
-          setStatus(`選択肢「${choice.text}」を適用しました`, 'success')
+          // Push current state to history before applying choice
+          if (appState.sessionHistory) {
+            appState.sessionHistory = pushHistory(appState.sessionHistory, currentSession)
+          }
+          const nextSession = applyChoice(currentSession, appState.model, choice.id)
+          setCurrentSession(nextSession)
+          // Show state change feedback
+          const changes = diffSessionState(currentSession, nextSession)
+          if (changes.length > 0) {
+            setStatus(changes.join(' | '), 'success')
+          } else {
+            setStatus(`→ ${choice.text}`, 'success')
+          }
           appendStoryFromCurrentNode()
         }
       } catch (err) {
@@ -323,6 +339,31 @@ function renderChoices() {
     list.appendChild(button)
   })
 
+  // Add undo button if history is available
+  if (appState.sessionHistory && canUndo(appState.sessionHistory)) {
+    const undoBtn = document.createElement('button')
+    undoBtn.textContent = '← 戻る'
+    undoBtn.style.marginTop = '0.5rem'
+    undoBtn.style.opacity = '0.7'
+    undoBtn.style.fontSize = '11px'
+    undoBtn.addEventListener('click', () => {
+      const result = popHistory(appState.sessionHistory)
+      if (result) {
+        appState.sessionHistory = result.history
+        setCurrentSession(result.state)
+        // Remove the last story log entry
+        if (appState.storyLog && appState.storyLog.length > 0) {
+          appState.storyLog.pop()
+        }
+        setStatus('← 前のノードに戻りました', 'success')
+        renderState()
+        renderChoices()
+        renderStory()
+      }
+    })
+    list.appendChild(undoBtn)
+  }
+
   choicesContainer.appendChild(list)
 }
 
@@ -333,6 +374,7 @@ const safeStartSession = ErrorBoundary.wrap(async (modelName) => {
   appState.model = model
   startNewSession(appState.model)
   setCurrentModelName(modelName)
+  appState.sessionHistory = createSessionHistory()
   initStory()
   renderState()
   renderChoices()
