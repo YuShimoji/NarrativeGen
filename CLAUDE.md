@@ -125,21 +125,22 @@
 方針: 最終体験からの逆算で基盤能力の空白を埋める
 直近の状態 (2026-03-18 session 10):
 
-- main ブランチ
+- main ブランチ、origin/main +6 commits ahead (未push)
 - 250テスト全緑 (20ファイル)、14モデル検証通過、ビルド成功
-- E2E: 44件 — serial実行で安定
-- 32 specs: done 30 / partial 2 (SP-UNITY-001 85%, SP-PLAY-001 75%)
-- Session 10 の主な成果:
-  - SP-PLAY-001 プレイ没入感MVP 実装完了
-    - TransitionRegistry (Strategy pattern) + CrossfadeTransition + AppendScrollTransition
-    - PlayRenderer: 段落フェードイン + インライン選択肢 + エンディング表示
-    - play.css: CSS アニメーション + モード切替トグル
-    - app-controller.js 統合 (全セッション開始点)
-    - playthrough.schema.json: settings.presentation + nodes.*.presentation
-  - HANDOVER.md / TASKS.md / spec-index.json 同期
-- 次回着手: SP-PLAY-001 仕上げ (E2E テスト、手動確認)
+- E2E: 44件 (SP-PLAY-001 8件含む、単独実行で全通過)
+- 32 specs: done 30 / partial 2 (SP-UNITY-001 85%, SP-PLAY-001 95%)
+- Session 11 (2026-03-19) の成果:
+  - REFRESH: Drift check実施、プレイ体験検証方向を選択
+  - ローカルモデル二重管理問題を発見・修正
+    - apps/web-tester/models/examples/ がルート models/examples/ と乖離していた
+    - 6ファイル同期、SP-PLAY-001 E2E 8/8通過
+  - HANDOVER.md session 11反映、spec-index SP-PLAY-001 pct 75→95%
+- 既知問題:
+  - E2E全テスト一括実行時に状態汚染で3-5件不安定 (個別実行は全通過)
+  - apps/web-tester/models/examples/ と models/examples/ の二重管理 (同期スクリプト未整備)
+- 次回着手: SP-PLAY-001 手動確認 (ブラウザで操作感検証) → pct 100%化
 - 次回着手候補:
+  - SP-PLAY-001 Phase 2 仕様策定 (画像/BGM対応)
   - WritingPage連携仕様策定 (DECISION LOG 2026-03-08 双方向、未仕様)
   - Dynamic Text Yarn変換 (NarrativeGen構文 → Yarn Spinnerネイティブ)
-  - insertContext によるテンプレート挿入位置制御
   - Unity SDK パリティ (7機能移植) — 別セッション推奨

@@ -85,6 +85,24 @@ Status: done (2026-03-17)
 `npx playwright test` をプロジェクトルートから実行すると、Playwright が `engine-ts` 配下の `@vitest/expect` を読み込みエラーになっていた。
 → ルート `package.json` に `test:e2e` スクリプトを追加し `--config apps/web-tester/playwright.config.js` で解決。
 
+### 10. Model files dual management
+Status: not started (2026-03-19)
+
+`models/examples/` (ルート、スキーマ検証対象) と `apps/web-tester/models/examples/` (Vite配信用) が独立して存在し、内容が乖離していた。Session 11で手動同期済みだが、再発防止の仕組みがない。
+
+Remaining tasks:
+- [ ] 同期スクリプト作成 (cp or symlink)、npm scriptに登録
+- [ ] CI/precommitで乖離検出
+
+### 11. E2E state pollution in batch runs
+Status: not started (2026-03-19)
+
+全E2Eテストを一括実行すると、テスト間のlocalStorage/ブラウザコンテキスト汚染で3-5件が不安定に失敗する。個別実行では全通過。
+
+Remaining tasks:
+- [ ] テストファイル間のisolation強化 (context/storageState設定)
+- [ ] あるいはbeforeEachで確実にlocalStorage.clear + reload
+
 ---
 
 ## Low Priority
