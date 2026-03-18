@@ -20,9 +20,11 @@
 9. [複合条件で複雑な分岐を作る](#9-複合条件で複雑な分岐を作る)
 10. [イベントで物語中に事実を生成する](#10-イベントで物語中に事実を生成する)
 11. [テンプレートで動的な会話を追加する](#11-テンプレートで動的な会話を追加する)
-12. [完成モデルの確認](#12-完成モデルの確認)
-13. [エクスポート](#13-エクスポート)
-14. [次のステップ](#14-次のステップ)
+12. [キャラクター知識モデルを定義する](#12-キャラクター知識モデルを定義する)
+13. [言い換え辞書でテキストに変化をつける](#13-言い換え辞書でテキストに変化をつける)
+14. [完成モデルの確認](#14-完成モデルの確認)
+15. [エクスポート](#15-エクスポート)
+16. [次のステップ](#16-次のステップ)
 
 ---
 
@@ -533,7 +535,104 @@ flags, resources, variables のどれでも `{key}` で参照可能。
 
 ---
 
-## 12. 完成モデルの確認
+## 12. キャラクター知識モデルを定義する
+
+**キャラクター** は登場人物の知識プロファイルを定義する。各キャラクターは複数の知識領域 (domain) を持ち、エンティティのプロパティに対する「気づき」を制御できる。
+
+### 定義
+
+```json
+"characters": {
+  "detective": {
+    "id": "detective",
+    "name": "You (the detective)",
+    "knowledgeProfiles": [
+      { "domain": "forensics", "accuracy": 0.8, "tolerance": 15 },
+      { "domain": "general", "accuracy": 0.5, "tolerance": 30 }
+    ]
+  }
+}
+```
+
+| フィールド | 説明 |
+|-----------|------|
+| `domain` | 知識領域名 (自由文字列)。`"general"` はフォールバック |
+| `accuracy` | 正確性 (0.0-1.0)。高いほど異常を正確に検出 |
+| `tolerance` | 許容範囲。低いほど小さなずれにも気づく |
+
+### 使い方 (エンジンAPI)
+
+```javascript
+import { perceiveEntity, findKnowledgeProfile } from '@narrativegen/engine-ts'
+
+// キャラクターがエンティティを観察
+const result = perceiveEntity(
+  model.characters.detective,
+  'suspect_remedy',
+  { toxicity: 30 },       // 期待値 (toxicity は 30 以下のはず)
+  'forensics',             // 使う知識領域
+  model.entities
+)
+// result.noticed === true (toxicity 72 が tolerance 15 を超過)
+```
+
+### writer_tutorial.json での例
+
+- `detective`: forensics 領域の精度 0.8、許容範囲 15 → 手紙のインク色や紙質の異常に気づきやすい
+- `manager_char`: building 領域の精度 0.9 → 建物について非常に詳しいが、一般知識は低い
+
+---
+
+## 13. 言い換え辞書でテキストに変化をつける
+
+**paraphraseLexicon** は単語の言い換え候補を定義する辞書。同じ言葉を繰り返さずに、テキストにバリエーションを持たせる。
+
+### 基本定義 (文字列配列)
+
+```json
+"paraphraseLexicon": {
+  "investigate": ["examine", "look into", "inspect", "scrutinize"],
+  "letter": ["note", "message", "correspondence"]
+}
+```
+
+### 条件付きバリアント
+
+プロパティ値に応じて選択される言い換え:
+
+```json
+"nervous": [
+  "anxious",
+  { "text": "terrified", "match": { "fear_level": 80 }, "weight": 2.0 },
+  { "text": "uneasy", "weight": 1.0 }
+]
+```
+
+| フィールド | 説明 |
+|-----------|------|
+| `text` | 言い換えテキスト |
+| `match` | プロパティ条件 (キー → 値)。一致する場合のみ候補になる |
+| `weight` | 選択重み (デフォルト 1.0)。高いほど選ばれやすい |
+
+### 言い換えAPI の使い方
+
+```javascript
+import { applyParaphrase, buildParaphraseContext } from '@narrativegen/engine-ts'
+
+const context = buildParaphraseContext('manager', model.entities)
+const result = applyParaphrase('nervous', model.paraphraseLexicon, 42, context)
+// → "anxious" or "uneasy" (seed=42 で決定的)
+```
+
+### 辞書の使用例
+
+- `"investigate"` → examine / look into / inspect / scrutinize
+- `"nervous"` → anxious / terrified (fear_level=80 のとき) / uneasy
+- `"letter"` → note / message / correspondence
+
+---
+
+## 14. 完成モデルの確認
 
 `writer_tutorial.json` は以下の全機能を使っている:
 
@@ -551,6 +650,8 @@ flags, resources, variables のどれでも `{key}` で参照可能。
 | イベント生成 (createEvent) | `manager_panicked`, `showed_mercy`, `truth_discovered` |
 | イベント確認 (hasEvent) | `{?hasEvent:manager_panicked:...}` |
 | テンプレート | 3件 (sessionConditions + eventMatch) |
+| キャラクター | `detective` (forensics/general), `manager_char` (building/general) |
+| 言い換え辞書 | `investigate`, `nervous` (条件付き), `letter` |
 
 ### バリデーション
 
@@ -569,7 +670,7 @@ npm run validate
 
 ---
 
-## 13. エクスポート
+## 15. エクスポート
 
 完成したモデルは複数の形式にエクスポートできる。
 
@@ -585,7 +686,7 @@ npm run validate
 
 ---
 
-## 14. 次のステップ
+## 16. 次のステップ
 
 このガイドでカバーした機能を使いこなせたら:
 

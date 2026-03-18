@@ -18,6 +18,9 @@ describe('writer_tutorial.json - session routes', () => {
     expect(Object.keys(model.nodes)).toHaveLength(12)
     expect(Object.keys(model.entities!)).toHaveLength(4)
     expect(model.conversationTemplates).toHaveLength(3)
+    expect(Object.keys(model.characters!)).toHaveLength(2)
+    expect(model.characters!.detective.knowledgeProfiles).toHaveLength(2)
+    expect(Object.keys(model.paraphraseLexicon!)).toHaveLength(3)
   })
 
   it('starts at apartment with 2 choices', () => {

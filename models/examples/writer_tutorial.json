@@ -15,6 +15,33 @@
     "suspect_name": "unknown",
     "letter_content": ""
   },
+  "characters": {
+    "detective": {
+      "id": "detective",
+      "name": "You (the detective)",
+      "knowledgeProfiles": [
+        { "domain": "forensics", "accuracy": 0.8, "tolerance": 15 },
+        { "domain": "general", "accuracy": 0.5, "tolerance": 30 }
+      ]
+    },
+    "manager_char": {
+      "id": "manager_char",
+      "name": "Mr. Tanaka",
+      "knowledgeProfiles": [
+        { "domain": "building", "accuracy": 0.9, "tolerance": 5 },
+        { "domain": "general", "accuracy": 0.3, "tolerance": 50 }
+      ]
+    }
+  },
+  "paraphraseLexicon": {
+    "investigate": ["examine", "look into", "inspect", "scrutinize"],
+    "nervous": [
+      "anxious",
+      { "text": "terrified", "match": { "fear_level": 80 }, "weight": 2.0 },
+      { "text": "uneasy", "weight": 1.0 }
+    ],
+    "letter": ["note", "message", "correspondence"]
+  },
   "entities": {
     "evidence_base": {
       "id": "evidence_base",
