@@ -1,0 +1,175 @@
+/* SP-PLAY-001: Play immersion CSS */
+
+/* --- Keyframes --- */
+
+@keyframes playFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes playFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* --- Content blocks --- */
+
+.play-content {
+  position: relative;
+}
+
+.play-enter {
+  animation: playFadeIn 300ms ease-out forwards;
+}
+
+.play-exit {
+  animation: playFadeOut 300ms ease-out forwards;
+}
+
+/* --- Paragraph stagger --- */
+
+.play-paragraph {
+  opacity: 0;
+  animation: playFadeIn 300ms ease-out forwards;
+}
+
+/* Stagger delays are set via inline style: animation-delay */
+
+/* --- Inline choices --- */
+
+.play-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 24px;
+  opacity: 0;
+  animation: playFadeIn 300ms ease-out forwards;
+}
+
+.play-choice-btn {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  padding: 12px 16px;
+  margin: 0;
+  background: var(--bg-secondary, #f5f5f5);
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text-primary, #222);
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.play-choice-btn:hover {
+  background: var(--bg-hover, #eee);
+  border-color: var(--border-hover, #bbb);
+}
+
+.play-choice-btn:active {
+  background: var(--bg-active, #ddd);
+}
+
+.play-choice-btn::before {
+  content: '\25b8 ';
+  color: var(--accent-color, #666);
+}
+
+/* --- Choice quote (append-scroll mode) --- */
+
+.play-choice-quote {
+  margin: 16px 0 0;
+  padding: 8px 16px;
+  border-left: 3px solid var(--accent-color, #999);
+  color: var(--text-secondary, #666);
+  font-style: italic;
+}
+
+/* --- Separator (append-scroll mode) --- */
+
+.play-separator {
+  margin: 16px 0;
+  border: none;
+  border-top: 1px solid var(--border-color, #ddd);
+}
+
+/* --- Ending display --- */
+
+.play-ending {
+  text-align: center;
+  margin-top: 32px;
+  padding: 24px 0;
+  opacity: 0;
+  animation: playFadeIn 500ms ease-out 300ms forwards;
+}
+
+.play-ending-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  color: var(--text-secondary, #888);
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+}
+
+.play-ending-mark::before,
+.play-ending-mark::after {
+  content: '';
+  width: 48px;
+  height: 1px;
+  background: var(--border-color, #ccc);
+}
+
+.play-ending-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.play-ending-btn {
+  padding: 8px 20px;
+  background: var(--bg-secondary, #f5f5f5);
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-primary, #333);
+  transition: background-color 0.15s;
+}
+
+.play-ending-btn:hover {
+  background: var(--bg-hover, #eee);
+}
+
+/* --- Transition mode toggle --- */
+
+.play-mode-toggle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  padding: 4px 8px;
+  background: var(--bg-secondary, #f5f5f5);
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #666);
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.play-mode-toggle:hover {
+  opacity: 1;
+}
+
+/* --- Story view adjustments for play mode --- */
+
+.story-view.play-mode {
+  position: relative;
+  padding-top: 32px; /* space for mode toggle */
+}

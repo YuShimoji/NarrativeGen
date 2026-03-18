@@ -31,6 +31,9 @@ import {
 // Theme setup
 import { setupThemeEventListeners } from './ui/theme.js'
 
+// Play immersion (SP-PLAY-001)
+import { PlayRenderer } from './ui/play/PlayRenderer.js'
+
 // Utilities
 import { parseCsvLine } from './utils/file-utils.js'
 import Logger from './core/logger.js'
@@ -116,6 +119,137 @@ export function initializeApp({ appState, managers, keyBindingManager, exportMan
   // AI configuration
   let aiConfig = getDefaultAIConfig()
   let aiProviderInstance = null
+
+// --- Play Renderer (SP-PLAY-001) ---
+let playRenderer = null
+
+function initPlayRenderer() {
+  if (!storyView) return
+  playRenderer = new PlayRenderer(storyView)
+  // Apply model-level presentation settings if available
+  const presentation = appState.model?.settings?.presentation
+  if (presentation) {
+    playRenderer.applyModelSettings(presentation)
+  }
+  // Insert mode toggle button
+  insertModeToggle()
+}
+
+function insertModeToggle() {
+  // Remove existing toggle if any
+  const existing = storyView.parentElement?.querySelector('.play-mode-toggle')
+  if (existing) existing.remove()
+
+  if (!playRenderer) return
+
+  const toggle = document.createElement('button')
+  toggle.className = 'play-mode-toggle'
+  toggle.title = 'Transition mode'
+  updateToggleLabel(toggle)
+  toggle.addEventListener('click', () => {
+    playRenderer.toggleMode()
+    updateToggleLabel(toggle)
+  })
+  // Place toggle relative to the story content area
+  storyView.parentElement?.insertBefore(toggle, storyView)
+}
+
+function updateToggleLabel(btn) {
+  if (!playRenderer) return
+  const mode = playRenderer.getTransitionMode()
+  btn.textContent = mode === 'crossfade' ? '\u21c4 Crossfade' : '\u2193 Scroll'
+}
+
+/**
+ * Render current node via PlayRenderer with transitions and inline choices.
+ * @param {object} [opts]
+ * @param {string} [opts.choiceText] - The choice text the player selected
+ */
+async function renderPlayView(opts = {}) {
+  if (!playRenderer) return
+  const currentSession = getCurrentSession()
+  if (!currentSession || !appState.model) return
+
+  const node = appState.model.nodes?.[currentSession.nodeId]
+  if (!node) return
+
+  const resolvedText = node.text
+    ? resolveVariables(node.text, currentSession, appState.model)
+    : ''
+  const choices = getAvailableChoices(currentSession, appState.model)
+
+  // Node-level transition override
+  const nodeTransition = node.presentation?.transition
+
+  await playRenderer.renderNode(resolvedText, choices, {
+    speaker: node.speaker,
+    choiceText: opts.choiceText,
+    transition: nodeTransition,
+    canUndo: appState.sessionHistory && canUndo(appState.sessionHistory),
+    onChoice: (choiceId, choiceText) => {
+      handlePlayChoice(choiceId, choiceText)
+    },
+    onRestart: () => {
+      handlePlayRestart()
+    },
+    onUndo: () => {
+      handlePlayUndo()
+    }
+  })
+}
+
+function handlePlayChoice(choiceId, choiceText) {
+  try {
+    const currentSession = getCurrentSession()
+    if (!currentSession) return
+    if (appState.sessionHistory) {
+      appState.sessionHistory = pushHistory(appState.sessionHistory, currentSession)
+    }
+    const nextSession = applyChoice(currentSession, appState.model, choiceId)
+    setCurrentSession(nextSession)
+
+    const changes = diffSessionState(currentSession, nextSession)
+    if (changes.length > 0) {
+      setStatus(changes.join(' | '), 'success')
+    } else {
+      setStatus(`\u2192 ${choiceText}`, 'success')
+    }
+
+    appendStoryFromCurrentNode()
+    renderState()
+    renderPlayView({ choiceText })
+  } catch (err) {
+    console.error(err)
+    setStatus(`\u9078\u629e\u80a2\u306e\u9069\u7528\u306b\u5931\u6557\u3057\u307e\u3057\u305f: ${err?.message ?? err}`, 'warn')
+  }
+}
+
+function handlePlayRestart() {
+  if (!appState.model) return
+  startNewSession(appState.model)
+  appState.sessionHistory = createSessionHistory()
+  appState.storyLog = []
+  appendStoryFromCurrentNode()
+  playRenderer?.clear()
+  renderState()
+  renderPlayView()
+}
+
+function handlePlayUndo() {
+  if (!appState.sessionHistory) return
+  const result = popHistory(appState.sessionHistory)
+  if (!result) return
+  appState.sessionHistory = result.history
+  setCurrentSession(result.state)
+  if (appState.storyLog && appState.storyLog.length > 0) {
+    appState.storyLog.pop()
+  }
+  setStatus('\u2190 \u524d\u306e\u30ce\u30fc\u30c9\u306b\u623b\u308a\u307e\u3057\u305f', 'success')
+  // For undo, re-render with crossfade regardless of current mode
+  playRenderer?.clear()
+  renderState()
+  renderPlayView()
+}
 
 function renderState() {
   const currentSession = getCurrentSession()
@@ -286,10 +420,32 @@ function setControlsEnabled(enabled) {
 function renderChoices() {
   choicesContainer.innerHTML = ''
 
+  // When PlayRenderer is active, choices are inline in storyView.
+  // Sidebar shows a summary only.
+  if (playRenderer) {
+    const currentSession = getCurrentSession()
+    if (!currentSession) {
+      const info = document.createElement('p')
+      info.textContent = '\u30bb\u30c3\u30b7\u30e7\u30f3\u3092\u958b\u59cb\u3059\u308b\u3068\u72b6\u614b\u304c\u8868\u793a\u3055\u308c\u307e\u3059'
+      choicesContainer.appendChild(info)
+      return
+    }
+    const choices = getAvailableChoices(currentSession, appState.model)
+    const info = document.createElement('p')
+    info.style.fontSize = '11px'
+    info.style.color = 'var(--text-secondary, #888)'
+    info.textContent = choices.length > 0
+      ? `\u9078\u629e\u80a2: ${choices.length}\u4ef6 (\u30b9\u30c8\u30fc\u30ea\u30fc\u30d3\u30e5\u30fc\u5185\u306b\u8868\u793a)`
+      : '\u30a8\u30f3\u30c7\u30a3\u30f3\u30b0'
+    choicesContainer.appendChild(info)
+    return
+  }
+
+  // --- Legacy rendering (when PlayRenderer is not active) ---
   const currentSession = getCurrentSession()
   if (!currentSession) {
     const info = document.createElement('p')
-    info.textContent = 'セッションを開始すると選択肢が表示されます'
+    info.textContent = '\u30bb\u30c3\u30b7\u30e7\u30f3\u3092\u958b\u59cb\u3059\u308b\u3068\u9078\u629e\u80a2\u304c\u8868\u793a\u3055\u308c\u307e\u3059'
     choicesContainer.appendChild(info)
     return
   }
@@ -297,7 +453,7 @@ function renderChoices() {
   const choices = getAvailableChoices(currentSession, appState.model)
   if (!choices || choices.length === 0) {
     const empty = document.createElement('p')
-    empty.textContent = '利用可能な選択肢はありません'
+    empty.textContent = '\u5229\u7528\u53ef\u80fd\u306a\u9078\u629e\u80a2\u306f\u3042\u308a\u307e\u305b\u3093'
     choicesContainer.appendChild(empty)
     return
   }
@@ -314,24 +470,22 @@ function renderChoices() {
       try {
         const currentSession = getCurrentSession()
         if (currentSession) {
-          // Push current state to history before applying choice
           if (appState.sessionHistory) {
             appState.sessionHistory = pushHistory(appState.sessionHistory, currentSession)
           }
           const nextSession = applyChoice(currentSession, appState.model, choice.id)
           setCurrentSession(nextSession)
-          // Show state change feedback
           const changes = diffSessionState(currentSession, nextSession)
           if (changes.length > 0) {
             setStatus(changes.join(' | '), 'success')
           } else {
-            setStatus(`→ ${choice.text}`, 'success')
+            setStatus(`\u2192 ${choice.text}`, 'success')
           }
           appendStoryFromCurrentNode()
         }
       } catch (err) {
         console.error(err)
-        setStatus(`選択肢の適用に失敗しました: ${err?.message ?? err}`, 'warn')
+        setStatus(`\u9078\u629e\u80a2\u306e\u9069\u7528\u306b\u5931\u6557\u3057\u307e\u3057\u305f: ${err?.message ?? err}`, 'warn')
       }
       renderState()
       renderChoices()
@@ -340,10 +494,9 @@ function renderChoices() {
     list.appendChild(button)
   })
 
-  // Add undo button if history is available
   if (appState.sessionHistory && canUndo(appState.sessionHistory)) {
     const undoBtn = document.createElement('button')
-    undoBtn.textContent = '← 戻る'
+    undoBtn.textContent = '\u2190 \u623b\u308b'
     undoBtn.style.marginTop = '0.5rem'
     undoBtn.style.opacity = '0.7'
     undoBtn.style.fontSize = '11px'
@@ -352,11 +505,10 @@ function renderChoices() {
       if (result) {
         appState.sessionHistory = result.history
         setCurrentSession(result.state)
-        // Remove the last story log entry
         if (appState.storyLog && appState.storyLog.length > 0) {
           appState.storyLog.pop()
         }
-        setStatus('← 前のノードに戻りました', 'success')
+        setStatus('\u2190 \u524d\u306e\u30ce\u30fc\u30c9\u306b\u623b\u308a\u307e\u3057\u305f', 'success')
         renderState()
         renderChoices()
         renderStory()
@@ -376,6 +528,7 @@ const safeStartSession = ErrorBoundary.wrap(async (modelName) => {
   startNewSession(appState.model)
   setCurrentModelName(modelName)
   appState.sessionHistory = createSessionHistory()
+  initPlayRenderer()
   initStory()
   renderState()
   renderChoices()
@@ -601,6 +754,7 @@ startBtn.addEventListener('click', async () => {
     startNewSession(appState.model)
     setCurrentModelName(sampleId)
     setStatus(`サンプル ${sampleId} を実行中`, 'success')
+    initPlayRenderer()
     initStory()
     startAutoSave() // Start auto-save when session begins
   } catch (err) {
@@ -638,6 +792,7 @@ fileInput.addEventListener('change', async (e) => {
     startNewSession(appState.model)
     setCurrentModelName(file.name)
     setStatus(`ファイル ${file.name} を実行中`, 'success')
+    initPlayRenderer()
     initStory()
     startAutoSave() // Start auto-save when session begins
   } catch (err) {
@@ -677,6 +832,7 @@ newModelBtn.addEventListener('click', () => {
   startNewSession(appState.model)
   setCurrentModelName('新規モデル')
   setStatus('新しいモデルを作成しました — 編集モードで内容を追加してください', 'success')
+  initPlayRenderer()
   initStory()
   startAutoSave()
   renderState()
@@ -721,6 +877,7 @@ dropZone.addEventListener('drop', async (e) => {
     startNewSession(appState.model)
     setCurrentModelName(file.name)
     setStatus(`ファイル ${file.name} を実行中`, 'success')
+    initPlayRenderer()
     initStory()
     startAutoSave() // Start auto-save when session begins
   } catch (err) {
@@ -1071,6 +1228,12 @@ function appendStoryFromCurrentNode() {
 
 function renderStory() {
   if (!storyView) return
+
+  // When PlayRenderer is active, delegate to it
+  if (playRenderer) {
+    renderPlayView()
+    return
+  }
 
   // Performance optimization: Virtual scrolling for long stories
   const maxVisibleEntries = 50

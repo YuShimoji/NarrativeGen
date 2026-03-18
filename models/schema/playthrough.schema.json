@@ -284,10 +284,32 @@
               },
               "additionalProperties": false
             }
+          },
+          "presentation": {
+            "type": "object",
+            "properties": {
+              "transition": { "type": "string" }
+            },
+            "additionalProperties": false
           }
         },
         "additionalProperties": false
       }
+    },
+    "settings": {
+      "type": "object",
+      "properties": {
+        "presentation": {
+          "type": "object",
+          "properties": {
+            "defaultTransition": { "type": "string", "enum": ["crossfade", "append-scroll"] },
+            "paragraphDelay": { "type": "number", "minimum": 0 },
+            "transitionDuration": { "type": "number", "minimum": 0 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     },
     "characters": {
       "type": "object",
