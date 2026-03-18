@@ -73,9 +73,9 @@
 
 | 種類 | 件数 |
 |------|------|
-| ユニットテスト (Vitest) | 198テスト (17ファイル) |
-| E2Eテスト (Playwright) | 44件 (entity-panel 11 + template-panel 10 含む) |
-| モデル検証 (CLI) | 12モデル |
+| ユニットテスト (Vitest) | 250テスト (20ファイル) |
+| E2Eテスト (Playwright) | 52件 (entity-panel 11 + template-panel 10 + play-immersion 8 含む) |
+| モデル検証 (CLI) | 14モデル |
 
 ---
 
@@ -243,7 +243,38 @@
 
 **原初ビジョン コア実装: 全8件完了**
 
-**テスト**: 198件全緑、12モデル検証通過
+**テスト**: 250件全緑、14モデル検証通過
+
+---
+
+### 優先順位3.10: Authoring 体験逆算 [完了]
+
+**完了日**: 2026-03-17
+
+- AUTHORING_GUIDE.md: 16セクション、全機能ステップバイステップガイド
+- writer_tutorial.json: 12ノード/4エンティティ/3テンプレート/2キャラクター/3語辞書
+- writer-tutorial.spec.ts (14件) + full-integration.spec.ts (11件): 全ルートセッション検証
+- GUI改善: condition-effect-editor datalistサジェスト + Dynamic Textインラインプレビュー
+- G4解消: Model.characters (CharacterDef + KnowledgeProfile) スキーマ追加
+- G5解消: Model.paraphraseLexicon (PropertyAwareLexicon) スキーマ追加
+- [entity~] prop_pool構文: expandTemplateWithTracking + DescriptionState連動 + 7テスト
+- Yarn検証: writer_tutorial構造出力OK
+
+---
+
+### 優先順位3.11: SP-PLAY-001 プレイ没入感 MVP [進行中]
+
+**開始日**: 2026-03-18
+
+- TransitionRegistry: Strategy パターンでノード遷移方式を登録・切替
+- CrossfadeTransition / AppendScrollTransition: 2つの組み込み遷移
+- PlayRenderer: 段落フェードイン + インライン選択肢 + エンディング表示
+- play.css: CSS アニメーション (fadeIn/fadeOut, stagger, ending, mode toggle)
+- app-controller.js: PlayRenderer 統合 (全セッション開始点)
+- playthrough.schema.json: settings.presentation + nodes.*.presentation 追加
+- E2E テスト: 8件
+
+**残タスク**: 手動確認、SP-PLAY-001 pct → 100%
 
 ---
 
@@ -257,14 +288,13 @@
 
 ---
 
-### 優先順位5: チャンクサイズ最適化
+### 優先順位5: チャンクサイズ最適化 [完了]
 
-**現状**: Viteビルドで「Some chunks are larger than 500 kB」警告。主にMermaid関連。
+**完了日**: 2026-03-17
 
-**タスク内容**:
-- manualChunks設定の最適化
-- 動的importの活用
-- main.jsリファクタリング完了後に実施が効果的
+- Dynamic import for Mermaid preview
+- Manual chunking: vendor-mermaid-core, vendor-mermaid-deps, vendor-diagram-layout, vendor-cytoscape
+- chunkSizeWarningLimit: 1300 (遅延読込のため初期ロードに影響なし)
 
 ---
 
