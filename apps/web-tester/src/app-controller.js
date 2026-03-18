@@ -217,6 +217,7 @@ function handlePlayChoice(choiceId, choiceText) {
 
     appendStoryFromCurrentNode()
     renderState()
+    renderChoices()
     renderPlayView({ choiceText })
   } catch (err) {
     console.error(err)
@@ -232,6 +233,7 @@ function handlePlayRestart() {
   appendStoryFromCurrentNode()
   playRenderer?.clear()
   renderState()
+  renderChoices()
   renderPlayView()
 }
 
@@ -248,6 +250,7 @@ function handlePlayUndo() {
   // For undo, re-render with crossfade regardless of current mode
   playRenderer?.clear()
   renderState()
+  renderChoices()
   renderPlayView()
 }
 
