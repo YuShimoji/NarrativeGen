@@ -116,23 +116,26 @@
 プロジェクト名: NarrativeGen
 環境: Node.js 22 / TypeScript 5.x / Vite 5 / Vitest / Playwright
 ブランチ戦略: trunk-based (main のみ)
-現フェーズ: ライター体験逆算 → ツール成熟フェーズ
-方針: オーサリングガイド + 統合検証 + GUI改善 + スキーマ完全性
+現フェーズ: 体験逆算 → プレイ品質向上フェーズ
+方針: 最終体験からの逆算で基盤能力の空白を埋める
 直近の状態 (2026-03-18 session 7):
 
 - main ブランチ
-- 230テスト全緑 (19ファイル)、14モデル検証通過、ビルド成功
+- 250テスト全緑 (20ファイル)、14モデル検証通過、ビルド成功
 - E2E: 44件
 - 31 specs: done 30 / partial 1 (SP-UNITY-001 85%)
 - Session 7 の主な成果:
-  - AUTHORING_GUIDE.md: ライター向け14セクションのステップバイステップガイド
-  - writer_tutorial.json: 12ノード/4エンティティ/3テンプレートのミステリー短編サンプル
-  - writer-tutorial.spec.ts: 14テスト (全ルート+Dynamic Text+テンプレート検証)
-  - full-integration.spec.ts: 11テスト (全ルート+テンプレート+継承+変数)
-  - GUI改善: condition-effect-editor datalistサジェスト (property/hasItem/hasEvent/addItem/removeItem)
-  - G4解消: Model.characters (CharacterDef + KnowledgeProfile) スキーマ追加
-  - G5解消: Model.paraphraseLexicon (PropertyAwareLexicon) スキーマ追加
+  - AUTHORING_GUIDE.md: 16セクションのステップバイステップガイド
+  - writer_tutorial.json: 12ノード/4エンティティ/3テンプレート/2キャラクター/3語辞書
+  - 統合テスト: writer-tutorial.spec.ts (14件) + full-integration.spec.ts (11件)
+  - GUI改善: datalistサジェスト + Dynamic Textプレビュー + speaker入力欄
+  - G4/G5解消: Model.characters + Model.paraphraseLexicon
+  - [entity~] prop_pool構文: expandTemplateWithTracking + 7テスト
+  - SessionHistory: セッション巻き戻し + 状態変化フィードバック + 13テスト
+  - speaker フィールド: NodeDef.speaker + Story UI + GUI Editor
+  - Yarn構造検証: 全機能の出力構造OK (Dynamic Text Yarn変換は将来課題)
 - 次回着手候補:
-  - Unity SDK パリティ (7機能移植) — 別セッション候補
-  - [entity~prop_pool] 構文 (DescriptionState統合)
-  - Yarn実運用検証
+  - Unity SDK パリティ (7機能移植) — 別セッション推奨
+  - Dynamic Text Yarn変換 (NarrativeGen構文 → Yarn Spinnerネイティブ)
+  - 新規モデル作成UI (空モデルからの開始)
+  - insertContext によるテンプレート挿入位置制御
