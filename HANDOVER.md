@@ -28,10 +28,10 @@ NarrativeGen/
 
 ### CI・テスト
 
-- **engine-ts**: 205 テスト全合格 (17 ファイル)
+- **engine-ts**: 237 テスト全合格 (19 ファイル)
 - **web-tester**: Vite ビルド成功
 - **E2E**: 44 件
-- **モデル検証**: 13 モデル通過
+- **モデル検証**: 14 モデル通過
 
 ### 仕様書
 
@@ -39,31 +39,28 @@ NarrativeGen/
 - **done**: 30 件
 - **partial**: 1 件 (SP-UNITY-001 Unity SDK 85%)
 
-### Session 5-6 の成果 (2026-03-17 ~ 2026-03-18)
+### Session 7 の成果 (2026-03-18)
 
-- Doc sync: HANDOVER/TASKS/DEVELOPMENT_PLAN/TECHNICAL_DEBT 全最新化
-- Doctor: 25/25 pass (TEST_PROCEDURES→TEST_GUIDE fallback修正)
-- full_integration.json: 全機能横断統合モデル (14ノード, 5エンティティ, 3テンプレート)
-- G1解消: playthrough.schema.json に and/or/not 条件 ($ref 再帰定義)
-- G2解消: ConversationTemplate trigger sessionConditions + eventMatch optional
-- G3解消: Model.variables 初期値サポート
-- and/or/not 複合条件 GUI (condition-effect-editor, 1階層ネスト)
-- YarnFormatter: hasEvent/createEvent/property 条件・エフェクト対応
-- index.ts export パリティ (paraphrase, AI, inference 追加)
-- gui-editor.js: const session 重複宣言バグ修正
+- AUTHORING_GUIDE.md: 16セクション、全機能ステップバイステップガイド
+- writer_tutorial.json: 12ノード/4エンティティ/3テンプレート/2キャラクター/3語辞書
+- writer-tutorial.spec.ts (14件) + full-integration.spec.ts (11件): 全ルートセッション検証
+- GUI改善: condition-effect-editor datalistサジェスト + Dynamic Textインラインプレビュー
+- G4解消: Model.characters (CharacterDef + KnowledgeProfile) スキーマ追加
+- G5解消: Model.paraphraseLexicon (PropertyAwareLexicon) スキーマ追加
+- [entity~] prop_pool構文: expandTemplateWithTracking + DescriptionState連動 + 7テスト
+- Yarn検証: writer_tutorial構造出力OK (Dynamic Text構文のYarn変換は将来課題)
 
 ## 既知の課題
 
 - GUI Undo/Redo 手動回帰テスト未実施
-- Yarn Spinner 実運用検証未実施
 - Unity SDK パリティ未完 (TS側7機能の移植)
+- Dynamic Text構文のYarnネイティブ変換 (`{variable}`→`{$variable}`, `{?cond:text}`→`<<if>>`/`<<endif>>`)
 
 ## 次の推奨作業
 
-1. **Web Tester 手動プレビュー**: full_integration.json を実際に動かして検証
-2. **sessionConditions GUI**: ConversationTemplate trigger の GUI 対応
-3. **Unity SDK パリティ**: TS側7機能の C# 移植
-4. **ライター向けガイド**: 原初ビジョン機能を使った実用サンプル
+1. **Unity SDK パリティ**: TS側7機能の C# 移植 (別セッション推奨)
+2. **Dynamic Text Yarn変換**: {variable}→{$variable}, {?cond:text}→<<if>>/<<endif>>
+3. **CI統合**: spec-index/encoding-safety checks in PR/CI
 
 ## 再開手順
 

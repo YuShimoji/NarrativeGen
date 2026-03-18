@@ -42,7 +42,7 @@
 |--------|--------|------|--------|------|
 | **高** | Unity SDK パリティ (TS側7機能移植) | sdk-unity | 高 | 未着手 |
 | **高** | ライター向けオーサリングガイド / サンプルストーリー | docs + models | 中 | 完了 (AUTHORING_GUIDE.md + writer_tutorial.json) |
-| **中** | Yarn Spinner エクスポート実運用検証 | web-tester | 低 | 未着手 |
+| **中** | Yarn Spinner エクスポート実運用検証 | web-tester | 低 | 構造検証済み (変数宣言/条件/効果/jump全OK。Dynamic Text構文のYarn変換は未対応 — 将来課題) |
 | **中** | GUI Undo/Redo の手動回帰テスト | web-tester | 中 | 未着手 |
 | **中** | CI統合 (spec-index/encoding-safety checks) | infra | 低 | 未着手 |
 | **中** | [entity~prop_pool] 構文 (DescriptionState統合) | engine-ts | 中 | 完了 (expandTemplateWithTracking + 7テスト) |
