@@ -382,6 +382,22 @@ flags, resources, variables のどれでも `{key}` で参照可能。
 
 初回訪問と再訪問でテキストが変わる。
 
+### 未描写プロパティの自動選択 `[entity~]`
+
+エンティティのプロパティを毎回違う角度で描写したい場合:
+
+```
+"You notice something about the [letter~]."
+```
+
+1回目: `"You notice something about the ink_color: dark blue."`
+2回目: `"You notice something about the paper_quality: expensive."`
+3回目: `"You notice something about the has_watermark: true."`
+
+全プロパティを描写し終えると、再びプールが最初に戻る。
+
+この機能を使うには `expandTemplateWithTracking()` を使い、`DescriptionState` を管理する必要がある。
+
 ---
 
 ## 9. 複合条件で複雑な分岐を作る
@@ -748,3 +764,4 @@ npm run validate
 | `{?flag:text}` | フラグが true なら表示 | `{?has_key:You have the key.}` |
 | `{?!flag:text}` | フラグが false なら表示 | `{?!has_key:The door is locked.}` |
 | `{?res>=N:text}` | リソース比較で表示 | `{?gold>=100:You can afford it.}` |
+| `[entity~]` | 未描写プロパティを自動選択 | `[sword~]` → "damage: 25" (次回は別のプロパティ) |

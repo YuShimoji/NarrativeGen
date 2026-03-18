@@ -45,7 +45,7 @@
 | **中** | Yarn Spinner エクスポート実運用検証 | web-tester | 低 | 未着手 |
 | **中** | GUI Undo/Redo の手動回帰テスト | web-tester | 中 | 未着手 |
 | **中** | CI統合 (spec-index/encoding-safety checks) | infra | 低 | 未着手 |
-| **中** | [entity~prop_pool] 構文 (DescriptionState統合) | engine-ts | 中 | 未着手 |
+| **中** | [entity~prop_pool] 構文 (DescriptionState統合) | engine-ts | 中 | 完了 (expandTemplateWithTracking + 7テスト) |
 | **低** | アクセシビリティ改善（ARIA ラベル等） | web-tester | 低 | 未着手 |
 | **低** | モバイル/タブレット対応 | web-tester | 高 | 未着手 |
 
@@ -89,7 +89,7 @@ DescriptionState と Dynamic Text Engine の統合:
 
 ## 進捗指標
 
-- **テスト**: engine-ts 230/230 合格 (19ファイル)。E2E 44件
+- **テスト**: engine-ts 237/237 合格 (19ファイル)。E2E 44件
 - **モデル検証**: 14モデル通過
 - **ビルド**: engine-ts + web-tester ともに成功
 - **エクスポート形式**: 5形式（CSV / Ink / Twine / JSON / Yarn）
