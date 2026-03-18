@@ -108,32 +108,31 @@
 | 2026-03-17 | 原初ビジョンと現行実装の乖離を認識・記録 | N/A | レガシードキュメント分析で5つの高深刻度ギャップを特定 (Entity-Property, 動的テキスト構文, プロパティ比較推論, 事象Entity動的生成, 動的ストーリー展開)。段階的に基盤から積み上げる方針 |
 | 2026-03-17 | SP-PARA-002: 言い換え辞書プロパティマッチング拡張 | flat辞書維持 / ConditionalVariant拡張 / AI依存 | ConditionalVariant + match条件 + UsageHistory + buildParaphraseContextで原初ビジョン§4.2を実現。後方互換維持 |
 | 2026-03-17 | Runtime Core→Authoring体験逆算へ軸切替 | Authoring逆算 / 手動検証 / Unity SDK / 基盤続行 | 原初ビジョン8スペック完了でエンジンAPIは充実。しかしライターが使えるGUIが追いついていないためAuthoring軸へ。Entity定義パネルbug修正・ConversationTemplate GUI・Dynamic Textプレビュー完了 |
+| 2026-03-18 | G4: Model.characters (CharacterDef) をスキーマに追加 | 追加 / 保留 | モデルJSON内でキャラクター知識プロファイルを完結させる。perceiveEntity APIとの接続を可能に。任意フィールドでリスク低 |
+| 2026-03-18 | G5: Model.paraphraseLexicon (PropertyAwareLexicon) をスキーマに追加 | 追加 / 保留 | モデルJSON内で言い換え辞書を完結させる。ConditionalVariant+match対応。任意フィールドでリスク低 |
 
 ## Project Context
 
 プロジェクト名: NarrativeGen
 環境: Node.js 22 / TypeScript 5.x / Vite 5 / Vitest / Playwright
 ブランチ戦略: trunk-based (main のみ)
-現フェーズ: 統合検証 → エクスポート整備フェーズ
-方針: 統合モデルによる実戦検証 + エクスポート/SDK パリティ
-直近の状態 (2026-03-18 session 6):
+現フェーズ: ライター体験逆算 → ツール成熟フェーズ
+方針: オーサリングガイド + 統合検証 + GUI改善 + スキーマ完全性
+直近の状態 (2026-03-18 session 7):
 
-- main ブランチ、origin/main +3コミット先行 (push前)
-- 205テスト全緑、13モデル検証通過、ビルド成功
+- main ブランチ
+- 230テスト全緑 (19ファイル)、14モデル検証通過、ビルド成功
 - E2E: 44件
 - 31 specs: done 30 / partial 1 (SP-UNITY-001 85%)
-- Session 5-6 の主な成果:
-  - 統合モデル full_integration.json (14ノード, 全機能横断)
-  - G1解消: playthrough.schema.json に and/or/not 条件 ($ref再帰定義)
-  - G2解消: ConversationTemplate trigger sessionConditions + eventMatch optional
-  - G3解消: Model.variables 初期値サポート
-  - and/or/not 複合条件 GUI (condition-effect-editor, 1階層ネスト)
-  - YarnFormatter: hasEvent/createEvent/property 条件・エフェクト対応
-  - index.ts export パリティ (paraphrase, AI, inference 追加)
-  - gui-editor.js const session 重複宣言バグ修正
+- Session 7 の主な成果:
+  - AUTHORING_GUIDE.md: ライター向け14セクションのステップバイステップガイド
+  - writer_tutorial.json: 12ノード/4エンティティ/3テンプレートのミステリー短編サンプル
+  - writer-tutorial.spec.ts: 14テスト (全ルート+Dynamic Text+テンプレート検証)
+  - full-integration.spec.ts: 11テスト (全ルート+テンプレート+継承+変数)
+  - GUI改善: condition-effect-editor datalistサジェスト (property/hasItem/hasEvent/addItem/removeItem)
+  - G4解消: Model.characters (CharacterDef + KnowledgeProfile) スキーマ追加
+  - G5解消: Model.paraphraseLexicon (PropertyAwareLexicon) スキーマ追加
 - 次回着手候補:
-  - Web Tester で full_integration.json の手動プレビュー検証
-  - sessionConditions の GUI Editor 対応 (Template trigger 編集)
-  - Unity SDK パリティ — HUMAN_AUTHORITY
-  - G4: Model に characters — 設計判断必要
-  - G5: Model に paraphraseLexicon — 設計判断必要
+  - Unity SDK パリティ (7機能移植) — 別セッション候補
+  - [entity~prop_pool] 構文 (DescriptionState統合)
+  - Yarn実運用検証

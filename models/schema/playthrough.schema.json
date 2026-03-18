@@ -288,6 +288,52 @@
         "additionalProperties": false
       }
     },
+    "characters": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["id", "name", "knowledgeProfiles"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "knowledgeProfiles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["domain"],
+              "properties": {
+                "domain": { "type": "string" },
+                "accuracy": { "type": "number" },
+                "tolerance": { "type": "number" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "paraphraseLexicon": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "object",
+              "required": ["text"],
+              "properties": {
+                "text": { "type": "string" },
+                "match": { "type": "object", "additionalProperties": { "oneOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] } },
+                "weight": { "type": "number" }
+              },
+              "additionalProperties": false
+            }
+          ]
+        }
+      }
+    },
     "conversationTemplates": {
       "type": "array",
       "items": {

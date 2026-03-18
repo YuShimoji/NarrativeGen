@@ -2235,3 +2235,23 @@
 .inference-query-clear {
   background: var(--color-text-muted, #8e8e93);
 }
+
+/* ==========================================================================
+   Dynamic Text Preview
+   ========================================================================== */
+
+.text-preview {
+  font-size: 0.8rem;
+  color: var(--color-text-muted, #8e8e93);
+  padding: 0.25rem 0.5rem;
+  margin-top: -0.25rem;
+  margin-bottom: 0.25rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 4rem;
+  overflow-y: auto;
+}
+
+.text-preview:empty {
+  display: none;
+}

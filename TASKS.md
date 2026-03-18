@@ -41,7 +41,7 @@
 | 優先度 | タスク | 対象 | 難易度 | 状態 |
 |--------|--------|------|--------|------|
 | **高** | Unity SDK パリティ (TS側7機能移植) | sdk-unity | 高 | 未着手 |
-| **高** | ライター向けオーサリングガイド / サンプルストーリー | docs + models | 中 | 未着手 |
+| **高** | ライター向けオーサリングガイド / サンプルストーリー | docs + models | 中 | 完了 (AUTHORING_GUIDE.md + writer_tutorial.json) |
 | **中** | Yarn Spinner エクスポート実運用検証 | web-tester | 低 | 未着手 |
 | **中** | GUI Undo/Redo の手動回帰テスト | web-tester | 中 | 未着手 |
 | **中** | CI統合 (spec-index/encoding-safety checks) | infra | 低 | 未着手 |
@@ -89,8 +89,9 @@ DescriptionState と Dynamic Text Engine の統合:
 
 ## 進捗指標
 
-- **テスト**: engine-ts 198/198 合格 (17ファイル)。E2E 44件
-- **モデル検証**: 12モデル通過
+- **テスト**: engine-ts 230/230 合格 (19ファイル)。E2E 44件
+- **モデル検証**: 14モデル通過
 - **ビルド**: engine-ts + web-tester ともに成功
 - **エクスポート形式**: 5形式（CSV / Ink / Twine / JSON / Yarn）
 - **仕様書**: 31エントリ (done 30 / partial 1)
+- **ドキュメント**: AUTHORING_GUIDE.md (ライター向けステップバイステップガイド)

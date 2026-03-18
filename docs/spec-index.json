@@ -168,7 +168,7 @@
     "pct": 100,
     "cat": "data",
     "file": "docs/specs/model-schema.md",
-    "summary": "Playthrough model JSON Schema. Strict oneOf + additionalProperties:false for all condition/effect types. EntityDef + PropertyDef + EventEntity schema. and/or/not composite conditions via $ref recursive definition. Structure + integrity validation (Ajv + assertModelIntegrity). 13 example models validated."
+    "summary": "Playthrough model JSON Schema. Strict oneOf + additionalProperties:false for all condition/effect types. EntityDef + PropertyDef + EventEntity schema. CharacterDef (KnowledgeProfile[]) + PropertyAwareLexicon (paraphraseLexicon) added. and/or/not composite conditions via $ref recursive definition. Structure + integrity validation (Ajv + assertModelIntegrity). 14 example models validated."
   },
   {
     "id": "SP-API-001",

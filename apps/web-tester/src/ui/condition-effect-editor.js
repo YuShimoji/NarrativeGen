@@ -56,6 +56,40 @@ export const Operators = {
 export class ConditionEffectEditor {
   constructor() {
     this.onChangeCallback = null
+    this._model = null
+  }
+
+  /**
+   * モデル参照を設定 (エンティティ候補のサジェストに使用)
+   */
+  setModel(model) {
+    this._model = model
+  }
+
+  /**
+   * モデルのエンティティからproperty条件用のサジェスト候補を生成
+   * @returns {string[]} "entityId.propertyKey" 形式の候補リスト
+   */
+  _getPropertySuggestions() {
+    if (!this._model?.entities) return []
+    const suggestions = []
+    for (const [entityId, entity] of Object.entries(this._model.entities)) {
+      if (entity.properties) {
+        for (const propKey of Object.keys(entity.properties)) {
+          suggestions.push(`${entityId}.${propKey}`)
+        }
+      }
+    }
+    return suggestions
+  }
+
+  /**
+   * モデルのエンティティIDリストを取得 (アイテム条件のサジェスト)
+   * @returns {string[]}
+   */
+  _getEntityIds() {
+    if (!this._model?.entities) return []
+    return Object.keys(this._model.entities)
   }
 
   _escapeAttr(value) {
@@ -65,6 +99,15 @@ export class ConditionEffectEditor {
       .replace(/"/g, '&quot;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
+  }
+
+  /**
+   * datalist要素のHTMLを生成
+   */
+  _renderDatalist(id, options) {
+    if (!options || options.length === 0) return ''
+    const opts = options.map(o => `<option value="${this._escapeAttr(o)}">`).join('')
+    return `<datalist id="${id}">${opts}</datalist>`
   }
 
   /**
@@ -186,7 +229,9 @@ export class ConditionEffectEditor {
             <option value="raw" ${parsed.type === 'raw' ? 'selected' : ''}>カスタム</option>
           </select>
           <input type="text" class="condition-raw" placeholder="条件(生)" value="${this._escapeAttr(parsed.rawText)}" data-field="raw" ${isRaw ? '' : 'style="display:none"'}>
-          <input type="text" class="condition-name" placeholder="名前" value="${this._escapeAttr(parsed.name)}" data-field="name" ${(isRaw || mainFieldsHidden) ? 'style="display:none"' : ''}>
+          <input type="text" class="condition-name" placeholder="${isProperty ? 'entity.property' : '名前'}" value="${this._escapeAttr(parsed.name)}" data-field="name" ${(isRaw || mainFieldsHidden) ? 'style="display:none"' : ''} ${isProperty ? `list="dl-prop-${nodeId}-${choiceIndex}-${condIndex}"` : (isHasItem || isHasEvent) ? `list="dl-entity-${nodeId}-${choiceIndex}-${condIndex}"` : ''}>
+          ${isProperty ? this._renderDatalist(`dl-prop-${nodeId}-${choiceIndex}-${condIndex}`, this._getPropertySuggestions()) : ''}
+          ${(isHasItem || isHasEvent) ? this._renderDatalist(`dl-entity-${nodeId}-${choiceIndex}-${condIndex}`, this._getEntityIds()) : ''}
           <select class="condition-operator" data-field="operator" ${operatorHidden ? 'style="display:none"' : ''}>
             ${operatorOptions}
           </select>
@@ -226,7 +271,8 @@ export class ConditionEffectEditor {
             <option value="raw" ${parsed.type === 'raw' ? 'selected' : ''}>カスタム</option>
           </select>
           <input type="text" class="effect-raw" placeholder="効果(生)" value="${this._escapeAttr(parsed.rawText)}" data-field="raw" ${isRaw ? '' : 'style="display:none"'}>
-          <input type="text" class="effect-name" placeholder="名前" value="${this._escapeAttr(parsed.name)}" data-field="name" ${isRaw ? 'style="display:none"' : ''}>
+          <input type="text" class="effect-name" placeholder="名前" value="${this._escapeAttr(parsed.name)}" data-field="name" ${isRaw ? 'style="display:none"' : ''} ${isItemEffect ? `list="dl-eff-entity-${nodeId}-${choiceIndex}-${effectIndex}"` : ''}>
+          ${isItemEffect ? this._renderDatalist(`dl-eff-entity-${nodeId}-${choiceIndex}-${effectIndex}`, this._getEntityIds()) : ''}
           <select class="effect-operator" data-field="operator" ${isModifyVar ? '' : 'style="display:none"'}>
             <option value="+" ${parsed.operator === '+' ? 'selected' : ''}>+</option>
             <option value="-" ${parsed.operator === '-' ? 'selected' : ''}>-</option>
@@ -273,7 +319,9 @@ export class ConditionEffectEditor {
             <option value="raw" ${parsed.type === 'raw' ? 'selected' : ''}>カスタム</option>
           </select>
           <input type="text" class="sub-condition-raw" placeholder="条件(生)" value="${this._escapeAttr(parsed.rawText)}" ${isSubRaw ? '' : 'style="display:none"'}>
-          <input type="text" class="sub-condition-name" placeholder="名前" value="${this._escapeAttr(parsed.name)}" ${isSubRaw ? 'style="display:none"' : ''}>
+          <input type="text" class="sub-condition-name" placeholder="${parsed.type === 'property' ? 'entity.property' : '名前'}" value="${this._escapeAttr(parsed.name)}" ${isSubRaw ? 'style="display:none"' : ''} ${parsed.type === 'property' ? `list="dl-sub-prop-${parentCondIndex}-${i}"` : (parsed.type === 'hasItem' || parsed.type === 'hasEvent') ? `list="dl-sub-entity-${parentCondIndex}-${i}"` : ''}>
+          ${parsed.type === 'property' ? this._renderDatalist(`dl-sub-prop-${parentCondIndex}-${i}`, this._getPropertySuggestions()) : ''}
+          ${(parsed.type === 'hasItem' || parsed.type === 'hasEvent') ? this._renderDatalist(`dl-sub-entity-${parentCondIndex}-${i}`, this._getEntityIds()) : ''}
           <select class="sub-condition-operator" ${subOperatorHidden ? 'style="display:none"' : ''}>
             ${subOperatorOptions}
           </select>

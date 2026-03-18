@@ -57,9 +57,6 @@ NarrativeGen/
 - GUI Undo/Redo 手動回帰テスト未実施
 - Yarn Spinner 実運用検証未実施
 - Unity SDK パリティ未完 (TS側7機能の移植)
-- G4: Model に characters (CharacterDef) 未対応 — 設計判断必要
-- G5: Model に paraphraseLexicon 未対応 — 設計判断必要
-- full_integration.json の Web Tester 手動プレビュー未実施
 
 ## 次の推奨作業
 

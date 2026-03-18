@@ -4,6 +4,7 @@
  */
 
 import { ConditionEffectEditor } from './condition-effect-editor.js'
+import { expandTemplate } from '../../../../packages/engine-ts/dist/template.js'
 
 export class NodeRenderer {
   constructor(appState) {
@@ -36,6 +37,8 @@ export class NodeRenderer {
   // Main rendering function
   renderNodeList() {
     if (!this.nodeList) return
+    // モデル参照を渡してエンティティ候補のサジェストを有効化
+    this.conditionEffectEditor.setModel(this.appState.model)
 
     const fragment = document.createDocumentFragment()
     for (const [nodeId, node] of Object.entries(this.appState.model.nodes)) {
@@ -53,6 +56,7 @@ export class NodeRenderer {
           <button class="rename-node-btn" data-node-id="${nodeId}">ID変更</button>
         </div>
         <label>テキスト: <input type="text" value="${(node.text || '').replace(/"/g, '&quot;')}" data-node-id="${nodeId}" data-field="text"></label>
+        <div class="text-preview" data-node-id="${nodeId}" title="Dynamic Text プレビュー (初期状態)">${this._expandPreview(node.text || '')}</div>
         <h4>選択肢</h4>
         <div class="choices-editor" data-node-id="${nodeId}"></div>
         <button class="add-choice-btn" data-node-id="${nodeId}">選択肢を追加</button>
@@ -73,6 +77,32 @@ export class NodeRenderer {
   }
 
   /**
+   * Dynamic Text のプレビュー展開 (初期セッション状態を使用)
+   */
+  _expandPreview(text) {
+    if (!text) return ''
+    try {
+      const model = this.appState.model
+      // 初期セッション状態を構築 (startSessionを使わず軽量に)
+      const session = {
+        nodeId: model.startNode,
+        flags: { ...(model.flags || {}) },
+        resources: { ...(model.resources || {}) },
+        variables: { ...(model.variables || {}) },
+        inventory: [],
+        time: 0,
+        events: {}
+      }
+      const expanded = expandTemplate(text, model, session)
+      if (expanded === text) return '' // 展開なし = プレビュー不要
+      // HTMLエスケープ
+      return expanded.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    } catch {
+      return ''
+    }
+  }
+
+  /**
    * ノード選択のイベントハンドラを設定
    */
   _setupNodeSelectionHandlers() {
@@ -85,6 +115,17 @@ export class NodeRenderer {
         const nodeId = btn.dataset.nodeId
         if (this.onNodeSelect) {
           this.onNodeSelect(nodeId)
+        }
+      })
+    })
+
+    // テキスト入力のDynamic Textプレビュー
+    this.nodeList.querySelectorAll('input[data-field="text"]').forEach(input => {
+      input.addEventListener('input', () => {
+        const nodeId = input.dataset.nodeId
+        const preview = this.nodeList.querySelector(`.text-preview[data-node-id="${nodeId}"]`)
+        if (preview) {
+          preview.innerHTML = this._expandPreview(input.value)
         }
       })
     })

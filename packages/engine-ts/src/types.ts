@@ -69,6 +69,8 @@ export interface Model {
   resources?: ResourceState
   variables?: VariableState
   entities?: Record<string, EntityDef>
+  characters?: Record<string, import('./character-knowledge.js').CharacterDef>
+  paraphraseLexicon?: import('./paraphrase.js').PropertyAwareLexicon
   nodes: Record<string, NodeDef>
   conversationTemplates?: import('./conversation-templates.js').ConversationTemplate[]
 }
