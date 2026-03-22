@@ -125,6 +125,10 @@ let playRenderer = null
 
 function initPlayRenderer() {
   if (!storyView) return
+  // Dispose previous instance to release AudioManager resources
+  if (playRenderer) {
+    playRenderer.dispose()
+  }
   playRenderer = new PlayRenderer(storyView)
   // Apply model-level presentation settings if available
   const presentation = appState.model?.settings?.presentation
@@ -178,13 +182,25 @@ async function renderPlayView(opts = {}) {
     : ''
   const choices = getAvailableChoices(currentSession, appState.model)
 
-  // Node-level transition override
+  // Node-level presentation overrides
   const nodeTransition = node.presentation?.transition
+  const nodeImage = node.presentation?.image
+
+  // BGM resolution: node-level > default (on first render) > undefined (continue)
+  let nodeBgm = undefined
+  if (node.presentation && 'bgm' in node.presentation) {
+    nodeBgm = node.presentation.bgm // string | null
+  } else if (!opts.choiceText && playRenderer.defaultBgm) {
+    // First render (no prior choice) — apply model default BGM
+    nodeBgm = playRenderer.defaultBgm
+  }
 
   await playRenderer.renderNode(resolvedText, choices, {
     speaker: node.speaker,
     choiceText: opts.choiceText,
     transition: nodeTransition,
+    image: nodeImage,
+    bgm: nodeBgm,
     canUndo: appState.sessionHistory && canUndo(appState.sessionHistory),
     onChoice: (choiceId, choiceText) => {
       handlePlayChoice(choiceId, choiceText)

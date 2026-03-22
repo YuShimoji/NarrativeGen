@@ -218,11 +218,154 @@ apps/web-tester/
 ### AC-7: 拡張性
 - 新しい TransitionStrategy を register するだけで、コード変更なしに遷移方式を追加できる
 
-## スコープ外（Phase 2 以降）
+## Phase 2: シーン画像 / BGM サポート
 
-- 背景画像・キャラクター画像
-- BGM・SE
+### 設計原則
+
+1. **全フィールド任意**: 既存モデルへの破壊的変更なし（後方互換）
+2. **autoplay 対応**: ブラウザの autoplay ポリシーに従い、最初のユーザー操作後に BGM 再生を開始
+3. **HTMLAudioElement 主体**: Web Audio API は不使用。HTMLAudioElement のダブルバッファリングでクロスフェード
+4. **画像はイラスト配置**: テキスト上部にシーン画像を表示（背景全画面ではない）
+5. **BGM 二層構造**: settings デフォルト + ノード単位上書き。未指定時は前ノードの BGM を継続
+
+### 6. シーン画像
+
+ノードの `presentation.image` に URL を指定すると、テキスト上部にシーン画像を表示する。
+
+```
++----------------------------------+
+|  [シーン画像 (max-height: 40vh)] |
+|                                  |
+| あなたは暗い部屋にいる。          |
+| 気配がする。どうする？            |
+|                                  |
+|   +---------------------+       |
+|   | > ドアを開ける       |       |
+|   +---------------------+       |
++----------------------------------+
+```
+
+- 画像は段落フェードインの stagger に含める（最初のフェードイン要素として表示）
+- `max-width: 100%`, `max-height: 40vh`, `object-fit: contain`
+- `border-radius: 8px` で角丸
+- 画像なしノードでは画像要素を生成しない
+- アセットパス: 相対 URL（Vite dev server では `public/media/` に配置）
+
+### 7. BGM（背景音楽）
+
+#### BGM 指定の優先順位
+
+1. ノード `presentation.bgm` (string): そのノードで再生する BGM URL
+2. ノード `presentation.bgm` (null): 明示的に BGM を停止
+3. ノード `presentation.bgm` 未指定: 前ノードの BGM を継続（変更なし）
+4. `settings.presentation.defaultBgm` (string): モデル全体のデフォルト BGM
+
+#### AudioManager
+
+HTMLAudioElement x2 のダブルバッファリングでクロスフェードを実現する。
+
+```
+AudioManager
++-- play(url)           # 即時再生（同じ URL なら no-op）
++-- crossfadeTo(url)    # クロスフェードで切替
++-- fadeOut()           # フェードアウトして停止
++-- stop()             # 即時停止
++-- unlock()           # autoplay ポリシー解除
++-- dispose()          # リソース解放
+```
+
+- 音量: `settings.presentation.bgmVolume` (0-1, デフォルト 0.5)
+- クロスフェード時間: `settings.presentation.bgmCrossfadeDuration` (ms, デフォルト 1000)
+- フェードは setInterval (50ms 刻み) で volume を操作
+- `unlock()` は最初のユーザー操作（click / touchstart）で一度だけ呼ぶ
+
+#### autoplay ポリシー対応
+
+ブラウザの autoplay ポリシーにより、ユーザー操作なしでの音声再生は拒否される。
+PlayRenderer のコンストラクタで document に click/touchstart リスナーを登録し、
+最初のユーザー操作時に AudioManager.unlock() を呼ぶ。
+
+開始ノードに defaultBgm が指定されていても、最初の選択肢クリック後に再生が始まる設計とする。
+
+### 8. モデル JSON 拡張（Phase 2）
+
+```json
+{
+  "settings": {
+    "presentation": {
+      "defaultTransition": "crossfade",
+      "paragraphDelay": 150,
+      "transitionDuration": 300,
+      "defaultBgm": "media/ambient.mp3",
+      "bgmVolume": 0.5,
+      "bgmCrossfadeDuration": 1000
+    }
+  },
+  "nodes": {
+    "dramatic_scene": {
+      "text": "...",
+      "presentation": {
+        "transition": "crossfade",
+        "image": "media/scene-dark-room.jpg",
+        "bgm": "media/tension.mp3"
+      }
+    },
+    "silence_scene": {
+      "text": "...",
+      "presentation": {
+        "bgm": null
+      }
+    }
+  }
+}
+```
+
+### ファイル構成（Phase 2 追加分）
+
+```
+apps/web-tester/
++-- src/
+|   +-- ui/
+|       +-- play/
+|           +-- AudioManager.js         # BGM 再生管理
+|           +-- PlayRenderer.js         # 画像表示 + AudioManager 統合
+|           +-- play.css               # .play-scene-image スタイル追加
++-- public/
+    +-- media/                         # テスト用メディアファイル
+```
+
+### 受け入れ条件（Phase 2）
+
+#### AC-8: シーン画像表示
+- ノードに `presentation.image` を指定すると、テキスト上部に画像が表示される
+- 画像は段落フェードインの stagger に含まれてアニメーション表示される
+- `max-height: 40vh` で表示され、アスペクト比が維持される
+
+#### AC-9: BGM 再生
+- BGM 指定のあるノードに遷移すると音楽が再生される
+- `settings.presentation.bgmVolume` で音量が制御される
+
+#### AC-10: BGM クロスフェード
+- 異なる BGM のノードに遷移すると、クロスフェードで BGM が切り替わる
+- クロスフェード時間は `settings.presentation.bgmCrossfadeDuration` に従う
+
+#### AC-11: BGM 明示停止
+- `presentation.bgm: null` のノードで BGM がフェードアウトして停止する
+
+#### AC-12: autoplay 対応
+- autoplay 制限環境で、最初のユーザー操作後に BGM が再生される
+- ユーザー操作前にエラーが発生しない
+
+#### AC-13: 後方互換
+- 画像・BGM 未指定の既存モデルが正常に動作する
+- Phase 1 のテキスト演出に影響しない
+
+## スコープ外（Phase 3 以降）
+
+- キャラクター立ち絵（画像はシーン画像のみ）
+- SE（効果音）
 - タイプライター表示（個別文字送り）
 - パーティクル・エフェクト
 - ノード個別 CSS animation 指定
 - レスポンシブ / モバイル対応
+- BGM プレイリスト（Phase 2 はノード単位指定のみ）

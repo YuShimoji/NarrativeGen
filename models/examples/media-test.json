@@ -1,0 +1,42 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "start",
+  "settings": {
+    "presentation": {
+      "defaultBgm": "media/test-bgm.mp3",
+      "bgmVolume": 0.4,
+      "bgmCrossfadeDuration": 500
+    }
+  },
+  "nodes": {
+    "start": {
+      "id": "start",
+      "text": "A dark room. You hear something.",
+      "presentation": {
+        "image": "media/test-scene.png"
+      },
+      "choices": [
+        { "id": "c1", "text": "Investigate", "target": "scene2" }
+      ]
+    },
+    "scene2": {
+      "id": "scene2",
+      "text": "The corridor stretches ahead.",
+      "presentation": {
+        "image": "media/test-scene2.png",
+        "bgm": "media/test-bgm2.mp3"
+      },
+      "choices": [
+        { "id": "c2", "text": "Enter silence", "target": "end" }
+      ]
+    },
+    "end": {
+      "id": "end",
+      "text": "Silence falls.",
+      "presentation": {
+        "bgm": null
+      },
+      "choices": []
+    }
+  }
+}

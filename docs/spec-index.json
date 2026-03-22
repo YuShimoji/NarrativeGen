@@ -285,6 +285,6 @@
     "pct": 95,
     "cat": "ui",
     "file": "docs/specs/play-immersion.md",
-    "summary": "Web Tester play experience: paragraph fade-in, inline choices, crossfade/append-scroll transitions (switchable), extensible TransitionRegistry architecture. Phase 1: text effects only. TransitionRegistry + PlayRenderer + CSS animations implemented. Schema extended. E2E 8 tests passing. Remaining: user manual confirmation of animation feel."
+    "summary": "Web Tester play experience. Phase 1: paragraph fade-in, inline choices, crossfade/append-scroll transitions, TransitionRegistry, CSS animations, E2E 8 tests. Phase 2: scene image display (node presentation.image) + BGM (AudioManager, crossfade, autoplay policy). Manual confirmation pending."
   }
 ]

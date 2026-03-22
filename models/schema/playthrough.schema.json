@@ -288,7 +288,14 @@
           "presentation": {
             "type": "object",
             "properties": {
-              "transition": { "type": "string" }
+              "transition": { "type": "string" },
+              "image": { "type": "string", "description": "Scene image URL (relative or absolute)" },
+              "bgm": {
+                "oneOf": [
+                  { "type": "string", "description": "BGM audio URL" },
+                  { "type": "null", "description": "Explicitly stop BGM" }
+                ]
+              }
             },
             "additionalProperties": false
           }
@@ -304,7 +311,10 @@
           "properties": {
             "defaultTransition": { "type": "string", "enum": ["crossfade", "append-scroll"] },
             "paragraphDelay": { "type": "number", "minimum": 0 },
-            "transitionDuration": { "type": "number", "minimum": 0 }
+            "transitionDuration": { "type": "number", "minimum": 0 },
+            "defaultBgm": { "type": "string", "description": "Default BGM URL for the model" },
+            "bgmVolume": { "type": "number", "minimum": 0, "maximum": 1, "description": "BGM volume (0-1, default 0.5)" },
+            "bgmCrossfadeDuration": { "type": "number", "minimum": 0, "description": "BGM crossfade duration in ms (default 1000)" }
           },
           "additionalProperties": false
         }

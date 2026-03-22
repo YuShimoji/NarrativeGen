@@ -123,23 +123,24 @@
 ブランチ戦略: trunk-based (main のみ)
 現フェーズ: 体験逆算 → プレイ品質向上フェーズ
 方針: 最終体験からの逆算で基盤能力の空白を埋める
-直近の状態 (2026-03-22 nightshift):
+直近の状態 (2026-03-22 session 12):
 
-- main ブランチ、origin/main +1 commit ahead
-- 250テスト全緑 (20ファイル)、14モデル検証通過、ビルド成功
-- E2E: 44件 (バッチ実行 127+通過、間欠失敗 0-2件に改善)
+- main ブランチ、origin/main +3 commits ahead (未push) + ローカル未コミット変更あり
+- 250テスト全緑 (20ファイル)、15モデル検証通過、ビルド成功
+- E2E: 57件 (Phase 2: 5件新規追加、全パス。バッチ全体 135 passed / 1 flaky)
 - 32 specs: done 30 / partial 2 (SP-UNITY-001 85%, SP-PLAY-001 95%)
-- Nightshift 成果:
-  - TD-10: モデル同期スクリプト (`npm run sync:models` / `check:models-sync`) 完了
-  - TD-11: E2Eバッチ安定性改善 (workers=2, timeout=45s, retries=1)
-  - saveGuiBtnバグ修正: GUI編集保存後にPlayRendererが未初期化でインライン選択肢が表示されなかった
-  - E2Eテスト修正: SP-PLAY-001のインライン選択肢セレクタに更新
-  - TECHNICAL_DEBT.md更新
+- Session 12 成果:
+  - SP-PLAY-001 Phase 2 実装完了: シーン画像 + BGM (AudioManager)
+  - AudioManager: HTMLAudioElement ダブルバッファリング、クロスフェード、autoplay対応
+  - PlayRenderer: 画像表示 (テキスト上部)、BGM制御、レンダーキュー追加
+  - スキーマ拡張: node.presentation.image/bgm + settings.presentation.defaultBgm/bgmVolume/bgmCrossfadeDuration
+  - engine-ts types.ts: NodePresentation/PresentationSettings インターフェース追加
+  - media-test.json テストモデル追加
+  - PlayRenderer renderNodeキュー機構: トランジション中の操作ロスを防止
 - 既知問題:
-  - E2Eバッチ実行で間欠的に0-2件が失敗 (CPU競合、retry=1で緩和)
-- 次回着手: SP-PLAY-001 手動確認 (ブラウザで操作感検証) → pct 100%化
+  - E2Eバッチ実行で間欠的に1件が失敗 (AC-5 mode toggle、CPU競合)
+- 次回着手: SP-PLAY-001 手動確認 (ブラウザで画像/BGM操作感検証) → pct 100%化
 - 次回着手候補:
-  - SP-PLAY-001 Phase 2 仕様策定 (画像/BGM対応)
   - WritingPage連携仕様策定 (DECISION LOG 2026-03-08 双方向、未仕様)
   - Dynamic Text Yarn変換 (NarrativeGen構文 → Yarn Spinnerネイティブ)
   - Unity SDK パリティ (7機能移植) — 別セッション推奨

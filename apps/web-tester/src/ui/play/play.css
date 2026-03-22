@@ -167,6 +167,20 @@
   opacity: 1;
 }
 
+/* --- Scene image --- */
+
+.play-scene-image {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.play-scene-image img {
+  max-width: 100%;
+  max-height: 40vh;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
 /* --- Story view adjustments for play mode --- */
 
 .story-view.play-mode {

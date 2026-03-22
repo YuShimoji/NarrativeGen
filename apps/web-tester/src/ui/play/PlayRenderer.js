@@ -7,6 +7,7 @@
 import { TransitionRegistry } from './TransitionRegistry.js'
 import { CrossfadeTransition } from './transitions/CrossfadeTransition.js'
 import { AppendScrollTransition } from './transitions/AppendScrollTransition.js'
+import { AudioManager } from './AudioManager.js'
 
 const STORAGE_KEY = 'narrativegen-play-transition-mode'
 
@@ -19,6 +20,12 @@ export class PlayRenderer {
   #currentMode
   /** @type {boolean} */
   #transitioning = false
+  /** @type {object|null} Queued render request (latest wins) */
+  #pendingRender = null
+  /** @type {AudioManager} */
+  #audioManager
+  /** @type {string|null} */
+  #defaultBgm = null
 
   /**
    * @param {HTMLElement} storyView - The story view container
@@ -26,6 +33,8 @@ export class PlayRenderer {
    * @param {string} [options.defaultTransition] - Model-specified default
    * @param {number} [options.paragraphDelay] - ms between paragraph stagger (default 150)
    * @param {number} [options.transitionDuration] - ms for transitions (default 300)
+   * @param {number} [options.bgmVolume] - BGM volume 0-1 (default 0.5)
+   * @param {number} [options.bgmCrossfadeDuration] - BGM crossfade duration ms (default 1000)
    */
   constructor(storyView, options = {}) {
     this.#storyView = storyView
@@ -47,6 +56,21 @@ export class PlayRenderer {
     }
 
     this.#storyView.classList.add('play-mode')
+
+    // Audio
+    this.#audioManager = new AudioManager({
+      volume: options.bgmVolume ?? 0.5,
+      crossfadeDuration: options.bgmCrossfadeDuration ?? 1000
+    })
+
+    // Autoplay unlock on first user gesture
+    const unlockHandler = () => {
+      this.#audioManager.unlock()
+      document.removeEventListener('click', unlockHandler)
+      document.removeEventListener('touchstart', unlockHandler)
+    }
+    document.addEventListener('click', unlockHandler)
+    document.addEventListener('touchstart', unlockHandler)
   }
 
   /** @returns {TransitionRegistry} */
@@ -86,14 +110,21 @@ export class PlayRenderer {
    * @param {string} [options.speaker] - Speaker name
    * @param {string} [options.choiceText] - The choice text the player selected (for append-scroll quote)
    * @param {string} [options.transition] - Node-specific transition override
+   * @param {string} [options.image] - Scene image URL
+   * @param {string|null} [options.bgm] - BGM URL (string=play, null=stop, undefined=continue)
    * @param {function} [options.onChoice] - Callback: (choiceId, choiceText) => void
    * @param {function} [options.onRestart] - Callback: () => void
    * @param {function} [options.onUndo] - Callback: () => void
    * @param {boolean} [options.canUndo] - Whether undo is available
    */
   async renderNode(nodeText, choices, options = {}) {
-    if (this.#transitioning) return
+    if (this.#transitioning) {
+      // Queue this render — latest request wins, previous ones are dropped
+      this.#pendingRender = { nodeText, choices, options }
+      return
+    }
     this.#transitioning = true
+    this.#pendingRender = null
 
     try {
       const modeName = options.transition || this.#currentMode
@@ -110,16 +141,42 @@ export class PlayRenderer {
         duration: this.transitionDuration,
         choiceText: options.choiceText
       })
+
+      // BGM handling (independent layer)
+      if (options.bgm !== undefined) {
+        if (options.bgm === null) {
+          this.#audioManager.fadeOut()
+        } else {
+          this.#audioManager.crossfadeTo(options.bgm)
+        }
+      }
+      // bgm === undefined → no change, continue current BGM
     } finally {
       this.#transitioning = false
+
+      // Process queued render if any
+      if (this.#pendingRender) {
+        const { nodeText: t, choices: c, options: o } = this.#pendingRender
+        this.#pendingRender = null
+        this.renderNode(t, c, o)
+      }
     }
   }
 
   /**
-   * Clear all play content from the story view.
+   * Clear all play content from the story view and stop BGM.
    */
   clear() {
     this.#storyView.querySelectorAll('.play-content, .play-choice-quote, .play-separator').forEach(el => el.remove())
+    this.#audioManager.stop()
+  }
+
+  /**
+   * Release all resources (AudioManager etc).
+   * Call before discarding this instance.
+   */
+  dispose() {
+    this.#audioManager.dispose()
   }
 
   /**
@@ -141,6 +198,20 @@ export class PlayRenderer {
     if (typeof presentation.transitionDuration === 'number') {
       this.transitionDuration = presentation.transitionDuration
     }
+    if (typeof presentation.bgmVolume === 'number') {
+      this.#audioManager.volume = presentation.bgmVolume
+    }
+    if (typeof presentation.bgmCrossfadeDuration === 'number') {
+      this.#audioManager.crossfadeDuration = presentation.bgmCrossfadeDuration
+    }
+    if (presentation.defaultBgm) {
+      this.#defaultBgm = presentation.defaultBgm
+    }
+  }
+
+  /** @returns {string|null} Model default BGM URL */
+  get defaultBgm() {
+    return this.#defaultBgm
   }
 
   // --- Private helpers ---
@@ -159,6 +230,20 @@ export class PlayRenderer {
     // Split text into paragraphs
     const paragraphs = this.#splitParagraphs(nodeText)
     let staggerIndex = 0
+
+    // Scene image (before text)
+    if (options.image) {
+      const imgWrapper = document.createElement('div')
+      imgWrapper.className = 'play-scene-image play-paragraph'
+      const img = document.createElement('img')
+      img.src = options.image
+      img.alt = options.speaker ? `Scene: ${options.speaker}` : 'Scene illustration'
+      img.loading = 'lazy'
+      imgWrapper.appendChild(img)
+      imgWrapper.style.animationDelay = `${staggerIndex * this.paragraphDelay}ms`
+      container.appendChild(imgWrapper)
+      staggerIndex++
+    }
 
     // Speaker name
     if (options.speaker) {

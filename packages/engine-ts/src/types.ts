@@ -56,11 +56,27 @@ export interface Choice {
   outcome?: ChoiceOutcome | null
 }
 
+export interface NodePresentation {
+  transition?: string
+  image?: string
+  bgm?: string | null
+}
+
+export interface PresentationSettings {
+  defaultTransition?: 'crossfade' | 'append-scroll'
+  paragraphDelay?: number
+  transitionDuration?: number
+  defaultBgm?: string
+  bgmVolume?: number
+  bgmCrossfadeDuration?: number
+}
+
 export interface NodeDef {
   id: string
   text?: string
   speaker?: string
   choices?: Choice[]
+  presentation?: NodePresentation
 }
 
 export interface Model {
