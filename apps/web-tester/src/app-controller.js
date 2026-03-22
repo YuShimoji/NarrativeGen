@@ -1379,6 +1379,9 @@ cancelGuiBtn.addEventListener('click', () => {
 
   exitGuiEditMode()
   setControlsEnabled(true)
+  renderState()
+  renderChoices()
+  renderStory()
 })
 
 // 言い換えイベント（非AI）
