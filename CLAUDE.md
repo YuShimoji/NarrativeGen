@@ -123,21 +123,20 @@
 ブランチ戦略: trunk-based (main のみ)
 現フェーズ: 体験逆算 → プレイ品質向上フェーズ
 方針: 最終体験からの逆算で基盤能力の空白を埋める
-直近の状態 (2026-03-18 session 10):
+直近の状態 (2026-03-22 nightshift):
 
-- main ブランチ、origin/main +6 commits ahead (未push)
+- main ブランチ、origin/main +1 commit ahead
 - 250テスト全緑 (20ファイル)、14モデル検証通過、ビルド成功
-- E2E: 44件 (SP-PLAY-001 8件含む、単独実行で全通過)
+- E2E: 44件 (バッチ実行 127+通過、間欠失敗 0-2件に改善)
 - 32 specs: done 30 / partial 2 (SP-UNITY-001 85%, SP-PLAY-001 95%)
-- Session 11 (2026-03-19) の成果:
-  - REFRESH: Drift check実施、プレイ体験検証方向を選択
-  - ローカルモデル二重管理問題を発見・修正
-    - apps/web-tester/models/examples/ がルート models/examples/ と乖離していた
-    - 6ファイル同期、SP-PLAY-001 E2E 8/8通過
-  - HANDOVER.md session 11反映、spec-index SP-PLAY-001 pct 75→95%
+- Nightshift 成果:
+  - TD-10: モデル同期スクリプト (`npm run sync:models` / `check:models-sync`) 完了
+  - TD-11: E2Eバッチ安定性改善 (workers=2, timeout=45s, retries=1)
+  - saveGuiBtnバグ修正: GUI編集保存後にPlayRendererが未初期化でインライン選択肢が表示されなかった
+  - E2Eテスト修正: SP-PLAY-001のインライン選択肢セレクタに更新
+  - TECHNICAL_DEBT.md更新
 - 既知問題:
-  - E2E全テスト一括実行時に状態汚染で3-5件不安定 (個別実行は全通過)
-  - apps/web-tester/models/examples/ と models/examples/ の二重管理 (同期スクリプト未整備)
+  - E2Eバッチ実行で間欠的に0-2件が失敗 (CPU競合、retry=1で緩和)
 - 次回着手: SP-PLAY-001 手動確認 (ブラウザで操作感検証) → pct 100%化
 - 次回着手候補:
   - SP-PLAY-001 Phase 2 仕様策定 (画像/BGM対応)

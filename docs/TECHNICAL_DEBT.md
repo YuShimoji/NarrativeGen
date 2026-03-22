@@ -86,22 +86,26 @@ Status: done (2026-03-17)
 → ルート `package.json` に `test:e2e` スクリプトを追加し `--config apps/web-tester/playwright.config.js` で解決。
 
 ### 10. Model files dual management
-Status: not started (2026-03-19)
+Status: done (2026-03-22)
 
-`models/examples/` (ルート、スキーマ検証対象) と `apps/web-tester/models/examples/` (Vite配信用) が独立して存在し、内容が乖離していた。Session 11で手動同期済みだが、再発防止の仕組みがない。
+`models/examples/` (ルート、スキーマ検証対象) と `apps/web-tester/models/examples/` (Vite配信用) が独立して存在し、内容が乖離していた。
 
-Remaining tasks:
-- [ ] 同期スクリプト作成 (cp or symlink)、npm scriptに登録
-- [ ] CI/precommitで乖離検出
+- `scripts/sync-models.mjs` 作成: root→web-tester へコピー同期
+- `npm run sync:models` / `npm run check:models-sync` 登録済み
+- CI/precommit での乖離検出は `npm run check:models-sync` で可能
 
 ### 11. E2E state pollution in batch runs
-Status: not started (2026-03-19)
+Status: mitigated (2026-03-22)
 
-全E2Eテストを一括実行すると、テスト間のlocalStorage/ブラウザコンテキスト汚染で3-5件が不安定に失敗する。個別実行では全通過。
+全E2Eテストを一括実行すると、CPU競合で間欠的にタイムアウトが発生していた。
 
-Remaining tasks:
-- [ ] テストファイル間のisolation強化 (context/storageState設定)
-- [ ] あるいはbeforeEachで確実にlocalStorage.clear + reload
+対策:
+- workers を 2 に制限 (無制限からの変更)
+- デフォルトタイムアウトを 45s に延長
+- ローカルリトライ 1回追加
+- saveGuiBtnのPlayRenderer未初期化バグを修正 (根本原因の1つ)
+
+9→0-2件の間欠失敗に改善。完全排除にはさらにisolation強化が必要。
 
 ---
 
@@ -144,6 +148,9 @@ Remaining tasks:
 | Node graph visual issues | 2026-03-17 | Minimap dark theme, text overflow, unsafe render() all resolved |
 | Doctor warning fix (TEST_PROCEDURES→TEST_GUIDE) | 2026-03-17 | doctor 25/25 pass, troubleshooting/README参照修正 |
 | Doc sync (HANDOVER/TASKS/DEVELOPMENT_PLAN) | 2026-03-17 | テスト数198, spec 31, 原初ビジョン完了反映 |
+| Model files sync script (TD-10) | 2026-03-22 | `npm run sync:models` / `check:models-sync` |
+| saveGuiBtn PlayRenderer bug | 2026-03-22 | GUI編集保存後にインライン選択肢が表示されなかった |
+| E2E batch stability (TD-11) | 2026-03-22 | workers=2, timeout=45s, retries=1, 9→0-2件に改善 |
 
 ---
 

@@ -66,10 +66,10 @@
     "id": "SP-009",
     "title": "Technical Debt",
     "status": "partial",
-    "pct": 85,
+    "pct": 90,
     "cat": "infra",
     "file": "docs/TECHNICAL_DEBT.md",
-    "summary": "Post-split debt cleanup. Core debt resolved: E2E Vitest conflict, chunk optimization, graph visual issues, entity/inference, branch consolidation, doctor warnings, doc sync. Remaining: CI integration (spec-index/encoding-safety in PR/CI), responsive/a11y, manual regression tests"
+    "summary": "Post-split debt cleanup. Core debt resolved: E2E Vitest conflict, chunk optimization, graph visual issues, entity/inference, branch consolidation, doctor warnings, doc sync, model sync script, E2E batch stability. Remaining: CI integration, responsive/a11y, manual regression tests"
   },
   {
     "id": "SP-010",

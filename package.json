@@ -65,7 +65,7 @@
     "validate:spec": "redocly lint openapi-spec.json",
     "check:spec-index": "node scripts/spec-index-check.mjs",
     "check:encoding-safety": "node scripts/encoding-safety-check.mjs",
-    "check:safety": "npm run check:spec-index && npm run check:encoding-safety",
+    "check:safety": "npm run check:spec-index && npm run check:encoding-safety && npm run check:models-sync",
     "check:safety:changed": "node scripts/encoding-safety-check-changed.mjs",
     "sync:models": "node scripts/sync-models.mjs",
     "check:models-sync": "node scripts/sync-models.mjs --check",
