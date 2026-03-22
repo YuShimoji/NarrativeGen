@@ -138,21 +138,30 @@ test.describe('New Model Authoring Workflow', () => {
 
     // GUI編集を保存 (セッション再開始 + ストーリータブに復帰)
     await page.click('#saveGuiBtn');
-    await page.waitForTimeout(500);
+
+    // Wait for PlayRenderer to finish rendering the node
+    await page.waitForFunction(
+      () => {
+        const storyView = document.getElementById('storyView');
+        return storyView && storyView.querySelector('.play-content');
+      },
+      { timeout: 10000 }
+    );
 
     // ストーリービューにstartノードのテキストが表示される
-    const storyContent = page.locator('#storyContent');
+    const storyContent = page.locator('#storyView');
     await expect(storyContent).toContainText('冒険の始まり', { timeout: 10000 });
 
-    // 選択肢ボタンが表示される
-    const choiceBtn = page.locator('#choices button:has-text("進む")');
-    await expect(choiceBtn).toBeVisible({ timeout: 5000 });
+    // 選択肢ボタンが表示される (PlayRenderer active: inline .play-choice-btn)
+    // Note: PlayRenderer renders choices inside #storyView, not #choices
+    const choiceBtn = page.locator('.play-choice-btn:has-text("進む")');
+    await expect(choiceBtn).toBeVisible({ timeout: 10000 });
 
     // 選択肢をクリック
     await choiceBtn.click();
 
     // endingノードに遷移
-    await expect(storyContent).toContainText('冒険は終わった', { timeout: 5000 });
+    await expect(storyContent).toContainText('冒険は終わった', { timeout: 10000 });
   });
 
   test('モデルをダウンロード保存できる', async ({ page }) => {
@@ -205,12 +214,12 @@ test.describe('New Model Authoring Workflow', () => {
       { timeout: 15000 }
     );
 
-    // ストーリーが表示される
-    const storyContent = page.locator('#storyContent');
-    await expect(storyContent).toContainText('letter', { timeout: 5000 });
+    // ストーリーが表示される (PlayRenderer renders in #storyView)
+    const storyView = page.locator('#storyView');
+    await expect(storyView).toContainText('letter', { timeout: 10000 });
 
-    // 選択肢が表示される (apartment has 2 choices)
-    const choices = page.locator('#choices button');
-    await expect(choices).toHaveCount(2, { timeout: 3000 });
+    // 選択肢が表示される (PlayRenderer: inline .play-choice-btn, apartment has 2 choices)
+    const choices = page.locator('.play-choice-btn');
+    await expect(choices).toHaveCount(2, { timeout: 5000 });
   });
 });

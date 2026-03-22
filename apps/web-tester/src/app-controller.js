@@ -1348,10 +1348,11 @@ saveGuiBtn.addEventListener('click', () => {
 
     setStatus('GUI編集を保存しました', 'success')
     setControlsEnabled(true)
+    initPlayRenderer()
+    initStory()
     renderState()
     renderChoices()
-    storyManager.initStory()
-    storyManager.renderStory()
+    renderStory()
   } catch (err) {
     showErrors([err?.message ?? err])
     setStatus(`GUI保存に失敗しました: ${err?.message ?? err}`, 'warn')
