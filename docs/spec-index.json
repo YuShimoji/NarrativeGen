@@ -27,15 +27,6 @@
     "summary": "Preview, zoom, and pan behavior for Mermaid diagrams"
   },
   {
-    "id": "SP-004",
-    "title": "Design Improvements",
-    "status": "legacy",
-    "pct": 60,
-    "cat": "ui",
-    "file": "docs/archive/legacy-specs/DESIGN_IMPROVEMENTS_SPEC.md",
-    "summary": "Legacy: UI color, readability, layout improvements (2025-11). Mostly implemented."
-  },
-  {
     "id": "SP-005",
     "title": "Spreadsheet Format",
     "status": "done",
@@ -286,5 +277,14 @@
     "cat": "ui",
     "file": "docs/specs/play-immersion.md",
     "summary": "Web Tester play experience. Phase 1: paragraph fade-in, inline choices, crossfade/append-scroll transitions, TransitionRegistry, CSS animations, E2E 8 tests. Phase 2: scene image display (node presentation.image) + BGM (AudioManager, crossfade, autoplay policy). Manual confirmation pending."
+  },
+  {
+    "id": "SP-PIPE-001",
+    "title": "Designer Pipeline Workflow",
+    "status": "todo",
+    "pct": 10,
+    "cat": "system",
+    "file": "docs/specs/pipeline-workflow.md",
+    "summary": "End-to-end workflow for story creation: Design → Author → Validate → Export → Integrate. Persona definitions (Writer/TechDesigner/Integrator), manual vs automation matrix, gap analysis (WritingPage, DT export, Unity SDK parity). HUMAN_AUTHORITY review pending."
   }
 ]

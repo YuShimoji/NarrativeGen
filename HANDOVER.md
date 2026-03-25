@@ -2,10 +2,10 @@
 
 ## 最終更新
 
-- **日時**: 2026-03-19
+- **日時**: 2026-03-26
 - **ブランチ**: `main` (trunk-based)
-- **最新コミット**: `f4448f2` (docs: sync DEVELOPMENT_PLAN.md)
-- **origin/main**: +5 commits ahead (push前) + 作業中の変更あり
+- **最新コミット**: session 14 nightshift (レガシー根絶 + 棚卸し)
+- **origin/main**: +5 commits ahead (未push)
 
 ## プロジェクト概要
 
@@ -20,7 +20,7 @@ NarrativeGen/
   packages/sdk-unity/    # Unity C# SDK (UPM パッケージ形式)
   packages/tests/        # C# ユニットテスト
   apps/web-tester/       # Web UI (Vite, Playwright E2E)
-  models/                # サンプルモデル + JSON スキーマ
+  models/                # サンプルモデル (16ファイル) + JSON スキーマ
   docs/                  # 仕様書・プラン・ガバナンス
 ```
 
@@ -30,48 +30,62 @@ NarrativeGen/
 
 - **engine-ts**: 250 テスト全合格 (20 ファイル)
 - **web-tester**: Vite ビルド成功
-- **E2E**: 44 件 (SP-PLAY-001: 8件含む)
-- **モデル検証**: 14 モデル通過
+- **E2E**: 57 件 (6 spec files)
+- **モデル検証**: 16 モデル通過
 
 ### 仕様書
 
 - **spec-index.json**: 32 エントリ
-- **done**: 30 件
-- **partial**: 2 件 (SP-UNITY-001 Unity SDK 85%, SP-PLAY-001 Play Immersion 75%)
+- **done**: 28 件
+- **partial**: 3 件 (SP-009 Technical Debt 90%, SP-UNITY-001 Unity SDK 85%, SP-PLAY-001 Play Immersion 95%)
+- **todo**: 1 件 (SP-PIPE-001 Pipeline Workflow 10%)
 
-### Session 10 の成果 (2026-03-18)
+### Session 12 の成果 (2026-03-22)
 
-- SP-PLAY-001 プレイ没入感 MVP 実装
-  - TransitionRegistry: Strategy パターンでノード遷移方式を登録・切替
-  - CrossfadeTransition / AppendScrollTransition: 2つの組み込み遷移
-  - PlayRenderer: 段落フェードイン + インライン選択肢 + エンディング表示
-  - play.css: CSS アニメーション (fadeIn/fadeOut, stagger, ending, mode toggle)
-  - app-controller.js: PlayRenderer 統合 (全セッション開始点で初期化)
-  - playthrough.schema.json: settings.presentation + nodes.*.presentation 追加
+- SP-PLAY-001 Phase 2 実装完了: シーン画像 + BGM
+  - AudioManager: HTMLAudioElement ダブルバッファリング、クロスフェード、autoplay対応
+  - PlayRenderer: 画像表示 (テキスト上部)、BGM制御、レンダーキュー追加
+  - スキーマ拡張: node.presentation.image/bgm + settings.presentation.defaultBgm/bgmVolume/bgmCrossfadeDuration
+  - engine-ts types.ts: NodePresentation/PresentationSettings インターフェース追加
+  - media-test.json テストモデル追加
+  - E2E: Phase 2 5件新規追加、全パス。バッチ全体 135 passed / 1 flaky
+- E2Eバッチ安定化: workers=2, timeout=45s, retries=1
+- model sync script: `npm run sync:models` / `check:models-sync`
+- saveGuiBtn PlayRenderer未初期化バグ修正
+- cancelGuiBtn修正: 編集キャンセル後のstory/choices表示復帰
 
-### Session 11 の成果 (2026-03-19)
+### Session 13 の成果 (2026-03-23 nightshift)
 
-- SP-PLAY-001 E2E テスト修正: ローカルモデル二重管理問題を発見・解決
-  - `apps/web-tester/models/examples/` がルート `models/examples/` と乖離していた
-  - linear.json 含む6ファイルを同期、E2E 8/8 通過
-- SP-PLAY-001 E2E 8件全通過 (単独実行時)
-  - AC-1〜AC-6b + append-scroll + sidebar summary
+- docs debt消化: AI_CONTEXT.md整理、HANDOVER.md/TASKS.md session 12反映
+- Pipeline仕様ドラフト策定: docs/specs/pipeline-workflow.md (SP-PIPE-001)
+- BLIND_SPOTS.md整理: 陳腐化項目の更新
+- spec-index.json同期
+
+### Session 14 の成果 (2026-03-26 nightshift)
+
+- 全体棚卸し + docs/project-status.md 作成 (全機能ステータス表)
+- レガシー根絶:
+  - 孤立ドキュメント4件削除 (hands-on-testing.md, API_ENDPOINTS.md, API_DEVELOPMENT_WORKFLOW.md, test-ai-features.md)
+  - 偽テスト1件削除 (hierarchy-state.test.js: ブラウザコンソール手動確認用)
+  - 陳腐化docs 6件をarchive移動 (AI_CONTEXT.md, MIGRATION_NOTES.md, QUICK_START_PHASE2.md, node-hierarchy-design.md, reference.md, OpenSpec.md)
+  - SP-004 (legacy) をspec-indexから除去
+  - docs/troubleshooting.md の旧ブランチ参照 (master→main) 修正
 
 ## 既知の課題
 
-- GUI Undo/Redo 手動回帰テスト未実施
+- E2Eバッチ実行で間欠的に1件失敗 (AC-5 mode toggle、CPU競合)
+- SP-PLAY-001 手動確認未了 (ブラウザで画像/BGM操作感検証)
 - Unity SDK パリティ未完 (TS側7機能の移植)
-- Dynamic Text構文のYarnネイティブ変換 (`{variable}`→`{$variable}`, `{?cond:text}`→`<<if>>`/`<<endif>>`)
-- E2E 全テスト一括実行時に状態汚染で3-5件不安定 (個別実行時は全通過)
-- `apps/web-tester/models/examples/` と `models/examples/` の二重管理 (同期スクリプト未整備)
+- Dynamic Text構文のYarnネイティブ変換未対応
+- Pipeline仕様が初期ドラフト段階 (HUMAN_AUTHORITY確認待ち)
+- Packages/ (大文字P) がディスク上に残存 (git管理外、手動削除で可)
 
 ## 次の推奨作業
 
-1. **SP-PLAY-001 手動確認**: crossfade/append-scroll の操作感、エンディング表示 → pct 100% 化
-2. **SP-PLAY-001 Phase 2 仕様策定**: 画像/BGM 対応
-3. **Unity SDK パリティ**: TS側7機能の C# 移植 (別セッション推奨)
-4. **Dynamic Text Yarn変換**: {variable}→{$variable}, {?cond:text}→<<if>>/<<endif>>
-5. **CI統合**: spec-index/encoding-safety checks in PR/CI
+1. **Pipeline仕様レビュー**: SP-PIPE-001 ドラフトの方向性確認 (HUMAN_AUTHORITY)
+2. **SP-PLAY-001 手動確認**: 画像/BGMの操作感検証 → pct 100%化
+3. **Unity SDK パリティ**: TS側7機能のC#移植 (別セッション推奨)
+4. **WritingPage連携仕様策定**: 双方向連携の具体設計
 
 ## 再開手順
 

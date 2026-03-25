@@ -121,26 +121,25 @@
 プロジェクト名: NarrativeGen
 環境: Node.js 22 / TypeScript 5.x / Vite 5 / Vitest / Playwright
 ブランチ戦略: trunk-based (main のみ)
-現フェーズ: 体験逆算 → プレイ品質向上フェーズ
-方針: 最終体験からの逆算で基盤能力の空白を埋める
-直近の状態 (2026-03-22 session 12):
+現フェーズ: Pipeline定義 → 最終ワークフロー確立フェーズ
+方針: 基盤能力は充実。「誰が何をどう使うか」のPipeline仕様を確立し、残Gap (WritingPage連携/Unity SDK) を計画的に埋める
+直近の状態 (2026-03-26 session 14 nightshift):
 
-- main ブランチ、origin/main +3 commits ahead (未push) + ローカル未コミット変更あり
-- 250テスト全緑 (20ファイル)、15モデル検証通過、ビルド成功
-- E2E: 57件 (Phase 2: 5件新規追加、全パス。バッチ全体 135 passed / 1 flaky)
-- 32 specs: done 30 / partial 2 (SP-UNITY-001 85%, SP-PLAY-001 95%)
-- Session 12 成果:
-  - SP-PLAY-001 Phase 2 実装完了: シーン画像 + BGM (AudioManager)
-  - AudioManager: HTMLAudioElement ダブルバッファリング、クロスフェード、autoplay対応
-  - PlayRenderer: 画像表示 (テキスト上部)、BGM制御、レンダーキュー追加
-  - スキーマ拡張: node.presentation.image/bgm + settings.presentation.defaultBgm/bgmVolume/bgmCrossfadeDuration
-  - engine-ts types.ts: NodePresentation/PresentationSettings インターフェース追加
-  - media-test.json テストモデル追加
-  - PlayRenderer renderNodeキュー機構: トランジション中の操作ロスを防止
+- main ブランチ、250テスト全緑 (20ファイル)、16モデル検証通過、ビルド成功
+- E2E: 57件 (6 spec files)。バッチ全体 135 passed / 1 flaky
+- 32 specs: done 28 / partial 3 / todo 1 (SP-PIPE-001)
+- Session 14 nightshift 成果:
+  - 全体ステータス棚卸し + docs/project-status.md 作成
+  - レガシー根絶: 孤立ドキュメント4件削除、偽テスト1件削除、陳腐化docs 6件をarchive移動
+  - SP-004 (legacy) をspec-indexから除去
+  - 旧ブランチ参照 (master) を修正
 - 既知問題:
   - E2Eバッチ実行で間欠的に1件が失敗 (AC-5 mode toggle、CPU競合)
-- 次回着手: SP-PLAY-001 手動確認 (ブラウザで画像/BGM操作感検証) → pct 100%化
+  - SP-PLAY-001 手動確認未了 (pct 95%)
+  - Packages/ (大文字P) がディスク上に残存 (git管理外)
+- HUMAN_AUTHORITY 確認待ち:
+  - SP-PIPE-001 方向性レビュー (ペルソナ定義、WritingPage優先度、エクスポート戦略)
 - 次回着手候補:
-  - WritingPage連携仕様策定 (DECISION LOG 2026-03-08 双方向、未仕様)
-  - Dynamic Text Yarn変換 (NarrativeGen構文 → Yarn Spinnerネイティブ)
+  - SP-PIPE-001 レビュー → 承認後に具体化
+  - SP-PLAY-001 手動確認 → pct 100%化
   - Unity SDK パリティ (7機能移植) — 別セッション推奨

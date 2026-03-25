@@ -1,6 +1,6 @@
 # 今後の開発タスク表
 
-**最終更新**: 2026-03-18
+**最終更新**: 2026-03-23
 
 ## 完了済みタスク
 
@@ -23,7 +23,7 @@
 | XSS Phase 1 修正 | 完了 | 2026-02 | html-utils 中央化 |
 | Spec Viewer 導入 | 完了 | 2026-03-09 | spec-index.json + spec-viewer.html |
 | feature/main-js-split-phase2 統合 | 完了 | 2026-03-11 | 85コミット、コンフリクト8件解決、テスト15→73件 |
-| 推論UI Phase 1-3 | 完了 | 2026-03-17 | UC-1〜UC-5 + グラフ視覚統合 (パスハイライト/到達不能半透明化/影響色分け/デバッグクエリUI) |
+| 推論UI Phase 1-3 | 完了 | 2026-03-17 | UC-1〜UC-5 + グラフ視覚統合 |
 | validate キャッシュ汚染修正 | 完了 | 2026-03-12 | clearSessionCaches() 追加 |
 | E2E skip 36件整理 | 完了 | 2026-03-12 | theme-toggle 33件削除 |
 | Entity/Inventory + C# SDK 統合 | 完了 | 2026-03-13 | hasItem/addItem/removeItem + InferenceRegistry |
@@ -35,24 +35,38 @@
 | ConversationTemplate GUI | 完了 | 2026-03-17 | Phase 4完了、テンプレートCRUD + trigger条件編集 + 10 E2E |
 | チャンクサイズ最適化 | 完了 | 2026-03-17 | Dynamic import + manual chunking |
 | E2E root Vitest衝突解決 | 完了 | 2026-03-17 | test:e2e スクリプト追加 |
-| SP-PLAY-001 プレイ没入感 MVP | 進行中 | 2026-03-18 | TransitionRegistry + PlayRenderer + CSS animations + schema拡張。E2E・手動確認残 |
+| SP-PLAY-001 Phase 1 プレイ没入感 | 完了 | 2026-03-18 | TransitionRegistry + PlayRenderer + CSS animations |
+| SP-PLAY-001 Phase 2 画像/BGM | 完了 | 2026-03-22 | AudioManager + シーン画像 + スキーマ拡張 + E2E 5件 |
+| E2Eバッチ安定化 | 完了 | 2026-03-22 | workers=2, timeout=45s, retries=1 |
+| Model sync script | 完了 | 2026-03-22 | sync:models / check:models-sync |
 
 ## 優先度順タスク一覧
 
 | 優先度 | タスク | 対象 | 難易度 | 状態 |
 |--------|--------|------|--------|------|
+| **高** | Pipeline仕様策定 (デザイナーワークフロー定義) | docs + system | 高 | ドラフト (SP-PIPE-001) |
+| **高** | SP-PLAY-001 手動確認 → pct 100% | web-tester | 低 | 未着手 |
 | **高** | Unity SDK パリティ (TS側7機能移植) | sdk-unity | 高 | 未着手 |
-| **高** | ライター向けオーサリングガイド / サンプルストーリー | docs + models | 中 | 完了 (AUTHORING_GUIDE.md + writer_tutorial.json) |
-| **中** | Yarn Spinner エクスポート実運用検証 | web-tester | 低 | 構造検証済み (変数宣言/条件/効果/jump全OK。Dynamic Text構文のYarn変換は未対応 — 将来課題) |
-| **中** | GUI Undo/Redo の手動回帰テスト | web-tester | 中 | 未着手 |
+| **中** | WritingPage連携仕様策定 | docs + system | 中 | 未着手 |
+| **中** | Dynamic Text Yarn変換 | engine-ts + web-tester | 中 | 未着手 |
 | **中** | CI統合 (spec-index/encoding-safety checks) | infra | 低 | 未着手 |
-| **中** | [entity~prop_pool] 構文 (DescriptionState統合) | engine-ts | 中 | 完了 (expandTemplateWithTracking + 7テスト) |
+| **中** | GUI Undo/Redo の手動回帰テスト | web-tester | 中 | 未着手 |
 | **低** | アクセシビリティ改善（ARIA ラベル等） | web-tester | 低 | 未着手 |
 | **低** | モバイル/タブレット対応 | web-tester | 高 | 未着手 |
 
 ## タスク詳細
 
 ### 高優先度
+
+#### Pipeline仕様策定
+
+デザイナー/ライターが NarrativeGen でストーリーを完成させるまでのワークフローを定義:
+- 入力→編集→検証→エクスポート→実行の各ステージ
+- 手動介入/自動化の境界
+- 各ステージで使うツール・画面
+- WritingPage / Unity との接続点
+
+**完了条件**: SP-PIPE-001 done、HUMAN_AUTHORITY 承認済み
 
 #### Unity SDK パリティ
 
@@ -67,32 +81,11 @@ TS側の原初ビジョン7機能を C# SDK に移植:
 
 **完了条件**: SP-UNITY-001 pct → 100%
 
-#### ライター向けオーサリングガイド
-
-原初ビジョン機能 (Entity-Property, Dynamic Text, ConversationTemplate, Event等) を使った:
-- 実用的なサンプルストーリー (models/ に配置)
-- ライター向けガイドドキュメント (docs/ に配置)
-- Web Tester での操作手順
-
-### 中優先度
-
-#### Yarn Spinner エクスポート実運用検証
-
-- `models/` のサンプルモデルを Yarn 形式に出力
-- Yarn Spinner で読込確認
-- `docs/specs/yarn-spinner-export.md` との仕様整合チェック
-
-#### [entity~prop_pool] 構文
-
-DescriptionState と Dynamic Text Engine の統合:
-- `[entity~prop_pool]` 構文で未描写プロパティから自動選択
-- 重複回避テキスト生成
-
 ## 進捗指標
 
-- **テスト**: engine-ts 250/250 合格 (20ファイル)。E2E 44件
-- **モデル検証**: 14モデル通過
+- **テスト**: engine-ts 250/250 合格 (20ファイル)。E2E 57件
+- **モデル検証**: 16モデル通過
 - **ビルド**: engine-ts + web-tester ともに成功
 - **エクスポート形式**: 5形式（CSV / Ink / Twine / JSON / Yarn）
-- **仕様書**: 32エントリ (done 30 / partial 2)
+- **仕様書**: 32エントリ (done 28 / partial 3 / todo 1)
 - **ドキュメント**: AUTHORING_GUIDE.md (ライター向けステップバイステップガイド)

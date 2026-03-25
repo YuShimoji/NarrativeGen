@@ -211,7 +211,7 @@ export async function loadModel(url: string): Promise<Model> {
 
 5. **後でリトライ**:
    ```bash
-   git push origin master
+   git push origin main
    ```
 
 #### 回避策
