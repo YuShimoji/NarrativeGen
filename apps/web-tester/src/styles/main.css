@@ -399,13 +399,6 @@ button.secondary:hover:not(:disabled) {
   line-height: 1.7;
 }
 
-.story-content {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
 /* ==========================================================================
    Pre / Code
    ========================================================================== */
@@ -867,6 +860,7 @@ button .icon {
    Story Content Layout (moved from inline styles)
    ========================================================================== */
 .story-content {
+  position: relative;
   display: flex;
   flex: 1;
   min-height: 0;

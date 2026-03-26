@@ -554,28 +554,27 @@
           </div>
         </div>
 
+        <!-- エクスポートモーダル (タブコンテンツの外に配置) -->
+        <div id="exportModal" class="modal">
+          <div class="modal-content" style="width: 400px;">
+            <h3>エクスポート</h3>
+            <div class="control-group" style="margin-bottom: 1rem; flex-direction: column; align-items: stretch;">
+              <label for="exportFormatSelect" style="margin-bottom: 0.5rem;">形式:</label>
+              <select id="exportFormatSelect" style="width: 100%;"></select>
+            </div>
+            <div class="control-group" style="margin-bottom: 1.5rem; flex-direction: column; align-items: stretch;">
+              <label for="exportFilenameInput" style="margin-bottom: 0.5rem;">ファイル名:</label>
+              <input type="text" id="exportFilenameInput" value="story" style="width: 100%;">
+            </div>
+            <div class="modal-buttons">
+              <button id="cancelExportBtn">キャンセル</button>
+              <button id="doExportBtn" class="primary">エクスポート</button>
+            </div>
+          </div>
+        </div>
+
         <div id="referencePanel" class="tab-content">
           <div style="display: flex; gap: 1rem; height: calc(100vh - 250px);">
-            <!-- エクスポートモーダル -->
-            <div id="exportModal" class="modal">
-              <div class="modal-content" style="width: 400px;">
-                <h3>エクスポート</h3>
-                <div class="control-group" style="margin-bottom: 1rem; flex-direction: column; align-items: stretch;">
-                  <label for="exportFormatSelect" style="margin-bottom: 0.5rem;">形式:</label>
-                  <select id="exportFormatSelect" style="width: 100%;"></select>
-                </div>
-                <div class="control-group" style="margin-bottom: 1.5rem; flex-direction: column; align-items: stretch;">
-                  <label for="exportFilenameInput" style="margin-bottom: 0.5rem;">ファイル名:</label>
-                  <input type="text" id="exportFilenameInput" value="story" style="width: 100%;">
-                </div>
-                <div class="modal-buttons">
-                  <button id="cancelExportBtn">キャンセル</button>
-                  <button id="doExportBtn" class="primary">エクスポート</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- アイコン定義 -->
             <!-- 左側: 目次 -->
             <div
               style="flex: 0 0 280px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 1rem; overflow-y: auto;">
