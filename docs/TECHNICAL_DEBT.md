@@ -1,6 +1,6 @@
 # Technical Debt and Improvement Tasks
 
-Last updated: 2026-03-18
+Last updated: 2026-03-26
 
 ## Overview
 This document tracks technical debt and improvement work items.
@@ -151,6 +151,10 @@ Remaining tasks:
 | Model files sync script (TD-10) | 2026-03-22 | `npm run sync:models` / `check:models-sync` |
 | saveGuiBtn PlayRenderer bug | 2026-03-22 | GUI編集保存後にインライン選択肢が表示されなかった |
 | E2E batch stability (TD-11) | 2026-03-22 | workers=2, timeout=45s, retries=1, 9→0-2件に改善 |
+| Dead code cleanup (session 14-15) | 2026-03-26 | 8ファイル削除, utils/logger.js統合, 陳腐化docs archive移動 |
+| Empty state UI | 2026-03-26 | ストーリー/グラフタブに未ロード時プレースホルダー追加 |
+| Sidebar toggle CSS fix | 2026-03-26 | .sidebar-hidden CSSルール欠落を修正 |
+| spec-index gap | 2026-03-26 | SP-HIST-001 (Session History) エントリ追加、33エントリに |
 
 ---
 
@@ -159,3 +163,4 @@ Remaining tasks:
 - 2026-03-10: updated for encoding safety workflow and Mermaid chunk split
 - 2026-03-12: added graph visual issues, completed Phase 2 items
 - 2026-03-17: completed items update, E2E root Vitest conflict added
+- 2026-03-26: session 15 — dead code/UI/sidebar/spec-index completed items
