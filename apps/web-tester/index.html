@@ -394,7 +394,13 @@
                   <use href="#icon-sidebar"></use>
                 </svg>サイドバー</button>
             </div>
-            <div class="story-view" id="storyView" style="flex: 1; margin: 0; border-radius: 0; border: none;"></div>
+            <div class="story-view" id="storyView" style="flex: 1; margin: 0; border-radius: 0; border: none;">
+              <div id="storyEmptyState" class="empty-state">
+                <svg class="icon" style="width: 48px; height: 48px; opacity: 0.3; margin-bottom: 12px;"><use href="#icon-book-open"></use></svg>
+                <p style="font-size: 16px; margin: 0 0 8px 0; color: var(--color-text-muted);">モデルを選択して「実行」をクリック</p>
+                <p style="font-size: 12px; margin: 0; color: var(--color-text-muted); opacity: 0.7;">または JSON ファイルをドラッグ&ドロップ</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -427,6 +433,11 @@
             <button id="loadGraphPreset">プリセット読み込み</button>
           </div>
           <div class="graph-container" style="flex: 1; padding: 0; border: none; position: relative;">
+            <div id="graphEmptyState" class="empty-state">
+              <svg class="icon" style="width: 48px; height: 48px; opacity: 0.3; margin-bottom: 12px;"><use href="#icon-git-branch"></use></svg>
+              <p style="font-size: 16px; margin: 0 0 8px 0; color: var(--color-text-muted);">モデルを実行するとノードグラフが表示されます</p>
+              <p style="font-size: 12px; margin: 0; color: var(--color-text-muted); opacity: 0.7;">ストーリータブでモデルを選択して「実行」をクリック</p>
+            </div>
             <svg id="graphSvg" style="width: 100%; height: 100%;"></svg>
             <div id="graphInferencePanel" class="graph-inference-panel"></div>
           </div>

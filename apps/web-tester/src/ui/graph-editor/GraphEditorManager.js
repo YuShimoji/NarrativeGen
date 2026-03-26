@@ -459,12 +459,15 @@ export class GraphEditorManager {
    * グラフを描画
    */
   render() {
+    const graphEmpty = document.getElementById('graphEmptyState')
     if (!this.appState.model) {
       if (this.g) {
         this.g.selectAll('*').remove()
       }
+      if (graphEmpty) graphEmpty.classList.remove('hidden')
       return
     }
+    if (graphEmpty) graphEmpty.classList.add('hidden')
 
     // SVGを再セットアップ（サイズ変更に対応）
     this._setupSVG()

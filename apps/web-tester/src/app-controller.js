@@ -1248,6 +1248,10 @@ function appendStoryFromCurrentNode() {
 function renderStory() {
   if (!storyView) return
 
+  // Hide empty state placeholder on first render
+  const emptyState = document.getElementById('storyEmptyState')
+  if (emptyState) emptyState.classList.add('hidden')
+
   // When PlayRenderer is active, delegate to it
   if (playRenderer) {
     renderPlayView()

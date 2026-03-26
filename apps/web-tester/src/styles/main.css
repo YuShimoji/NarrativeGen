@@ -393,6 +393,7 @@ button.secondary:hover:not(:disabled) {
   flex: 1;
   overflow: auto;
   white-space: pre-wrap;
+  position: relative;
   border: 1px solid var(--color-border);
   font-size: 14px;
   line-height: 1.7;
@@ -860,4 +861,55 @@ button .icon {
   background: var(--color-primary-dark);
   border-color: var(--color-primary);
   color: white;
+}
+
+/* ==========================================================================
+   Empty State - Initial placeholder for unloaded content areas
+   ========================================================================== */
+/* ==========================================================================
+   Sidebar Toggle
+   ========================================================================== */
+.story-content.sidebar-hidden .story-sidebar {
+  width: 0;
+  overflow: hidden;
+  border-right: none;
+  transition: width 0.2s ease;
+}
+
+.story-content .story-sidebar {
+  transition: width 0.2s ease;
+}
+
+.story-content.sidebar-hidden #toggleSidebarBtn {
+  position: fixed;
+  bottom: 8px;
+  left: 8px;
+  z-index: 10;
+  width: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  padding: 4px 8px;
+}
+
+/* ==========================================================================
+   Empty State - Initial placeholder for unloaded content areas
+   ========================================================================== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+
+.empty-state.hidden {
+  display: none;
 }
