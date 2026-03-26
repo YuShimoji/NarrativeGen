@@ -1,7 +1,7 @@
 // storage-utils.js - localStorage management for NarrativeGen Web Tester
 // Handles session/model state persistence with schema validation and error handling
 
-import { Logger } from './logger.js'
+import Logger from '../src/core/logger.js'
 
 // Storage keys namespace
 const STORAGE_KEYS = {
