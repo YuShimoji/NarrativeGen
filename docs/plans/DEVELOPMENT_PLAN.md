@@ -74,8 +74,8 @@
 | 種類 | 件数 |
 |------|------|
 | ユニットテスト (Vitest) | 250テスト (20ファイル) |
-| E2Eテスト (Playwright) | 52件 (entity-panel 11 + template-panel 10 + play-immersion 8 含む) |
-| モデル検証 (CLI) | 14モデル |
+| E2Eテスト (Playwright) | 57件 (6 spec files, 3 skipped in undo-redo) |
+| モデル検証 (CLI) | 15モデル |
 
 ---
 

@@ -290,8 +290,8 @@
   {
     "id": "SP-PIPE-001",
     "title": "Designer Pipeline Workflow",
-    "status": "todo",
-    "pct": 10,
+    "status": "partial",
+    "pct": 70,
     "cat": "system",
     "file": "docs/specs/pipeline-workflow.md",
     "summary": "End-to-end workflow for story creation: Design → Author → Validate → Export → Integrate. Persona definitions (Writer/TechDesigner/Integrator), manual vs automation matrix, gap analysis (WritingPage, DT export, Unity SDK parity). HUMAN_AUTHORITY review pending."

@@ -34,12 +34,12 @@
 
 ## CURRENT SLICE
 
-- スライス名: SP-PIPE-001 Pipeline Workflow 仕様策定
-- ユーザー操作列: ドラフト読み → ペルソナ/ステージ/Gap のレビュー → 方向性承認 → 具体化
-- 成功状態: Pipeline 仕様が承認され、次の実装対象 (WritingPage連携 or Unity SDK or Pipeline ガイド) が決定
-- このスライスで必要な基盤能力: なし (仕様策定のみ)
-- このスライスから抽出されるツール要求: Pipeline ガイド (AUTHORING_GUIDE.md の拡張候補)
-- 今回はやらないこと: SP-PIPE-001 に基づく実装、Unity SDK パリティ
+- スライス名: WritingPage 連携仕様策定 + 実装 (SP-PIPE-001 Stage 2a)
+- ユーザー操作列: WritingPage でテキスト執筆 → NarrativeGen にノードとして流し込み / NarrativeGen のノードテキストを WritingPage で長文編集
+- 成功状態: WritingPage と NarrativeGen 間で双方向にテキストを受け渡せる
+- このスライスで必要な基盤能力: WritingPage のデータ構造理解、連携インターフェース設計
+- このスライスから抽出されるツール要求: インポート/エクスポートハンドラー、WritingPage 側の対応
+- 今回はやらないこと: Unity SDK パリティ、AI 支援機能
 
 ---
 
@@ -70,6 +70,7 @@
 | 2026-03-23 | SP-PIPE-001 Pipeline Workflow ドラフト策定 | Pipeline先行 / SP-PLAY-001閉じ優先 / WritingPage先行 / 体験ウォークスルー | 基盤能力は充実。次に進むべきは「この基盤で何を作るか」の言語化。Pipeline仕様なしに機能を積み上げると使われない機能が増える |
 | 2026-03-26 | レガシー根絶: 孤立ドキュメント/偽テスト/陳腐化仕様の一斉削除 | 個別対応 / 一斉削除 | task-scoutによる全体スキャンでL01-L07を特定。4ルートファイル+1偽テスト+SP-004 legacy+旧ブランチ参照+陳腐化docs 5件。一斉処理が効率的 |
 | 2026-03-26 | 安定版化: デッドコード根絶 + UI改善 + CSS重複修正 | Excise先行 / Advance先行 / 並行 | 保守偏重脱出のためExcise→Advance→Refactorの順で実行。user-visible change (empty state + sidebar) を確実に含めた |
+| 2026-03-27 | SP-PIPE-001 方向性確定: 1人運用/WritingPage次スライス/JSON主軸/AI支援スコープ外/AUTHORING_GUIDE拡張 | 各項目に3択 | Pipeline仕様のHUMAN_AUTHORITY 5件を全件レビュー。次スライスはWritingPage連携に決定 |
 
 ---
 
@@ -81,20 +82,17 @@ CLAUDE.md の IDEA POOL を参照。
 
 ## HANDOFF SNAPSHOT
 
-- 現在の主レーン: Authoring / Tooling (Pipeline 定義)
-- 現在のスライス: SP-PIPE-001 Pipeline Workflow 仕様策定 (ドラフト完了、レビュー待ち)
-- 今回変更した対象 (session 15):
-  - 削除: PHASE-2A-COMPLETE.md, copy-models.js, verify-phase-2a.mjs, verify-phase2b.sh, hierarchy-integration-example.js, theme-manager.js, csv-exporter.js, utils/logger.js
-  - archive移動: WORKFLOW_STATE_SSOT.md, WEB_TESTER_BROWSER_VERIFICATION.md
-  - UI追加: empty state (index.html), サイドバートグルCSS (main.css)
-  - CSS修正: inline.css内部重複統一
-  - docs更新: NarrativeGen_Reference_Wiki.md, OpenSpec-WebTester.md, TECHNICAL_DEBT.md, spec-index.json, runtime-state.md, HANDOVER.md, TASKS.md, project-context.md
+- 現在の主レーン: Advance (WritingPage 連携)
+- 現在のスライス: WritingPage 連携仕様策定 + 実装
+- 今回変更した対象 (session 16):
+  - SP-PIPE-001: HUMAN_AUTHORITY 5件レビュー完了、ステータス todo→partial (70%)
+  - docs: pipeline-workflow.md 決定反映、spec-index.json 更新、project-context.md 更新、CLAUDE.md Project Context session 15→16 反映
 - 次回最初に確認すべきファイル:
-  - docs/project-status.md (全体ステータス表)
-  - docs/specs/pipeline-workflow.md (HUMAN_AUTHORITY レビュー対象)
+  - docs/specs/pipeline-workflow.md (確定済み方向性)
+  - WritingPage プロジェクトのデータ構造
 - 未確定の設計論点:
-  - SP-PIPE-001 の5つの HUMAN_AUTHORITY 確認事項 (ペルソナ/WritingPage優先度/エクスポート戦略/AI支援スコープ/ガイド形態)
+  - WritingPage 連携の具体設計 (データフォーマット、インターフェース)
 - 今は触らない範囲:
   - Unity SDK パリティ (別セッション推奨)
-  - 新規エンジン機能追加
+  - AI 支援機能 (スコープ外決定済み)
   - コンテンツ執筆

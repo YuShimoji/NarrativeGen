@@ -115,6 +115,7 @@
 | 2026-03-18 | SP-PLAY-001: ノード遷移はcrossfade+append-scroll両対応 | crossfadeのみ / append-scrollのみ / 両方切替 | 用途に応じて切替可能にする。拡張可能なTransitionRegistry設計で将来のAnimation追加も受容 |
 | 2026-03-18 | SP-PLAY-001: Phase 1はテキスト演出のみ | テキストのみ / 画像含む / 画像+BGM | スコープを絞りプレイ基盤を先に確立。画像/BGMはPhase 2 |
 | 2026-03-18 | UI設計はマウス操作主体 (NarrativeGenにも適用) | マウス主体 / キーボード主体 | WritingPageでの決定をNarrativeGenにも適用 |
+| 2026-03-27 | SP-PIPE-001 方向性確定: 1人運用/WritingPage次スライス/JSON主軸/AI支援スコープ外/AUTHORING_GUIDE拡張 | 各項目に複数択 | Pipeline仕様の5件HUMAN_AUTHORITY全件レビュー完了。次スライスはWritingPage連携 |
 
 ## Project Context
 
@@ -123,23 +124,18 @@
 ブランチ戦略: trunk-based (main のみ)
 現フェーズ: Pipeline定義 → 最終ワークフロー確立フェーズ
 方針: 基盤能力は充実。「誰が何をどう使うか」のPipeline仕様を確立し、残Gap (WritingPage連携/Unity SDK) を計画的に埋める
-直近の状態 (2026-03-26 session 14 nightshift):
+直近の状態 (2026-03-27 session 16):
 
-- main ブランチ、250テスト全緑 (20ファイル)、16モデル検証通過、ビルド成功
-- E2E: 57件 (6 spec files)。バッチ全体 135 passed / 1 flaky
-- 32 specs: done 28 / partial 3 / todo 1 (SP-PIPE-001)
-- Session 14 nightshift 成果:
-  - 全体ステータス棚卸し + docs/project-status.md 作成
-  - レガシー根絶: 孤立ドキュメント4件削除、偽テスト1件削除、陳腐化docs 6件をarchive移動
-  - SP-004 (legacy) をspec-indexから除去
-  - 旧ブランチ参照 (master) を修正
+- main ブランチ、250テスト全緑 (20ファイル)、15モデル検証通過、ビルド成功
+- E2E: 57件 (6 spec files, 3 skipped in undo-redo)
+- 33 specs: done 29 / partial 3 (SP-UNITY-001 85%, SP-PLAY-001 95%, SP-PIPE-001 70%) / todo 0
+- Session 15 成果: デッドコード9件削除(-1072行), CSS重複統一(-688行), サイドバートグル修正, empty state UI, exportモーダル修正
+- Session 16: SP-PIPE-001 HUMAN_AUTHORITY 5件レビュー完了
+  - 1人運用 / WritingPage次スライス / JSON主軸 / AI支援スコープ外 / AUTHORING_GUIDE拡張
 - 既知問題:
   - E2Eバッチ実行で間欠的に1件が失敗 (AC-5 mode toggle、CPU競合)
   - SP-PLAY-001 手動確認未了 (pct 95%)
-  - Packages/ (大文字P) がディスク上に残存 (git管理外)
-- HUMAN_AUTHORITY 確認待ち:
-  - SP-PIPE-001 方向性レビュー (ペルソナ定義、WritingPage優先度、エクスポート戦略)
 - 次回着手候補:
-  - SP-PIPE-001 レビュー → 承認後に具体化
+  - WritingPage連携仕様策定 → 実装 (SP-PIPE-001で決定)
   - SP-PLAY-001 手動確認 → pct 100%化
   - Unity SDK パリティ (7機能移植) — 別セッション推奨
