@@ -6,12 +6,11 @@
 - 環境: Node.js 22 / TypeScript 5.x / Vite 5 / Vitest / Playwright
 - ブランチ戦略: trunk-based (main のみ)
 - 現フェーズ: Pipeline定義 → 最終ワークフロー確立
-- 直近の状態 (2026-03-26 session 15 nightshift):
-  - Excise: デッドコード8件削除 (1072行+), utils/logger.js統合, 陳腐化docs 2件archive移動
-  - Advance: Empty State UI追加, サイドバートグルCSS修正
-  - Refactor: inline.css内部重複3箇所統一 (42行削減)
-  - docs: Wiki 6セクション追加, OpenSpecデッドリンク修正, spec-index 33エントリ (done 29 / partial 3 / todo 1)
-  - 250テスト全緑、ビルド成功、E2E 57件、Visual Audit実施済み
+- 直近の状態 (2026-03-27 session 16):
+  - SP-PIPE-001: HUMAN_AUTHORITY 5件レビュー完了 (1人運用/WritingPage次スライス/JSON主軸/AI支援スコープ外/AUTHORING_GUIDE拡張)
+  - SP-PLAY-001: visual-scout で AC-1/2/8/13 確認、テストメディアを有効ファイルに置換。BGM 再生の人間確認のみ残 (95%→98%)
+  - Excise: Phase-2B/2C レガシー7ファイル削除 (-2376行)、DEVELOPMENT_PLAN.md 数値修正
+  - 33 specs: done 29 / partial 3 (SP-UNITY-001 85%, SP-PLAY-001 98%, SP-PIPE-001 70%) / todo 0
 
 ---
 

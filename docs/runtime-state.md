@@ -10,18 +10,18 @@
 ## Active Artifact
 - **artifact**: Web Tester (インタラクティブストーリーエディタ + プレイモード)
 - **surface**: `npm run dev` -> http://localhost:5173/
-- **last_change_relation**: evidence-only (SP-PIPE-001 レビュー完了)
+- **last_change_relation**: direct (SP-PLAY-001 テストメディア置換 + visual audit)
 
 ## カウンター
-- **blocks_in_session**: 1
-- **blocks_since_user_visible_change**: 1 (レビューのみ、visible change なし)
-- **blocks_since_visual_audit**: 2 (session 境界 +1, block 1 +1)
+- **blocks_in_session**: 3
+- **blocks_since_user_visible_change**: 1 (テストメディア置換で実質前進)
+- **blocks_since_visual_audit**: 1 (block 3 で visual-scout 実施)
 
 ## 量的指標
 - **engine_unit_tests**: 250 (20 files)
 - **e2e_tests**: 57 (6 spec files, 3 skipped in undo-redo)
 - **model_validation**: 15 models passed
-- **spec_index_entries**: 33 (done 29 / partial 3 / todo 0)
+- **spec_index_entries**: 33 (done 29 / partial 3 (SP-UNITY-001 85%, SP-PLAY-001 98%, SP-PIPE-001 70%) / todo 0)
 - **export_formats**: 5
 - **scripts**: 8
 - **impl_files**: 112 (engine-ts/src 42 + web-tester/src 60 + handlers 10)
@@ -30,9 +30,9 @@
 - **todo_fixme_hack**: 0
 
 ## Visual Evidence
-- **visual_evidence_status**: stale (2ブロック前)
-- **last_visual_audit_path**: visual-scout (session 15, 4回実施)
-- **blocks_since_visual_audit**: 2
+- **visual_evidence_status**: fresh
+- **last_visual_audit_path**: apps/web-tester/docs/verification/sp-play-001/ (session 16 block 3)
+- **blocks_since_visual_audit**: 0
 
 ## 膨張兆候
 - **test_proliferation**: none

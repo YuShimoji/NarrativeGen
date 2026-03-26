@@ -273,10 +273,10 @@
     "id": "SP-PLAY-001",
     "title": "Play Immersion MVP",
     "status": "partial",
-    "pct": 95,
+    "pct": 98,
     "cat": "ui",
     "file": "docs/specs/play-immersion.md",
-    "summary": "Web Tester play experience. Phase 1: paragraph fade-in, inline choices, crossfade/append-scroll transitions, TransitionRegistry, CSS animations, E2E 8 tests. Phase 2: scene image display (node presentation.image) + BGM (AudioManager, crossfade, autoplay policy). Manual confirmation pending."
+    "summary": "Web Tester play experience. Phase 1: paragraph fade-in, inline choices, crossfade/append-scroll transitions, TransitionRegistry, CSS animations, E2E 8 tests. Phase 2: scene image display (node presentation.image) + BGM (AudioManager, crossfade, autoplay policy), E2E 5 tests. Visual audit confirmed (AC-1/2/8/13). Test media replaced with valid files. BGM audio playback requires human ear verification (AC-9~12)."
   },
   {
     "id": "SP-HIST-001",
