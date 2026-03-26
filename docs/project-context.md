@@ -6,11 +6,12 @@
 - 環境: Node.js 22 / TypeScript 5.x / Vite 5 / Vitest / Playwright
 - ブランチ戦略: trunk-based (main のみ)
 - 現フェーズ: Pipeline定義 → 最終ワークフロー確立
-- 直近の状態 (2026-03-26 session 14 nightshift):
-  - 全体棚卸し + docs/project-status.md 作成 (実装済み/未確認/未実装/懸念/レガシーの全体表)
-  - レガシー根絶: 孤立ドキュメント4件削除、偽テスト1件削除、陳腐化docs 6件をarchive移動、SP-004 legacy除去
-  - spec-index 32エントリ (done 28 / partial 3 / todo 1)
-  - 250テスト全緑、ビルド成功、E2E 57件
+- 直近の状態 (2026-03-26 session 15 nightshift):
+  - Excise: デッドコード8件削除 (1072行+), utils/logger.js統合, 陳腐化docs 2件archive移動
+  - Advance: Empty State UI追加, サイドバートグルCSS修正
+  - Refactor: inline.css内部重複3箇所統一 (42行削減)
+  - docs: Wiki 6セクション追加, OpenSpecデッドリンク修正, spec-index 33エントリ (done 29 / partial 3 / todo 1)
+  - 250テスト全緑、ビルド成功、E2E 57件、Visual Audit実施済み
 
 ---
 
@@ -68,6 +69,7 @@
 |------|----------|--------|----------|
 | 2026-03-23 | SP-PIPE-001 Pipeline Workflow ドラフト策定 | Pipeline先行 / SP-PLAY-001閉じ優先 / WritingPage先行 / 体験ウォークスルー | 基盤能力は充実。次に進むべきは「この基盤で何を作るか」の言語化。Pipeline仕様なしに機能を積み上げると使われない機能が増える |
 | 2026-03-26 | レガシー根絶: 孤立ドキュメント/偽テスト/陳腐化仕様の一斉削除 | 個別対応 / 一斉削除 | task-scoutによる全体スキャンでL01-L07を特定。4ルートファイル+1偽テスト+SP-004 legacy+旧ブランチ参照+陳腐化docs 5件。一斉処理が効率的 |
+| 2026-03-26 | 安定版化: デッドコード根絶 + UI改善 + CSS重複修正 | Excise先行 / Advance先行 / 並行 | 保守偏重脱出のためExcise→Advance→Refactorの順で実行。user-visible change (empty state + sidebar) を確実に含めた |
 
 ---
 
@@ -81,14 +83,12 @@ CLAUDE.md の IDEA POOL を参照。
 
 - 現在の主レーン: Authoring / Tooling (Pipeline 定義)
 - 現在のスライス: SP-PIPE-001 Pipeline Workflow 仕様策定 (ドラフト完了、レビュー待ち)
-- 今回変更した対象 (session 14):
-  - docs/project-status.md (新規: 全体ステータス表)
-  - docs/runtime-state.md (新規: ランタイム状態)
-  - docs/spec-index.json (SP-004 legacy 除去、32エントリ)
-  - docs/troubleshooting.md (master→main 修正)
-  - CLAUDE.md / HANDOVER.md / TASKS.md (session 14 同期)
-  - 削除: hands-on-testing.md, API_ENDPOINTS.md, API_DEVELOPMENT_WORKFLOW.md, test-ai-features.md, hierarchy-state.test.js
-  - archive移動: AI_CONTEXT.md, MIGRATION_NOTES.md, QUICK_START_PHASE2.md, node-hierarchy-design.md, reference.md, OpenSpec.md
+- 今回変更した対象 (session 15):
+  - 削除: PHASE-2A-COMPLETE.md, copy-models.js, verify-phase-2a.mjs, verify-phase2b.sh, hierarchy-integration-example.js, theme-manager.js, csv-exporter.js, utils/logger.js
+  - archive移動: WORKFLOW_STATE_SSOT.md, WEB_TESTER_BROWSER_VERIFICATION.md
+  - UI追加: empty state (index.html), サイドバートグルCSS (main.css)
+  - CSS修正: inline.css内部重複統一
+  - docs更新: NarrativeGen_Reference_Wiki.md, OpenSpec-WebTester.md, TECHNICAL_DEBT.md, spec-index.json, runtime-state.md, HANDOVER.md, TASKS.md, project-context.md
 - 次回最初に確認すべきファイル:
   - docs/project-status.md (全体ステータス表)
   - docs/specs/pipeline-workflow.md (HUMAN_AUTHORITY レビュー対象)
