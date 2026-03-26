@@ -279,6 +279,15 @@
     "summary": "Web Tester play experience. Phase 1: paragraph fade-in, inline choices, crossfade/append-scroll transitions, TransitionRegistry, CSS animations, E2E 8 tests. Phase 2: scene image display (node presentation.image) + BGM (AudioManager, crossfade, autoplay policy). Manual confirmation pending."
   },
   {
+    "id": "SP-HIST-001",
+    "title": "Session History (Undo/Back)",
+    "status": "done",
+    "pct": 100,
+    "cat": "core",
+    "file": null,
+    "summary": "Immutable session state snapshot stack for undo/back navigation. createSessionHistory/pushHistory/popHistory/clearHistory/canGoBack. maxDepth support. Engine + Web Tester graph undo integrated. No standalone spec doc (implementation-only)."
+  },
+  {
     "id": "SP-PIPE-001",
     "title": "Designer Pipeline Workflow",
     "status": "todo",
