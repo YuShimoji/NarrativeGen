@@ -4,8 +4,8 @@
 
 - **日時**: 2026-03-26
 - **ブランチ**: `main` (trunk-based)
-- **最新コミット**: session 14 nightshift (レガシー根絶 + 棚卸し)
-- **origin/main**: +5 commits ahead (未push)
+- **最新コミット**: session 15 nightshift (安定版化: Excise + Advance + docs)
+- **origin/main**: +9 commits ahead (未push)
 
 ## プロジェクト概要
 
@@ -35,41 +35,25 @@ NarrativeGen/
 
 ### 仕様書
 
-- **spec-index.json**: 32 エントリ
-- **done**: 28 件
+- **spec-index.json**: 33 エントリ
+- **done**: 29 件
 - **partial**: 3 件 (SP-009 Technical Debt 90%, SP-UNITY-001 Unity SDK 85%, SP-PLAY-001 Play Immersion 95%)
 - **todo**: 1 件 (SP-PIPE-001 Pipeline Workflow 10%)
 
-### Session 12 の成果 (2026-03-22)
+### Session 15 の成果 (2026-03-26 nightshift)
 
-- SP-PLAY-001 Phase 2 実装完了: シーン画像 + BGM
-  - AudioManager: HTMLAudioElement ダブルバッファリング、クロスフェード、autoplay対応
-  - PlayRenderer: 画像表示 (テキスト上部)、BGM制御、レンダーキュー追加
-  - スキーマ拡張: node.presentation.image/bgm + settings.presentation.defaultBgm/bgmVolume/bgmCrossfadeDuration
-  - engine-ts types.ts: NodePresentation/PresentationSettings インターフェース追加
-  - media-test.json テストモデル追加
-  - E2E: Phase 2 5件新規追加、全パス。バッチ全体 135 passed / 1 flaky
-- E2Eバッチ安定化: workers=2, timeout=45s, retries=1
-- model sync script: `npm run sync:models` / `check:models-sync`
-- saveGuiBtn PlayRenderer未初期化バグ修正
-- cancelGuiBtn修正: 編集キャンセル後のstory/choices表示復帰
-
-### Session 13 の成果 (2026-03-23 nightshift)
-
-- docs debt消化: AI_CONTEXT.md整理、HANDOVER.md/TASKS.md session 12反映
-- Pipeline仕様ドラフト策定: docs/specs/pipeline-workflow.md (SP-PIPE-001)
-- BLIND_SPOTS.md整理: 陳腐化項目の更新
-- spec-index.json同期
-
-### Session 14 の成果 (2026-03-26 nightshift)
-
-- 全体棚卸し + docs/project-status.md 作成 (全機能ステータス表)
-- レガシー根絶:
-  - 孤立ドキュメント4件削除 (hands-on-testing.md, API_ENDPOINTS.md, API_DEVELOPMENT_WORKFLOW.md, test-ai-features.md)
-  - 偽テスト1件削除 (hierarchy-state.test.js: ブラウザコンソール手動確認用)
-  - 陳腐化docs 6件をarchive移動 (AI_CONTEXT.md, MIGRATION_NOTES.md, QUICK_START_PHASE2.md, node-hierarchy-design.md, reference.md, OpenSpec.md)
-  - SP-004 (legacy) をspec-indexから除去
-  - docs/troubleshooting.md の旧ブランチ参照 (master→main) 修正
+- **Excise**: デッドコード8ファイル削除 (1072+行)
+  - PHASE-2A-COMPLETE.md, copy-models.js, verify-phase-2a.mjs, verify-phase2b.sh
+  - hierarchy-integration-example.js, theme-manager.js, csv-exporter.js
+  - utils/logger.js (src/core/logger.js に統合)
+- **Excise**: 陳腐化docs 2件 archive移動 (WORKFLOW_STATE_SSOT.md, WEB_TESTER_BROWSER_VERIFICATION.md)
+- **Advance**: Empty State UI追加 (ストーリータブ + グラフタブにプレースホルダー)
+- **Advance**: サイドバートグルCSS修正 (.sidebar-hidden ルール欠落バグ)
+- **docs**: spec-index に SP-HIST-001 (Session History) 追加 → 33エントリ
+- **docs**: NarrativeGen_Reference_Wiki.md 更新 (Vite修正 + 6セクション追加)
+- **docs**: OpenSpec-WebTester.md デッドリンク6件修正
+- **docs**: TECHNICAL_DEBT.md session 15 完了4件追記
+- **Visual Audit 実施**: 画面走査完了、empty state 動作確認
 
 ## 既知の課題
 
@@ -78,7 +62,7 @@ NarrativeGen/
 - Unity SDK パリティ未完 (TS側7機能の移植)
 - Dynamic Text構文のYarnネイティブ変換未対応
 - Pipeline仕様が初期ドラフト段階 (HUMAN_AUTHORITY確認待ち)
-- Packages/ (大文字P) がディスク上に残存 (git管理外、手動削除で可)
+- Packages/ (大文字P) はWindowsケース非感受性のため削除不可 (packages/と同一)
 
 ## 次の推奨作業
 
