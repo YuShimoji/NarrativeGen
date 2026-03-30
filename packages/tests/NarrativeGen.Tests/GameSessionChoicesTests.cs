@@ -49,8 +49,8 @@ namespace NarrativeGen.Tests
 
         private static List<Entity> CreateEntities() => new()
         {
-            new Entity { Id = "mac_burger_001", Brand = "MacBurger", Description = "おいしいバーガー", Cost = 100 },
-            new Entity { Id = "coffee_001", Brand = "CoffeeStand", Description = "香り高いコーヒー", Cost = 50 },
+            new Entity { Id = "mac_burger_001", Name = "MacBurger", Description = "おいしいバーガー", Cost = 100 },
+            new Entity { Id = "coffee_001", Name = "CoffeeStand", Description = "香り高いコーヒー", Cost = 50 },
         };
 
         [Test]

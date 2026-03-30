@@ -1,12 +1,12 @@
 [
   {
     "id": "SP-001",
-    "title": "Web Tester Spec",
+    "title": "Web Tester Spec (Legacy)",
     "status": "done",
-    "pct": 95,
+    "pct": 80,
     "cat": "system",
-    "file": "docs/OpenSpec-WebTester.md",
-    "summary": "Overall spec for GUI, graph editor, CSV, and AI features"
+    "file": "docs/archive/OpenSpec-WebTester.md",
+    "summary": "Original Web Tester spec (2025-12). Superseded by individual SP-* specs. Dead links 7箇所, Phase 2B/2C未反映. Archived session 15."
   },
   {
     "id": "SP-002",
