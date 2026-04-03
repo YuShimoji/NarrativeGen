@@ -52,6 +52,7 @@ import {
   DRAFT_MODEL_STORAGE_KEY
 } from './config/constants.js'
 import { setupEditorEvents } from './app-editor-events.js'
+import { initZwpImportHandler } from '../handlers/zwp-import-handler.js'
 
 /**
  * Initialize the application: wire up DOM events, initialize managers, set up UI
@@ -75,7 +76,7 @@ export function initializeApp({ appState, managers, keyBindingManager, exportMan
   const {
   startBtn, choicesContainer, stateView, statusText, modelSelect,
   fileInput, uploadBtn, dropZone, previewTopBtn, downloadTopBtn,
-  importCsvBtn, csvFileInput, exportCsvBtn, guiEditMode, guiEditBtn,
+  importCsvBtn, csvFileInput, exportCsvBtn, importZwpBtn, guiEditMode, guiEditBtn,
   nodeList, addNodeBtn, previewBtn, downloadBtn, saveGuiBtn, cancelGuiBtn,
   nodeSearchInput, clearSearchBtn, nodeFilterSelect, searchResultCount,
   storyView, errorPanel, errorList, csvPreviewModal, csvFileName,
@@ -1814,6 +1815,21 @@ if (importCsvBtn) {
 if (exportCsvBtn) {
   exportCsvBtn.addEventListener('click', () => {
     csvManager.showCsvExportModal()
+  })
+}
+
+// ZWP import (WritingPage round-trip)
+const zwpHandler = initZwpImportHandler({
+  getModel: () => appState.model,
+  setModel: (m) => { appState.model = m },
+  setStatus,
+  showErrors,
+  hideErrors,
+})
+
+if (importZwpBtn) {
+  importZwpBtn.addEventListener('click', () => {
+    zwpHandler.openFilePicker()
   })
 }
 

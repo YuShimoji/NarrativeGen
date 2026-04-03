@@ -24,6 +24,7 @@ export function getUIElements() {
         importCsvBtn: document.getElementById('importCsvBtn'),
         csvFileInput: document.getElementById('csvFileInput'),
         exportCsvBtn: document.getElementById('exportCsvBtn'),
+        importZwpBtn: document.getElementById('importZwpBtn'),
         guiEditMode: document.getElementById('guiEditMode'),
         guiEditBtn: document.getElementById('editBtn'),
         nodeList: document.getElementById('nodeList'),
