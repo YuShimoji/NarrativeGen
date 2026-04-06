@@ -219,10 +219,10 @@
     "id": "SP-TGEN-001",
     "title": "Narrative Text Generation Pipeline (SSoT)",
     "status": "partial",
-    "pct": 75,
+    "pct": 80,
     "cat": "core",
     "file": "docs/specs/narrative-text-generation-pipeline.md",
-    "summary": "resolveNarrativeDisplayText + resolveNarrativeDisplayTextTracked (stage2 [entity~]); Web resolveVariables(..., appState) + AppState.descriptionState + startNewSession hook; engine-ts prepare for dist on install. Gaps: legacy {flag:} merge, undo/save vs DescriptionState, Unity."
+    "summary": "resolveNarrativeDisplayText + resolveNarrativeDisplayTextTracked (stage2 [entity~]); Web resolveVariables(..., appState) + AppState.descriptionState + Undo スナップショット + localStorage 1.1.0 / SaveManager 1.1 descriptionState; startNewSession hook. Gaps: legacy {flag:} merge, Unity."
   },
   {
     "id": "SP-PARA-002",

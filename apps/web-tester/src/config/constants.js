@@ -117,7 +117,7 @@ export const AUTOSAVE_INTERVAL = 30000  // 30秒
  * セーブデータのバージョン
  * @constant {string}
  */
-export const SAVE_DATA_VERSION = '1.0'
+export const SAVE_DATA_VERSION = '1.1'
 
 /**
  * ノードID生成時のプレフィックス

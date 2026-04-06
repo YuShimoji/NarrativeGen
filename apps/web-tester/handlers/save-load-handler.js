@@ -44,6 +44,8 @@ import { GameSession } from '@narrativegen/engine-ts/dist/browser.js'
  * @param {HTMLElement} deps.storyView - Story view element
  * @param {Function} deps.currentModelName - Function to get current model name
  * @param {Function} deps.entities - Function to get entity list
+ * @param {Function} [deps.getDescriptionState] - 保存用に現在の描写追跡を返す（省略時は {} を保存）
+ * @param {Function} [deps.restoreDescriptionState] - ロード後に描写追跡を復元（Undo 履歴はクリア前提で呼び出し側が実装）
  * @returns {Object} Handler public API
  * @returns {Function} returns.scheduleAutoSave - Schedule auto-save operation
  * @returns {Function} returns.manualSave - Perform manual save
@@ -93,7 +95,9 @@ export function initSaveLoadHandler(deps) {
     storyView,
     // Dynamic accessors
     currentModelName,
-    entities
+    entities,
+    getDescriptionState,
+    restoreDescriptionState
   } = deps
 
   let autoSaveTimeout = null
@@ -170,12 +174,14 @@ export function initSaveLoadHandler(deps) {
       const entityList = entities ? entities() : []
       const modelName = currentModelName ? currentModelName() : 'unknown'
 
+      const descriptionState = getDescriptionState ? getDescriptionState() : {}
       const success = StorageManager.saveSession(
         session,
         model,
         storyLog,
         entityList,
-        modelName
+        modelName,
+        descriptionState
       )
 
       if (success) {
@@ -240,12 +246,14 @@ export function initSaveLoadHandler(deps) {
       const entityList = entities ? entities() : []
       const modelName = currentModelName ? currentModelName() : 'unknown'
 
+      const descriptionState = getDescriptionState ? getDescriptionState() : {}
       const success = StorageManager.saveSession(
         session,
         model,
         storyLog,
         entityList,
-        modelName
+        modelName,
+        descriptionState
       )
 
       if (success) {
@@ -412,6 +420,10 @@ export function initSaveLoadHandler(deps) {
       // Restore story log
       const savedStoryLog = savedData.storyLog || []
       setStoryLog(savedStoryLog)
+
+      if (restoreDescriptionState) {
+        restoreDescriptionState(savedData.descriptionState || {})
+      }
 
       // Update all UI
       renderState()

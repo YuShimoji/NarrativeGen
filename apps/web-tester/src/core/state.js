@@ -3,6 +3,24 @@
  * @module core/state
  */
 
+import Logger from './logger.js';
+
+/**
+ * DescriptionState を深いコピーする（JSON 互換のプレーンオブジェクトのみ想定）
+ * @param {Record<string, unknown>} state
+ * @returns {Record<string, unknown>}
+ */
+function cloneDescriptionState(state) {
+  if (!state || typeof state !== 'object') {
+    return {};
+  }
+  try {
+    return JSON.parse(JSON.stringify(state));
+  } catch {
+    return {};
+  }
+}
+
 export class AppState {
   constructor() {
     this._session = null;
@@ -10,6 +28,8 @@ export class AppState {
     this._storyLog = [];
     /** SP-TGEN 段階2: 本文 `[entity~]` 描写追跡（エンジン DescriptionState 互換） */
     this._descriptionState = {};
+    /** Undo 用: `pushHistory` と同じタイミングで積む `descriptionState` のスナップショット */
+    this._descriptionStateHistory = [];
     this._listeners = new Map();
   }
 
@@ -22,9 +42,34 @@ export class AppState {
     this._descriptionState = value && typeof value === 'object' ? value : {};
   }
 
+  /** Undo 用スタックを空にする（セッション履歴リセット時と `resetDescriptionTracking` から利用） */
+  clearDescriptionStateHistory() {
+    this._descriptionStateHistory = [];
+  }
+
+  /** 現在の `descriptionState` を深いコピーで履歴に積む（選択適用・`pushHistory` の直前） */
+  pushDescriptionStateSnapshot() {
+    this._descriptionStateHistory.push(cloneDescriptionState(this._descriptionState));
+  }
+
+  /**
+   * 直近のスナップショットを復元（`popHistory` 成功後に呼ぶ）
+   * スタックが空のときは `resetDescriptionTracking` で整合を取る
+   */
+  popDescriptionStateSnapshot() {
+    if (this._descriptionStateHistory.length === 0) {
+      Logger.warn('[AppState] descriptionStateHistory underflow; resetting description tracking');
+      this.resetDescriptionTracking();
+      return;
+    }
+    const snap = this._descriptionStateHistory.pop();
+    this._descriptionState = cloneDescriptionState(snap);
+  }
+
   /** 新規プレイ開始時に呼ぶ（startNewSession フックからも実行） */
   resetDescriptionTracking() {
     this._descriptionState = {};
+    this.clearDescriptionStateHistory();
   }
 
   // ゲッター・セッター + イベント発火

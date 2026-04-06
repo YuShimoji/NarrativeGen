@@ -1,6 +1,6 @@
 # SP-TGEN-001: Narrative Text Generation Pipeline（文章生成の単一設計）
 
-**Status**: partial | **Pct**: 75 | **Cat**: core
+**Status**: partial | **Pct**: 80 | **Cat**: core
 
 ## 1. 目的
 
@@ -111,7 +111,7 @@
 ## 7. 既知ギャップ（Pct が partial の理由）
 
 1. **段階 0 と `expandTemplate` の二重系統**: レガシー `{flag:…}` 等と `{name}` 形式が併存したまま（段階 1 への統合は未着手）。
-2. **Undo / セーブ復元と `DescriptionState`**: プレイ Undo やセーブデータに `descriptionState` を載せていないため、巻き戻し後に描写追跡が履歴と不整合になる可能性がある。
+2. **`Undo` / セーブと `DescriptionState`（Web Tester）**: **解消済み**。`pushHistory` と同タイミングで `AppState` に `descriptionState` スナップショットを積み、プレイ Undo（PlayRenderer 本線・レガシー選択肢）で `pop` して復元する。localStorage セッションはスキーマ **1.1.0**（`descriptionState` 付き）で保存し、**1.0.0** 読込時は `descriptionState` 欠落を `{}` とみなす。スロット／オートセーブ（`SaveManager`）も `descriptionState` を含む（バージョン 1.1）。
 3. **`model.metadata` の `{…}` 置換**: 本 API に未搭載（本線で未使用のため）。
 4. **Unity C#**: 同一パイプラインの移植は未着手。
 

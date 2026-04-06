@@ -222,6 +222,7 @@ function handlePlayChoice(choiceId, choiceText) {
     const currentSession = getCurrentSession()
     if (!currentSession) return
     if (appState.sessionHistory) {
+      appState.pushDescriptionStateSnapshot()
       appState.sessionHistory = pushHistory(appState.sessionHistory, currentSession)
     }
     const nextSession = applyChoice(currentSession, appState.model, choiceId)
@@ -248,6 +249,7 @@ function handlePlayRestart() {
   if (!appState.model) return
   startNewSession(appState.model)
   appState.sessionHistory = createSessionHistory()
+  appState.clearDescriptionStateHistory()
   appState.storyLog = []
   appendStoryFromCurrentNode()
   playRenderer?.clear()
@@ -265,6 +267,7 @@ function handlePlayUndo() {
   if (appState.storyLog && appState.storyLog.length > 0) {
     appState.storyLog.pop()
   }
+  appState.popDescriptionStateSnapshot()
   setStatus('\u2190 \u524d\u306e\u30ce\u30fc\u30c9\u306b\u623b\u308a\u307e\u3057\u305f', 'success')
   // For undo, re-render with crossfade regardless of current mode
   playRenderer?.clear()
@@ -493,6 +496,7 @@ function renderChoices() {
         const currentSession = getCurrentSession()
         if (currentSession) {
           if (appState.sessionHistory) {
+            appState.pushDescriptionStateSnapshot()
             appState.sessionHistory = pushHistory(appState.sessionHistory, currentSession)
           }
           const nextSession = applyChoice(currentSession, appState.model, choice.id)
@@ -530,6 +534,7 @@ function renderChoices() {
         if (appState.storyLog && appState.storyLog.length > 0) {
           appState.storyLog.pop()
         }
+        appState.popDescriptionStateSnapshot()
         setStatus('\u2190 \u524d\u306e\u30ce\u30fc\u30c9\u306b\u623b\u308a\u307e\u3057\u305f', 'success')
         renderState()
         renderChoices()
@@ -550,6 +555,7 @@ const safeStartSession = ErrorBoundary.wrap(async (modelName) => {
   startNewSession(appState.model)
   setCurrentModelName(modelName)
   appState.sessionHistory = createSessionHistory()
+  appState.clearDescriptionStateHistory()
   initPlayRenderer()
   initStory()
   renderState()

@@ -92,6 +92,14 @@ export class SaveManager {
    * @returns {Object} セーブデータ
    */
   createSaveData(session, modelName) {
+    let descriptionState = {}
+    if (this.appState?.descriptionState && typeof this.appState.descriptionState === 'object') {
+      try {
+        descriptionState = JSON.parse(JSON.stringify(this.appState.descriptionState))
+      } catch {
+        descriptionState = {}
+      }
+    }
     return {
       version: SAVE_DATA_VERSION,
       timestamp: new Date().toISOString(),
@@ -103,7 +111,8 @@ export class SaveManager {
         variables: { ...session.variables },
         time: session.time
       },
-      storyLog: this.appState ? [...this.appState.storyLog] : []
+      storyLog: this.appState ? [...this.appState.storyLog] : [],
+      descriptionState
     }
   }
 
@@ -126,6 +135,17 @@ export class SaveManager {
 
     if (this.appState) {
       this.appState.storyLog = saveData.storyLog || []
+      this.appState.clearDescriptionStateHistory()
+      const raw = saveData.descriptionState
+      if (raw && typeof raw === 'object') {
+        try {
+          this.appState.descriptionState = JSON.parse(JSON.stringify(raw))
+        } catch {
+          this.appState.descriptionState = {}
+        }
+      } else {
+        this.appState.descriptionState = {}
+      }
     }
 
     return restoredSession

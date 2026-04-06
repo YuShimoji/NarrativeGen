@@ -11,7 +11,9 @@ const STORAGE_KEYS = {
   AUTO_SAVE: 'narrativeGen_autoSaveEnabled'
 }
 
-const SCHEMA_VERSION = '1.0.0'
+const SCHEMA_VERSION = '1.1.0'
+/** 読み込みを許可するセッション JSON の version（1.0.0 は descriptionState なし→正規化で {}） */
+const SUPPORTED_SESSION_SCHEMA_VERSIONS = ['1.0.0', '1.1.0']
 const QUOTA_WARNING_THRESHOLD = 0.8 // Warn at 80% usage
 
 /**
@@ -74,9 +76,18 @@ function checkStorageQuota() {
  * @param {string[]} storyLog - Story progression log
  * @param {Entity[]} entities - Entity catalog
  * @param {string} modelName - Model identifier
+ * @param {Record<string, unknown>} [descriptionState] - `[entity~]` 描写追跡（省略時は {}）
  * @returns {Object} Serialized session data
  */
-function serializeSession(session, model, storyLog, entities, modelName) {
+function serializeSession(session, model, storyLog, entities, modelName, descriptionState) {
+  let desc = {}
+  if (descriptionState && typeof descriptionState === 'object') {
+    try {
+      desc = JSON.parse(JSON.stringify(descriptionState))
+    } catch {
+      desc = {}
+    }
+  }
   return {
     version: SCHEMA_VERSION,
     timestamp: new Date().toISOString(),
@@ -90,8 +101,28 @@ function serializeSession(session, model, storyLog, entities, modelName) {
     },
     inventory: session.listInventory().map(e => e.id),
     storyLog: [...storyLog],
-    entities: entities ? [...entities] : []
+    entities: entities ? [...entities] : [],
+    descriptionState: desc
   }
+}
+
+/**
+ * 1.0.0→1.1.0 互換: descriptionState を常にプレーンオブジェクトにそろえる
+ * @param {Object} data
+ * @returns {Object}
+ */
+function normalizeLoadedSession(data) {
+  const out = { ...data }
+  if (!out.descriptionState || typeof out.descriptionState !== 'object') {
+    out.descriptionState = {}
+  } else {
+    try {
+      out.descriptionState = JSON.parse(JSON.stringify(out.descriptionState))
+    } catch {
+      out.descriptionState = {}
+    }
+  }
+  return out
 }
 
 /**
@@ -105,15 +136,19 @@ function deserializeSession(data) {
     throw new Error('No save data provided')
   }
 
-  // Version check
-  if (data.version !== SCHEMA_VERSION) {
-    Logger.warn('Schema version mismatch', {
+  if (!SUPPORTED_SESSION_SCHEMA_VERSIONS.includes(data.version)) {
+    Logger.warn('Schema version not supported', {
       saved: data.version,
-      current: SCHEMA_VERSION
+      supported: SUPPORTED_SESSION_SCHEMA_VERSIONS,
+      currentWrite: SCHEMA_VERSION
     })
-    // Could implement migration here
-    // For now, reject incompatible versions
     throw new Error(`Incompatible save version: ${data.version}`)
+  }
+  if (data.version !== SCHEMA_VERSION) {
+    Logger.info('Loading legacy session schema; descriptionState normalized', {
+      saved: data.version,
+      currentWrite: SCHEMA_VERSION
+    })
   }
 
   // Validate required fields
@@ -129,7 +164,7 @@ function deserializeSession(data) {
     throw new Error('Invalid session state: missing nodeId')
   }
 
-  return data
+  return normalizeLoadedSession(data)
 }
 
 /**
@@ -215,9 +250,10 @@ export const StorageManager = {
    * @param {string[]} storyLog - Story log
    * @param {Entity[]} entities - Entity catalog
    * @param {string} modelName - Model name
+   * @param {Record<string, unknown>} [descriptionState] - 描写追跡状態
    * @returns {boolean} Success status
    */
-  saveSession(session, model, storyLog, entities, modelName) {
+  saveSession(session, model, storyLog, entities, modelName, descriptionState) {
     try {
       if (!isStorageAvailable()) {
         throw new Error('localStorage is not available')
@@ -227,7 +263,7 @@ export const StorageManager = {
         throw new Error('Storage quota exceeded')
       }
 
-      const data = serializeSession(session, model, storyLog, entities, modelName)
+      const data = serializeSession(session, model, storyLog, entities, modelName, descriptionState)
       const json = JSON.stringify(data)
 
       localStorage.setItem(STORAGE_KEYS.SESSION, json)
@@ -407,4 +443,4 @@ export const StorageManager = {
   }
 }
 
-export { STORAGE_KEYS, SCHEMA_VERSION }
+export { STORAGE_KEYS, SCHEMA_VERSION, SUPPORTED_SESSION_SCHEMA_VERSIONS }
