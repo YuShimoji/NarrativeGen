@@ -160,6 +160,8 @@ Remaining tasks:
 
 ## Backlog（要件確定後にチケット化）
 
+昇格手順: [docs/plans/BACKLOG_PROMOTION.md](plans/BACKLOG_PROMOTION.md)。
+
 次の項目はプロダクト要件が固まるまで **実装スコープ外** とし、ここにのみ記録する。
 
 | ID | 項目 | 備考 |

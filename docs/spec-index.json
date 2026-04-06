@@ -177,7 +177,7 @@
     "pct": 90,
     "cat": "system",
     "file": "docs/specs/unity-sdk.md",
-    "summary": "Unity C# SDK (UPM): Engine API, InferenceRegistry, Session Engine.Serialize/Deserialize (SessionSnapshot). SP-TGEN text pipeline C# は未移植。dotnet test は .NET 8 ランタイム要"
+    "summary": "Unity C# SDK (UPM): Engine API, InferenceRegistry, Session Serialize/Deserialize, NarrativeText.ExpandTemplate (slice1). Remaining: events, [entity~], templates. Tests: net9.0"
   },
   {
     "id": "SP-PARA-001",

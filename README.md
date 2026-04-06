@@ -69,7 +69,8 @@ npm run dev
 ### Requirements
 
 - Node.js 20+ (for TypeScript engine & Web Tester)
-- .NET SDK 8+ (for Unity SDK)
+- .NET SDK 8+ (for Unity SDK / `packages/sdk-unity` のビルド)
+- .NET SDK 9+（`packages/tests/NarrativeGen.Tests` の `dotnet test` 用）
 - Unity 2021.3+ (for UPM integration)
 
 ### Monorepo（Node）
@@ -285,11 +286,13 @@ CI (`.github/workflows/ci.yml`) では `npm run lint -- --max-warnings=0` / `npm
 
 ## Run tests (C#)
 
+テストプロジェクトは **net9.0** をターゲットにしている。
+
 ```powershell
-dotnet test .\Packages\tests\NarrativeGen.Tests -c Release
+dotnet test .\packages\tests\NarrativeGen.Tests -c Release
 ```
 
-The NUnit smoke test `EngineSmokeTests` loads `models/examples/linear.json`, plays through `start -> scene1 -> end`, and asserts that the engine returns expected nodes and zero choices at the end.
+`EngineSmokeTests` は `models/examples/linear.json` を読み、`start -> scene1 -> end` まで進行する。`NarrativeTextTests` は TS `expandTemplate` 縦スライス1相当の展開を検証する。
 
 ## Current Status (2025-10-28)
 

@@ -9,6 +9,10 @@
 
 **全体パイプライン（表示までの段階順・主対象の定義）**: `narrative-text-generation-pipeline.md`（SP-TGEN-001）。
 
+### SP-TGEN 段階0（レガシー表記）の所在
+
+著者が `{flag:key}` / `{resource:key}` / `{variable:key}` / `{nodeId}` / `{time}` を本文に書いた場合の展開は、engine-ts では **`packages/engine-ts/src/template.ts`** の `applyLegacySessionPlaceholders` が担当し、`expandTemplate` / `expandTemplateWithTracking` の先頭で一度だけ適用される。段階モデル・Undo/セーブとの関係は **SP-TGEN-001** を正とする。本書（SP-TEXT-001）は角括弧・単純 `{name}` 中心の Phase 1 説明に留まる。
+
 ## 構文
 
 ### Entity 参照 (`[角括弧]`)
