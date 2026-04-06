@@ -2,7 +2,7 @@
 
 ## 最終更新
 
-- **日時**: 2026-03-26
+- **日時**: 2026-04-07
 - **ブランチ**: `main` (trunk-based)
 - **最新コミット**: session 15 nightshift (安定版化: Excise + Advance + docs)
 - **origin/main**: +9 commits ahead (未push)
@@ -55,6 +55,11 @@ NarrativeGen/
 - **docs**: TECHNICAL_DEBT.md session 15 完了4件追記
 - **Visual Audit 実施**: 画面走査完了、empty state 動作確認
 
+## 直近の変更（2026-04-07）
+
+- `@narrativegen/engine-ts` に `prepare` を追加（`npm install` で `dist` 生成）
+- `resolveNarrativeDisplayTextTracked` と Web `AppState.descriptionState`（`startNewSession` でリセット）
+
 ## 既知の課題
 
 - E2Eバッチ実行で間欠的に1件失敗 (AC-5 mode toggle、CPU競合)
@@ -76,7 +81,7 @@ NarrativeGen/
 ```bash
 git fetch origin && git pull
 npm ci
-npm run build:engine
+# prepare で engine-ts の dist が生成される（ignore-scripts 時は npm run build:engine）
 npm run test:engine
 npm run build:tester
 npm run dev

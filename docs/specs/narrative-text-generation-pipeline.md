@@ -1,6 +1,6 @@
 # SP-TGEN-001: Narrative Text Generation Pipeline（文章生成の単一設計）
 
-**Status**: partial | **Pct**: 60 | **Cat**: core
+**Status**: partial | **Pct**: 75 | **Cat**: core
 
 ## 1. 目的
 
@@ -45,15 +45,15 @@
   レガシーな {flag:key} / {resource:key} / {variable:key} / {nodeId} / {time} 形式の置換
   ※ engine-ts の expandTemplate が既に {name} 形式を扱うため、二重系統。将来は段階 1 に統合することが望ましい。
   ↓
-段階 1 — コア展開
+段階 1 — コア展開（追跡なし API）
   expandTemplate(raw, model, session)
   - {?…} 条件節
   - [entity…]（静的 Entity + session.events）
   - {session 変数・フラグ・リソース}
   ↓
-段階 2（任意）
-  expandTemplateWithTracking（[entity~] を含む場合）
-  - DescriptionState の更新とセットで1回の表示更新とみなす
+段階 1+2 — コア展開（追跡あり API `resolveNarrativeDisplayTextTracked`）
+  expandTemplateWithTracking（段階1と同内容に加え `[entity~]`）
+  - DescriptionState を入力・出力で受け渡し（Web Tester は `AppState.descriptionState`）
   ↓
 段階 3 — 会話テンプレート挿入
   findMatchingTemplates → 各 hit の text は **既に** expandTemplate 済み（テンプレート側）
@@ -64,7 +64,9 @@
 
 ### 4.1 段階 3 の結合（現状の事実）
 
-`resolveNarrativeDisplayText`（既定）では、段階 1 の後にマッチしたテンプレートの `expandedText` を **空白区切りで末尾連結**する。Web Tester の `resolveVariables` はこの関数の薄いラッパである。GUI プレビューは `appendConversationTemplates: false` で同関数を呼び、段階 3 を省略する。別 UI（段落分け等）にする場合は本節を更新する。
+`resolveNarrativeDisplayText` / `resolveNarrativeDisplayTextTracked` のいずれも、コア展開の後にマッチしたテンプレートの `expandedText` を **空白区切りで末尾連結**する。Web Tester の `resolveVariables` は **第4引数に `AppState` を渡したとき** `resolveNarrativeDisplayTextTracked` を使い、`descriptionState` を更新する（プレイ本線・`StoryManager`）。GUI プレビューは `resolveNarrativeDisplayText` と `appendConversationTemplates: false` で段階 3 を省略。別 UI（段落分け等）にする場合は本節を更新する。
+
+新規プレイ開始時は `startNewSession` から登録されたフックで `AppState.resetDescriptionTracking()` が呼ばれ、`DescriptionState` がクリアされる。
 
 ### 4.2 明示的にパイプライン外とするもの
 
@@ -85,23 +87,32 @@
 
 | 段階・要素 | 主なコード |
 |------------|------------|
-| **ランタイム合成（段階 0〜3、追跡なし）** | `resolveNarrativeDisplayText` / `applyLegacySessionPlaceholders` — `packages/engine-ts/src/narrative-display-text.ts`（`index.ts` / `browser.ts` からエクスポート） |
-| 段階 1 コア | `expandTemplate` / `expandTemplateWithTracking` — `packages/engine-ts/src/template.ts` |
-| 段階 3 マッチング | `findMatchingTemplates` — `packages/engine-ts/src/conversation-templates.ts` |
-| Web Tester 本線 | `apps/web-tester/src/session-controller.js` の `resolveVariables`（エンジン呼び出しのみ） |
-| GUI プレビュー（段階 3 オフ） | `apps/web-tester/src/ui/node-renderer.js`、`gui-editor.js`（`appendConversationTemplates: false`） |
+| **ランタイム合成（段階 0〜3、追跡なし）** | `resolveNarrativeDisplayText` / `applyLegacySessionPlaceholders` — `narrative-display-text.ts` |
+| **ランタイム合成（段階 0〜3 + 段階2）** | `resolveNarrativeDisplayTextTracked` — 同上 |
+| 段階 1 / 2 コア | `expandTemplate` / `expandTemplateWithTracking` — `template.ts` |
+| 段階 3 マッチング | `findMatchingTemplates` — `conversation-templates.ts` |
+| Web Tester 本線 | `session-controller.js` の `resolveVariables(…, appState)`、`core/session.js` の `registerNewPlaySessionHook` |
+| `DescriptionState` 保持 | `core/state.js` の `AppState` |
+| GUI プレビュー（段階 3 オフ・追跡なし） | `node-renderer.js`、`gui-editor.js` |
 | AI 下書き | `packages/engine-ts/src/ai-provider.ts`、`apps/web-tester/src/ui/ai.js` |
 
 ### 6.1 API メモ
 
 - `resolveNarrativeDisplayText(rawText, model, session, options?)`
   - `appendConversationTemplates`: 既定 `true`。`false` のとき段階 3 をスキップ（エディタプレビュー用）。
+- `resolveNarrativeDisplayTextTracked(rawText, model, session, options?)` → `{ text, descriptionState }`
+  - `descriptionState` / `descriptionSeed`: 段階2（`[entity~]`）。
+  - `appendConversationTemplates`: 上に同じ。
+
+### 6.2 開発体験
+
+- `@narrativegen/engine-ts` の `prepare` で `npm install` 時に `dist` を生成（ルート README 参照）。
 
 ## 7. 既知ギャップ（Pct が partial の理由）
 
 1. **段階 0 と `expandTemplate` の二重系統**: レガシー `{flag:…}` 等と `{name}` 形式が併存したまま（段階 1 への統合は未着手）。
-2. **段階 2 未統合**: `expandTemplateWithTracking` は `resolveNarrativeDisplayText` に含めていない（`DescriptionState` をまたぐ設計が別途必要）。
-3. **`model.metadata` の `{…}` 置換**: 旧 `StoryManager` にのみあった挙動は本 API に載せていない（本線で未使用のため）。
+2. **Undo / セーブ復元と `DescriptionState`**: プレイ Undo やセーブデータに `descriptionState` を載せていないため、巻き戻し後に描写追跡が履歴と不整合になる可能性がある。
+3. **`model.metadata` の `{…}` 置換**: 本 API に未搭載（本線で未使用のため）。
 4. **Unity C#**: 同一パイプラインの移植は未着手。
 
 ## 8. 関連仕様

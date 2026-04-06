@@ -3,7 +3,7 @@
  * Handles story display, navigation, and content rendering
  */
 
-import { resolveNarrativeDisplayText } from '@narrativegen/engine-ts/dist/browser.js'
+import { resolveNarrativeDisplayTextTracked } from '@narrativegen/engine-ts/dist/browser.js'
 import Logger from '../core/logger.js'
 import { getCurrentSession } from '../core/session.js'
 
@@ -42,13 +42,16 @@ export class StoryManager {
 
     const node = this.appState.model?.nodes?.[currentSession.nodeId]
     if (node?.text && this.appState.model) {
-      const resolvedText = resolveNarrativeDisplayText(
+      const desc = this.appState.descriptionState ?? {}
+      const resolved = resolveNarrativeDisplayTextTracked(
         node.text,
         this.appState.model,
-        currentSession
+        currentSession,
+        { descriptionState: desc }
       )
-      this.appState.storyLog.push(resolvedText)
-      Logger.info('Story entry appended', { nodeId: currentSession.nodeId, textLength: resolvedText.length })
+      this.appState.descriptionState = resolved.descriptionState
+      this.appState.storyLog.push(resolved.text)
+      Logger.info('Story entry appended', { nodeId: currentSession.nodeId, textLength: resolved.text.length })
     }
   }
 

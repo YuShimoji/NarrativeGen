@@ -273,8 +273,13 @@ export type { ExpandWithTrackingResult } from './template.js'
 export {
   applyLegacySessionPlaceholders,
   resolveNarrativeDisplayText,
+  resolveNarrativeDisplayTextTracked,
 } from './narrative-display-text.js'
-export type { ResolveNarrativeDisplayTextOptions } from './narrative-display-text.js'
+export type {
+  ResolveNarrativeDisplayTextOptions,
+  ResolveNarrativeDisplayTextTrackedOptions,
+  ResolveNarrativeDisplayTextTrackedResult,
+} from './narrative-display-text.js'
 export { detectAnomaly, detectAllAnomalies } from './anomaly-detector.js'
 export type { KnowledgeProfile, AnomalyResult } from './anomaly-detector.js'
 export { findKnowledgeProfile, perceiveEntity } from './character-knowledge.js'

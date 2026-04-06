@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   applyLegacySessionPlaceholders,
   resolveNarrativeDisplayText,
+  resolveNarrativeDisplayTextTracked,
 } from '../src/narrative-display-text'
 import type { ConversationTemplate } from '../src/conversation-templates'
 import type { Model, SessionState } from '../src/types'
@@ -150,5 +151,83 @@ describe('resolveNarrativeDisplayText', () => {
   it('returns falsy text unchanged', () => {
     const session = makeSession()
     expect(resolveNarrativeDisplayText('', modelWithEntity, session)).toBe('')
+  })
+})
+
+describe('resolveNarrativeDisplayTextTracked', () => {
+  const swordModel: Model = {
+    modelType: 'adventure-playthrough',
+    startNode: 'start',
+    nodes: { start: { id: 'start' } },
+    entities: {
+      sword: {
+        id: 'sword',
+        name: 'Iron Sword',
+        properties: {
+          damage: { key: 'damage', type: 'number', defaultValue: 25 },
+          weight: { key: 'weight', type: 'number', defaultValue: 3.5 },
+          material: { key: 'material', type: 'string', defaultValue: 'iron' },
+        },
+      },
+    },
+  }
+
+  it('matches resolveNarrativeDisplayText when no [entity~] and same seed path', () => {
+    const session = makeSession({ flags: { x: true } })
+    const raw = '[sword.name] {?x:OK}'
+    const plain = resolveNarrativeDisplayText(raw, swordModel, session)
+    const tracked = resolveNarrativeDisplayTextTracked(raw, swordModel, session)
+    expect(tracked.text).toBe(plain)
+    expect(Object.keys(tracked.descriptionState)).toHaveLength(0)
+  })
+
+  it('updates descriptionState for [sword~]', () => {
+    const session = makeSession()
+    const r = resolveNarrativeDisplayTextTracked('Hi [sword~]', swordModel, session, {
+      descriptionSeed: 0,
+    })
+    expect(r.text).toContain('damage: 25')
+    expect(r.descriptionState.sword?.describedKeys).toContain('damage')
+  })
+
+  it('carries descriptionState across chained calls', () => {
+    const session = makeSession()
+    const r1 = resolveNarrativeDisplayTextTracked('[sword~]', swordModel, session, {})
+    const r2 = resolveNarrativeDisplayTextTracked('[sword~]', swordModel, session, {
+      descriptionState: r1.descriptionState,
+    })
+    expect(r2.descriptionState.sword?.describedKeys).toHaveLength(2)
+  })
+
+  it('respects appendConversationTemplates false with tracking', () => {
+    const templates: ConversationTemplate[] = [
+      {
+        id: 'tail',
+        trigger: {
+          eventMatch: {
+            propertyChecks: [{ key: 'severity', op: '>=', value: 1 }],
+          },
+        },
+        text: 'Tail.',
+        priority: 10,
+      },
+    ]
+    const model: Model = { ...swordModel, conversationTemplates: templates }
+    const session = makeSession({
+      events: {
+        e1: {
+          id: 'e1',
+          name: 'E',
+          properties: {
+            severity: { key: 'severity', type: 'number', defaultValue: 5 },
+          },
+        },
+      },
+    })
+    const r = resolveNarrativeDisplayTextTracked('[sword~]', model, session, {
+      appendConversationTemplates: false,
+    })
+    expect(r.text).not.toContain('Tail.')
+    expect(r.descriptionState.sword).toBeDefined()
   })
 })

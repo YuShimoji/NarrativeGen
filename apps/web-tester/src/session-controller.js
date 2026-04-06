@@ -6,6 +6,7 @@
 import {
     setParaphraseLexicon,
     resolveNarrativeDisplayText,
+    resolveNarrativeDisplayTextTracked,
 } from '../../../packages/engine-ts/dist/browser.js'
 import Logger from './core/logger.js'
 import {
@@ -18,11 +19,20 @@ import { DRAFT_MODEL_STORAGE_KEY } from './config/constants.js'
  * Resolve variables in text (browser-compatible)
  * @param {string} text - Text with variable placeholders
  * @param {Object} session - Current session state
- * @param {Object} model - Current model (unused but kept for API compatibility)
+ * @param {Object} model - Current model
+ * @param {import('./core/state.js').AppState | null} [narrationAppState] - 指定時は resolveNarrativeDisplayTextTracked で `[entity~]` 追跡を更新
  * @returns {string} Text with variables resolved
  */
-export function resolveVariables(text, session, model) {
+export function resolveVariables(text, session, model, narrationAppState = null) {
     if (!text || !session) return text
+    if (narrationAppState && typeof narrationAppState.resetDescriptionTracking === 'function') {
+        const desc = narrationAppState.descriptionState ?? {}
+        const result = resolveNarrativeDisplayTextTracked(text, model, session, {
+            descriptionState: desc,
+        })
+        narrationAppState.descriptionState = result.descriptionState
+        return result.text
+    }
     return resolveNarrativeDisplayText(text, model, session)
 }
 

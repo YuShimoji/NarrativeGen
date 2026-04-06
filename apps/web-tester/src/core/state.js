@@ -8,7 +8,23 @@ export class AppState {
     this._session = null;
     this._model = null;
     this._storyLog = [];
+    /** SP-TGEN 段階2: 本文 `[entity~]` 描写追跡（エンジン DescriptionState 互換） */
+    this._descriptionState = {};
     this._listeners = new Map();
+  }
+
+  /** 描写追跡状態（プレイ本線の resolveNarrativeDisplayTextTracked 用） */
+  get descriptionState() {
+    return this._descriptionState;
+  }
+
+  set descriptionState(value) {
+    this._descriptionState = value && typeof value === 'object' ? value : {};
+  }
+
+  /** 新規プレイ開始時に呼ぶ（startNewSession フックからも実行） */
+  resetDescriptionTracking() {
+    this._descriptionState = {};
   }
 
   // ゲッター・セッター + イベント発火

@@ -9,6 +9,17 @@ import { startSession as engineStartSession } from '../../../../packages/engine-
 let currentSession = null
 let currentModelName = null
 
+/** @type {(() => void) | null} 新規プレイセッション開始時（startNewSession）に呼ぶフック */
+let newPlaySessionHook = null
+
+/**
+ * 新規セッション開始時のフックを登録（例: DescriptionState のリセット）
+ * @param {(() => void) | null} fn
+ */
+export function registerNewPlaySessionHook(fn) {
+  newPlaySessionHook = fn
+}
+
 // Session utilities
 export function getCurrentSession() {
   return currentSession
@@ -33,6 +44,13 @@ export function clearSession() {
 
 export function startNewSession(model) {
   currentSession = engineStartSession(model)
+  if (typeof newPlaySessionHook === 'function') {
+    try {
+      newPlaySessionHook()
+    } catch (e) {
+      console.error('newPlaySessionHook failed', e)
+    }
+  }
   return currentSession
 }
 

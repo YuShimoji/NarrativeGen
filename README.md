@@ -72,6 +72,10 @@ npm run dev
 - .NET SDK 8+ (for Unity SDK)
 - Unity 2021.3+ (for UPM integration)
 
+### Monorepo（Node）
+
+リポジトリルートで `npm ci` または `npm install` を実行すると、ワークスペース `@narrativegen/engine-ts` の **`prepare`** スクリプトが走り、`packages/engine-ts/dist` が生成される（`dist` は Git 管理外）。`npm install --ignore-scripts` を使う環境では、続けて `npm run build:engine` が必要。
+
 ### Build (C# runtime)
 
 ```powershell

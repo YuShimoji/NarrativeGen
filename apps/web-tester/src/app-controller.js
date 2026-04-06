@@ -44,6 +44,7 @@ import {
   setCurrentModelName,
   clearSession,
   startNewSession,
+  registerNewPlaySessionHook,
 } from './core/session.js'
 import { ModelValidator, ValidationSeverity } from './features/model-validator.js'
 import { ExportModal } from './ui/export-modal.js'
@@ -63,6 +64,8 @@ import { setupEditorEvents } from './app-editor-events.js'
  * @returns {Object} References needed for DevTools and global access
  */
 export function initializeApp({ appState, managers, keyBindingManager, exportManager }) {
+  registerNewPlaySessionHook(() => appState.resetDescriptionTracking())
+
   // Destructure managers
   const {
     dom, eventManager, storyManager, graphManager, debugManager,
@@ -178,7 +181,7 @@ async function renderPlayView(opts = {}) {
   if (!node) return
 
   const resolvedText = node.text
-    ? resolveVariables(node.text, currentSession, appState.model)
+    ? resolveVariables(node.text, currentSession, appState.model, appState)
     : ''
   const choices = getAvailableChoices(currentSession, appState.model)
 
@@ -1236,7 +1239,7 @@ function appendStoryFromCurrentNode() {
   const currentSession = getCurrentSession()
   const node = appState.model?.nodes?.[currentSession?.nodeId]
   if (node?.text && currentSession) {
-    const resolvedText = resolveVariables(node.text, currentSession, appState.model)
+    const resolvedText = resolveVariables(node.text, currentSession, appState.model, appState)
     if (node.speaker) {
       appState.storyLog.push(`**${node.speaker}:** ${resolvedText}`)
     } else {
