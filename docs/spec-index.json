@@ -216,6 +216,15 @@
     "summary": "Template expansion engine. [entity.property] refs via inheritance, {variable} expansion, {?condition:text} conditional sections (flag/resource/inventory). Web Tester integrated. 31 unit tests."
   },
   {
+    "id": "SP-TGEN-001",
+    "title": "Narrative Text Generation Pipeline (SSoT)",
+    "status": "partial",
+    "pct": 40,
+    "cat": "core",
+    "file": "docs/specs/narrative-text-generation-pipeline.md",
+    "summary": "Single design doc: runtime display pipeline as primary \"text generation\"; cheeseburger/inheritance mapped to SP-TEXT/PROP/DYNAMIC/DESC; legacy recursive syntax non-normative until re-specified. Documents normative stage order vs fragmented call sites (engine unified API TBD)."
+  },
+  {
     "id": "SP-PARA-002",
     "title": "Paraphrase Property Matching",
     "status": "done",

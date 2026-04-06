@@ -7,6 +7,8 @@
 ノードテキスト内で Entity プロパティや変数を動的に展開する構文エンジン。
 原初ビジョンの「構文ベース生成エンジン」(ORIGINAL_DESIGN_PHILOSOPHY.md 3) の Phase 1 実装。
 
+**全体パイプライン（表示までの段階順・主対象の定義）**: `narrative-text-generation-pipeline.md`（SP-TGEN-001）。
+
 ## 構文
 
 ### Entity 参照 (`[角括弧]`)

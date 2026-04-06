@@ -6,6 +6,8 @@
 
 蓄積された事象 Entity を参照して、後続のノードテキストや選択肢を動的に変化させる仕組み。原初ビジョン (ORIGINAL_DESIGN_PHILOSOPHY.md 5.3) の段階的実装。
 
+**ランタイム合成での位置**: ノード本文の `expandTemplate` の後に挿入する段階として、SP-TGEN-001（`narrative-text-generation-pipeline.md`）に統合記載する。
+
 ## 設計方針: 案D (A+B ハイブリッド)
 
 - **案A (テンプレート駆動)**: ライターが `{?event:text}` + `[event.property]` で手書き。既に動作する
