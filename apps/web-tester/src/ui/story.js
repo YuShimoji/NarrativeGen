@@ -3,6 +3,7 @@
  * Handles story display, navigation, and content rendering
  */
 
+import { resolveNarrativeDisplayText } from '@narrativegen/engine-ts/dist/browser.js'
 import Logger from '../core/logger.js'
 import { getCurrentSession } from '../core/session.js'
 
@@ -40,50 +41,15 @@ export class StoryManager {
     }
 
     const node = this.appState.model?.nodes?.[currentSession.nodeId]
-    if (node?.text) {
-      const resolvedText = this.resolveVariables(node.text, currentSession, this.appState.model)
+    if (node?.text && this.appState.model) {
+      const resolvedText = resolveNarrativeDisplayText(
+        node.text,
+        this.appState.model,
+        currentSession
+      )
       this.appState.storyLog.push(resolvedText)
       Logger.info('Story entry appended', { nodeId: currentSession.nodeId, textLength: resolvedText.length })
     }
-  }
-
-  resolveVariables(text, session, model) {
-    if (!text || !session) return text
-
-    return text.replace(/\{([^}]+)\}/g, (match, variable) => {
-      try {
-        // Check session variables first
-        if (session.variables && session.variables[variable] !== undefined) {
-          return String(session.variables[variable])
-        }
-
-        // Check flags
-        if (session.flags && session.flags[variable] !== undefined) {
-          return String(session.flags[variable])
-        }
-
-        // Check resources
-        if (session.resources && session.resources[variable] !== undefined) {
-          return String(session.resources[variable])
-        }
-
-        // Check model metadata
-        if (model?.metadata && model.metadata[variable] !== undefined) {
-          return String(model.metadata[variable])
-        }
-
-        Logger.debug('Variable not found in resolution', { variable, available: {
-          variables: Object.keys(session.variables || {}),
-          flags: Object.keys(session.flags || {}),
-          resources: Object.keys(session.resources || {})
-        }})
-
-        return match // Return original if not found
-      } catch (error) {
-        Logger.error('Error resolving variable', { variable, error: error.message })
-        return match
-      }
-    })
   }
 
   renderStory() {

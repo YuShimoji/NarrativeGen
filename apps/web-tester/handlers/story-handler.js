@@ -8,7 +8,7 @@
  * @module handlers/story-handler
  */
 
-import { resolveVariables } from '../utils/model-utils.js'
+import { resolveNarrativeDisplayText } from '@narrativegen/engine-ts/dist/browser.js'
 
 /** @type {string[]} In-memory cache of story entries */
 let storyLog = []
@@ -43,8 +43,9 @@ export function initStory(session, model) {
  */
 export function appendStoryFromCurrentNode(session, model) {
   const node = model?.nodes?.[session?.state?.nodeId]
-  if (node?.text) {
-    const resolvedText = resolveVariables(node.text, session?.state, model)
+  const state = session?.state
+  if (node?.text && state) {
+    const resolvedText = resolveNarrativeDisplayText(node.text, model, state)
     storyLog.push(resolvedText)
   }
 }

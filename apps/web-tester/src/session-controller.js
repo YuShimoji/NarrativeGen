@@ -5,9 +5,8 @@
 
 import {
     setParaphraseLexicon,
+    resolveNarrativeDisplayText,
 } from '../../../packages/engine-ts/dist/browser.js'
-import { expandTemplate } from '../../../packages/engine-ts/dist/template.js'
-import { findMatchingTemplates } from '../../../packages/engine-ts/dist/conversation-templates.js'
 import Logger from './core/logger.js'
 import {
     startNewSession,
@@ -24,45 +23,7 @@ import { DRAFT_MODEL_STORAGE_KEY } from './config/constants.js'
  */
 export function resolveVariables(text, session, model) {
     if (!text || !session) return text
-
-    let resolved = text
-
-    // Replace flag variables: {flag:key}
-    Object.entries(session.flags || {}).forEach(([key, value]) => {
-        resolved = resolved.replace(new RegExp(`\\{flag:${key}\\}`, 'g'), value ? 'true' : 'false')
-    })
-
-    // Replace resource variables: {resource:key}
-    Object.entries(session.resources || {}).forEach(([key, value]) => {
-        resolved = resolved.replace(new RegExp(`\\{resource:${key}\\}`, 'g'), String(value))
-    })
-
-    // Replace variable variables: {variable:key}
-    Object.entries(session.variables || {}).forEach(([key, value]) => {
-        resolved = resolved.replace(new RegExp(`\\{variable:${key}\\}`, 'g'), String(value))
-    })
-
-    // Replace node ID variable: {nodeId}
-    resolved = resolved.replace(/\{nodeId\}/g, session.nodeId)
-
-    // Replace time variable: {time}
-    resolved = resolved.replace(/\{time\}/g, String(session.time))
-
-    // Entity property expansion: [entity_id] and [entity_id.property]
-    if (model?.entities || session?.events) {
-        resolved = expandTemplate(resolved, model, session)
-    }
-
-    // Dynamic story expansion: conversationTemplates auto-insertion
-    if (model?.conversationTemplates?.length > 0 && session?.events) {
-        const matches = findMatchingTemplates(model.conversationTemplates, session, model)
-        if (matches.length > 0) {
-            const insertions = matches.map(m => m.expandedText).join(' ')
-            resolved = resolved + ' ' + insertions
-        }
-    }
-
-    return resolved
+    return resolveNarrativeDisplayText(text, model, session)
 }
 
 /**

@@ -1,6 +1,6 @@
 # SP-TGEN-001: Narrative Text Generation Pipeline（文章生成の単一設計）
 
-**Status**: partial | **Pct**: 40 | **Cat**: core
+**Status**: partial | **Pct**: 60 | **Cat**: core
 
 ## 1. 目的
 
@@ -64,7 +64,7 @@
 
 ### 4.1 段階 3 の結合（現状の事実）
 
-Web Tester の `session-controller.js` 内 `resolveVariables` では、段階 1 の後にマッチしたテンプレートの `expandedText` を **空白区切りで末尾連結**している。これは **暫定規約**として文書化する。別 UI（段落分け等）にする場合は本節を更新する。
+`resolveNarrativeDisplayText`（既定）では、段階 1 の後にマッチしたテンプレートの `expandedText` を **空白区切りで末尾連結**する。Web Tester の `resolveVariables` はこの関数の薄いラッパである。GUI プレビューは `appendConversationTemplates: false` で同関数を呼び、段階 3 を省略する。別 UI（段落分け等）にする場合は本節を更新する。
 
 ### 4.2 明示的にパイプライン外とするもの
 
@@ -85,17 +85,24 @@ Web Tester の `session-controller.js` 内 `resolveVariables` では、段階 1 
 
 | 段階・要素 | 主なコード |
 |------------|------------|
-| expandTemplate / expandTemplateWithTracking | `packages/engine-ts/src/template.ts` |
-| findMatchingTemplates | `packages/engine-ts/src/conversation-templates.ts` |
-| Web Tester での合成（現状） | `apps/web-tester/src/session-controller.js` の `resolveVariables` |
-| GUI プレビュー（テンプレート非合成） | `apps/web-tester/src/ui/node-renderer.js`（`expandTemplate` のみ） |
+| **ランタイム合成（段階 0〜3、追跡なし）** | `resolveNarrativeDisplayText` / `applyLegacySessionPlaceholders` — `packages/engine-ts/src/narrative-display-text.ts`（`index.ts` / `browser.ts` からエクスポート） |
+| 段階 1 コア | `expandTemplate` / `expandTemplateWithTracking` — `packages/engine-ts/src/template.ts` |
+| 段階 3 マッチング | `findMatchingTemplates` — `packages/engine-ts/src/conversation-templates.ts` |
+| Web Tester 本線 | `apps/web-tester/src/session-controller.js` の `resolveVariables`（エンジン呼び出しのみ） |
+| GUI プレビュー（段階 3 オフ） | `apps/web-tester/src/ui/node-renderer.js`、`gui-editor.js`（`appendConversationTemplates: false`） |
 | AI 下書き | `packages/engine-ts/src/ai-provider.ts`、`apps/web-tester/src/ui/ai.js` |
+
+### 6.1 API メモ
+
+- `resolveNarrativeDisplayText(rawText, model, session, options?)`
+  - `appendConversationTemplates`: 既定 `true`。`false` のとき段階 3 をスキップ（エディタプレビュー用）。
 
 ## 7. 既知ギャップ（Pct が partial の理由）
 
-1. **エンジン単一エントリポイントがない**: `resolveNarrativeText` 相当が TS になく、Web・Unity で順序がズレうる。
-2. **resolveVariables と expandTemplate の役割重複**: `{flag:…}` 系と `expandTemplate` の `{…}` が併存。
-3. **ノードプレビューとプレイ表示の非対称**: プレビューは `conversationTemplates` を付与しない等、意図の明示が必要。
+1. **段階 0 と `expandTemplate` の二重系統**: レガシー `{flag:…}` 等と `{name}` 形式が併存したまま（段階 1 への統合は未着手）。
+2. **段階 2 未統合**: `expandTemplateWithTracking` は `resolveNarrativeDisplayText` に含めていない（`DescriptionState` をまたぐ設計が別途必要）。
+3. **`model.metadata` の `{…}` 置換**: 旧 `StoryManager` にのみあった挙動は本 API に載せていない（本線で未使用のため）。
+4. **Unity C#**: 同一パイプラインの移植は未着手。
 
 ## 8. 関連仕様
 

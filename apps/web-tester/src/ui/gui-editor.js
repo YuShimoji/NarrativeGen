@@ -4,7 +4,7 @@
  */
 
 import { getCurrentModelName, getCurrentSession } from '../core/session.js'
-import { expandTemplate } from '../../../../packages/engine-ts/dist/template.js'
+import { resolveNarrativeDisplayText } from '../../../../packages/engine-ts/dist/browser.js'
 import { NODE_TEMPLATES, DRAFT_MODEL_STORAGE_KEY } from '../config/constants.js'
 import { NodeRenderer } from './node-renderer.js'
 import { ModelUpdater } from './model-updater.js'
@@ -231,7 +231,9 @@ export class GuiEditorManager {
     let hasTemplateRefs = false
     try {
       if (session && (rawText.includes('[') || rawText.includes('{')) && (model.entities || session.events)) {
-        expandedText = expandTemplate(rawText, model, session)
+        expandedText = resolveNarrativeDisplayText(rawText, model, session, {
+          appendConversationTemplates: false,
+        })
         hasTemplateRefs = expandedText !== rawText
       }
     } catch (_) { /* ignore expansion errors */ }

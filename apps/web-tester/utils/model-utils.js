@@ -1,30 +1,5 @@
 // Model loading and utility functions
 
-// Utility function for resolving variables in text (browser-compatible)
-export function resolveVariables(text, sessionState, model) {
-  if (!text || !sessionState) return text
-  
-  let resolved = text
-  
-  // Replace flag variables: {flag:key}
-  Object.entries(sessionState.flags || {}).forEach(([key, value]) => {
-    resolved = resolved.replace(new RegExp(`\\{flag:${key}\\}`, 'g'), value ? 'true' : 'false')
-  })
-  
-  // Replace resource variables: {resource:key}
-  Object.entries(sessionState.resources || {}).forEach(([key, value]) => {
-    resolved = resolved.replace(new RegExp(`\\{resource:${key}\\}`, 'g'), String(value))
-  })
-  
-  // Replace node ID variable: {nodeId}
-  resolved = resolved.replace(/\{nodeId\}/g, sessionState.nodeId)
-  
-  // Replace time variable: {time}
-  resolved = resolved.replace(/\{time\}/g, String(sessionState.time))
-  
-  return resolved
-}
-
 // Browser-compatible model loading (no fs module)
 export async function loadModel(modelName) {
   const url = `./models/examples/${modelName}.json`

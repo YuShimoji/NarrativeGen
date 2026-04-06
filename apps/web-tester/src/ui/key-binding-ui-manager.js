@@ -192,46 +192,6 @@ export class KeyBindingUIManager {
     }
   }
 
-  /**
-   * 変数解決ユーティリティ
-   */
-  resolveVariables(text, session, model) {
-    if (!text || !session) return text
-
-    let resolved = text
-
-    // Replace flag variables: {flag:key}
-    Object.entries(session.flags || {}).forEach(([key, value]) => {
-      resolved = resolved.replace(new RegExp(`\\{flag:${key}\\}`, 'g'), value ? 'true' : 'false')
-    })
-
-    // Replace resource variables: {resource:key}
-    Object.entries(session.resources || {}).forEach(([key, value]) => {
-      resolved = resolved.replace(new RegExp(`\\{resource:${key}\\}`, 'g'), String(value))
-    })
-
-    // Replace variable variables: {variable:key}
-    Object.entries(session.variables || {}).forEach(([key, value]) => {
-      resolved = resolved.replace(new RegExp(`\\{variable:${key}\\}`, 'g'), String(value))
-    })
-
-    // Replace node ID variable: {nodeId}
-    resolved = resolved.replace(/\{nodeId\}/g, session.nodeId)
-
-    // Replace time variable: {time}
-    resolved = resolved.replace(/\{time\}/g, String(session.time))
-
-    return resolved
-  }
-
-  /**
-   * モデル読み込みユーティリティ
-   */
-  async loadModel(modelName) {
-    const url = `/models/examples/${modelName}.json`
-    const response = await fetch(url)
-    return await response.json()
-  }
 }
 
 export default KeyBindingUIManager

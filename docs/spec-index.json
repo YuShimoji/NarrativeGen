@@ -219,10 +219,10 @@
     "id": "SP-TGEN-001",
     "title": "Narrative Text Generation Pipeline (SSoT)",
     "status": "partial",
-    "pct": 40,
+    "pct": 60,
     "cat": "core",
     "file": "docs/specs/narrative-text-generation-pipeline.md",
-    "summary": "Single design doc: runtime display pipeline as primary \"text generation\"; cheeseburger/inheritance mapped to SP-TEXT/PROP/DYNAMIC/DESC; legacy recursive syntax non-normative until re-specified. Documents normative stage order vs fragmented call sites (engine unified API TBD)."
+    "summary": "SSoT doc + engine entrypoint resolveNarrativeDisplayText (narrative-display-text.ts): legacy placeholders, expandTemplate, optional template append. Web resolveVariables wraps it; GUI preview uses appendConversationTemplates:false. Remaining: stage0/{…} merge, expandTemplateWithTracking, Unity parity."
   },
   {
     "id": "SP-PARA-002",

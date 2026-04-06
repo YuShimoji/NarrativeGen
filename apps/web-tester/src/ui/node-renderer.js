@@ -4,7 +4,7 @@
  */
 
 import { ConditionEffectEditor } from './condition-effect-editor.js'
-import { expandTemplate } from '../../../../packages/engine-ts/dist/template.js'
+import { resolveNarrativeDisplayText } from '../../../../packages/engine-ts/dist/browser.js'
 
 export class NodeRenderer {
   constructor(appState) {
@@ -94,7 +94,9 @@ export class NodeRenderer {
         time: 0,
         events: {}
       }
-      const expanded = expandTemplate(text, model, session)
+      const expanded = resolveNarrativeDisplayText(text, model, session, {
+        appendConversationTemplates: false,
+      })
       if (expanded === text) return '' // 展開なし = プレビュー不要
       // HTMLエスケープ
       return expanded.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')

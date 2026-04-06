@@ -90,6 +90,11 @@ export { resolveProperty, getEntityProperties, getInheritanceChain } from './ent
 // Dynamic text engine
 export { expandTemplate, expandTemplateWithTracking } from './template.js'
 export type { ExpandWithTrackingResult } from './template.js'
+export {
+  applyLegacySessionPlaceholders,
+  resolveNarrativeDisplayText,
+} from './narrative-display-text.js'
+export type { ResolveNarrativeDisplayTextOptions } from './narrative-display-text.js'
 
 // Character knowledge model
 export { findKnowledgeProfile, perceiveEntity } from './character-knowledge.js'
