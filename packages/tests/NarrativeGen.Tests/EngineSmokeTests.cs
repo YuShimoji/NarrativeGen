@@ -178,5 +178,23 @@ namespace NarrativeGen.Tests
             Assert.Throws<ArgumentException>(() => Engine.LoadModel(invalidModel));
         }
 
+        [Test]
+        public void Session_Serialize_Deserialize_RoundTrip()
+        {
+            var model = LoadSampleModel("linear");
+            var session = Engine.StartSession(model);
+            session = Engine.ApplyChoice(session, model, "c1");
+
+            var json = Engine.Serialize(session);
+            Assert.That(json, Does.Contain("currentNodeId"));
+
+            var restored = Engine.Deserialize(json);
+            Assert.AreEqual(session.CurrentNodeId, restored.CurrentNodeId);
+            Assert.AreEqual(session.Time, restored.Time);
+            CollectionAssert.AreEquivalent(session.Flags, restored.Flags);
+            CollectionAssert.AreEquivalent(session.Resources, restored.Resources);
+            CollectionAssert.AreEquivalent(session.Inventory, restored.Inventory);
+        }
+
     }
 }

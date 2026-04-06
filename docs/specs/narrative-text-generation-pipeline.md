@@ -1,6 +1,6 @@
 # SP-TGEN-001: Narrative Text Generation Pipeline（文章生成の単一設計）
 
-**Status**: partial | **Pct**: 80 | **Cat**: core
+**Status**: partial | **Pct**: 85 | **Cat**: core
 
 ## 1. 目的
 
@@ -41,19 +41,20 @@
 ```
 [入力] NodeDef.text（および必要ならメタ）
   ↓
-段階 0（任意・移行用）
+段階 0（移行用・著者向け表記）
   レガシーな {flag:key} / {resource:key} / {variable:key} / {nodeId} / {time} 形式の置換
-  ※ engine-ts の expandTemplate が既に {name} 形式を扱うため、二重系統。将来は段階 1 に統合することが望ましい。
+  ※ 実装は `template.ts` の `applyLegacySessionPlaceholders`。`expandTemplate` / `expandTemplateWithTracking` の先頭で一度だけ適用。
+  ※ `resolveNarrativeDisplayText*` は entities/events が無いとき段階0のみ、あるときは段階0のあと `expandTemplateCore` を呼び二重適用はない。
   ↓
 段階 1 — コア展開（追跡なし API）
-  expandTemplate(raw, model, session)
+  expandTemplate(text, model, session) = 段階0 + expandTemplateCore
   - {?…} 条件節
   - [entity…]（静的 Entity + session.events）
   - {session 変数・フラグ・リソース}
   ↓
-段階 1+2 — コア展開（追跡あり API `resolveNarrativeDisplayTextTracked`）
-  expandTemplateWithTracking（段階1と同内容に加え `[entity~]`）
-  - DescriptionState を入力・出力で受け渡し（Web Tester は `AppState.descriptionState`）
+段階 1+2 — コア展開（追跡あり）
+  expandTemplateWithTracking: 段階0 → [entity~] → expandTemplateCore
+  - `resolveNarrativeDisplayTextTracked` が上記を利用し、DescriptionState を入出力（Web は `AppState.descriptionState`）
   ↓
 段階 3 — 会話テンプレート挿入
   findMatchingTemplates → 各 hit の text は **既に** expandTemplate 済み（テンプレート側）
@@ -87,9 +88,10 @@
 
 | 段階・要素 | 主なコード |
 |------------|------------|
-| **ランタイム合成（段階 0〜3、追跡なし）** | `resolveNarrativeDisplayText` / `applyLegacySessionPlaceholders` — `narrative-display-text.ts` |
-| **ランタイム合成（段階 0〜3 + 段階2）** | `resolveNarrativeDisplayTextTracked` — 同上 |
-| 段階 1 / 2 コア | `expandTemplate` / `expandTemplateWithTracking` — `template.ts` |
+| **ランタイム合成（段階 0〜3、追跡なし）** | `resolveNarrativeDisplayText` — `narrative-display-text.ts`（段階0 + `expandTemplateCore`） |
+| **ランタイム合成（段階 0〜3 + 段階2）** | `resolveNarrativeDisplayTextTracked` — 同上 + `expandTemplateWithTracking` |
+| 段階 0 | `applyLegacySessionPlaceholders` — `template.ts`（`expandTemplate` に内包） |
+| 段階 1 / 2 コア | `expandTemplateCore` / `expandTemplate` / `expandTemplateWithTracking` — `template.ts` |
 | 段階 3 マッチング | `findMatchingTemplates` — `conversation-templates.ts` |
 | Web Tester 本線 | `session-controller.js` の `resolveVariables(…, appState)`、`core/session.js` の `registerNewPlaySessionHook` |
 | `DescriptionState` 保持 | `core/state.js` の `AppState` |
@@ -110,7 +112,7 @@
 
 ## 7. 既知ギャップ（Pct が partial の理由）
 
-1. **段階 0 と `expandTemplate` の二重系統**: レガシー `{flag:…}` 等と `{name}` 形式が併存したまま（段階 1 への統合は未着手）。
+1. **著者向け表記の併存**: レガシー `{flag:…}` 等と `{name}` 形式はモデル上併存しうる。ランタイムは `template.ts` で段階0→段階1の単一順序。**コードパス上の二重適用は解消済み**（`expandTemplate` 直前とコア内での重複なし）。
 2. **`Undo` / セーブと `DescriptionState`（Web Tester）**: **解消済み**。`pushHistory` と同タイミングで `AppState` に `descriptionState` スナップショットを積み、プレイ Undo（PlayRenderer 本線・レガシー選択肢）で `pop` して復元する。localStorage セッションはスキーマ **1.1.0**（`descriptionState` 付き）で保存し、**1.0.0** 読込時は `descriptionState` 欠落を `{}` とみなす。スロット／オートセーブ（`SaveManager`）も `descriptionState` を含む（バージョン 1.1）。
 3. **`model.metadata` の `{…}` 置換**: 本 API に未搭載（本線で未使用のため）。
 4. **Unity C#**: 同一パイプラインの移植は未着手。

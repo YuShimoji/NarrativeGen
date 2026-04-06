@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import {
-  applyLegacySessionPlaceholders,
   resolveNarrativeDisplayText,
   resolveNarrativeDisplayTextTracked,
 } from '../src/narrative-display-text'
+import { applyLegacySessionPlaceholders } from '../src/template'
 import type { ConversationTemplate } from '../src/conversation-templates'
 import type { Model, SessionState } from '../src/types'
 

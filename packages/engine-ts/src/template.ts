@@ -3,23 +3,39 @@ import { resolveProperty, getEntityProperties } from './entities.js'
 import type { DescriptionState } from './description-tracker.js'
 import { getUndescribedKeys, markDescribed } from './description-tracker.js'
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 /**
- * Expand template references in text.
- *
- * Supported syntax:
- * - `[entity_id]` → EntityDef.name
- * - `[entity_id.property]` → resolved PropertyDef.defaultValue (inheritance-aware)
- * - `[entity_id.name]` → EntityDef.name
- * - `[entity_id.description]` → EntityDef.description
- * - `[entity_id.cost]` → EntityDef.cost
- * - `{variable}` → session.variables / session.flags / session.resources
- * - `{?flag:text}` → conditional section (show if flag is true)
- * - `{?!flag:text}` → negated conditional (show if flag is false)
- * - `{?resource>=N:text}` → resource comparison conditional
- *
- * Unresolved references are left as-is.
+ * SP-TGEN 段階0: レガシー `{flag:…}` / `{resource:…}` / `{variable:…}` / `{nodeId}` / `{time}` を展開する。
+ * `expandTemplate` / `expandTemplateWithTracking` の先頭で一括適用され、二重パスを避ける。
  */
-export function expandTemplate(
+export function applyLegacySessionPlaceholders(text: string, session: SessionState): string {
+  let resolved = text
+
+  Object.entries(session.flags ?? {}).forEach(([key, value]) => {
+    resolved = resolved.replace(new RegExp(`\\{flag:${escapeRegExp(key)}\\}`, 'g'), value ? 'true' : 'false')
+  })
+
+  Object.entries(session.resources ?? {}).forEach(([key, value]) => {
+    resolved = resolved.replace(new RegExp(`\\{resource:${escapeRegExp(key)}\\}`, 'g'), String(value))
+  })
+
+  Object.entries(session.variables ?? {}).forEach(([key, value]) => {
+    resolved = resolved.replace(new RegExp(`\\{variable:${escapeRegExp(key)}\\}`, 'g'), String(value))
+  })
+
+  resolved = resolved.replace(/\{nodeId\}/g, session.nodeId)
+  resolved = resolved.replace(/\{time\}/g, String(session.time))
+
+  return resolved
+}
+
+/**
+ * 段階1以降のみ（段階0なし）。`resolveNarrativeDisplayText` 等が段階0のあとに呼ぶ。
+ */
+export function expandTemplateCore(
   text: string,
   model: Model,
   session: SessionState
@@ -125,6 +141,33 @@ export function expandTemplate(
 }
 
 /**
+ * Expand template references in text.
+ *
+ * Supported syntax:
+ * - `[entity_id]` → EntityDef.name
+ * - `[entity_id.property]` → resolved PropertyDef.defaultValue (inheritance-aware)
+ * - `[entity_id.name]` → EntityDef.name
+ * - `[entity_id.description]` → EntityDef.description
+ * - `[entity_id.cost]` → EntityDef.cost
+ * - `{variable}` → session.variables / session.flags / session.resources
+ * - `{?flag:text}` → conditional section (show if flag is true)
+ * - `{?!flag:text}` → negated conditional (show if flag is false)
+ * - `{?resource>=N:text}` → resource comparison conditional
+ *
+ * Unresolved references are left as-is.
+ *
+ * 段階0（レガシー `{flag:…}` 等）は本関数の先頭で一度だけ適用される。
+ */
+export function expandTemplate(
+  text: string,
+  model: Model,
+  session: SessionState
+): string {
+  if (!text) return text
+  return expandTemplateCore(applyLegacySessionPlaceholders(text, session), model, session)
+}
+
+/**
  * Result of template expansion with description tracking.
  */
 export interface ExpandWithTrackingResult {
@@ -140,7 +183,7 @@ export interface ExpandWithTrackingResult {
  *   If all properties are described, picks any property.
  *   Format: "key: value" for the selected property.
  *
- * All other syntax is handled by `expandTemplate`.
+ * 段階0は `[entity~]` より前に適用し、その後 `expandTemplateCore` で段階1以降を処理する。
  *
  * @param text - Template text
  * @param model - The model
@@ -158,11 +201,13 @@ export function expandTemplateWithTracking(
 ): ExpandWithTrackingResult {
   if (!text) return { text, descriptionState: descState }
 
+  const afterLegacy = applyLegacySessionPlaceholders(text, session)
+
   let state = { ...descState }
   let seedCounter = seed
 
   // Process [entity~] patterns before standard expansion
-  const processed = text.replace(/\[(\w+)~\]/g, (_match, entityId: string) => {
+  const processed = afterLegacy.replace(/\[(\w+)~\]/g, (_match, entityId: string) => {
     const entities = { ...(model.entities ?? {}), ...(session.events ?? {}) }
     const entity = entities[entityId]
     if (!entity) return `[${entityId}~]`
@@ -204,8 +249,7 @@ export function expandTemplateWithTracking(
     return `${selectedKey}: ${value}`
   })
 
-  // Run standard expansion on the processed text
-  const expanded = expandTemplate(processed, model, session)
+  const expanded = expandTemplateCore(processed, model, session)
 
   return { text: expanded, descriptionState: state }
 }

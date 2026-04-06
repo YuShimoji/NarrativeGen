@@ -268,13 +268,14 @@ export { registry, registerBuiltins } from './inference/registry.js'
 export type { Goal, PathStep } from './inference/backward-chaining.js'
 export type { DependencyGraph, ForwardChainingResult } from './inference/forward-chaining.js'
 export type { ConditionEvaluator, EffectApplicator, EvaluationContext, DependencyInfo } from './inference/types.js'
-export { expandTemplate, expandTemplateWithTracking } from './template.js'
-export type { ExpandWithTrackingResult } from './template.js'
 export {
   applyLegacySessionPlaceholders,
-  resolveNarrativeDisplayText,
-  resolveNarrativeDisplayTextTracked,
-} from './narrative-display-text.js'
+  expandTemplate,
+  expandTemplateCore,
+  expandTemplateWithTracking,
+} from './template.js'
+export type { ExpandWithTrackingResult } from './template.js'
+export { resolveNarrativeDisplayText, resolveNarrativeDisplayTextTracked } from './narrative-display-text.js'
 export type {
   ResolveNarrativeDisplayTextOptions,
   ResolveNarrativeDisplayTextTrackedOptions,

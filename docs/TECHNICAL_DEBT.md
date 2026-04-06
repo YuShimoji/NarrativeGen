@@ -1,6 +1,6 @@
 # Technical Debt and Improvement Tasks
 
-Last updated: 2026-03-26
+Last updated: 2026-04-07
 
 ## Overview
 This document tracks technical debt and improvement work items.
@@ -155,6 +155,17 @@ Remaining tasks:
 | Empty state UI | 2026-03-26 | ストーリー/グラフタブに未ロード時プレースホルダー追加 |
 | Sidebar toggle CSS fix | 2026-03-26 | .sidebar-hidden CSSルール欠落を修正 |
 | spec-index gap | 2026-03-26 | SP-HIST-001 (Session History) エントリ追加、33エントリに |
+
+---
+
+## Backlog（要件確定後にチケット化）
+
+次の項目はプロダクト要件が固まるまで **実装スコープ外** とし、ここにのみ記録する。
+
+| ID | 項目 | 備考 |
+|----|------|------|
+| BL-TGEN-META | `model.metadata` の `{…}` 展開をランタイム文章 API に載せるか | SP-TGEN セクション7・本線未使用 |
+| BL-PLAY-BGM | SP-PLAY-001 残差（BGM 人的検証の AC 記録） | `docs/specs/play-immersion.md` の AC-9〜12 |
 
 ---
 

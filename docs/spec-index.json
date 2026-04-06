@@ -174,10 +174,10 @@
     "id": "SP-UNITY-001",
     "title": "Unity SDK",
     "status": "partial",
-    "pct": 85,
+    "pct": 90,
     "cat": "system",
     "file": "docs/specs/unity-sdk.md",
-    "summary": "Unity C# SDK (UPM): Engine API, InferenceRegistry (8 cond / 7 effect), Variables/Inventory. Serialize/test unverified"
+    "summary": "Unity C# SDK (UPM): Engine API, InferenceRegistry, Session Engine.Serialize/Deserialize (SessionSnapshot). SP-TGEN text pipeline C# は未移植。dotnet test は .NET 8 ランタイム要"
   },
   {
     "id": "SP-PARA-001",
@@ -219,10 +219,10 @@
     "id": "SP-TGEN-001",
     "title": "Narrative Text Generation Pipeline (SSoT)",
     "status": "partial",
-    "pct": 80,
+    "pct": 85,
     "cat": "core",
     "file": "docs/specs/narrative-text-generation-pipeline.md",
-    "summary": "resolveNarrativeDisplayText + resolveNarrativeDisplayTextTracked (stage2 [entity~]); Web resolveVariables(..., appState) + AppState.descriptionState + Undo スナップショット + localStorage 1.1.0 / SaveManager 1.1 descriptionState; startNewSession hook. Gaps: legacy {flag:} merge, Unity."
+    "summary": "段階0は template.applyLegacy + expandTemplate/WithTracking 内包; expandTemplateCore; Web Undo/description セーブ連携; 著者表記のレガシー/{name}併存は残る。Gaps: model.metadata 置換, Unity 全文パイプライン。"
   },
   {
     "id": "SP-PARA-002",

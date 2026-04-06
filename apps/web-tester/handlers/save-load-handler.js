@@ -1,6 +1,13 @@
 /**
  * Save/Load handler - Manages session persistence and auto-save functionality
  *
+ * **本線との関係**: 現行 Web Tester のプレイ用セーブは `src/features/save-manager.js` の SaveManager
+ *（スロット / オートセーブ、`narrativeGen_save_slot_*` キー）が UI から利用されている。
+ * 本モジュールは `StorageManager`（`narrativeGen_savedSession` 等）向けの **別ストレージ名前空間** 用。
+ * エントリから未配線のときは将来用・実験用として残す。配線する場合は `getDescriptionState` /
+ * `restoreDescriptionState` を渡し、ロード後は `sessionHistory` を空にするなど Undo スタック方針を
+ * `app-controller` 側で揃えること。
+ *
  * Provides comprehensive save/load operations with auto-save capability,
  * session resumption, and storage quota management. Uses dependency injection
  * for flexible integration with the main application state.

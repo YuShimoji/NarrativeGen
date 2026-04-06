@@ -68,6 +68,12 @@ describe('expandTemplate', () => {
     resources: { gold: 100, health: 80 },
   })
 
+  it('applies legacy phase0 placeholders before core expansion', () => {
+    const m = makeModel()
+    const s = makeSession({ nodeId: 'room1', time: 3, flags: { lit: true } })
+    expect(expandTemplate('at {nodeId} t={time} f={flag:lit}', m, s)).toBe('at room1 t=3 f=true')
+  })
+
   describe('Entity references [entity_id]', () => {
     it('should expand entity name', () => {
       expect(expandTemplate('[cheeseburger]', model, session)).toBe('Cheeseburger')

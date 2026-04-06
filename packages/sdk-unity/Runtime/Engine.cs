@@ -108,5 +108,42 @@ namespace NarrativeGen
             var registry = InferenceRegistry.Instance;
             return conditions.All(c => registry.EvaluateCondition(c, context));
         }
+
+        /// <summary>
+        /// Serializes a runtime session to JSON for persistence (flags, resources, variables, inventory, time, node).
+        /// </summary>
+        public static string Serialize(Runtime.Session session)
+        {
+            EnsureInitialized();
+            var snap = SessionSnapshot.FromSession(session);
+            return JsonConvert.SerializeObject(snap, SessionJsonSettings());
+        }
+
+        /// <summary>
+        /// Restores a session previously written with <see cref="Serialize"/>.
+        /// </summary>
+        public static Runtime.Session Deserialize(string json)
+        {
+            EnsureInitialized();
+            if (string.IsNullOrWhiteSpace(json))
+                throw new ArgumentException("Session JSON cannot be null or empty", nameof(json));
+
+            var snap = JsonConvert.DeserializeObject<SessionSnapshot>(json, SessionJsonSettings())
+                       ?? throw new ArgumentException("Failed to parse session JSON", nameof(json));
+
+            if (string.IsNullOrWhiteSpace(snap.CurrentNodeId))
+                throw new ArgumentException("Session JSON missing currentNodeId", nameof(json));
+
+            return snap.ToSession();
+        }
+
+        private static JsonSerializerSettings SessionJsonSettings()
+        {
+            return new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                MissingMemberHandling = MissingMemberHandling.Ignore
+            };
+        }
     }
 }

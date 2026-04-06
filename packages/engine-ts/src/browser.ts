@@ -88,13 +88,14 @@ export type { Choice, Condition, Effect, EntityDef, FlagState, Model, NodeDef, P
 export { resolveProperty, getEntityProperties, getInheritanceChain } from './entities.js'
 
 // Dynamic text engine
-export { expandTemplate, expandTemplateWithTracking } from './template.js'
-export type { ExpandWithTrackingResult } from './template.js'
 export {
   applyLegacySessionPlaceholders,
-  resolveNarrativeDisplayText,
-  resolveNarrativeDisplayTextTracked,
-} from './narrative-display-text.js'
+  expandTemplate,
+  expandTemplateCore,
+  expandTemplateWithTracking,
+} from './template.js'
+export type { ExpandWithTrackingResult } from './template.js'
+export { resolveNarrativeDisplayText, resolveNarrativeDisplayTextTracked } from './narrative-display-text.js'
 export type {
   ResolveNarrativeDisplayTextOptions,
   ResolveNarrativeDisplayTextTrackedOptions,

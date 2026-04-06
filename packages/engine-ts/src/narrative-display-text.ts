@@ -1,36 +1,13 @@
 import type { Model, SessionState } from './types.js'
-import { expandTemplate, expandTemplateWithTracking } from './template.js'
+import {
+  applyLegacySessionPlaceholders,
+  expandTemplateCore,
+  expandTemplateWithTracking,
+} from './template.js'
 import { findMatchingTemplates } from './conversation-templates.js'
 import type { DescriptionState } from './description-tracker.js'
 
-/**
- * SP-TGEN-001: レガシーな `{flag:…}` / `{resource:…}` 等を先に展開する（段階0）。
- * Web Tester 由来の互換用。`expandTemplate` の `{name}` 形式と併存する。
- */
-export function applyLegacySessionPlaceholders(text: string, session: SessionState): string {
-  let resolved = text
-
-  Object.entries(session.flags ?? {}).forEach(([key, value]) => {
-    resolved = resolved.replace(new RegExp(`\\{flag:${escapeRegExp(key)}\\}`, 'g'), value ? 'true' : 'false')
-  })
-
-  Object.entries(session.resources ?? {}).forEach(([key, value]) => {
-    resolved = resolved.replace(new RegExp(`\\{resource:${escapeRegExp(key)}\\}`, 'g'), String(value))
-  })
-
-  Object.entries(session.variables ?? {}).forEach(([key, value]) => {
-    resolved = resolved.replace(new RegExp(`\\{variable:${escapeRegExp(key)}\\}`, 'g'), String(value))
-  })
-
-  resolved = resolved.replace(/\{nodeId\}/g, session.nodeId)
-  resolved = resolved.replace(/\{time\}/g, String(session.time))
-
-  return resolved
-}
-
-function escapeRegExp(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
+export { applyLegacySessionPlaceholders } from './template.js'
 
 export interface ResolveNarrativeDisplayTextOptions {
   /**
@@ -55,7 +32,7 @@ export interface ResolveNarrativeDisplayTextTrackedResult {
 /**
  * プレイヤー向けにノード本文を決定論的に合成する（SP-TGEN-001 段階0〜3、追跡なし）。
  *
- * 順序: レガシー置換 → expandTemplate（entities/events がある場合のみ）→ 会話テンプレート末尾連結（任意）。
+ * 順序: 段階0（レガシー置換）→ `expandTemplateCore`（entities/events がある場合のみ）→ 会話テンプレート末尾連結（任意）。
  * `[entity~]` 描写追跡が必要な場合は `resolveNarrativeDisplayTextTracked` を使う。
  */
 export function resolveNarrativeDisplayText(
@@ -71,7 +48,7 @@ export function resolveNarrativeDisplayText(
   let resolved = applyLegacySessionPlaceholders(rawText, session)
 
   if (model?.entities || session?.events) {
-    resolved = expandTemplate(resolved, model, session)
+    resolved = expandTemplateCore(resolved, model, session)
   }
 
   if (
@@ -92,7 +69,7 @@ export function resolveNarrativeDisplayText(
 
 /**
  * 段階0〜3に加え SP-TEXT の `[entity~]` 描写追跡（段階2）を含む合成。
- * 段階1は `expandTemplateWithTracking` で一括する（`[~]` が無い場合も `expandTemplate` と同結果）。
+ * 段階0→`[entity~]`→段階1+ は `expandTemplateWithTracking` 内で一括する。
  */
 export function resolveNarrativeDisplayTextTracked(
   rawText: string,
@@ -108,13 +85,16 @@ export function resolveNarrativeDisplayTextTracked(
   const descIn = options?.descriptionState ?? {}
   const seed = options?.descriptionSeed ?? 0
 
-  let resolved = applyLegacySessionPlaceholders(rawText, session)
-  let descriptionState = descIn
+  let resolved: string
+  let descriptionState: DescriptionState
 
   if (model?.entities || session?.events) {
-    const tracked = expandTemplateWithTracking(resolved, model, session, descIn, seed)
+    const tracked = expandTemplateWithTracking(rawText, model, session, descIn, seed)
     resolved = tracked.text
     descriptionState = tracked.descriptionState
+  } else {
+    resolved = applyLegacySessionPlaceholders(rawText, session)
+    descriptionState = descIn
   }
 
   if (
