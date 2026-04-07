@@ -36,7 +36,7 @@ interface AIProvider {
 ```
 
 - **Mock**: 単純な `"(バリエーション N)"` 付与
-- **OpenAI**: `gpt-3.5-turbo` でプロンプトベースの言い換え生成
+- **OpenAI**: 利用可能なチャットモデルでプロンプトベースの言い換え生成（モデル名は実行環境設定に従う）
 
 ### ParaphraseOptions
 

@@ -508,14 +508,16 @@ function checkTestEnvironment(projectRoot, options = {}) {
   const warnings = [];
   const results = [];
 
-  // テスト手順ドキュメントの確認 (TEST_GUIDE.md or TEST_PROCEDURES.md)
-  const testGuidePath = path.join(projectRoot, 'TEST_GUIDE.md');
-  const testProceduresPath = path.join(projectRoot, 'TEST_PROCEDURES.md');
-  const foundTestDoc = fs.existsSync(testGuidePath) ? testGuidePath
-    : fs.existsSync(testProceduresPath) ? testProceduresPath
+  // テスト手順ドキュメントの確認 (現行: docs/GUI_EDITOR_TEST_GUIDE.md)
+  const guiEditorTestGuidePath = path.join(projectRoot, 'docs', 'GUI_EDITOR_TEST_GUIDE.md');
+  const legacyTestGuidePath = path.join(projectRoot, 'TEST_GUIDE.md');
+  const legacyTestProceduresPath = path.join(projectRoot, 'TEST_PROCEDURES.md');
+  const foundTestDoc = fs.existsSync(guiEditorTestGuidePath) ? guiEditorTestGuidePath
+    : fs.existsSync(legacyTestGuidePath) ? legacyTestGuidePath
+    : fs.existsSync(legacyTestProceduresPath) ? legacyTestProceduresPath
     : null;
   if (!foundTestDoc) {
-    const msg = 'TEST_GUIDE.md not found';
+    const msg = 'docs/GUI_EDITOR_TEST_GUIDE.md not found';
     warnings.push(msg);
     results.push(createCheckResult('test.procedures-file', 'WARN', msg));
     return { issues, warnings, results };

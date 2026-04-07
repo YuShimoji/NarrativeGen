@@ -1,86 +1,32 @@
-# 今後の開発タスク表
+# 今後の開発タスク（現行）
 
-**最終更新**: 2026-04-07（`HANDOVER.md` / `docs/project-context.md` と整合）
+**最終更新**: 2026-04-07  
+再開時の正は `HANDOVER.md`。詳細な現況は `docs/project-status.md`、仕様進捗は `docs/spec-index.json` / `docs/spec-viewer.html`。
 
-## 完了済みタスク
+## 未着手タスク（高〜中）
 
-| タスク | ステータス | 完了日 | 詳細 |
-|--------|-----------|--------|------|
-| ストーリーテキスト改行処理改善 | 完了 | 2025-10-31 | HTML 段落レンダリング実装 |
-| main.js 分割 Phase 1 | 完了 | 2025-10-31 | handlers/, utils/ への機能分離 |
-| main.js 分割 Phase 2〜4 | 完了 | 2026-03-09 | main.js 2365行→469行。app-controller.js + app-editor-events.js |
-| 推論レジストリ基盤 | 完了 | 2026-03-06 | inference/ プラグインパターン |
-| グラフエディタモジュール分割 | 完了 | 2026-03-06 | DagreLayoutEngine, ContextMenuManager 分離 |
-| 前方/後方連鎖推論 | 完了 | 2026-03-06 | forward-chaining, backward-chaining 実装 |
-| condition-effect-ops.ts 統合 | 完了 | 2026-03-09 | 3ファイルの重複 evalCondition/applyEffect を集約 |
-| Yarn Spinner エクスポート | 完了 | 2026-03-09 | YarnFormatter.js 追加（5形式目） |
-| 変数システム拡張 | 完了 | 2026-03-09 | 数値型・四則演算・比較条件・UI対応 |
-| ドキュメント整理 | 完了 | 2026-03-06 | 108件 → 23件（アクティブ） |
-| AI 採用ボタン | 完了 | 2026-03 | 生成履歴の簡易保持 |
-| Undo/Redo 基本実装 | 完了 | 2026-03 | |
-| セーブ/ロード（localStorage） | 完了 | 2026-03 | localStorage + 自動保存 |
-| ノード階層 Phase 2 | 完了 | 2026-03 | node_group 対応 |
-| XSS Phase 1 修正 | 完了 | 2026-02 | html-utils 中央化 |
-| Spec Viewer 導入 | 完了 | 2026-03-09 | spec-index.json + spec-viewer.html |
-| feature/main-js-split-phase2 統合 | 完了 | 2026-03-11 | 85コミット、コンフリクト8件解決、テスト15→73件 |
-| 推論UI Phase 1-3 | 完了 | 2026-03-17 | UC-1〜UC-5 + グラフ視覚統合 |
-| validate キャッシュ汚染修正 | 完了 | 2026-03-12 | clearSessionCaches() 追加 |
-| E2E skip 36件整理 | 完了 | 2026-03-12 | theme-toggle 33件削除 |
-| Entity/Inventory + C# SDK 統合 | 完了 | 2026-03-13 | hasItem/addItem/removeItem + InferenceRegistry |
-| ブランチ統合 (master→main) | 完了 | 2026-03-16 | ローカルを main に切替 |
-| Entity/Inventory condition-effect-editor UI | 完了 | 2026-03-17 | hasItem/addItem/removeItem ドロップダウン + スキーマ更新 |
-| Entity 定義管理 UI | 完了 | 2026-03-17 | コラプシブルパネル、CRUD、インライン編集、11 E2E |
-| 原初ビジョン全8スペック | 完了 | 2026-03-17 | SP-PROP-001 ~ SP-DYNAMIC-001 + SP-EVENT-001 |
-| Authoring体験逆算スライス | 完了 | 2026-03-17 | Entity定義/Template GUI/Dynamic Textプレビュー/createEvent GUI |
-| ConversationTemplate GUI | 完了 | 2026-03-17 | Phase 4完了、テンプレートCRUD + trigger条件編集 + 10 E2E |
-| チャンクサイズ最適化 | 完了 | 2026-03-17 | Dynamic import + manual chunking |
-| E2E root Vitest衝突解決 | 完了 | 2026-03-17 | test:e2e スクリプト追加 |
-| SP-PLAY-001 Phase 1 プレイ没入感 | 完了 | 2026-03-18 | TransitionRegistry + PlayRenderer + CSS animations |
-| SP-PLAY-001 Phase 2 画像/BGM | 完了 | 2026-03-22 | AudioManager + シーン画像 + スキーマ拡張 + E2E 5件 |
-| E2Eバッチ安定化 | 完了 | 2026-03-22 | workers=2, timeout=45s, retries=1 |
-| Model sync script | 完了 | 2026-03-22 | sync:models / check:models-sync |
-| SP-PIPE-001 デザイナパイプライン仕様 | 完了 | 2026-04-03 | `docs/specs/pipeline-workflow.md`、AUTHORING_GUIDE 全5ステージ。WritingPage 連携は延期（Decision Log 参照） |
-| CI governance ジョブ（spec-index / models-sync / encoding-safety） | 完了 | 2026-04-07 | GitHub Actions `governance`。詳細は `HANDOVER.md` |
+| 優先度 | タスク | 備考 |
+|--------|--------|------|
+| 高 | SP-PLAY-001 手動確認（AC-9〜12） | `docs/specs/play-immersion.md` の検証表に日付/環境/合否を記入 |
+| 高 | Unity SDK パリティの最終差分整理 | スライス2実装済。`hasEvent` 条件や edge parity の最終突合 |
+| 中 | Vite / Rollup / esbuild 更新検証 | 破壊的変更のため専用ブランチで実施 |
+| 中 | WritingPage 連携仕様策定 | 外部フォーマット安定後に着手 |
+| 中 | Dynamic Text の Yarn 変換 | engine-ts / web-tester 跨ぎ |
+| 中 | spec 保守運用の具体化 | `docs/TECHNICAL_DEBT.md` 参照 |
+| 中 | GUI Undo/Redo 手動回帰テスト | E2E 防御的 skip の裏取り |
 
-## 優先度順タスク一覧
+## 次に実行するコマンド
 
-| 優先度 | タスク | 対象 | 難易度 | 状態 |
-|--------|--------|------|--------|------|
-| **高** | SP-PLAY-001 手動確認 → pct 100%（`play-immersion.md` 検証表 AC-9〜12） | web-tester | 低 | 未着手 |
-| **高** | Unity SDK パリティ (TS側7機能移植) | sdk-unity | 高 | 未着手 |
-| **中** | WritingPage連携仕様策定（外部フォーマット安定後） | docs + system | 中 | 未着手 |
-| **中** | Dynamic Text Yarn変換 | engine-ts + web-tester | 中 | 未着手 |
-| **中** | spec 保守運用の具体化（change-review 例など） | docs + infra | 低 | `docs/TECHNICAL_DEBT.md` 参照 |
-| **中** | GUI Undo/Redo の手動回帰テスト | web-tester | 中 | 未着手 |
-| **低** | アクセシビリティ改善（ARIA ラベル等） | web-tester | 低 | 未着手 |
-| **低** | モバイル/タブレット対応 | web-tester | 高 | 未着手 |
+```powershell
+npm run check:spec-index
+npm run test:engine
+npm run build:all
+npm run dev
+```
 
-## タスク詳細
+## 参照先
 
-### 高優先度
-
-#### SP-PIPE-001（完了）
-
-デザイナー/ライターのワークフローは `docs/specs/pipeline-workflow.md` と `docs/AUTHORING_GUIDE.md` で規定済み（spec-index で `done` / 100%）。WritingPage との接続は外部仕様安定後に別途。
-
-#### Unity SDK パリティ
-
-TS側の原初ビジョン7機能を C# SDK に移植:
-1. Entity-Property System (resolveProperty, getEntityProperties, getInheritanceChain)
-2. Dynamic Text Engine (template expansion)
-3. Property Anomaly Detection (detectAnomaly)
-4. Character Knowledge Model (perceiveEntity)
-5. Event Entity Generation (createEventEntity)
-6. Description Tracker (markDescribed, isDescribed)
-7. Conversation Templates (trigger matching)
-
-**完了条件**: SP-UNITY-001 pct → 100%
-
-## 進捗指標
-
-- **テスト**: engine-ts Vitest 264 件前後（`npm run test:engine`）。E2E: Playwright（`apps/web-tester/tests/e2e`）
-- **モデル検証**: 16 モデル通過
-- **ビルド**: engine-ts + web-tester ともに成功
-- **エクスポート形式**: 5形式（CSV / Ink / Twine / JSON / Yarn）
-- **仕様書**: spec-index 34 エントリ。partial 例: SP-009、SP-UNITY-001、SP-TGEN-001、SP-PLAY-001（`HANDOVER.md` と同一基準）
-- **ドキュメント**: `docs/AUTHORING_GUIDE.md`（ライター向け）。再開はルート `HANDOVER.md` を優先
+- 再開・次アクション: `HANDOVER.md`
+- 現況サマリ: `docs/project-status.md`
+- セッション補助: `docs/project-context.md`
+- 仕様 SoT: `docs/spec-index.json`, `docs/spec-viewer.html`

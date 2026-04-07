@@ -23,6 +23,8 @@
 - `apps/web-tester/` — Web ベースのテストツール（CSV インポート/エクスポート対応）
 - `docs/` — 仕様ドキュメント（旧 `docs/archive/` パスは廃止。該当資料は Git 履歴を参照）
 
+再開時の読み順は `docs/windsurf_workflow/OPEN_HERE.md`、操作手順は `docs/AUTHORING_GUIDE.md`、現況は `HANDOVER.md` を参照してください。
+
 ## Purpose (Rebuild from scratch)
 
 - Break away from the existing project's technical debt and design flaws
@@ -336,7 +338,7 @@ The Web Tester is now fully operational with:
 
 ## Testing
 
-See [`TEST_GUIDE.md`](TEST_GUIDE.md) for comprehensive testing procedures and expected results.
+See [`docs/GUI_EDITOR_TEST_GUIDE.md`](docs/GUI_EDITOR_TEST_GUIDE.md) and [`docs/GUI_INFERENCE_TEST_GUIDE.md`](docs/GUI_INFERENCE_TEST_GUIDE.md) for testing procedures and expected results.
 
 ### Quick Test
 ```bash
@@ -376,7 +378,6 @@ NarrativeGen provides a comprehensive REST API for backend integration. See the 
 
 ### API Testing
 - **Postman Collection**: [`narrativegen-api.postman_collection.json`](narrativegen-api.postman_collection.json)
-- **Development Workflow**: [`API_DEVELOPMENT_WORKFLOW.md`](API_DEVELOPMENT_WORKFLOW.md)
 
 ### Generate API Documentation
 ```bash

@@ -2,6 +2,11 @@
 Ruleset-Version: v18
 Status: canonical
 
+## Scope and usage
+This file is a **supplementary rubric** for AI-oriented handoff quality checks.
+Use it when updating `docs/ai/*` canonical docs or when reviewing handoff/report quality.
+For normal development resume, prioritize `HANDOVER.md`, `docs/project-status.md`, and `docs/spec-index.json`.
+
 ## Feature status semantics
 Keep priority separate from status.
 

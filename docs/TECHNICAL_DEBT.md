@@ -116,7 +116,7 @@ Status: ongoing
 
 Remaining tasks:
 - [x] HANDOVER.md / TASKS.md / DEVELOPMENT_PLAN.md を最新状態に同期 (2026-03-17)
-- [x] TEST_PROCEDURES.md → TEST_GUIDE.md 参照を doctor / README / troubleshooting で修正 (2026-03-17)
+- [x] 旧テスト手順参照を doctor / README / troubleshooting で現行ドキュメントに修正 (2026-03-17)
 - [ ] Periodic legacy document review.
 - [ ] Normalize mojibake-affected legacy planning documents.
 
@@ -151,7 +151,7 @@ Remaining tasks:
 | Model files sync script (TD-10) | 2026-03-22 | `npm run sync:models` / `check:models-sync` |
 | saveGuiBtn PlayRenderer bug | 2026-03-22 | GUI編集保存後にインライン選択肢が表示されなかった |
 | E2E batch stability (TD-11) | 2026-03-22 | workers=2, timeout=45s, retries=1, 9→0-2件に改善 |
-| Dead code cleanup (session 14-15) | 2026-03-26 | 8ファイル削除, utils/logger.js統合, 陳腐化docs archive移動 |
+| Dead code cleanup (session 14-15) | 2026-03-26 | 8ファイル削除, utils/logger.js統合, 旧文書はワークツリーから除去済み（必要時はGit履歴参照） |
 | Empty state UI | 2026-03-26 | ストーリー/グラフタブに未ロード時プレースホルダー追加 |
 | Sidebar toggle CSS fix | 2026-03-26 | .sidebar-hidden CSSルール欠落を修正 |
 | spec-index gap | 2026-03-26 | SP-HIST-001 (Session History) エントリ追加、33エントリに |
