@@ -5,6 +5,23 @@
 
 ---
 
+## 2026-04 以降の優先順位（ロードマップ）
+
+| Phase | 内容 | 状態 |
+|-------|------|------|
+| 1 | CI `governance`（ルート `npm ci` + spec-index / models-sync / encoding-safety）とドキュメント整合 | 実装済み |
+| 2 | SP-PLAY-001: `play-immersion.md` 検証表への AC-9〜12 記入 | 表用意済み・記入待ち |
+| 3 | Unity SP-TGEN スライス2（events / 継承 / `[entity~]` / 会話テンプレ） | 実装済み（細部パリティは継続） |
+| 4 | E2E 間欠失敗の安定化（例: `play-immersion` AC-5 の `toContainText` 待機） | 一部実施（継続可） |
+| 5 | 依存: Vite/Rollup は専用ブランチで検証。UI: レスポンシブ・a11y は画面単位で Issue 化して着手 | 計画記載のみ |
+
+### Phase 5 詳細（着手単位の目安）
+
+- **Vite 8+ / esbuild / rollup**: `npm audit fix --force` 相当は破壊的のため、`feat/vite-upgrade` 等のブランチで `npm run build:all`・Playwright・`package.json` の `overrides`（Rollup wasm）を確認してから main へ。
+- **a11y / レスポンシブ**: ストーリービュー、グラフエディタ、プレイ画面、モーダルをそれぞれ Issue に分け、ARIA・キーボード・ブレークポイントを段階適用。
+
+---
+
 ## 現在の実装済み機能 (コードソースから確認)
 
 ### エンジン層 (Packages/engine-ts)
@@ -73,9 +90,10 @@
 
 | 種類 | 件数 |
 |------|------|
-| ユニットテスト (Vitest) | 250テスト (20ファイル) |
-| E2Eテスト (Playwright) | 57件 (6 spec files, 3 skipped in undo-redo) |
-| モデル検証 (CLI) | 15モデル |
+| ユニットテスト (Vitest) | 264テスト前後 (engine-ts、要 `npm run test:engine`) |
+| E2Eテスト (Playwright) | 57件前後 (6 spec files, 3 skipped in undo-redo) |
+| モデル検証 (CLI) | 16モデル |
+| C# テスト (`packages/tests/NarrativeGen.Tests`) | `dotnet test`（.NET 9 SDK）、CI `sdk-unity` ジョブ |
 
 ---
 
@@ -274,7 +292,7 @@
 - playthrough.schema.json: settings.presentation + nodes.*.presentation 追加
 - E2E テスト: 8件
 
-**残タスク**: 手動確認、SP-PLAY-001 pct → 100%
+**残タスク**: `docs/specs/play-immersion.md` の AC-9〜12 を検証表に記入し、SP-PLAY-001 pct → 100% へ
 
 ---
 
@@ -307,7 +325,7 @@
 | AI生成改善 | 現状のAI機能で十分 |
 | プロンプトテンプレート | 同上 |
 | 生成難易度調整/比較 | 同上 |
-| Unity NUnit テスト | Web Tester優先 |
+| （削除）Unity NUnit | `NarrativeGen.Tests` が CI で実行済みのため保留表から除外 |
 | Unity Editor拡張 | 同上 |
 
 ## 削除事項

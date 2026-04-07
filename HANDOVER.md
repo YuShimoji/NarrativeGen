@@ -4,8 +4,7 @@
 
 - **日時**: 2026-04-07
 - **ブランチ**: `main` (trunk-based)
-- **最新コミット**: session 15 nightshift (安定版化: Excise + Advance + docs)
-- **origin/main**: +9 commits ahead (未push)
+- **直近**: CI `governance` ジョブ追加、SP-HIST-001 スタブ仕様、`npm audit fix` ロック更新、Unity SP-TGEN スライス2（C#）
 
 ## プロジェクト概要
 
@@ -18,9 +17,9 @@ NarrativeGen/
   packages/engine-ts/    # ストーリーエンジン (TypeScript, Vitest)
   packages/backend/      # Express REST API (port 3001)
   packages/sdk-unity/    # Unity C# SDK (UPM パッケージ形式)
-  packages/tests/        # C# ユニットテスト
+  packages/tests/        # C# ユニットテスト (.NET 9)
   apps/web-tester/       # Web UI (Vite, Playwright E2E)
-  models/                # サンプルモデル (16ファイル) + JSON スキーマ
+  models/                # サンプルモデル + JSON スキーマ
   docs/                  # 仕様書・プラン・ガバナンス
 ```
 
@@ -28,64 +27,47 @@ NarrativeGen/
 
 ### CI・テスト
 
-- **engine-ts**: 250 テスト全合格 (20 ファイル)
-- **web-tester**: Vite ビルド成功
-- **E2E**: 57 件 (6 spec files)
-- **モデル検証**: 16 モデル通過
+- **GitHub Actions**: `governance`（ルート `npm ci` + `check:spec-index` / `check:models-sync` / `check:encoding-safety`）、`engine-ts`、`web-tester`、`sdk-unity`（.NET 9）
+- **engine-ts**: Vitest 264 件前後（`npm run test:engine`）
+- **web-tester**: Vite ビルド、`verify-export-formatters`
+- **E2E**: Playwright（`apps/web-tester/tests/e2e`）
+- **C#**: `packages/tests/NarrativeGen.Tests` で `dotnet test`
 
-### 仕様書
+### 仕様書（spec-index.json）
 
-- **spec-index.json**: 33 エントリ
-- **done**: 29 件
-- **partial**: 3 件 (SP-009 Technical Debt 90%, SP-UNITY-001 Unity SDK 85%, SP-PLAY-001 Play Immersion 95%)
-- **todo**: 1 件 (SP-PIPE-001 Pipeline Workflow 10%)
-
-### Session 15 の成果 (2026-03-26 nightshift)
-
-- **Excise**: デッドコード8ファイル削除 (1072+行)
-  - PHASE-2A-COMPLETE.md, copy-models.js, verify-phase-2a.mjs, verify-phase2b.sh
-  - hierarchy-integration-example.js, theme-manager.js, csv-exporter.js
-  - utils/logger.js (src/core/logger.js に統合)
-- **Excise**: 陳腐化docs 2件 archive移動 (WORKFLOW_STATE_SSOT.md, WEB_TESTER_BROWSER_VERIFICATION.md)
-- **Advance**: Empty State UI追加 (ストーリータブ + グラフタブにプレースホルダー)
-- **Advance**: サイドバートグルCSS修正 (.sidebar-hidden ルール欠落バグ)
-- **docs**: spec-index に SP-HIST-001 (Session History) 追加 → 33エントリ
-- **docs**: NarrativeGen_Reference_Wiki.md 更新 (Vite修正 + 6セクション追加)
-- **docs**: OpenSpec-WebTester.md デッドリンク6件修正
-- **docs**: TECHNICAL_DEBT.md session 15 完了4件追記
-- **Visual Audit 実施**: 画面走査完了、empty state 動作確認
-
-## 直近の変更（2026-04-07）
-
-- `@narrativegen/engine-ts` に `prepare` を追加（`npm install` で `dist` 生成）
-- `resolveNarrativeDisplayTextTracked` と Web `AppState.descriptionState`（`startNewSession` でリセット）
+- **エントリ**: 34 件（SP-HIST-001 は `docs/specs/session-history.md` を参照）
+- **partial**: SP-009 Technical Debt、SP-UNITY-001、SP-TGEN-001、SP-PLAY-001
+- **SP-PIPE-001**: done（デザイナパイプライン。WritingPage 連携は延期）
 
 ## 既知の課題
 
-- E2Eバッチ実行で間欠的に1件失敗 (AC-5 mode toggle、CPU競合)
-- SP-PLAY-001 手動確認未了 (ブラウザで画像/BGM操作感検証)
-- Unity SDK パリティ未完 (TS側7機能の移植)
-- Dynamic Text構文のYarnネイティブ変換未対応
-- Pipeline仕様が初期ドラフト段階 (HUMAN_AUTHORITY確認待ち)
-- Packages/ (大文字P) はWindowsケース非感受性のため削除不可 (packages/と同一)
+- E2E バッチで稀に失敗しうる（`play-immersion` AC-5 は `toContainText` 待機で緩和）
+- SP-PLAY-001: AC-9〜12 は `docs/specs/play-immersion.md` の検証表への人的記入が残る
+- Dynamic Text の Yarn ネイティブ変換は未対応
+- `Packages/`（大文字）と `packages/` は Windows 上同一扱いのため重複削除不可
 
 ## 次の推奨作業
 
-1. **Pipeline仕様レビュー**: SP-PIPE-001 ドラフトの方向性確認 (HUMAN_AUTHORITY)
-2. **SP-PLAY-001 手動確認**: 画像/BGMの操作感検証 → pct 100%化
-3. **Unity SDK パリティ**: TS側7機能のC#移植 (別セッション推奨)
-4. **WritingPage連携仕様策定**: 双方向連携の具体設計
+1. **play-immersion 検証表**: AC-9〜12 を実機で確認し表に記入
+2. **BL-TGEN-META**: `model.metadata` ランタイム展開の要否を決め Issue 化
+3. **Vite 系更新**: 専用ブランチでメジャーアップ検証（`docs/plans/DEVELOPMENT_PLAN.md` ロードマップ参照）
 
 ## 再開手順
 
 ```bash
 git fetch origin && git pull
 npm ci
-# prepare で engine-ts の dist が生成される（ignore-scripts 時は npm run build:engine）
+npm run check:spec-index
 npm run test:engine
-npm run build:tester
+npm run build:all
 npm run dev
 # → http://localhost:5173/
+```
+
+C#:
+
+```powershell
+dotnet test .\packages\tests\NarrativeGen.Tests
 ```
 
 ---

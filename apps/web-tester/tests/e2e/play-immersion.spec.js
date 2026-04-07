@@ -92,12 +92,9 @@ test.describe('SP-PLAY-001: Play Immersion MVP', () => {
     const initialText = await toggle.textContent();
     expect(initialText).toContain('Crossfade');
 
-    // Click toggle
+    // Click toggle — wait for label to avoid batch-run races with CSS/layout
     await toggle.click();
-
-    // Should switch to scroll mode
-    const newText = await toggle.textContent();
-    expect(newText).toContain('Scroll');
+    await expect(toggle).toContainText(/Scroll/i, { timeout: 8000 });
 
     // localStorage should be updated
     const stored = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
@@ -105,8 +102,7 @@ test.describe('SP-PLAY-001: Play Immersion MVP', () => {
 
     // Toggle back
     await toggle.click();
-    const backText = await toggle.textContent();
-    expect(backText).toContain('Crossfade');
+    await expect(toggle).toContainText(/Crossfade/i, { timeout: 8000 });
   });
 
   test('AC-6: ending display — shows End marker and restart button at terminal node', async ({ page }) => {

@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using NarrativeGen;
 
 namespace NarrativeGen.Serialization
 {
@@ -26,6 +28,9 @@ namespace NarrativeGen.Serialization
         [JsonProperty("time")]
         public double Time { get; set; }
 
+        [JsonProperty("events")]
+        public Dictionary<string, Entity>? Events { get; set; }
+
         /// <summary>
         /// Creates a snapshot from a runtime session.
         /// </summary>
@@ -38,7 +43,10 @@ namespace NarrativeGen.Serialization
                 Resources = new Dictionary<string, double>(session.Resources),
                 Variables = new Dictionary<string, object>(session.Variables),
                 Inventory = new List<string>(session.Inventory),
-                Time = session.Time
+                Time = session.Time,
+                Events = session.Events.Count > 0
+                    ? new Dictionary<string, Entity>(session.Events, StringComparer.OrdinalIgnoreCase)
+                    : null
             };
         }
 
@@ -53,7 +61,8 @@ namespace NarrativeGen.Serialization
                 Resources,
                 Variables ?? new Dictionary<string, object>(),
                 Inventory ?? new List<string>(),
-                Time
+                Time,
+                Events
             );
         }
     }

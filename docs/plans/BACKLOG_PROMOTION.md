@@ -10,6 +10,7 @@
 | ID | 昇格時に含めること |
 |----|-------------------|
 | BL-TGEN-META | `model.metadata` に `{…}` を載せるか、対象フィールド、プレイ本線で使うか |
-| BL-PLAY-BGM | `play-immersion.md` の AC-9〜12 の検証結果（日付・環境・合否） |
+
+（BGM 人的検証は `docs/specs/play-immersion.md` の「検証記録」表で管理。Issue 化する場合はその表へのリンクを添える。）
 
 昇格後は `TECHNICAL_DEBT.md` の表から該当行を **削除**し、Issue/DEVELOPMENT_PLAN 側を正とする。

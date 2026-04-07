@@ -18,7 +18,7 @@ Status: in progress
 - Workflow note added to `docs/plans/DEVELOPMENT_PLAN.md`.
 
 Remaining tasks:
-- [ ] Require `npm run check:spec-index` in PR/CI.
+- [x] Require root `npm ci` + `check:spec-index` / `check:models-sync` / `check:encoding-safety` in CI (`governance` job).
 - [ ] Add change-review examples for spec maintenance.
 
 ### 2. Dependency health recheck
@@ -167,7 +167,8 @@ Remaining tasks:
 | ID | 項目 | 備考 |
 |----|------|------|
 | BL-TGEN-META | `model.metadata` の `{…}` 展開をランタイム文章 API に載せるか | SP-TGEN セクション7・本線未使用 |
-| BL-PLAY-BGM | SP-PLAY-001 残差（BGM 人的検証の AC 記録） | `docs/specs/play-immersion.md` の AC-9〜12 |
+
+（`BL-PLAY-BGM` は `docs/specs/play-immersion.md` の「検証記録」表へ移設。記入完了後は Issue 昇格または表のみで完結可。）
 
 ---
 

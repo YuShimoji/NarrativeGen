@@ -42,6 +42,9 @@ namespace NarrativeGen
         [JsonProperty("entities")]
         public Dictionary<string, Entity>? Entities { get; set; }
 
+        [JsonProperty("conversationTemplates")]
+        public List<ConversationTemplate>? ConversationTemplates { get; set; }
+
         [JsonProperty("nodes")]
         public Dictionary<string, Node> Nodes { get; set; } = new();
 

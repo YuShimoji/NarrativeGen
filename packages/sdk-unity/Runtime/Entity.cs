@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace NarrativeGen
@@ -32,5 +33,17 @@ namespace NarrativeGen
         /// </summary>
         [JsonProperty("cost")]
         public double Cost;
+
+        /// <summary>
+        /// Optional parent entity id for property inheritance (SP-PROP-001).
+        /// </summary>
+        [JsonProperty("parentEntity")]
+        public string? ParentEntity { get; set; }
+
+        /// <summary>
+        /// Custom properties merged with inherited defaults.
+        /// </summary>
+        [JsonProperty("properties")]
+        public Dictionary<string, PropertyDef>? Properties { get; set; }
     }
 }

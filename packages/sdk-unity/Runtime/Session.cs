@@ -16,12 +16,18 @@ namespace NarrativeGen.Runtime
         public List<string> Inventory { get; }
         public double Time { get; }
 
+        /// <summary>
+        /// 動的イベントエンティティ（session.events）。静的エンティティ（モデル JSON の entities）とテンプレート展開でマージ参照される。
+        /// </summary>
+        public Dictionary<string, Entity> Events { get; }
+
         public Session(string currentNodeId,
                         Dictionary<string, bool>? flags = null,
                         Dictionary<string, double>? resources = null,
                         Dictionary<string, object>? variables = null,
                         List<string>? inventory = null,
-                        double time = 0)
+                        double time = 0,
+                        Dictionary<string, Entity>? events = null)
         {
             CurrentNodeId = currentNodeId;
             Flags = flags != null ? new Dictionary<string, bool>(flags) : new Dictionary<string, bool>();
@@ -29,6 +35,14 @@ namespace NarrativeGen.Runtime
             Variables = variables != null ? new Dictionary<string, object>(variables) : new Dictionary<string, object>();
             Inventory = inventory != null ? new List<string>(inventory) : new List<string>();
             Time = time;
+            Events = CloneEvents(events);
+        }
+
+        private static Dictionary<string, Entity> CloneEvents(Dictionary<string, Entity>? events)
+        {
+            if (events == null || events.Count == 0)
+                return new Dictionary<string, Entity>(StringComparer.OrdinalIgnoreCase);
+            return new Dictionary<string, Entity>(events, StringComparer.OrdinalIgnoreCase);
         }
 
         public Session With(
@@ -37,7 +51,8 @@ namespace NarrativeGen.Runtime
             Dictionary<string, double>? resources = null,
             Dictionary<string, object>? variables = null,
             List<string>? inventory = null,
-            double? time = null)
+            double? time = null,
+            Dictionary<string, Entity>? events = null)
         {
             return new Session(
                 currentNodeId ?? CurrentNodeId,
@@ -45,7 +60,8 @@ namespace NarrativeGen.Runtime
                 resources ?? Resources,
                 variables ?? Variables,
                 inventory ?? Inventory,
-                time ?? Time
+                time ?? Time,
+                events ?? Events
             );
         }
 

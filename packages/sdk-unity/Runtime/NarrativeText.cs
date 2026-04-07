@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using NarrativeGen.Runtime;
 
 namespace NarrativeGen
 {
     /// <summary>
-    /// SP-TGEN / SP-TEXT 縦スライス: engine-ts <c>expandTemplate</c> 相当（段階0 + コア）。
-    /// C# の <see cref="Entity"/> に TS の PropertyDef 継承が無いため、<c>[entity.prop]</c> の追加プロパティは未解決のまま残す。
+    /// SP-TGEN / SP-TEXT: engine-ts の <c>expandTemplate</c> / <c>expandTemplateWithTracking</c> に相当。
     /// </summary>
     public static class NarrativeText
     {
@@ -18,11 +18,12 @@ namespace NarrativeGen
         private static readonly Regex s_BracketRef = new(@"\[([^\]]+)\]", RegexOptions.Compiled);
         private static readonly Regex s_CurlyRef = new(@"\{([^?}][^}]*)\}", RegexOptions.Compiled);
         private static readonly Regex s_ComparisonCond = new(@"^(\w+)(>=|<=|>|<|==|!=)(.+)$", RegexOptions.Compiled);
+        private static readonly Regex s_EntityTilde = new(@"\[(\w+)~\]", RegexOptions.Compiled);
 
         /// <summary>
         /// 段階0: レガシー <c>{flag:…}</c> / <c>{resource:…}</c> / <c>{variable:…}</c> / <c>{nodeId}</c> / <c>{time}</c>。
         /// </summary>
-        public static string ApplyLegacyPlaceholders(string text, Runtime.Session session)
+        public static string ApplyLegacyPlaceholders(string text, Session session)
         {
             if (string.IsNullOrEmpty(text)) return text;
             var resolved = text;
@@ -52,7 +53,7 @@ namespace NarrativeGen
         /// <summary>
         /// 段階1以降（段階0なし）。TS の <c>expandTemplateCore</c> に相当。
         /// </summary>
-        public static string ExpandTemplateCore(string text, NarrativeModel model, Runtime.Session session)
+        public static string ExpandTemplateCore(string text, NarrativeModel model, Session session)
         {
             if (string.IsNullOrEmpty(text)) return text;
             var result = s_Conditional.Replace(text, m =>
@@ -64,7 +65,7 @@ namespace NarrativeGen
                 if (negate) condResult = !condResult;
                 return condResult ? body : string.Empty;
             });
-            result = s_BracketRef.Replace(result, m => ResolveBracket(m.Groups[1].Value, model));
+            result = s_BracketRef.Replace(result, m => ResolveBracket(m.Groups[1].Value, model, session));
             result = s_CurlyRef.Replace(result, m => ResolveCurly(m.Groups[1].Value, session));
             return result;
         }
@@ -72,13 +73,141 @@ namespace NarrativeGen
         /// <summary>
         /// 段階0 + コア。TS の <c>expandTemplate</c> に相当。
         /// </summary>
-        public static string ExpandTemplate(string text, NarrativeModel model, Runtime.Session session)
+        public static string ExpandTemplate(string text, NarrativeModel model, Session session)
         {
             if (string.IsNullOrEmpty(text)) return text;
             return ExpandTemplateCore(ApplyLegacyPlaceholders(text, session), model, session);
         }
 
-        private static bool EvaluateCondition(string cond, Runtime.Session session)
+        /// <summary>
+        /// <c>[entity~]</c> 描写追跡付き展開。TS の <c>expandTemplateWithTracking</c> に相当。
+        /// </summary>
+        public static ExpandWithTrackingResult ExpandTemplateWithTracking(
+            string text,
+            NarrativeModel model,
+            Session session,
+            IReadOnlyDictionary<string, HashSet<string>>? descriptionState = null,
+            int seed = 0)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return new ExpandWithTrackingResult
+                {
+                    Text = text,
+                    DescriptionState = CloneDescriptionState(descriptionState)
+                };
+            }
+
+            var state = CloneDescriptionState(descriptionState);
+            var afterLegacy = ApplyLegacyPlaceholders(text, session);
+            var seedCounter = seed;
+
+            var processed = s_EntityTilde.Replace(afterLegacy, m =>
+            {
+                var entityId = m.Groups[1].Value;
+                var entity = ResolveEntity(entityId, model, session);
+                if (entity == null) return "[" + entityId + "~]";
+
+                Dictionary<string, PropertyDef> allProps;
+                if (model.Entities != null && model.Entities.ContainsKey(entityId))
+                    allProps = GetEntityPropertiesMerged(entityId, model.Entities);
+                else
+                {
+                    allProps = new Dictionary<string, PropertyDef>(StringComparer.OrdinalIgnoreCase);
+                    if (entity.Properties != null)
+                    {
+                        foreach (var kv in entity.Properties)
+                            allProps[kv.Key] = kv.Value;
+                    }
+                }
+
+                var allKeys = allProps.Keys.ToList();
+                if (allKeys.Count == 0) return entity.Name;
+
+                var candidateKeys = GetUndescribedKeys(state, entityId, allKeys);
+                if (candidateKeys.Count == 0) candidateKeys = allKeys;
+
+                var selectedKey = candidateKeys[Math.Abs(seedCounter) % candidateKeys.Count];
+                seedCounter++;
+                MarkDescribed(state, entityId, selectedKey);
+                var prop = allProps[selectedKey];
+                var value = prop?.DefaultValue != null ? Convert.ToString(prop.DefaultValue, CultureInfo.InvariantCulture) ?? "unknown" : "unknown";
+                return selectedKey + ": " + value;
+            });
+
+            var expanded = ExpandTemplateCore(processed, model, session);
+            return new ExpandWithTrackingResult { Text = expanded, DescriptionState = state };
+        }
+
+
+        /// <summary>
+        /// 描写追跡の出力（エンティティID → 既に描写したプロパティキー）。
+        /// </summary>
+        public sealed class ExpandWithTrackingResult
+        {
+            public string Text { get; set; } = string.Empty;
+            public Dictionary<string, HashSet<string>> DescriptionState { get; set; } =
+                new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        private static Dictionary<string, HashSet<string>> CloneDescriptionState(IReadOnlyDictionary<string, HashSet<string>>? src)
+        {
+            var d = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+            if (src == null) return d;
+            foreach (var kv in src)
+                d[kv.Key] = new HashSet<string>(kv.Value, StringComparer.OrdinalIgnoreCase);
+            return d;
+        }
+
+        private static void MarkDescribed(Dictionary<string, HashSet<string>> state, string entityId, string key)
+        {
+            if (!state.TryGetValue(entityId, out var set))
+            {
+                set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                state[entityId] = set;
+            }
+            set.Add(key);
+        }
+
+        private static List<string> GetUndescribedKeys(Dictionary<string, HashSet<string>> state, string entityId, List<string> allKeys)
+        {
+            if (!state.TryGetValue(entityId, out var described))
+                return allKeys;
+            return allKeys.Where(k => !described.Contains(k)).ToList();
+        }
+
+        internal static Entity? ResolveEntity(string entityId, NarrativeModel model, Session session)
+        {
+            if (model.Entities != null && model.Entities.TryGetValue(entityId, out var e))
+                return e;
+            if (session.Events.TryGetValue(entityId, out var ev))
+                return ev;
+            return null;
+        }
+
+        internal static Dictionary<string, PropertyDef> GetEntityPropertiesMerged(string entityId, Dictionary<string, Entity> entities)
+        {
+            var chain = new List<string>();
+            var cur = entityId;
+            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            while (!string.IsNullOrEmpty(cur) && entities.TryGetValue(cur, out var ent) && visited.Add(cur))
+            {
+                chain.Add(cur);
+                cur = ent.ParentEntity ?? string.Empty;
+            }
+
+            var merged = new Dictionary<string, PropertyDef>(StringComparer.OrdinalIgnoreCase);
+            for (var i = chain.Count - 1; i >= 0; i--)
+            {
+                var e = entities[chain[i]];
+                if (e.Properties == null) continue;
+                foreach (var kv in e.Properties)
+                    merged[kv.Key] = kv.Value;
+            }
+            return merged;
+        }
+
+        private static bool EvaluateCondition(string cond, Session session)
         {
             var cmp = s_ComparisonCond.Match(cond);
             if (cmp.Success)
@@ -138,21 +267,19 @@ namespace NarrativeGen
             return true;
         }
 
-        private static string ResolveBracket(string reference, NarrativeModel model)
+        private static string ResolveBracket(string reference, NarrativeModel model, Session session)
         {
-            var entities = model.Entities;
-            var dot = reference.IndexOf('.');
-            if (dot < 0)
+            var dotIndex = reference.IndexOf('.');
+            if (dotIndex < 0)
             {
-                if (entities != null && entities.TryGetValue(reference, out var e))
-                    return e.Name;
-                return "[" + reference + "]";
+                var ent = ResolveEntity(reference, model, session);
+                return ent != null ? ent.Name : "[" + reference + "]";
             }
 
-            var entityId = reference.Substring(0, dot);
-            var propKey = reference.Substring(dot + 1);
-            if (entities == null || !entities.TryGetValue(entityId, out var entity))
-                return "[" + reference + "]";
+            var entityId = reference.Substring(0, dotIndex);
+            var propKey = reference.Substring(dotIndex + 1);
+            var entity = ResolveEntity(entityId, model, session);
+            if (entity == null) return "[" + reference + "]";
 
             switch (propKey)
             {
@@ -160,11 +287,22 @@ namespace NarrativeGen
                 case "description": return string.IsNullOrEmpty(entity.Description) ? "[" + reference + "]" : entity.Description;
                 case "cost": return entity.Cost.ToString(CultureInfo.InvariantCulture);
                 case "id": return entity.Id;
-                default: return "[" + reference + "]";
             }
+
+            if (model.Entities != null && model.Entities.TryGetValue(entityId, out _))
+            {
+                var merged = GetEntityPropertiesMerged(entityId, model.Entities);
+                if (merged.TryGetValue(propKey, out var pdef) && pdef.DefaultValue != null)
+                    return Convert.ToString(pdef.DefaultValue, CultureInfo.InvariantCulture) ?? "[" + reference + "]";
+            }
+
+            if (entity.Properties != null && entity.Properties.TryGetValue(propKey, out var ep) && ep.DefaultValue != null)
+                return Convert.ToString(ep.DefaultValue, CultureInfo.InvariantCulture) ?? "[" + reference + "]";
+
+            return "[" + reference + "]";
         }
 
-        private static string ResolveCurly(string key, Runtime.Session session)
+        private static string ResolveCurly(string key, Session session)
         {
             if (session.Variables.TryGetValue(key, out var v))
                 return Convert.ToString(v, CultureInfo.InvariantCulture) ?? string.Empty;

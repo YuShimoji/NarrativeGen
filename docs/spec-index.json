@@ -60,7 +60,7 @@
     "pct": 90,
     "cat": "infra",
     "file": "docs/TECHNICAL_DEBT.md",
-    "summary": "Post-split debt cleanup. Core debt resolved: E2E Vitest conflict, chunk optimization, graph visual issues, entity/inference, branch consolidation, doctor warnings, doc sync, model sync script, E2E batch stability. Remaining: CI integration, responsive/a11y, manual regression tests"
+    "summary": "Post-split debt cleanup. CI governance job: spec-index + models-sync + encoding-safety. Remaining: responsive/a11y, manual regression tests, E2E flake hardening"
   },
   {
     "id": "SP-010",
@@ -174,10 +174,10 @@
     "id": "SP-UNITY-001",
     "title": "Unity SDK",
     "status": "partial",
-    "pct": 90,
+    "pct": 95,
     "cat": "system",
     "file": "docs/specs/unity-sdk.md",
-    "summary": "Unity C# SDK (UPM): Engine API, InferenceRegistry, Session Serialize/Deserialize, NarrativeText.ExpandTemplate (slice1). Remaining: events, [entity~], templates. Tests: net9.0"
+    "summary": "Unity C# SDK: Session.events, PropertyDef/parentEntity, ExpandTemplateWithTracking, ConversationTemplateMatcher, NarrativeDisplayText.ResolveNarrativeDisplayTextTracked (SP-TGEN slice2). Remaining: NuGet, hasEvent/createEvent effects parity, edge TS parity."
   },
   {
     "id": "SP-PARA-001",
@@ -219,10 +219,10 @@
     "id": "SP-TGEN-001",
     "title": "Narrative Text Generation Pipeline (SSoT)",
     "status": "partial",
-    "pct": 85,
+    "pct": 92,
     "cat": "core",
     "file": "docs/specs/narrative-text-generation-pipeline.md",
-    "summary": "段階0は template.applyLegacy + expandTemplate/WithTracking 内包; expandTemplateCore; Web Undo/description セーブ連携; 著者表記のレガシー/{name}併存は残る。Gaps: model.metadata 置換, Unity 全文パイプライン。"
+    "summary": "段階0〜3 + Web 追跡連携。Unity 側に ResolveNarrativeDisplayTextTracked / events / [entity~] / templates 相当を実装済み。Gaps: model.metadata ランタイム置換, TS/C# の細部完全一致。"
   },
   {
     "id": "SP-PARA-002",
@@ -293,8 +293,8 @@
     "status": "done",
     "pct": 100,
     "cat": "core",
-    "file": null,
-    "summary": "Immutable session state snapshot stack for undo/back navigation. createSessionHistory/pushHistory/popHistory/clearHistory/canGoBack. maxDepth support. Engine + Web Tester graph undo integrated. No standalone spec doc (implementation-only)."
+    "file": "docs/specs/session-history.md",
+    "summary": "Immutable session state snapshot stack for undo/back navigation. createSessionHistory/pushHistory/popHistory/clearHistory/canGoBack. maxDepth support. Engine + Web Tester graph undo integrated. Stub spec points to engine source."
   },
   {
     "id": "SP-PIPE-001",

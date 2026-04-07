@@ -45,7 +45,8 @@ namespace NarrativeGen
                 model.InitialResources ?? new Dictionary<string, double>(),
                 variables: new Dictionary<string, object>(),
                 inventory: new List<string>(),
-                0
+                time: 0,
+                events: null
             );
         }
 
