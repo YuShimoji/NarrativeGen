@@ -6,8 +6,8 @@
 
 `narrgen-doctor.js`は、NarrativeGenプロジェクトの環境と構造を検証するスクリプトです。以下の項目をチェックします：
 
-- Unity C#プロジェクト構造（Packages/sdk-unity/）
-- TypeScriptエンジンのビルド可能性（Packages/engine-ts/）
+- Unity C#プロジェクト構造（packages/sdk-unity/）
+- TypeScriptエンジンのビルド可能性（packages/engine-ts/）
 - Web Testerのビルド可能性（apps/web-tester/）
 - 依存関係の整合性（package.json、workspace設定）
 - テスト環境の準備可能性（TEST_GUIDE.mdの前提条件）
@@ -29,18 +29,18 @@ node scripts/narrgen-doctor.js
 
 ### Unity C#プロジェクト関連
 
-#### エラー: `Packages/sdk-unity/ directory not found`
+#### エラー: `packages/sdk-unity/ directory not found`
 
 **原因**: Unity SDKパッケージのディレクトリが存在しない
 
 **復旧手順**:
 1. プロジェクトルートで以下を確認:
    ```bash
-   ls Packages/sdk-unity/
+   ls packages/sdk-unity/
    ```
 2. ディレクトリが存在しない場合、Gitリポジトリから取得:
    ```bash
-   git checkout Packages/sdk-unity/
+   git checkout packages/sdk-unity/
    ```
 3. サブモジュールを使用している場合:
    ```bash
@@ -52,7 +52,7 @@ node scripts/narrgen-doctor.js
 **原因**: package.jsonに`name`または`unity`フィールドが不足
 
 **復旧手順**:
-1. `Packages/sdk-unity/package.json`を開く
+1. `packages/sdk-unity/package.json`を開く
 2. 以下のフィールドが存在することを確認:
    ```json
    {
@@ -70,23 +70,23 @@ node scripts/narrgen-doctor.js
 1. Unityエディタでパッケージを再インポート
 2. または、Gitリポジトリから完全な構造を取得:
    ```bash
-   git checkout Packages/sdk-unity/
+   git checkout packages/sdk-unity/
    ```
 
 ### TypeScriptエンジン関連
 
-#### エラー: `Packages/engine-ts/ directory not found`
+#### エラー: `packages/engine-ts/ directory not found`
 
 **原因**: TypeScriptエンジンのディレクトリが存在しない
 
 **復旧手順**:
 1. プロジェクトルートで確認:
    ```bash
-   ls Packages/engine-ts/
+   ls packages/engine-ts/
    ```
 2. 存在しない場合、Gitから取得:
    ```bash
-   git checkout Packages/engine-ts/
+   git checkout packages/engine-ts/
    ```
 
 #### エラー: `engine-ts package.json missing build script`
@@ -94,7 +94,7 @@ node scripts/narrgen-doctor.js
 **原因**: package.jsonにビルドスクリプトが定義されていない
 
 **復旧手順**:
-1. `Packages/engine-ts/package.json`を開く
+1. `packages/engine-ts/package.json`を開く
 2. `scripts`セクションに以下が存在することを確認:
    ```json
    {
@@ -110,10 +110,10 @@ node scripts/narrgen-doctor.js
 **原因**: TypeScript設定ファイルが存在しない
 
 **復旧手順**:
-1. `Packages/engine-ts/tsconfig.json`が存在することを確認
+1. `packages/engine-ts/tsconfig.json`が存在することを確認
 2. 存在しない場合、Gitから取得:
    ```bash
-   git checkout Packages/engine-ts/tsconfig.json
+   git checkout packages/engine-ts/tsconfig.json
    ```
 
 #### 警告: `dist directory not found (run npm run build:engine)`

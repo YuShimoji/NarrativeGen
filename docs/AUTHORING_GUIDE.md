@@ -840,7 +840,7 @@ NarrativeGen の独自機能 (Dynamic Text、Entity-Property、ConversationTempl
 4. **条件/効果**: エンジンが自動的に評価・適用する
 5. **セーブ/ロード**: SDK の serialize / deserialize API でセッション状態を保存・復元
 
-詳細は `docs/specs/spec-unity-sdk.md` (SP-UNITY-001) を参照。
+詳細は `docs/specs/unity-sdk.md` (SP-UNITY-001) を参照。
 
 **注意**: Unity SDK は現在 TypeScript 版の一部機能 (Entity-Property、Dynamic Text、Anomaly Detection、Character Knowledge、Event、Description Tracker、ConversationTemplate) が未移植 (85%)。基本的なノード遷移・条件・効果は動作する。
 

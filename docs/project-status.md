@@ -1,8 +1,8 @@
 # NarrativeGen プロジェクト全体ステータス
 
-**調査日**: 2026-03-26 (session 17)
-**ブランチ**: main (origin/main と同期済み)
-**テスト**: engine-ts 250/250 (20 files), E2E 57件 (6 spec files, 3 skip), モデル検証 16通過
+**調査日**: 2026-04-07（`HANDOVER.md` / spec-index と整合するよう更新）
+**ブランチ**: main (trunk-based)
+**テスト**: engine-ts Vitest 264 件前後、E2E Playwright（`apps/web-tester/tests/e2e`）、モデル検証 16 通過
 
 ---
 
@@ -73,10 +73,9 @@
 | # | 機能 | 仕様ID | 状態 | 優先度 | 備考 |
 |---|------|--------|------|--------|------|
 | N01 | Unity SDK: TS側7機能のC#移植 | SP-UNITY-001 (85%) | 未着手 | 高 | Entity-Property/DynamicText/Anomaly/Knowledge/Event/DescTracker/ConvTemplate |
-| N02 | Pipeline Workflow (ライターワークフロー全体定義) | SP-PIPE-001 (10%) | ドラフト | 高 | HUMAN_AUTHORITY確認待ち |
-| N03 | WritingPage連携 (双方向) | -- | 未着手 | 中 | 仕様策定前。Decision Log 2026-03-08 で方向決定済み |
+| N03 | WritingPage連携 (双方向) | -- | 未着手 | 中 | 外部フォーマット安定後。SP-PIPE-001 本文で延期扱い |
 | N04 | Dynamic Text Yarn変換 | -- | 未着手 | 中 | |
-| N05 | CI統合 (spec-index/encoding-safety) | SP-009残項目 | 未着手 | 中 | |
+| N05 | spec 保守運用の具体化（レビュー例・運用ガイド） | SP-009 残項目 | 部分 | 中 | GitHub Actions `governance`（spec-index / models-sync / encoding-safety）は実装済み |
 | N06 | アクセシビリティ (ARIA) | SP-009残項目 | 未着手 | 低 | |
 | N07 | モバイル/タブレット対応 | SP-009残項目 | 未着手 | 低 | |
 
@@ -85,7 +84,7 @@
 | 機能 | 実装場所 | テスト | 対応方針 |
 |------|---------|--------|---------|
 | Session History (Undo) | packages/engine-ts/src/session-history.ts | session-history.spec.ts | 必要なら SP-* エントリを追加 |
-| WritingPage連携仕様 | Decision Log のみ | なし | SP-PIPE-001 内で扱うか個別 SP を起票 |
+| WritingPage連携仕様 | Decision Log + pipeline-workflow.md（延期節） | なし | 外部安定後に個別 SP または SP-PIPE-001 追記で起票 |
 
 ---
 
@@ -94,14 +93,14 @@
 | # | 懸念 | 深刻度 | 詳細 | 対応状況 |
 |---|------|--------|------|---------|
 | C01 | E2Eバッチ間欠失敗 (AC-5 mode toggle) | 低 | CPU競合による。workers=2/timeout=45s/retries=1で緩和済み | mitigated |
-| C02 | Packages/ (大文字P) ディレクトリ残存 | 情報 | Windows case-insensitive でパス同一。Linux CIでは問題なし | 問題なし |
+| C02 | 表記ゆれ (Packages/ vs packages/) | 情報 | リポジトリ実体・現役ドキュメントは `packages/` に統一。`docs/archive/` に旧表記が残る場合あり | 新規は小文字で記載 |
 | C03 | Undo/Redo E2E skip 3件 | 低 | 防御的skip。graph表示依存の不安定さを隠蔽している可能性 | 既知 |
-| C04 | SP-PIPE-001 方向性未確定 | 高 | ペルソナ定義/WritingPage優先度/エクスポート戦略が未決定 | HUMAN_AUTHORITY待ち |
+| C04 | （解消）SP-PIPE-001 | 情報 | 2026-04-03 時点で spec-index `done` / 100%。本文は pipeline-workflow.md + AUTHORING_GUIDE | 完了 |
 | C06 | resolver.ts が公開APIにexportされていない | 低 | index.ts/browser.ts どちらからも未エクスポート。内部専用なら問題なし | 要確認 |
 | C07 | Visual Audit 未実施 | 中 | プロジェクト開始以来一度も画面走査を行っていない | 継続 |
 | C09 | Backend API重複ルート | 低 | `/models/*` と `/api/models/*` が全ハンドラを複製 (~200行) | 既知 |
-| C10 | IDEA POOL が空 | 低 | project-context.md は「CLAUDE.md を参照」だが CLAUDE.md に IDEA POOL なし | 要整備 |
-| C11 | blocks_since_user_visible_change: 5+ | 中 | session 12 以降 docs/cleanup のみ。保守偏重警告 | 次セッションで Advance 必須 |
+| C10 | IDEA POOL の所在 | 低 | `CLAUDE.md` に「IDEA POOL」節を追加し `USER_REQUEST_LEDGER.md` へ誘導（2026-04-07） | 記載済 |
+| C11 | 保守偏重（ドキュメントのみの連続コミット） | 中 | 状況は都度変化。次の user-visible 変更は `HANDOVER.md` の推奨作業を参照 | 継続監視 |
 
 ---
 
@@ -166,46 +165,47 @@
 
 ## 6. spec-index 監査結果
 
-### non-done エントリ (session 17 時点)
+### non-done および参照用エントリ (2026-04-07 時点)
 
 | ID | title | status | pct | 実態評価 | 次アクション |
 |----|-------|--------|-----|---------|-------------|
 | SP-001 | Web Tester Spec (Legacy) | done | 80 | archive 移動済み。参照用 | なし |
-| SP-009 | Technical Debt | partial | 90 | 残項目: CI統合/a11y/モバイル | 低優先度で段階対応 |
+| SP-009 | Technical Debt | partial | 90 | 残項目: a11y/モバイル、spec 運用の具体化など | 低優先度で段階対応 |
 | SP-UNITY-001 | Unity SDK | partial | 85 | 7機能未移植 | 別セッション推奨 |
-| SP-PLAY-001 | Play Immersion MVP | partial | 95 | Phase 2 手動確認のみ残 | Visual Audit で閉じられる |
+| SP-TGEN-001 | Narrative Text Generation Pipeline (SSoT) | partial | 92 | Unity 側スライス実装済み。Gaps は spec summary 参照 | `narrative-text-generation-pipeline.md` |
+| SP-PLAY-001 | Play Immersion MVP | partial | 95 前後 | AC-9〜12 は `play-immersion.md` 検証表への記入が残る | 手動確認 |
 | SP-API-001 | REST API | done | 90 | 実動作確認記録なし | curl テストで閉じられる |
-| SP-PIPE-001 | Designer Pipeline Workflow | todo | 10 | ドラフト段階 | HUMAN_AUTHORITY レビュー待ち |
+| SP-PIPE-001 | Designer Pipeline Workflow | done | 100 | 仕様確定済み | WritingPage は延期 |
 
-### 全32エントリの参照先ファイル存在確認: **全件存在**
+### 全34エントリの参照先ファイル存在確認: **都度** `npm run check:spec-index` で検証
 
 ---
 
 ## 7. 定量指標
 
-| 指標 | 値 (session 17) | session 16 比 |
-|------|-----------------|---------------|
-| engine-ts Unit テスト | 250 (20ファイル) | 変化なし |
-| E2E テスト | 57件 (6 spec files) | 変化なし |
-| E2E skip | 3件 (undo-redo 防御的skip) | 変化なし |
-| モデル検証 | 16モデル / 15 example files | 変化なし |
-| 仕様書 (spec-index) | 32エントリ (done 28 / partial 3 / todo 1) | 変化なし |
+| 指標 | 値 (2026-04-07) | 備考 |
+|------|-----------------|------|
+| engine-ts Unit テスト | 264 件前後 | `npm run test:engine` |
+| E2E テスト | Playwright（件数はスイート実行で確認） | `npm run test:e2e` |
+| E2E skip | undo-redo 等で防御的 skip が残る場合あり | |
+| モデル検証 | 16 モデル / 15 example files | |
+| 仕様書 (spec-index) | 34 エントリ | partial 例: SP-009, SP-UNITY-001, SP-TGEN-001, SP-PLAY-001 |
 | エクスポート形式 | 5 (CSV/Ink/Twine/JSON/Yarn) | 変化なし |
-| ルート .md ファイル | 5 (CLAUDE/README/HANDOVER/TASKS/BLIND_SPOTS) | -5 (レガシー削除) |
-| docs/ .md ファイル | 約189 (archive含む) | -6 (stale tasks + stale docs 削除) |
-| web-tester scripts | 3 (copy-models/verify-export/verify-hierarchy) | -1 (verify-phase-2a 削除) |
-| TODO/FIXME/HACK | 0 | 変化なし |
-| モックファイル | 0 | 変化なし |
-| レガシー処理累計 | L01-L35 (35件処理済み) | +13件 (session 17) |
+| ルート .md ファイル | 5 (CLAUDE/README/HANDOVER/TASKS/BLIND_SPOTS) | 再開は HANDOVER 優先 |
+| docs/ .md ファイル | archive 含め多数 | `docs/spec-index.json` が仕様 SoT |
+| web-tester scripts | copy-models / verify-export / verify-hierarchy 等 | `apps/web-tester` を参照 |
+| TODO/FIXME/HACK | 0 | |
+| モックファイル | 0 | |
+| レガシー処理累計 | L01-L35（履歴は本セクション §5 参照） | |
 
 ---
 
 ## 8. テスト健全性
 
-- **Unit**: 250/250 全緑
-- **E2E**: 6 spec files, 57件 (3件 skip in undo-redo)
+- **Unit**: engine-ts Vitest 全緑（264 件前後）
+- **E2E**: Playwright（`apps/web-tester/tests/e2e`）
 - **skip 理由**: undo-redo.spec.js L48/L97/L123 -- graph表示依存の不安定さに対する防御的skip
-- **C# テスト**: 3ファイル。L18-L22 の型不整合/デッドコードは全て修正済み (unstaged)
+- **C# テスト**: `packages/tests/NarrativeGen.Tests`（`dotnet test`）
 - **モック**: 0ファイル (健全)
 - **テスト/実装比**: 健全 (テスト増殖なし)
 - **仕様抜け**: Session History (F29) に SP-* エントリなし

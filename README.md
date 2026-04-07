@@ -18,8 +18,8 @@
 
 - `models/` — JSON schema とサンプルモデル
 - `models/spreadsheets/` — CSV/TSV サンプル（拡張フォーマット対応）
-- `Packages/engine-ts/` — TypeScript コアエンジン
-- `Packages/sdk-unity/` — Unity SDK（C# ランタイム）
+- `packages/engine-ts/` — TypeScript コアエンジン
+- `packages/sdk-unity/` — Unity SDK（C# ランタイム）
 - `apps/web-tester/` — Web ベースのテストツール（CSV インポート/エクスポート対応）
 - `docs/` — 仕様ドキュメント
 
@@ -105,13 +105,13 @@ Get-Content .\models\schema\playthrough.schema.json | ConvertFrom-Json | Out-Nul
 Get-Content .\models\examples\linear.json | ConvertFrom-Json | Out-Null
 ```
 
-1. Build the runtime
+2. Build the runtime
 
 ```powershell
 dotnet build .\packages\sdk-unity -c Release
 ```
 
-1. Run the sample
+3. Run the sample
 
 ```powershell
 dotnet run --project .\packages\samples\PlaythroughCli
@@ -128,13 +128,13 @@ Requirements:
 - Node.js 18+
 
 ```powershell
-cd .\Packages\engine-ts
+cd .\packages\engine-ts
 cmd /c npm install
 cmd /c npm run build
 cmd /c npm run validate:models
 ```
 
-`Packages/engine-ts/src/index.ts` の `loadModel()` は JSON Schema による構造検証に加え、`startNode` の存在・ノードID整合・選択肢ターゲット整合などを確認します。エラーは CLI 出力に集約されます。
+`packages/engine-ts/src/index.ts` の `loadModel()` は JSON Schema による構造検証に加え、`startNode` の存在・ノードID整合・選択肢ターゲット整合などを確認します。エラーは CLI 出力に集約されます。
 
 ## Web Tester
 
@@ -278,11 +278,11 @@ CI (`.github/workflows/ci.yml`) では `npm run lint -- --max-warnings=0` / `npm
 
 - `models/schema/playthrough.schema.json` — canonical schema
 - `models/examples/linear.json` — minimal sample model
-- `Packages/sdk-unity/Runtime/*.cs` — engine code (Model/Session/Engine/Converters)
-- `Packages/sdk-unity/package.json` — UPM metadata
-- `Packages/sdk-unity/Runtime/NarrativeGen.asmdef` — assembly definition
-- `Packages/samples/PlaythroughCli` — CLI sample project for verification
-- `Packages/engine-ts/` — TypeScript engine and tools (Ajv validation)
+- `packages/sdk-unity/Runtime/*.cs` — engine code (Model/Session/Engine/Converters)
+- `packages/sdk-unity/package.json` — UPM metadata
+- `packages/sdk-unity/Runtime/NarrativeGen.asmdef` — assembly definition
+- `packages/samples/PlaythroughCli` — CLI sample project for verification
+- `packages/engine-ts/` — TypeScript engine and tools (Ajv validation)
 
 ## Run tests (C#)
 

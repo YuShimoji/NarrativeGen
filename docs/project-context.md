@@ -88,7 +88,7 @@ CLAUDE.md の IDEA POOL を参照。
   - project-context.md / runtime-state.md / spec-index.json 同期
 - 次回最初に確認すべきファイル:
   - docs/USER_REQUEST_LEDGER.md (Backlog Delta)
-  - docs/specs/spec-unity-sdk.md (SP-UNITY-001: 次の高優先タスク候補)
+  - docs/specs/unity-sdk.md (SP-UNITY-001: 次の高優先タスク候補)
 - 未確定の設計論点:
   - WritingPage 連携の具体設計 (WritingPage 安定後)
 - 今は触らない範囲:

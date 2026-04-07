@@ -44,7 +44,7 @@ NarrativeGen/
 - E2E バッチで稀に失敗しうる（`play-immersion` AC-5 は `toContainText` 待機で緩和）
 - SP-PLAY-001: AC-9〜12 は `docs/specs/play-immersion.md` の検証表への人的記入が残る
 - Dynamic Text の Yarn ネイティブ変換は未対応
-- `Packages/`（大文字）と `packages/` は Windows 上同一扱いのため重複削除不可
+- リポジトリ内のソース配置は **`packages/`（小文字）** を正とする（現役ドキュメント表記を統一済み）。Unity 側の埋め込み先フォルダ名はエディタ既定の **`Packages/`** のまま（`packages/sdk-unity/README.md` 参照）
 
 ## 次の推奨作業
 

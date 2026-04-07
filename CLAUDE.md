@@ -20,7 +20,11 @@
 - Respond in Japanese
 - No emoji
 - Keep responses concise
-- Do NOT read `docs/reports/`, `docs/inbox/` unless explicitly asked
+- ルーティン調査では `docs/archive/` を読まない（明示指示がある場合のみ）。`docs/reports/` と `docs/inbox/` は現構成に存在しない
+
+## IDEA POOL
+
+バックログ・アイデアのたたき台は [`docs/USER_REQUEST_LEDGER.md`](docs/USER_REQUEST_LEDGER.md)。長期の軸・決定ログは本ファイルの Decision Log と [`docs/project-context.md`](docs/project-context.md) を参照。
 
 ## Commands
 

@@ -24,7 +24,7 @@
 
 ## 現在の実装済み機能 (コードソースから確認)
 
-### エンジン層 (Packages/engine-ts)
+### エンジン層 (packages/engine-ts)
 
 | 機能 | 説明 | ファイル |
 |------|------|---------|
@@ -72,13 +72,13 @@
 | CSVユーティリティ | 条件/効果付きCSVパース/シリアライズ | utils/csv-parser.js, csv-exporter.js |
 | モデルユーティリティ | サンプル/カスタム読込/変数解決 | utils/model-utils.js |
 
-### バックエンド (Packages/backend)
+### バックエンド (packages/backend)
 
 | 機能 | 説明 | ファイル |
 |------|------|---------|
 | Express API | providers/generate/paraphrase エンドポイント | index.ts |
 
-### Unity SDK (Packages/sdk-unity)
+### Unity SDK (packages/sdk-unity)
 
 | 機能 | 説明 |
 |------|------|

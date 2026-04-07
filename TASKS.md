@@ -1,6 +1,6 @@
 # 今後の開発タスク表
 
-**最終更新**: 2026-03-26
+**最終更新**: 2026-04-07（`HANDOVER.md` / `docs/project-context.md` と整合）
 
 ## 完了済みタスク
 
@@ -39,17 +39,18 @@
 | SP-PLAY-001 Phase 2 画像/BGM | 完了 | 2026-03-22 | AudioManager + シーン画像 + スキーマ拡張 + E2E 5件 |
 | E2Eバッチ安定化 | 完了 | 2026-03-22 | workers=2, timeout=45s, retries=1 |
 | Model sync script | 完了 | 2026-03-22 | sync:models / check:models-sync |
+| SP-PIPE-001 デザイナパイプライン仕様 | 完了 | 2026-04-03 | `docs/specs/pipeline-workflow.md`、AUTHORING_GUIDE 全5ステージ。WritingPage 連携は延期（Decision Log 参照） |
+| CI governance ジョブ（spec-index / models-sync / encoding-safety） | 完了 | 2026-04-07 | GitHub Actions `governance`。詳細は `HANDOVER.md` |
 
 ## 優先度順タスク一覧
 
 | 優先度 | タスク | 対象 | 難易度 | 状態 |
 |--------|--------|------|--------|------|
-| **高** | Pipeline仕様策定 (デザイナーワークフロー定義) | docs + system | 高 | ドラフト (SP-PIPE-001) |
-| **高** | SP-PLAY-001 手動確認 → pct 100% | web-tester | 低 | 未着手 |
+| **高** | SP-PLAY-001 手動確認 → pct 100%（`play-immersion.md` 検証表 AC-9〜12） | web-tester | 低 | 未着手 |
 | **高** | Unity SDK パリティ (TS側7機能移植) | sdk-unity | 高 | 未着手 |
-| **中** | WritingPage連携仕様策定 | docs + system | 中 | 未着手 |
+| **中** | WritingPage連携仕様策定（外部フォーマット安定後） | docs + system | 中 | 未着手 |
 | **中** | Dynamic Text Yarn変換 | engine-ts + web-tester | 中 | 未着手 |
-| **中** | CI統合 (spec-index/encoding-safety checks) | infra | 低 | 未着手 |
+| **中** | spec 保守運用の具体化（change-review 例など） | docs + infra | 低 | `docs/TECHNICAL_DEBT.md` 参照 |
 | **中** | GUI Undo/Redo の手動回帰テスト | web-tester | 中 | 未着手 |
 | **低** | アクセシビリティ改善（ARIA ラベル等） | web-tester | 低 | 未着手 |
 | **低** | モバイル/タブレット対応 | web-tester | 高 | 未着手 |
@@ -58,15 +59,9 @@
 
 ### 高優先度
 
-#### Pipeline仕様策定
+#### SP-PIPE-001（完了）
 
-デザイナー/ライターが NarrativeGen でストーリーを完成させるまでのワークフローを定義:
-- 入力→編集→検証→エクスポート→実行の各ステージ
-- 手動介入/自動化の境界
-- 各ステージで使うツール・画面
-- WritingPage / Unity との接続点
-
-**完了条件**: SP-PIPE-001 done、HUMAN_AUTHORITY 承認済み
+デザイナー/ライターのワークフローは `docs/specs/pipeline-workflow.md` と `docs/AUTHORING_GUIDE.md` で規定済み（spec-index で `done` / 100%）。WritingPage との接続は外部仕様安定後に別途。
 
 #### Unity SDK パリティ
 
@@ -83,9 +78,9 @@ TS側の原初ビジョン7機能を C# SDK に移植:
 
 ## 進捗指標
 
-- **テスト**: engine-ts 250/250 合格 (20ファイル)。E2E 57件
-- **モデル検証**: 16モデル通過
+- **テスト**: engine-ts Vitest 264 件前後（`npm run test:engine`）。E2E: Playwright（`apps/web-tester/tests/e2e`）
+- **モデル検証**: 16 モデル通過
 - **ビルド**: engine-ts + web-tester ともに成功
 - **エクスポート形式**: 5形式（CSV / Ink / Twine / JSON / Yarn）
-- **仕様書**: 32エントリ (done 28 / partial 3 / todo 1)
-- **ドキュメント**: AUTHORING_GUIDE.md (ライター向けステップバイステップガイド)
+- **仕様書**: spec-index 34 エントリ。partial 例: SP-009、SP-UNITY-001、SP-TGEN-001、SP-PLAY-001（`HANDOVER.md` と同一基準）
+- **ドキュメント**: `docs/AUTHORING_GUIDE.md`（ライター向け）。再開はルート `HANDOVER.md` を優先
