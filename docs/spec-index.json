@@ -5,8 +5,8 @@
     "status": "done",
     "pct": 80,
     "cat": "system",
-    "file": "docs/archive/OpenSpec-WebTester.md",
-    "summary": "Original Web Tester spec (2025-12). Superseded by individual SP-* specs. Dead links 7箇所, Phase 2B/2C未反映. Archived session 15."
+    "file": "docs/specs/legacy/OpenSpec-WebTester.md",
+    "summary": "Original Web Tester spec (2025-12). Superseded by individual SP-* specs. Dead links 7箇所, Phase 2B/2C未反映. 参照専用パス: docs/specs/legacy/."
   },
   {
     "id": "SP-002",
@@ -50,7 +50,7 @@
     "status": "done",
     "pct": 100,
     "cat": "ui",
-    "file": "docs/archive/legacy-status/PHASE2_GRAPH_EDITOR_DESIGN.md",
+    "file": "docs/specs/legacy/PHASE2_GRAPH_EDITOR_DESIGN.md",
     "summary": "SVG visual editor, drag and drop, and minimap"
   },
   {

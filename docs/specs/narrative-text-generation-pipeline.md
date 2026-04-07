@@ -16,7 +16,7 @@
 
 ## 3. 原初着想との対応（チーズバーガー例）
 
-最古の設計思想は `docs/archive/legacy-specs/ORIGINAL_DESIGN_PHILOSOPHY.md` に断片的に記載されている。**Entity 中心・プロパティ駆動**であり、階層継承の例として次が用いられる。
+初期の設計メモでは **Entity 中心・プロパティ駆動**が繰り返し語られていた（当該メモはワークツリーから削除済み。必要なら Git 履歴で検索）。階層継承のイメージとして次が用いられる。
 
 - カテゴリ: 携帯食料 → コモン: マックのチーズバーガー → インスタンス: 誰々が食べていた…
 - 各段で **重さ・大きさなどのプロパティ**が上書きされ、**表示時に解決された値**として物語に現れる
@@ -32,7 +32,7 @@
 | 描写の重複回避 | SP-DESC-001、`expandTemplateWithTracking` の `[entity~]` |
 | 事象に応じた挿入文 | SP-DYNAMIC-001、`findMatchingTemplates` |
 
-**要点**: 原初の「1つの再帰的な構文エンジン（遡行・辞書引き）」は `ORIGINAL_SYNTAX_ENGINE_SPECIFICATION.md` に詳述があるが、**現行コードの中核は `expandTemplate` 族とテンプレートマッチング**である。記号 `[]` / `{}` の意味は原初の入れ子構文と**完全には一致しない**（SP-TEXT-001 を正とする）。
+**要点**: 原初案では「1つの再帰的な構文エンジン（遡行・辞書引き）」が想定されていたが、**現行コードの中核は `expandTemplate` 族とテンプレートマッチング**である。記号 `[]` / `{}` の意味は原初の入れ子構文と**完全には一致しない**（SP-TEXT-001 を正とする）。
 
 ## 4. ノーマティブ: ランタイム連続パイプライン（段階定義）
 
@@ -123,4 +123,4 @@
 - SP-DYNAMIC-001: `dynamic-story-expansion.md`
 - SP-DESC-001: `description-tracker.md`
 - SP-006: `docs/ai-features.md`
-- 原初資料（参照用）: `docs/archive/legacy-specs/ORIGINAL_DESIGN_PHILOSOPHY.md`、`ORIGINAL_SYNTAX_ENGINE_SPECIFICATION.md`
+- 原初メモ類は Git 履歴にのみ残存（ワークツリーでは削除済み）。現行の正は上記 SP-* と本書の写像表。

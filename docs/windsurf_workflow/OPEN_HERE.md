@@ -1,14 +1,16 @@
 # 開発再開・オンボーディング入口
 
-このリポジトリには `.shared-workflows`（submodule）は**未導入**の場合があります。以下を**上から**参照してください。
+このリポジトリには `.shared-workflows`（submodule）は**未導入**の場合があります。
+
+**次の 1 → 2 → 3 を、この順で読む。**
 
 ## 人間・エージェント共通
 
 | 順 | ファイル | 用途 |
 |----|----------|------|
 | 1 | [`HANDOVER.md`](../../HANDOVER.md)（ルート） | 直近の状態・CI・次の推奨作業・再開コマンド |
-| 2 | [`CLAUDE.md`](../../CLAUDE.md) | キーパス・コマンド・Decision Log（長期） |
-| 3 | [`docs/project-context.md`](../project-context.md) | セッション寄りの軸・レーン・直近決定 |
+| 2 | [`CLAUDE.md`](../../CLAUDE.md) | キーパス・コマンド・Decision Log（長期は [`docs/governance/decision-log.md`](../governance/decision-log.md)） |
+| 3 | [`docs/project-context.md`](../project-context.md) | セッション用の焦点・補助線 |
 
 ## 仕様（Source of Truth）
 

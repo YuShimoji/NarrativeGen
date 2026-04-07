@@ -21,7 +21,7 @@
 - `packages/engine-ts/` — TypeScript コアエンジン
 - `packages/sdk-unity/` — Unity SDK（C# ランタイム）
 - `apps/web-tester/` — Web ベースのテストツール（CSV インポート/エクスポート対応）
-- `docs/` — 仕様ドキュメント
+- `docs/` — 仕様ドキュメント（旧 `docs/archive/` パスは廃止。該当資料は Git 履歴を参照）
 
 ## Purpose (Rebuild from scratch)
 

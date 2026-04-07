@@ -1,97 +1,52 @@
-# Project Context
+# プロジェクトコンテキスト（セッション用メモ）
 
-## PROJECT CONTEXT
-
-- プロジェクト名: NarrativeGen
-- 環境: Node.js 22 / TypeScript 5.x / Vite 5 / Vitest / Playwright
-- ブランチ戦略: trunk-based (main のみ)
-- 現フェーズ: Pipeline定義 → 最終ワークフロー確立
-- 直近の状態 (2026-04-03 session 18):
-  - SP-PIPE-001: done/100% (HUMAN_AUTHORITY 5件を本文反映、AUTHORING_GUIDE 全5ステージ拡張)
-  - WritingPage 連携: 早期実装コードを stash 退避 (WritingPage v0.3.32 不安定のため延期)
-  - Canonical docs 3件 (INVARIANTS / OPERATOR_WORKFLOW / USER_REQUEST_LEDGER) を実コンテンツで補完
-  - SP-PLAY-001: 98% (BGM 手動確認のみ残)
-  - 33 specs: done 30 / partial 3 (SP-009 90%, SP-UNITY-001 85%, SP-PLAY-001 98%) / todo 0
+環境・ブランチ・CI の**最新の正**はルート [`HANDOVER.md`](../HANDOVER.md)。本ファイルは**意思決定の補助線**と、長期 Decision Log（session 13 以降）の置き場。
 
 ---
 
-## CURRENT DEVELOPMENT AXIS
+## 現在の焦点
 
-- 主軸: Pipeline 確立完了。次の優先は Unity SDK パリティ (SP-UNITY-001) または WritingPage 安定後の連携
-- この軸を優先する理由: SP-PIPE-001 done。ワークフローが定義され、AUTHORING_GUIDE が全5ステージをカバー。残りは実装系のギャップ埋め
-- 今ここで避けるべき脱線: 新規エンジン機能の追加、コンテンツ執筆、UI装飾
+- **いま優先しやすいこと**: Unity SDK パリティ（**SP-UNITY-001** / [`specs/unity-sdk.md`](specs/unity-sdk.md)）、または **SP-PLAY-001** の手動確認（`play-immersion.md` 検証表）。WritingPage 連携は外部フォーマット安定まで**実装しない**。
+- **背景**: **SP-PIPE-001** は spec-index 上 **done**。オーサリングの流れは `pipeline-workflow.md` と [`AUTHORING_GUIDE.md`](AUTHORING_GUIDE.md) がカバー。
+- **いま深追いしないこと**: エンジンの大型機能追加、本編コンテンツ執筆、UI の装飾のみの変更。
 
----
+## 直近スナップショット（2026-04-03 / session 18 時点）
 
-## CURRENT LANE
+- SP-PIPE-001: 本文・AUTHORING_GUIDE 5 ステージまで反映済み。
+- WritingPage: 早期実装は stash 退避（相手フォーマット不安定のため）。
+- Canonical 3 件（INVARIANTS / OPERATOR_WORKFLOW / USER_REQUEST_LEDGER）を実記述に更新。
+- SP-PLAY-001: 手動確認が残る（BGM 等）。
+- 仕様エントリ数は **spec-index.json** を見たときの **34 件**が正（done / partial は `spec-viewer` で確認）。
 
-- 主レーン: Docs / Spec Completion (SP-PIPE-001 完了 + Canonical docs 補完)
-- 副レーン: なし
-- 今このレーンを優先する理由: SP-PIPE-001 完了と canonical docs 初期化を本セッションで実施。次セッションから実装系に移行可能
-- いまは深入りしないレーン: Runtime Core (十分成熟)、Experience Slice (SP-PLAY-001 手動確認のみ残)
+## 次に読むファイル
 
----
-
-## CURRENT SLICE
-
-- スライス名: SP-PIPE-001 完了 + Canonical docs 補完
-- 成功状態: SP-PIPE-001 が done/100%、AUTHORING_GUIDE が全5ステージカバー、canonical docs 3件が実コンテンツ
-- 今回はやらないこと: Unity SDK パリティ、WritingPage 連携実装 (延期中)、AI 支援機能
+1. [`USER_REQUEST_LEDGER.md`](USER_REQUEST_LEDGER.md)（バックログ）
+2. [`specs/unity-sdk.md`](specs/unity-sdk.md)（Unity 次タスクの核）
+3. 全体の健康状態の一行版: [`project-status.md`](project-status.md)
 
 ---
 
-## FINAL DELIVERABLE IMAGE
+## 成果物の像（短く）
 
-- 最終成果物: インタラクティブ物語のオーサリングツール + ランタイムエンジン
-  - Web Tester: ライター/デザイナーがノードベースのストーリーを視覚的に制作・検証するGUIツール
-  - engine-ts: TypeScript ストーリー実行エンジン (ブラウザ/Node.js 両対応)
-  - sdk-unity: Unity C# SDK (UPM パッケージ)
-  - 5形式エクスポート (JSON/CSV/Ink/Twine/Yarn)
-- 最終的なユーザーワークフロー: SP-PIPE-001 で定義中 (Design → Author → Validate → Export → Integrate)
-- 受け入れ時の使われ方: ライターが Web Tester で物語を完成させ、エクスポートして Unity 等で実行できる
-- 現時点で未確定な要素:
-  - WritingPage 連携の具体設計 (WritingPage 安定後に策定)
+ライターが **Web Tester** でノード物語を作り、**5 形式エクスポート**し、**engine-ts** または **Unity SDK** で実行する。ワークフロー語彙は Design → Author → Validate → Export → Integrate。**WritingPage** の接続点は未確定（相手安定後）。
 
 ---
 
-## DECISION LOG
+## Decision Log（session 13 以降）
 
-このファイルには session 13 以降の決定のみ記録する。
-それ以前の決定は CLAUDE.md の Decision Log を参照。
+それ以前の長期記録は [`governance/decision-log.md`](governance/decision-log.md)。ルート [`CLAUDE.md`](../CLAUDE.md) には直近3件の抜粋のみ。
 
 | 日付 | 決定事項 | 選択肢 | 決定理由 |
 |------|----------|--------|----------|
-| 2026-03-23 | SP-PIPE-001 Pipeline Workflow ドラフト策定 | Pipeline先行 / SP-PLAY-001閉じ優先 / WritingPage先行 / 体験ウォークスルー | 基盤能力は充実。次に進むべきは「この基盤で何を作るか」の言語化。Pipeline仕様なしに機能を積み上げると使われない機能が増える |
-| 2026-03-26 | レガシー根絶: 孤立ドキュメント/偽テスト/陳腐化仕様の一斉削除 | 個別対応 / 一斉削除 | task-scoutによる全体スキャンでL01-L07を特定。4ルートファイル+1偽テスト+SP-004 legacy+旧ブランチ参照+陳腐化docs 5件。一斉処理が効率的 |
-| 2026-03-26 | 安定版化: デッドコード根絶 + UI改善 + CSS重複修正 | Excise先行 / Advance先行 / 並行 | 保守偏重脱出のためExcise→Advance→Refactorの順で実行。user-visible change (empty state + sidebar) を確実に含めた |
-| 2026-03-27 | SP-PIPE-001 方向性確定: 1人運用/WritingPage次スライス/JSON主軸/AI支援スコープ外/AUTHORING_GUIDE拡張 | 各項目に3択 | Pipeline仕様のHUMAN_AUTHORITY 5件を全件レビュー。次スライスはWritingPage連携に決定 |
-| 2026-04-03 | WritingPage 連携の早期実装コードを stash 退避 | stash / ブランチ分離 / 仕様策定先行 | WritingPage v0.3.32 のフォーマットが不安定。349行で再実装容易。安定後に改めて連携仕様を策定 |
-| 2026-04-03 | SP-PIPE-001 完了 (70% → 100%) + Canonical docs 補完 | HUMAN_AUTHORITY 反映 + AUTHORING_GUIDE 拡張 + canonical docs 初期化 | 5件の決定を本文に反映し、全5ステージのガイドを完成。テンプレート状態だった3件の canonical docs を実コンテンツ化 |
+| 2026-03-23 | SP-PIPE-001 Pipeline Workflow ドラフト策定 | Pipeline先行 / SP-PLAY-001閉じ優先 / WritingPage先行 / 体験ウォークスルー | 基盤は揃っている。次は「誰が何をどう使うか」の言語化。Pipeline なしで機能だけ増やすと未使用機能が増える |
+| 2026-03-26 | 孤立ドキュメント・偽テスト・陳腐化仕様の整理削除 | 個別対応 / バッチ削除 | task-scout で L01-L07 を特定。対象をまとめて処理した方が速い |
+| 2026-03-26 | デッドコード除去・UI 改善・CSS 重複解消 | Excise先行 / Advance先行 / 並行 | 保守に偏らないよう Excise→Advance→Refactor。empty state とサイドバーなどユーザーに見える変更を含めた |
+| 2026-03-27 | SP-PIPE-001 方向性（1人運用・WritingPage 次・JSON 主軸・AI 支援スコープ外・AUTHORING_GUIDE 拡張） | 各項目で複数案 | HUMAN_AUTHORITY 5 件を全件レビュー。次スライスは WritingPage 連携 |
+| 2026-04-03 | WritingPage 連携の早期実装を stash 退避 | stash / ブランチ分離 / 仕様先行 | 相手 v0.3.32 のフォーマットが不安定。行数は小さく再実装しやすい |
+| 2026-04-03 | SP-PIPE-001 完了（70%→100%）と Canonical 3 件の実記述化 | 同上 | 5 件を本文に反映し、ガイドとテンプレ脱却 |
 
 ---
 
 ## IDEA POOL
 
-CLAUDE.md の IDEA POOL を参照。
-
----
-
-## HANDOFF SNAPSHOT
-
-- 現在の主レーン: Docs / Spec Completion
-- 現在のスライス: SP-PIPE-001 完了 + Canonical docs 補完
-- 今回変更した対象 (session 18):
-  - SP-PIPE-001: done/100% (HUMAN_AUTHORITY 5件を本文反映)
-  - AUTHORING_GUIDE.md: Stage 1/3/4/5 追加 (全5ステージカバー)
-  - Canonical docs 3件: INVARIANTS / OPERATOR_WORKFLOW / USER_REQUEST_LEDGER を実コンテンツ化
-  - WritingPage 連携: 早期実装コードを stash 退避
-  - project-context.md / runtime-state.md / spec-index.json 同期
-- 次回最初に確認すべきファイル:
-  - docs/USER_REQUEST_LEDGER.md (Backlog Delta)
-  - docs/specs/unity-sdk.md (SP-UNITY-001: 次の高優先タスク候補)
-- 未確定の設計論点:
-  - WritingPage 連携の具体設計 (WritingPage 安定後)
-- 今は触らない範囲:
-  - WritingPage 連携実装 (延期中)
-  - AI 支援機能 (スコープ外決定済み)
-  - コンテンツ執筆
+[`CLAUDE.md`](../CLAUDE.md) の IDEA POOL 節 → [`USER_REQUEST_LEDGER.md`](USER_REQUEST_LEDGER.md)。
