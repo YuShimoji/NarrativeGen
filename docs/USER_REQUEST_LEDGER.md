@@ -25,7 +25,7 @@
 
 ## 今後明文化すべきこと
 
-- WritingPage 連携の具体設計 (データフォーマット、インターフェース) -- WritingPage 安定後
+- WritingPage 連携の具体設計 (データフォーマット、インターフェース) -- `docs/specs/writingpage-io-contract.md` に最小契約を定義済み
 - Stage 1 → 2 のデータ引き継ぎ方法の改善策
 
 ## ロードマップ上の扱い（2026-04 更新）
@@ -36,6 +36,7 @@
   - 外部フォーマットが安定していること
   - 入出力契約（最小フィールド）が確定していること
   - 先行して短期（SP-PLAY / SP-UNITY / E2E安定化）が完了していること
+  - `docs/specs/writingpage-io-contract.md` の着手ゲートを満たすこと
 
 ## 運用ルール
 

@@ -14,7 +14,7 @@
 | 2 | SP-PLAY-001: `play-immersion.md` 検証表への AC-9〜12 記入 | 表用意済み・記入待ち |
 | 3 | Unity SP-TGEN スライス2（events / 継承 / `[entity~]` / 会話テンプレ） | 実装済み（細部パリティは継続） |
 | 4 | E2E 間欠失敗の安定化（例: `play-immersion` AC-5 の `toContainText` 待機） | 一部実施（継続可） |
-| 5 | 依存: Vite/Rollup は専用ブランチで検証。UI: レスポンシブ・a11y は画面単位で Issue 化して着手 | 計画記載のみ |
+| 5 | 依存: Vite/Rollup は専用ブランチで検証。UI: レスポンシブ・a11y は画面単位で Issue 化して着手 | 進行中 |
 
 ### 実行トラック（短期・中期・長期）
 
@@ -27,7 +27,7 @@
   - 手動回帰と E2E の責務境界を再設計し、重複確認を削減
   - Dynamic Text エクスポート方針（Yarn 変換境界）を確定
 - **長期（3〜6か月）**
-  - WritingPage 連携を外部フォーマット安定後に薄いスライスで着手
+  - WritingPage 連携を外部フォーマット安定後に薄いスライスで着手（準備仕様: `docs/specs/writingpage-io-contract.md`）
   - Unity 配布導線（UPM + NuGet 検討）を段階改善
   - CI の品質ゲートを仕様整合・モデル同期・互換性中心に強化
 

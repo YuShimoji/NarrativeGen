@@ -83,7 +83,8 @@ WritingPage で執筆したテキストを NarrativeGen のノードに流し込
 - NarrativeGen → WritingPage: ノードテキストを長文執筆環境で編集
 - WritingPage → NarrativeGen: 執筆済みテキストをノード構造に変換
 
-**ステータス**: DECISION LOG (2026-03-08) で双方向連携を決定。WritingPage (v0.3.32) のフォーマットが不安定なため延期。早期実装コードは stash 退避済み (2026-04-03)。拒否ではなくタイミング調整。WritingPage 側が安定した段階で次スライス候補として再開する。
+**ステータス**: DECISION LOG (2026-03-08) で双方向連携を決定。WritingPage (v0.3.32) のフォーマットが不安定なため延期。早期実装コードは stash 退避済み (2026-04-03)。拒否ではなくタイミング調整。WritingPage 側が安定した段階で次スライス候補として再開する。  
+**準備仕様**: `docs/specs/writingpage-io-contract.md`（最小 I/O 契約、versioning、非互換時挙動、着手ゲート）
 
 ### Stage 3: 検証・調整 (Validate)
 

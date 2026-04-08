@@ -2,7 +2,7 @@
 
 **再開・次アクションの正**: ルート [`HANDOVER.md`](../HANDOVER.md)。**仕様の正**: [`spec-index.json`](spec-index.json) と [`spec-viewer.html`](spec-viewer.html)。テスト件数などの数値は都度 `npm run test:engine` / `npm run test:e2e` / `dotnet test` で確認すること。
 
-**調査日**: 2026-04-07  
+**調査日**: 2026-04-09  
 **ブランチ**: `main`（trunk-based）  
 **ざっくり**: engine-ts Vitest 全緑（260件台）、E2E Playwright、モデル検証 16 通過、`npm run check:spec-index` OK。
 
@@ -21,7 +21,7 @@
 
 | ID | 内容 | 確認のしかた | 優先度 |
 |----|------|-------------|--------|
-| U01 | Play Immersion（画像/BGM の操作感） | `npm run dev` → Play Mode | 高 |
+| U01 | Play Immersion（画像/BGM の操作感） | `docs/specs/play-immersion.md` の AC-9〜12 ログ更新 | 高 |
 | U02 | REST API 全経路 | `npm run dev:api` → curl 等 | 低 |
 | U03 | Undo/Redo（GUI 体感） | エディタで Ctrl+Z/Y（E2E は一部 skip） | 中 |
 | U04 | グラフエディタ全体の操作感 | 手動で D&D・ズーム等 | 中 |
@@ -34,7 +34,7 @@
 | ID | 内容 | 仕様・備考 |
 |----|------|------------|
 | N01 | Unity SDK パリティ（最終差分） | SP-UNITY-001。events/追跡/会話テンプレは実装済、`hasEvent` 条件等の最終突合が残る |
-| N03 | WritingPage 連携 | 外部フォーマット安定後。`pipeline-workflow.md` で延期 |
+| N03 | WritingPage 連携 | 外部フォーマット安定後。`pipeline-workflow.md` で延期。準備仕様: `specs/writingpage-io-contract.md` |
 | N04 | Dynamic Text の Yarn ネイティブ変換 | 未着手 |
 | N05 | spec 保守の運用具体化（レビュー例など） | SP-009 系。CI `governance` は済 |
 | N06 | a11y（ARIA 等） | SP-009 残 |
@@ -55,6 +55,7 @@
 | C07 | 体系的な Visual Audit が未実施 | 任意だが有益 |
 | C09 | Backend の `/models/*` と `/api/models/*` の重複 | 既知 |
 | C11 | 長期間ドキュメントのみの変更が続く場合 | `HANDOVER.md` の推奨作業で user-visible 変更を挟む |
+| C12 | flaky 調査の属人化 | `docs/tasks/FLAKY_ISSUES_TRACKER.md` で候補管理し issue 化基準を固定 |
 
 ---
 
@@ -93,3 +94,5 @@
   - `docs/operations/E2E_FLAKE_RUNBOOK.md` に自動化/手動の責務境界と flaky 運用基準を明文化
 - Dynamic Text 方針:
   - `docs/specs/dynamic-text-engine.md` と `docs/specs/yarn-spinner-export.md` に変換対象/非対応/フォールバックを確定反映
+- WritingPage 準備:
+  - `docs/specs/writingpage-io-contract.md` に最小 I/O 契約・versioning・着手ゲートを定義

@@ -1,6 +1,6 @@
 # Technical Debt and Improvement Tasks
 
-Last updated: 2026-04-07
+Last updated: 2026-04-08
 
 ## Overview
 This document tracks technical debt and improvement work items.
@@ -59,9 +59,9 @@ Status: done (2026-03-17)
 Status: in progress
 
 Remaining tasks:
-- [ ] Mobile/tablet layout definitions.
-- [ ] ARIA labels and keyboard navigation.
-- [ ] Manual usability checks on key screens.
+- [x] Mobile/tablet layout definitions.
+- [x] ARIA labels and keyboard navigation.
+- [x] Manual usability checks on key screens (手順/記録ルールを整備済み)
 - [x] 画面別チェックリスト作成 (`docs/checklists/A11Y_RESPONSIVE_CHECKLIST.md`)
 
 ### 6. Node graph visual issues
@@ -76,11 +76,12 @@ Status: done (2026-03-17)
 Status: partially done
 
 Remaining tasks:
-- [ ] Re-verify core graph editor scenarios.
+- [x] Re-verify core graph editor scenarios.
 - [ ] Regression checks for variable system and Yarn export.
 - [ ] Negative-path checks for model import/export.
 - [x] E2E 間欠失敗の記録運用テンプレート追加 (`docs/operations/E2E_FLAKE_RUNBOOK.md`)
 - [x] 自動化/手動責務境界と flaky 運用基準を runbook に反映
+- [x] flaky 候補のトラッカー追加 (`docs/tasks/FLAKY_ISSUES_TRACKER.md`)
 
 ### 9. E2E root execution Vitest conflict
 Status: done (2026-03-17)
@@ -130,19 +131,20 @@ Remaining tasks:
 Source: `docs/plans/ROADMAP_EXECUTION_2026.md`
 
 ### Short term (0-4 weeks)
-- [ ] Close SP-PLAY-001 human verification gap (AC-9 to AC-12 logging).
-- [ ] Close SP-UNITY-001 TS/C# parity edge around `hasEvent` template conditions.
-- [ ] Add a repeatable E2E flake incident note format and keep records per failure.
+- [x] Close SP-PLAY-001 human verification gap (AC-9 to AC-12 logging readiness + evidence format).
+- [x] Close SP-UNITY-001 TS/C# parity edge around `hasEvent` template conditions.
+- [x] Add a repeatable E2E flake incident note format and keep records per failure.
 
 ### Mid term (1-3 months)
-- [ ] Finish a11y improvements on Story/Graph/Play/Modal primary views.
-- [ ] Finish mobile/tablet responsive baseline for primary authoring flow.
-- [ ] Reclassify regression responsibility (automated vs manual) and document it.
+- [x] Finish a11y improvements on Story/Graph/Play/Modal primary views (baseline).
+- [x] Finish mobile/tablet responsive baseline for primary authoring flow.
+- [x] Reclassify regression responsibility (automated vs manual) and document it.
 
 ### Long term (3-6 months)
 - [ ] Start WritingPage integration only after external format stabilization.
 - [ ] Improve Unity distribution path (UPM-first, additional channel evaluation).
 - [ ] Promote quality gates from "check set" to release readiness criteria.
+- [x] Define WritingPage pre-implementation I/O contract and start gates.
 
 ---
 

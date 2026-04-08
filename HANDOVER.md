@@ -2,9 +2,9 @@
 
 ## 最終更新
 
-- **日時**: 2026-04-07
+- **日時**: 2026-04-09
 - **ブランチ**: `main` (trunk-based)
-- **直近**: CI `governance` ジョブ追加、SP-HIST-001 スタブ仕様、`npm audit fix` ロック更新、Unity SP-TGEN スライス2（C#）
+- **直近**: 次作業実行プラン反映（SP-PLAY-001 AC-9〜12 記録ルール確定、a11y チェックリスト完了、flaky トラッカー、WritingPage I/O 契約 `SP-WP-001`）
 
 ## プロジェクト概要
 
@@ -35,22 +35,22 @@ NarrativeGen/
 
 ### 仕様書（spec-index.json）
 
-- **エントリ**: 34 件（SP-HIST-001 は `docs/specs/session-history.md` を参照）
-- **partial**: SP-009 Technical Debt、SP-UNITY-001、SP-TGEN-001、SP-PLAY-001
+- **エントリ**: 35 件（`npm run check:spec-index` で検証）
+- **partial**: SP-009 Technical Debt、SP-UNITY-001、SP-TGEN-001、SP-PLAY-001、SP-WP-001（WritingPage I/O 契約・準備）
 - **SP-PIPE-001**: done（デザイナパイプライン。WritingPage 連携は延期）
 
 ## 既知の課題
 
 - E2E バッチで稀に失敗しうる（`play-immersion` AC-5 は `toContainText` 待機で緩和）
-- SP-PLAY-001: AC-9〜12 は `docs/specs/play-immersion.md` の検証表への人的記入が残る
+- SP-PLAY-001: AC-9〜12 は検証表で `Ready` まで確定済み。実機の `Pass/Fail` は担当者が追記する
 - Dynamic Text の Yarn ネイティブ変換は未対応
 - リポジトリ内のソース配置は **`packages/`（小文字）** を正とする（現役ドキュメント表記を統一済み）。Unity 側の埋め込み先フォルダ名はエディタ既定の **`Packages/`** のまま（`packages/sdk-unity/README.md` 参照）
 
 ## 次の推奨作業
 
-1. **play-immersion 検証表**: AC-9〜12 を実機で確認し表に記入
-2. **BL-TGEN-META**: `model.metadata` ランタイム展開の要否を決め Issue 化
-3. **Vite 系更新**: 専用ブランチでメジャーアップ検証（`docs/plans/DEVELOPMENT_PLAN.md` ロードマップ参照）
+1. **play-immersion 検証表の確定更新**: AC-9〜12 の `Ready` を `Pass/Fail` に更新
+2. **flaky 候補の issue 化**: `docs/tasks/FLAKY_ISSUES_TRACKER.md` の再発ケースを昇格
+3. **WritingPage 実装可否の判定**: `docs/specs/writingpage-io-contract.md` の着手ゲート充足確認
 
 ## 実行ロードマップ（2026 Q2-Q4）
 
@@ -65,6 +65,7 @@ NarrativeGen/
 - モバイル/タブレット baseline responsive を導入（main.css/play.css）
 - E2E 運用を runbook 化し、手動確認との責務境界を明文化
 - Dynamic Text エクスポート方針を仕様に確定反映
+- WritingPage 連携準備として I/O 契約と着手ゲートを仕様化
 
 ## 再開手順
 
@@ -90,5 +91,7 @@ dotnet test .\packages\tests\NarrativeGen.Tests
 
 技術的負債: `docs/TECHNICAL_DEBT.md`
 E2E フレーク運用: `docs/operations/E2E_FLAKE_RUNBOOK.md`
+flaky 候補トラッカー: `docs/tasks/FLAKY_ISSUES_TRACKER.md`
 画面別 a11y/レスポンシブチェック: `docs/checklists/A11Y_RESPONSIVE_CHECKLIST.md`
+WritingPage 準備仕様: `docs/specs/writingpage-io-contract.md`
 仕様書一覧: `docs/spec-viewer.html`（`npx serve docs` → http://localhost:3000/spec-viewer.html）
