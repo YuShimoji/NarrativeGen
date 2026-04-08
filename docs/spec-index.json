@@ -57,10 +57,10 @@
     "id": "SP-009",
     "title": "Technical Debt",
     "status": "partial",
-    "pct": 90,
+    "pct": 92,
     "cat": "infra",
     "file": "docs/TECHNICAL_DEBT.md",
-    "summary": "Post-split debt cleanup. CI governance job: spec-index + models-sync + encoding-safety. Remaining: responsive/a11y, manual regression tests, E2E flake hardening"
+    "summary": "Post-split debt cleanup. CI governance job: spec-index + models-sync + encoding-safety. E2E flake runbook + responsibility boundary formalized. Remaining: responsive/a11y full rollout and manual regression expansion"
   },
   {
     "id": "SP-010",
@@ -213,7 +213,7 @@
     "pct": 100,
     "cat": "core",
     "file": "docs/specs/dynamic-text-engine.md",
-    "summary": "Template expansion engine. [entity.property] refs via inheritance, {variable} expansion, {?condition:text} conditional sections (flag/resource/inventory). Web Tester integrated. 31 unit tests."
+    "summary": "Template expansion engine. [entity.property] refs via inheritance, {variable} expansion, {?condition:text} conditional sections (flag/resource/inventory). Web Tester integrated. Export policy (supported/unsupported/fallback) documented for external formats."
   },
   {
     "id": "SP-TGEN-001",

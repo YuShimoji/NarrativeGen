@@ -2,6 +2,7 @@
 
 **作成日**: 2026-03-07
 **作成方法**: 実コード探索 + 対話的構築
+**実行版ロードマップ**: `docs/plans/ROADMAP_EXECUTION_2026.md`
 
 ---
 
@@ -15,10 +16,36 @@
 | 4 | E2E 間欠失敗の安定化（例: `play-immersion` AC-5 の `toContainText` 待機） | 一部実施（継続可） |
 | 5 | 依存: Vite/Rollup は専用ブランチで検証。UI: レスポンシブ・a11y は画面単位で Issue 化して着手 | 計画記載のみ |
 
+### 実行トラック（短期・中期・長期）
+
+- **短期（0〜4週間）**
+  - SP-PLAY-001 の AC-9〜12 人的確認ログを完了し、仕様クローズ条件を満たす
+  - SP-UNITY-001 の TS/C# パリティ差分（`hasEvent` 周辺）をテストで固定して収束
+  - E2E フレーク観測と `check:safety` 運用を再開手順へ定着
+- **中期（1〜3か月）**
+  - 主要画面の a11y（ARIA/キーボード）とレスポンシブを画面単位で改善
+  - 手動回帰と E2E の責務境界を再設計し、重複確認を削減
+  - Dynamic Text エクスポート方針（Yarn 変換境界）を確定
+- **長期（3〜6か月）**
+  - WritingPage 連携を外部フォーマット安定後に薄いスライスで着手
+  - Unity 配布導線（UPM + NuGet 検討）を段階改善
+  - CI の品質ゲートを仕様整合・モデル同期・互換性中心に強化
+
 ### Phase 5 詳細（着手単位の目安）
 
 - **Vite 8+ / esbuild / rollup**: `npm audit fix --force` 相当は破壊的のため、`feat/vite-upgrade` 等のブランチで `npm run build:all`・Playwright・`package.json` の `overrides`（Rollup wasm）を確認してから main へ。
 - **a11y / レスポンシブ**: ストーリービュー、グラフエディタ、プレイ画面、モーダルをそれぞれ Issue に分け、ARIA・キーボード・ブレークポイントを段階適用。
+
+#### 2026-04 中期実装反映
+
+- `apps/web-tester/src/bootstrap.js`
+  - tab role/aria 管理、modal focus trap、Escape close、landmark 付与を導入
+- `apps/web-tester/src/styles/main.css`, `apps/web-tester/src/ui/play/play.css`
+  - 768/1024 ブレークポイントの baseline responsive を適用
+- `docs/operations/E2E_FLAKE_RUNBOOK.md`
+  - 自動化/手動の責務境界と flaky 対応基準を正式化
+- Dynamic Text export policy
+  - `docs/specs/dynamic-text-engine.md` / `docs/specs/yarn-spinner-export.md` に方針を同期
 
 ---
 

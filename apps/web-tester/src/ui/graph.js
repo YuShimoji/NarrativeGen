@@ -176,6 +176,9 @@ export class GraphManager {
     }
 
     node.attr('fill', 'url(#nodeGradient)')
+      .attr('tabindex', 0)
+      .attr('role', 'button')
+      .attr('aria-label', d => `ノード ${d.id}`)
       .attr('filter', 'url(#nodeShadow)')
       .call(d3.drag()
         .on('start', (event, d) => {
@@ -192,6 +195,8 @@ export class GraphManager {
           d.fx = null
           d.fy = null
         }))
+
+    node.append('title').text(d => `ノード: ${d.id}`)
 
     // Add node labels
     let labels

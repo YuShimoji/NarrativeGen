@@ -280,6 +280,7 @@ export class PlayRenderer {
         undoBtn.style.fontSize = '0.85rem'
         undoBtn.style.marginTop = '8px'
         undoBtn.textContent = '\u2190 \u623b\u308b'
+        undoBtn.setAttribute('aria-label', '直前の選択に戻る')
         undoBtn.style.animationDelay = `${staggerIndex * this.paragraphDelay}ms`
         undoBtn.addEventListener('click', () => options.onUndo())
         container.appendChild(undoBtn)
@@ -314,11 +315,14 @@ export class PlayRenderer {
   #buildChoices(choices, options) {
     const wrapper = document.createElement('div')
     wrapper.className = 'play-choices'
+    wrapper.setAttribute('role', 'group')
+    wrapper.setAttribute('aria-label', '選択肢')
 
     for (const choice of choices) {
       const btn = document.createElement('button')
       btn.className = 'play-choice-btn'
       btn.textContent = choice.text || '(?)'
+      btn.setAttribute('aria-label', `選択肢: ${choice.text || '(不明)'}`)
       btn.addEventListener('click', () => {
         if (options.onChoice) {
           options.onChoice(choice.id, choice.text)
@@ -337,6 +341,8 @@ export class PlayRenderer {
   #buildEnding(options) {
     const ending = document.createElement('div')
     ending.className = 'play-ending'
+    ending.setAttribute('role', 'region')
+    ending.setAttribute('aria-label', 'エンディング')
 
     const mark = document.createElement('div')
     mark.className = 'play-ending-mark'
@@ -350,6 +356,7 @@ export class PlayRenderer {
       const restartBtn = document.createElement('button')
       restartBtn.className = 'play-ending-btn'
       restartBtn.textContent = '\u6700\u521d\u304b\u3089'
+      restartBtn.setAttribute('aria-label', '最初からプレイする')
       restartBtn.addEventListener('click', () => options.onRestart())
       actions.appendChild(restartBtn)
     }
@@ -358,6 +365,7 @@ export class PlayRenderer {
       const exploreBtn = document.createElement('button')
       exploreBtn.className = 'play-ending-btn'
       exploreBtn.textContent = '\u5225\u306e\u7d50\u672b\u3092\u63a2\u3059'
+      exploreBtn.setAttribute('aria-label', '別の結末を探索する')
       exploreBtn.addEventListener('click', () => options.onUndo())
       actions.appendChild(exploreBtn)
     }

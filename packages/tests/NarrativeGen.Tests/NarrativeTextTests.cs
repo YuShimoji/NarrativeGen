@@ -204,5 +204,92 @@ namespace NarrativeGen.Tests
             Assert.That(result.Text, Does.Contain("Hello."));
             Assert.That(result.Text, Does.Contain("Side text."));
         }
+
+        [Test]
+        public void ResolveNarrativeDisplayTextTracked_AppendsConversationTemplate_WhenHasEventSessionConditionMatches()
+        {
+            var model = new NarrativeModel
+            {
+                StartNode = "n1",
+                Nodes = new Dictionary<string, Node> { ["n1"] = new Node { Id = "n1", Text = "x" } },
+                ConversationTemplates = new List<ConversationTemplate>
+                {
+                    new ConversationTemplate
+                    {
+                        Id = "t_has_event",
+                        Priority = 10,
+                        Text = "Event-aware text.",
+                        Trigger = new TemplateTrigger
+                        {
+                            SessionConditions = new List<Condition>
+                            {
+                                new HasEventCondition
+                                {
+                                    Type = "hasEvent",
+                                    Key = "anomaly1",
+                                    Value = true
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            var evt = new Entity { Id = "anomaly1", Name = "Anomaly" };
+            var session = new NgSession(
+                "n1",
+                new Dictionary<string, bool>(),
+                new Dictionary<string, double>(),
+                new Dictionary<string, object>(),
+                new List<string>(),
+                0,
+                new Dictionary<string, Entity>(StringComparer.OrdinalIgnoreCase) { [evt.Id] = evt });
+
+            var result = NarrativeDisplayText.ResolveNarrativeDisplayTextTracked("Hello.", model, session);
+            Assert.That(result.Text, Does.Contain("Hello."));
+            Assert.That(result.Text, Does.Contain("Event-aware text."));
+        }
+
+        [Test]
+        public void ResolveNarrativeDisplayTextTracked_DoesNotAppendConversationTemplate_WhenHasEventSessionConditionFails()
+        {
+            var model = new NarrativeModel
+            {
+                StartNode = "n1",
+                Nodes = new Dictionary<string, Node> { ["n1"] = new Node { Id = "n1", Text = "x" } },
+                ConversationTemplates = new List<ConversationTemplate>
+                {
+                    new ConversationTemplate
+                    {
+                        Id = "t_missing_event",
+                        Priority = 10,
+                        Text = "Should not appear.",
+                        Trigger = new TemplateTrigger
+                        {
+                            SessionConditions = new List<Condition>
+                            {
+                                new HasEventCondition
+                                {
+                                    Type = "hasEvent",
+                                    Key = "missing-event",
+                                    Value = true
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            var session = new NgSession(
+                "n1",
+                new Dictionary<string, bool>(),
+                new Dictionary<string, double>(),
+                new Dictionary<string, object>(),
+                new List<string>(),
+                0,
+                new Dictionary<string, Entity>(StringComparer.OrdinalIgnoreCase));
+
+            var result = NarrativeDisplayText.ResolveNarrativeDisplayTextTracked("Hello.", model, session);
+            Assert.That(result.Text, Does.Contain("Hello."));
+            Assert.That(result.Text, Does.Not.Contain("Should not appear."));
+        }
     }
 }

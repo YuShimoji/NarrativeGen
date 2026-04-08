@@ -14,6 +14,7 @@ namespace NarrativeGen
         public Dictionary<string, double> Resources { get; set; } = new();
         public Dictionary<string, object> Variables { get; set; } = new();
         public List<string> Inventory { get; set; } = new();
+        public Dictionary<string, Entity> Events { get; set; } = new(StringComparer.OrdinalIgnoreCase);
         public double Time { get; set; }
 
         public static EvaluationContext FromSession(Session session)
@@ -24,6 +25,7 @@ namespace NarrativeGen
                 Resources = session.Resources,
                 Variables = session.Variables,
                 Inventory = session.Inventory,
+                Events = session.Events,
                 Time = session.Time,
             };
         }
@@ -98,6 +100,7 @@ namespace NarrativeGen
             reg.RegisterCondition(new ResourceEvaluator());
             reg.RegisterCondition(new VariableEvaluator());
             reg.RegisterCondition(new HasItemEvaluator());
+            reg.RegisterCondition(new HasEventEvaluator());
             reg.RegisterCondition(new TimeWindowEvaluator());
             reg.RegisterCondition(new AndEvaluator());
             reg.RegisterCondition(new OrEvaluator());
@@ -185,6 +188,17 @@ namespace NarrativeGen
         {
             var hc = (HasItemCondition)condition;
             var has = ctx.Inventory.Any(id => string.Equals(id, hc.Key, StringComparison.OrdinalIgnoreCase));
+            return has == hc.Value;
+        }
+    }
+
+    internal class HasEventEvaluator : IConditionEvaluator
+    {
+        public string Type => "hasEvent";
+        public bool Evaluate(Condition condition, EvaluationContext ctx)
+        {
+            var hc = (HasEventCondition)condition;
+            var has = ctx.Events.ContainsKey(hc.Key);
             return has == hc.Value;
         }
     }

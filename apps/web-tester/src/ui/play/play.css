@@ -68,6 +68,13 @@
   border-color: var(--border-hover, #bbb);
 }
 
+.play-choice-btn:focus-visible,
+.play-ending-btn:focus-visible,
+.play-mode-toggle:focus-visible {
+  outline: 2px solid var(--accent-color, #6e8295);
+  outline-offset: 2px;
+}
+
 .play-choice-btn:active {
   background: var(--bg-active, #ddd);
 }
@@ -186,4 +193,21 @@
 .story-view.play-mode {
   position: relative;
   padding-top: 32px; /* space for mode toggle */
+}
+
+@media (max-width: 768px) {
+  .play-choice-btn {
+    max-width: none;
+    font-size: 0.95rem;
+    padding: 10px 12px;
+  }
+
+  .play-ending-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .play-ending-btn {
+    width: 100%;
+  }
 }

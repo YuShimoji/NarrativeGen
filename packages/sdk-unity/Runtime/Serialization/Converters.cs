@@ -45,6 +45,7 @@ namespace NarrativeGen.Serialization
                 "resource" => new ResourceCondition(),
                 "variable" => new VariableCondition(),
                 "hasItem" => new HasItemCondition(),
+                "hasEvent" => new HasEventCondition(),
                 "timeWindow" => new TimeWindowCondition(),
                 "and" => new AndCondition(),
                 "or" => new OrCondition(),

@@ -52,13 +52,29 @@ NarrativeGen/
 2. **BL-TGEN-META**: `model.metadata` ランタイム展開の要否を決め Issue 化
 3. **Vite 系更新**: 専用ブランチでメジャーアップ検証（`docs/plans/DEVELOPMENT_PLAN.md` ロードマップ参照）
 
+## 実行ロードマップ（2026 Q2-Q4）
+
+- 実行版: `docs/plans/ROADMAP_EXECUTION_2026.md`
+- **短期**: SP-PLAY-001 / SP-UNITY-001 / E2E 安定化の完了
+- **中期**: a11y・レスポンシブ改善、回帰戦略再設計、Dynamic Text 変換方針確定
+- **長期**: WritingPage 連携、Unity 配布改善、品質ゲート高度化
+
+## 中期実装の更新点（2026-04）
+
+- Web Tester a11y baseline を導入（tab/landmark/modal）
+- モバイル/タブレット baseline responsive を導入（main.css/play.css）
+- E2E 運用を runbook 化し、手動確認との責務境界を明文化
+- Dynamic Text エクスポート方針を仕様に確定反映
+
 ## 再開手順
 
 ```bash
 git fetch origin && git pull
 npm ci
+npm run check:safety
 npm run check:spec-index
 npm run test:engine
+npm run test:e2e
 npm run build:all
 npm run dev
 # → http://localhost:5173/
@@ -73,4 +89,6 @@ dotnet test .\packages\tests\NarrativeGen.Tests
 ---
 
 技術的負債: `docs/TECHNICAL_DEBT.md`
+E2E フレーク運用: `docs/operations/E2E_FLAKE_RUNBOOK.md`
+画面別 a11y/レスポンシブチェック: `docs/checklists/A11Y_RESPONSIVE_CHECKLIST.md`
 仕様書一覧: `docs/spec-viewer.html`（`npx serve docs` → http://localhost:3000/spec-viewer.html）

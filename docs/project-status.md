@@ -64,3 +64,32 @@
 - **web-tester E2E**: `npm run test:e2e`
 - **C#**: `dotnet test packages/tests/NarrativeGen.Tests`
 - **仕様パス**: `npm run check:spec-index`
+
+---
+
+## 6. ロードマップ運用（2026 Q2-Q4）
+
+- 実行ドキュメント: `docs/plans/ROADMAP_EXECUTION_2026.md`
+- **短期（0〜4週間）**
+  - U01 の人的確認完了（AC-9〜12）
+  - N01 の Unity パリティ差分収束（`hasEvent` 周辺）
+  - C01（E2E 間欠失敗）の再現条件蓄積
+- **中期（1〜3か月）**
+  - N06/N07（a11y/モバイル）を主要画面で解消
+  - U03/U04 の手動回帰観点を固定し E2E と分担
+  - N04（Dynamic Text の Yarn 変換）方針を決定
+- **長期（3〜6か月）**
+  - N03（WritingPage 連携）を外部仕様安定後に着手
+  - Unity 配布導線改善（UPM 維持 + 追加チャネル検討）
+
+## 7. 中期実装フェーズ反映（2026-04）
+
+- a11y 基盤:
+  - `apps/web-tester/src/bootstrap.js` で landmarks / tabs / modal の a11y 初期化を追加
+  - Modal の Escape / focus trap / aria-hidden 同期を導入
+- レスポンシブ基盤:
+  - `apps/web-tester/src/styles/main.css` と `apps/web-tester/src/ui/play/play.css` にモバイル/タブレット向け基準を追加
+- 回帰運用:
+  - `docs/operations/E2E_FLAKE_RUNBOOK.md` に自動化/手動の責務境界と flaky 運用基準を明文化
+- Dynamic Text 方針:
+  - `docs/specs/dynamic-text-engine.md` と `docs/specs/yarn-spinner-export.md` に変換対象/非対応/フォールバックを確定反映

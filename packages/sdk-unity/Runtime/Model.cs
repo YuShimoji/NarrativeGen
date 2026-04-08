@@ -278,6 +278,18 @@ namespace NarrativeGen
     }
 
     /// <summary>
+    /// Condition that checks whether a dynamic event entity exists in session.events.
+    /// </summary>
+    public class HasEventCondition : Condition
+    {
+        [JsonProperty("key")]
+        public string Key { get; set; } = string.Empty;
+
+        [JsonProperty("value")]
+        public bool Value { get; set; } = true;
+    }
+
+    /// <summary>
     /// Logical AND: all sub-conditions must be true.
     /// </summary>
     public class AndCondition : Condition
