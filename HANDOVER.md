@@ -2,9 +2,9 @@
 
 ## 最終更新
 
-- **日時**: 2026-04-07
+- **日時**: 2026-04-08
 - **ブランチ**: `main` (trunk-based)
-- **直近**: CI `governance` ジョブ追加、SP-HIST-001 スタブ仕様、`npm audit fix` ロック更新、Unity SP-TGEN スライス2（C#）
+- **直近**: SP-PLAY-001 検証表・E2E 強化、`hasEvent`/`createEvent` を Unity InferenceRegistry に追加、BL-TGEN-META 決定ログ・issue stub、spec スタブ（SP-DTYARN-001）、a11y 小修正、仕様レビュー例ドキュメント
 
 ## プロジェクト概要
 
@@ -35,22 +35,22 @@ NarrativeGen/
 
 ### 仕様書（spec-index.json）
 
-- **エントリ**: 34 件（SP-HIST-001 は `docs/specs/session-history.md` を参照）
-- **partial**: SP-009 Technical Debt、SP-UNITY-001、SP-TGEN-001、SP-PLAY-001
+- **エントリ**: 35 件前後（SP-DTYARN-001 スタブ追加。件数は `npm run check:spec-index` で確認）
+- **partial**: SP-009 Technical Debt、SP-UNITY-001、SP-TGEN-001、SP-DTYARN-001 ほか
+- **SP-PLAY-001**: done（100%）
 - **SP-PIPE-001**: done（デザイナパイプライン。WritingPage 連携は延期）
 
 ## 既知の課題
 
 - E2E バッチで稀に失敗しうる（`play-immersion` AC-5 は `toContainText` 待機で緩和）
-- SP-PLAY-001: AC-9〜12 は `docs/specs/play-immersion.md` の検証表への人的記入が残る
-- Dynamic Text の Yarn ネイティブ変換は未対応
+- Dynamic Text の Yarn ネイティブ変換は [docs/specs/dynamic-text-yarn-export.md](docs/specs/dynamic-text-yarn-export.md)（SP-DTYARN-001）で計画のみ
 - リポジトリ内のソース配置は **`packages/`（小文字）** を正とする（現役ドキュメント表記を統一済み）。Unity 側の埋め込み先フォルダ名はエディタ既定の **`Packages/`** のまま（`packages/sdk-unity/README.md` 参照）
 
 ## 次の推奨作業
 
-1. **play-immersion 検証表**: AC-9〜12 を実機で確認し表に記入
-2. **BL-TGEN-META**: `model.metadata` ランタイム展開の要否を決め Issue 化
-3. **Vite 系更新**: 専用ブランチでメジャーアップ検証（`docs/plans/DEVELOPMENT_PLAN.md` ロードマップ参照）
+1. **Vite 系更新**: [docs/plans/vite-upgrade-branch-checklist.md](docs/plans/vite-upgrade-branch-checklist.md) に従い専用ブランチで検証
+2. **SP-DTYARN-001**: Dynamic Text → Yarn の受け入れ条件を固め実装着手
+3. **UI a11y / レスポンシブ**: [docs/plans/ui-a11y-responsive-issues.md](docs/plans/ui-a11y-responsive-issues.md) を単位に Issue 化
 
 ## 再開手順
 

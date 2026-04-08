@@ -1,6 +1,6 @@
 # Technical Debt and Improvement Tasks
 
-Last updated: 2026-04-07
+Last updated: 2026-04-08
 
 ## Overview
 This document tracks technical debt and improvement work items.
@@ -19,7 +19,7 @@ Status: in progress
 
 Remaining tasks:
 - [x] Require root `npm ci` + `check:spec-index` / `check:models-sync` / `check:encoding-safety` in CI (`governance` job).
-- [ ] Add change-review examples for spec maintenance.
+- [x] Add change-review examples for spec maintenance（`docs/governance/spec-change-review-examples.md`）。
 
 ### 2. Dependency health recheck
 Status: in progress
@@ -162,13 +162,9 @@ Remaining tasks:
 
 昇格手順: [docs/plans/BACKLOG_PROMOTION.md](plans/BACKLOG_PROMOTION.md)。
 
-次の項目はプロダクト要件が固まるまで **実装スコープ外** とし、ここにのみ記録する。
+**BL-TGEN-META** は 2026-04-08 決定: 当面コアに載せない。要件発生時は [docs/plans/issue-stubs/BL-TGEN-META.md](plans/issue-stubs/BL-TGEN-META.md) を元に GitHub Issue を起票する。
 
-| ID | 項目 | 備考 |
-|----|------|------|
-| BL-TGEN-META | `model.metadata` の `{…}` 展開をランタイム文章 API に載せるか | SP-TGEN セクション7・本線未使用 |
-
-（`BL-PLAY-BGM` は `docs/specs/play-immersion.md` の「検証記録」表へ移設。記入完了後は Issue 昇格または表のみで完結可。）
+（`BL-PLAY-BGM` は `docs/specs/play-immersion.md` の検証記録で E2E + 診断 API によりクローズ。）
 
 ---
 

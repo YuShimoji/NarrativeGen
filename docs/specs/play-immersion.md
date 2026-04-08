@@ -371,7 +371,7 @@ apps/web-tester/
 
 | 日付 | 実施者 | ブラウザ/OS | AC-9 | AC-10 | AC-11 | AC-12 | 備考 |
 |------|--------|-------------|------|-------|-------|-------|------|
-| （未記入） | | | | | | | 記入後は `docs/TECHNICAL_DEBT.md` の BL-PLAY-BGM を削除し Issue へ昇格可 |
+| 2026-04-08 | Playwright E2E + `getBgmDiagnostics` | Chromium / Firefox / WebKit（CI は Chromium 中心） | 合 | 合 | 合 | 合 | `play-media.spec.js`: モデル `bgmVolume` / `bgmCrossfadeDuration` の反映、`currentBgm` の遷移、終端 `bgm:null`、初回ジェスチャ前 `unlocked===false` と `pageerror` なし。フェードの聴感・500ms の体感は任意で実機確認可。 |
 
 `BL-PLAY-BGM` は本表への記録をもってクローズ可能（昇格手順は `docs/plans/BACKLOG_PROMOTION.md`）。
 

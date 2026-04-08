@@ -214,6 +214,19 @@ export class PlayRenderer {
     return this.#defaultBgm
   }
 
+  /**
+   * E2E / 検証用: BGM 状態のスナップショット（聴覚確認に代わる構造検証向け）。
+   * @returns {{ unlocked: boolean, currentBgm: string|null, volume: number, crossfadeMs: number }}
+   */
+  getBgmDiagnostics() {
+    return {
+      unlocked: this.#audioManager.isUnlocked,
+      currentBgm: this.#audioManager.currentBgm,
+      volume: this.#audioManager.volume,
+      crossfadeMs: this.#audioManager.crossfadeDuration
+    }
+  }
+
   // --- Private helpers ---
 
   /**

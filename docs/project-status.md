@@ -2,7 +2,7 @@
 
 **再開・次アクションの正**: ルート [`HANDOVER.md`](../HANDOVER.md)。**仕様の正**: [`spec-index.json`](spec-index.json) と [`spec-viewer.html`](spec-viewer.html)。テスト件数などの数値は都度 `npm run test:engine` / `npm run test:e2e` / `dotnet test` で確認すること。
 
-**調査日**: 2026-04-07  
+**調査日**: 2026-04-08  
 **ブランチ**: `main`（trunk-based）  
 **ざっくり**: engine-ts Vitest 全緑（260件台）、E2E Playwright、モデル検証 16 通過、`npm run check:spec-index` OK。
 
@@ -21,7 +21,7 @@
 
 | ID | 内容 | 確認のしかた | 優先度 |
 |----|------|-------------|--------|
-| U01 | Play Immersion（画像/BGM の操作感） | `npm run dev` → Play Mode | 高 |
+| U01 | Play Immersion（BGM 聴感・フェード体感） | `npm run dev` → Play Mode（構造は E2E 済） | 低（任意） |
 | U02 | REST API 全経路 | `npm run dev:api` → curl 等 | 低 |
 | U03 | Undo/Redo（GUI 体感） | エディタで Ctrl+Z/Y（E2E は一部 skip） | 中 |
 | U04 | グラフエディタ全体の操作感 | 手動で D&D・ズーム等 | 中 |
@@ -33,9 +33,9 @@
 
 | ID | 内容 | 仕様・備考 |
 |----|------|------------|
-| N01 | Unity SDK パリティ（最終差分） | SP-UNITY-001。events/追跡/会話テンプレは実装済、`hasEvent` 条件等の最終突合が残る |
+| N01 | Unity SDK パリティ（最終差分） | SP-UNITY-001。`hasEvent`/`createEvent` は InferenceRegistry 整合済（2026-04-08）。エッジ・maxUses 等が残る |
 | N03 | WritingPage 連携 | 外部フォーマット安定後。`pipeline-workflow.md` で延期 |
-| N04 | Dynamic Text の Yarn ネイティブ変換 | 未着手 |
+| N04 | Dynamic Text の Yarn ネイティブ変換 | SP-DTYARN-001 スタブ [dynamic-text-yarn-export.md](specs/dynamic-text-yarn-export.md) |
 | N05 | spec 保守の運用具体化（レビュー例など） | SP-009 系。CI `governance` は済 |
 | N06 | a11y（ARIA 等） | SP-009 残 |
 | N07 | モバイル/タブレット最適化 | SP-009 残 |

@@ -16,8 +16,16 @@ namespace NarrativeGen
         public List<string> Inventory { get; set; } = new();
         public double Time { get; set; }
 
+        /// <summary>
+        /// 動的イベントエンティティ（<see cref="Session.Events"/>）。hasEvent 条件の評価に使用。
+        /// </summary>
+        public Dictionary<string, Entity> Events { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
         public static EvaluationContext FromSession(Session session)
         {
+            var events = session.Events != null && session.Events.Count > 0
+                ? new Dictionary<string, Entity>(session.Events, StringComparer.OrdinalIgnoreCase)
+                : new Dictionary<string, Entity>(StringComparer.OrdinalIgnoreCase);
             return new EvaluationContext
             {
                 Flags = session.Flags,
@@ -25,6 +33,7 @@ namespace NarrativeGen
                 Variables = session.Variables,
                 Inventory = session.Inventory,
                 Time = session.Time,
+                Events = events,
             };
         }
     }
@@ -98,6 +107,7 @@ namespace NarrativeGen
             reg.RegisterCondition(new ResourceEvaluator());
             reg.RegisterCondition(new VariableEvaluator());
             reg.RegisterCondition(new HasItemEvaluator());
+            reg.RegisterCondition(new HasEventEvaluator());
             reg.RegisterCondition(new TimeWindowEvaluator());
             reg.RegisterCondition(new AndEvaluator());
             reg.RegisterCondition(new OrEvaluator());
@@ -110,6 +120,7 @@ namespace NarrativeGen
             reg.RegisterEffect(new AddItemApplicator());
             reg.RegisterEffect(new RemoveItemApplicator());
             reg.RegisterEffect(new GotoApplicator());
+            reg.RegisterEffect(new CreateEventApplicator());
         }
     }
 
@@ -185,6 +196,18 @@ namespace NarrativeGen
         {
             var hc = (HasItemCondition)condition;
             var has = ctx.Inventory.Any(id => string.Equals(id, hc.Key, StringComparison.OrdinalIgnoreCase));
+            return has == hc.Value;
+        }
+    }
+
+    internal class HasEventEvaluator : IConditionEvaluator
+    {
+        public string Type => "hasEvent";
+
+        public bool Evaluate(Condition condition, EvaluationContext ctx)
+        {
+            var hc = (HasEventCondition)condition;
+            var has = ctx.Events.ContainsKey(hc.Key);
             return has == hc.Value;
         }
     }
@@ -319,6 +342,52 @@ namespace NarrativeGen
         {
             var go = (GotoEffect)effect;
             return session.With(currentNodeId: go.Target);
+        }
+    }
+
+    internal class CreateEventApplicator : IEffectApplicator
+    {
+        public string Type => "createEvent";
+
+        public Session Apply(Effect effect, Session session)
+        {
+            var ce = (CreateEventEffect)effect;
+            var entity = new Entity
+            {
+                Id = ce.Id,
+                Name = ce.Name,
+                Properties = CreateEventApplicator.NormalizeProperties(ce.Properties),
+            };
+            var events = new Dictionary<string, Entity>(session.Events, StringComparer.OrdinalIgnoreCase)
+            {
+                [ce.Id] = entity,
+            };
+            return session.With(events: events);
+        }
+
+        private static Dictionary<string, PropertyDef>? NormalizeProperties(
+            Dictionary<string, CreateEventPropertyInput>? raw)
+        {
+            if (raw == null || raw.Count == 0)
+                return null;
+            var result = new Dictionary<string, PropertyDef>(StringComparer.OrdinalIgnoreCase);
+            foreach (var kv in raw)
+            {
+                var dv = kv.Value.DefaultValue;
+                string type = dv switch
+                {
+                    long or int or double or float => "number",
+                    bool => "boolean",
+                    _ => "string",
+                };
+                result[kv.Key] = new PropertyDef
+                {
+                    Key = kv.Key,
+                    Type = type,
+                    DefaultValue = dv,
+                };
+            }
+            return result;
         }
     }
 }

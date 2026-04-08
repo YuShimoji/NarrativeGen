@@ -5,12 +5,12 @@
 1. **GitHub Issue**（推奨）: 受け入れ条件を1〜3行で書き、`docs/spec-index.json` の該当 SP と相互リンクする。
 2. **`docs/plans/DEVELOPMENT_PLAN.md`**: マイルストーン行として1行追加し、Issue 番号が付いたら追記する。
 
-## 現在の表エントリ
+## BL-TGEN-META（決定済み 2026-04-08）
 
-| ID | 昇格時に含めること |
-|----|-------------------|
-| BL-TGEN-META | `model.metadata` に `{…}` を載せるか、対象フィールド、プレイ本線で使うか |
+当面コアに `model.metadata` の `{…}` 展開を載せない。将来ニーズが出たら [docs/plans/issue-stubs/BL-TGEN-META.md](issue-stubs/BL-TGEN-META.md) から GitHub Issue を起票する。
 
-（BGM 人的検証は `docs/specs/play-immersion.md` の「検証記録」表で管理。Issue 化する場合はその表へのリンクを添える。）
+## BGM 検証
 
-昇格後は `TECHNICAL_DEBT.md` の表から該当行を **削除**し、Issue/DEVELOPMENT_PLAN 側を正とする。
+`docs/specs/play-immersion.md` の検証記録表および `play-media.spec.js` の E2E を正とする。
+
+昇格後は `TECHNICAL_DEBT.md` の Backlog から該当行を **削除**し、Issue/DEVELOPMENT_PLAN 側を正とする。

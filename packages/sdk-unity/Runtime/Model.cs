@@ -278,6 +278,18 @@ namespace NarrativeGen
     }
 
     /// <summary>
+    /// engine-ts の hasEvent に対応。セッションの動的イベント ID の有無を検査する。
+    /// </summary>
+    public class HasEventCondition : Condition
+    {
+        [JsonProperty("key")]
+        public string Key { get; set; } = string.Empty;
+
+        [JsonProperty("value")]
+        public bool Value { get; set; } = true;
+    }
+
+    /// <summary>
     /// Logical AND: all sub-conditions must be true.
     /// </summary>
     public class AndCondition : Condition
@@ -406,5 +418,29 @@ namespace NarrativeGen
     {
         [JsonProperty("key")]
         public string Key { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// createEvent エフェクト（engine-ts <c>event-entity.ts</c> と同等のセッションへの動的エンティティ追加）。
+    /// </summary>
+    public class CreateEventEffect : Effect
+    {
+        [JsonProperty("id")]
+        public string Id { get; set; } = string.Empty;
+
+        [JsonProperty("name")]
+        public string Name { get; set; } = string.Empty;
+
+        [JsonProperty("properties")]
+        public Dictionary<string, CreateEventPropertyInput>? Properties { get; set; }
+    }
+
+    /// <summary>
+    /// createEvent.properties エントリの簡略形（defaultValue のみ）。
+    /// </summary>
+    public class CreateEventPropertyInput
+    {
+        [JsonProperty("defaultValue")]
+        public object? DefaultValue { get; set; }
     }
 }

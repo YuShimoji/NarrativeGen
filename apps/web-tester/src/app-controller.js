@@ -140,6 +140,12 @@ function initPlayRenderer() {
   }
   // Insert mode toggle button
   insertModeToggle()
+
+  // 開発時のみ: Playwright が PlayRenderer の BGM 診断を読むためのフック（本番ビルドでは無効）
+  if (import.meta.env.DEV) {
+    window.__narrativeGenE2E = window.__narrativeGenE2E ?? {}
+    window.__narrativeGenE2E.getPlayRenderer = () => playRenderer
+  }
 }
 
 function insertModeToggle() {
@@ -152,6 +158,7 @@ function insertModeToggle() {
   const toggle = document.createElement('button')
   toggle.className = 'play-mode-toggle'
   toggle.title = 'Transition mode'
+  toggle.setAttribute('aria-label', '\u30d7\u30ec\u30a4\u9078\u629e\u80a2\u306e\u9077\u79fb\u30e2\u30fc\u30c9\u3092\u5207\u66ff\uff08\u30af\u30ed\u30b9\u30d5\u30a7\u30fc\u30c9\u307e\u305f\u306f\u8ffd\u8a18\u30b9\u30af\u30ed\u30fc\u30eb\uff09')
   updateToggleLabel(toggle)
   toggle.addEventListener('click', () => {
     playRenderer.toggleMode()
