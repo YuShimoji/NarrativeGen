@@ -174,10 +174,10 @@
     "id": "SP-UNITY-001",
     "title": "Unity SDK",
     "status": "partial",
-    "pct": 95,
+    "pct": 96,
     "cat": "system",
     "file": "docs/specs/unity-sdk.md",
-    "summary": "Unity C# SDK: Session.events, PropertyDef/parentEntity, ExpandTemplateWithTracking, ConversationTemplateMatcher, NarrativeDisplayText.ResolveNarrativeDisplayTextTracked (SP-TGEN slice2). Remaining: NuGet, hasEvent/createEvent effects parity, edge TS parity."
+    "summary": "Unity C# SDK: Session.events, ExpandTemplateWithTracking, ConversationTemplateMatcher (maxUses with usageState), ResolveNarrativeDisplayTextTracked parity with TS (no usage in resolve path; tests in NarrativeTextTests). Remaining: NuGet distribution, expandTemplate edge cases."
   },
   {
     "id": "SP-PARA-001",

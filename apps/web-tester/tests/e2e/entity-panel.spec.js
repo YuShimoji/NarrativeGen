@@ -10,29 +10,31 @@ async function loadModelAndEdit(page, modelName) {
   await page.selectOption('#modelSelect', modelName);
   await page.click('#startBtn');
 
-  // Wait for session to actually start (status bar shows success)
+  // ステータス文言より先に appState が埋まる（並列負荷時のフレーク対策）
   await page.waitForFunction(
     () => {
-      const statusEl = document.querySelector('#statusText, .status-text');
-      return statusEl && statusEl.textContent.includes('実行中');
+      const st = window.appState;
+      return st?.model != null && st.model.nodes && Object.keys(st.model.nodes).length > 0;
     },
-    { timeout: 10000 }
+    { timeout: 40000 }
   );
 
-  // Switch to GUI edit mode
   await page.click('button:has-text("編集")');
 
-  // Wait for GUI edit mode to become active
   await page.waitForFunction(
     () => {
       const el = document.getElementById('guiEditMode');
       return el && el.classList.contains('active') && el.style.display !== 'none';
     },
-    { timeout: 5000 }
+    { timeout: 20000 }
   );
 }
 
-test.describe('Entity Definition Panel', () => {
+/** 同一ファイル内の describe が別ワーカーで並列に走ると dev サーバが詰まるため、ファイル全体を直列化する */
+test.describe.serial('entity-panel', () => {
+  test.describe.configure({ timeout: 90000 });
+
+  test.describe('Entity Definition Panel', () => {
   test.beforeEach(async ({ page }) => {
     await loadModelAndEdit(page, 'property_test');
   });
@@ -148,9 +150,9 @@ test.describe('Entity Definition Panel', () => {
     const countAfter = await page.locator('#entityTableBody > tr[data-entity-id]:not(.entity-props-row)').count();
     expect(countAfter).toBe(countBefore - 1);
   });
-});
+  });
 
-test.describe('Entity Panel - Integration Test Model', () => {
+  test.describe('Entity Panel - Integration Test Model', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());
@@ -160,17 +162,23 @@ test.describe('Entity Panel - Integration Test Model', () => {
     await page.click('#startBtn');
     await page.waitForFunction(
       () => {
-        const statusEl = document.querySelector('#statusText, .status-text');
-        return statusEl && statusEl.textContent.includes('実行中');
+        const st = window.appState;
+        return st?.model != null && st.model.nodes && Object.keys(st.model.nodes).length > 0;
       },
-      { timeout: 10000 }
+      { timeout: 40000 }
     );
   });
 
   test('integration_test model should load successfully', async ({ page }) => {
-    // Model loaded if status shows running
+    const ok = await page.evaluate(
+      () =>
+        window.appState?.model != null &&
+        window.appState.model.nodes &&
+        Object.keys(window.appState.model.nodes).length > 0
+    );
+    expect(ok).toBe(true);
     const status = page.locator('#statusText, .status-text');
-    await expect(status).toContainText('実行中');
+    await expect(status).toContainText('実行中', { timeout: 15000 });
   });
 
   test('dynamic text should expand entity references in play mode', async ({ page }) => {
@@ -189,7 +197,7 @@ test.describe('Entity Panel - Integration Test Model', () => {
         const el = document.getElementById('guiEditMode');
         return el && el.classList.contains('active') && el.style.display !== 'none';
       },
-      { timeout: 5000 }
+      { timeout: 12000 }
     );
 
     const panel = page.locator('#entityPanel');
@@ -201,5 +209,6 @@ test.describe('Entity Panel - Integration Test Model', () => {
     // integration_test has: physical_object, food, cheeseburger, detective_badge
     const rows = page.locator('#entityTableBody > tr[data-entity-id]:not(.entity-props-row)');
     expect(await rows.count()).toBeGreaterThanOrEqual(4);
+  });
   });
 });

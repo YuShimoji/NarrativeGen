@@ -28,8 +28,8 @@ Status: in progress
 - Build scripts in `packages/engine-ts` and `packages/backend` now use hoisted TypeScript.
 
 Remaining tasks:
-- [ ] Monitor `npm ls --depth=0` for `extraneous/invalid` recurrence.
-- [ ] Add environment troubleshooting notes for permission/sandbox differences.
+- [ ] Monitor `npm ls --depth=0` for `extraneous/invalid` recurrence（手順: [docs/operations/DEPENDENCY_ENCODING_OPS.md](operations/DEPENDENCY_ENCODING_OPS.md)）。
+- [x] Add environment troubleshooting notes for permission/sandbox differences（同上）。
 
 ### 3. Encoding safety operation
 Status: in progress
@@ -40,7 +40,7 @@ Status: in progress
 
 Remaining tasks:
 - [ ] Make changed-file mode use Git diff directly in restricted/sandboxed environments.
-- [ ] Add CI/pre-commit guidance for encoding safety checks.
+- [x] Add CI/pre-commit guidance for encoding safety checks（[docs/operations/DEPENDENCY_ENCODING_OPS.md](operations/DEPENDENCY_ENCODING_OPS.md)）。
 
 ---
 
@@ -77,7 +77,7 @@ Status: partially done
 
 Remaining tasks:
 - [x] Re-verify core graph editor scenarios.
-- [ ] Regression checks for variable system and Yarn export.
+- [x] Regression checks for variable system and Yarn export（手動手順: [docs/checklists/MANUAL_REGRESSION_VARIABLE_YARN.md](checklists/MANUAL_REGRESSION_VARIABLE_YARN.md)）。
 - [ ] Negative-path checks for model import/export.
 - [x] E2E 間欠失敗の記録運用テンプレート追加 (`docs/operations/E2E_FLAKE_RUNBOOK.md`)
 - [x] 自動化/手動責務境界と flaky 運用基準を runbook に反映

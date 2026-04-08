@@ -44,12 +44,12 @@ NarrativeGen/
 - E2E バッチで稀に失敗しうる（`play-immersion` AC-5 は `toContainText` 待機で緩和）
 - SP-PLAY-001: **done**（AC-9〜12 は `play-media-bgm-ac.spec.js` + 検証表で Pass 確定）
 - Dynamic Text の Yarn ネイティブ変換は未対応
-- リポジトリ内のソース配置は **`packages/`（小文字）** を正とする（現役ドキュメント表記を統一済み）。Unity 側の埋め込み先フォルダ名はエディタ既定の **`Packages/`** のまま（`packages/sdk-unity/README.md` 参照）
+- リポジトリ内のソース配置は `**packages/`（小文字）** を正とする（現役ドキュメント表記を統一済み）。Unity 側の埋め込み先フォルダ名はエディタ既定の `**Packages/`** のまま（`packages/sdk-unity/README.md` 参照）
 
 ## 次の推奨作業
 
-1. **E2E 恒久対策の実装**: GitHub [#81](https://github.com/YuShimoji/NarrativeGen/issues/81)〜[#83](https://github.com/YuShimoji/NarrativeGen/issues/83) の調査・修正
-2. **SP-UNITY-001 残差**: `docs/specs/unity-sdk.md` の未充足（NuGet / 細部パリティ）をテストで固定
+1. **SP-UNITY-001 残差**: NuGet 配布、`expandTemplate` エッジの列挙とテスト拡充（`unity-sdk.md` 参照）
+2. **TD §7**: import ネガティブ手動確認、または追加 E2E 化の検討
 3. **WritingPage**: 外部フォーマット安定後にゲート再判定（現状 No-Go は `writingpage-io-contract.md` 参照）
 
 ## 実行ロードマップ（2026 Q2-Q4）
@@ -91,6 +91,8 @@ dotnet test .\packages\tests\NarrativeGen.Tests
 
 技術的負債: `docs/TECHNICAL_DEBT.md`
 E2E フレーク運用: `docs/operations/E2E_FLAKE_RUNBOOK.md`
+依存・encoding 運用メモ: `docs/operations/DEPENDENCY_ENCODING_OPS.md`
+変数/Yarn 手動回帰: `docs/checklists/MANUAL_REGRESSION_VARIABLE_YARN.md`
 flaky 候補トラッカー: `docs/tasks/FLAKY_ISSUES_TRACKER.md`
 画面別 a11y/レスポンシブチェック: `docs/checklists/A11Y_RESPONSIVE_CHECKLIST.md`
 WritingPage 準備仕様: `docs/specs/writingpage-io-contract.md`

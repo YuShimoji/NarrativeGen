@@ -1,5 +1,20 @@
 import { test, expect } from '@playwright/test';
 
+test.describe.configure({ mode: 'serial' });
+
+/** グラフタブ切替後、D3 が SVG にノードを描画するまで待つ（初期描画遅延のフレーク対策） */
+async function switchToGraphAndWaitForSvg(page) {
+  await page.click('#graphTab');
+  await page.waitForSelector('#graphPanel.active', { timeout: 8000 });
+  await page.waitForFunction(
+    () => {
+      const svg = document.querySelector('#graphSvg');
+      return svg && svg.querySelector('g');
+    },
+    { timeout: 15000 }
+  );
+}
+
 test.describe('Undo/Redo Smoke Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
@@ -8,14 +23,18 @@ test.describe('Undo/Redo Smoke Tests', () => {
     // Load tutorial model and start session
     await page.selectOption('#modelSelect', 'tutorial');
     await page.click('#startBtn');
-    await page.waitForTimeout(1000);
+    await page.waitForFunction(
+      () => {
+        const st = window.appState;
+        return st?.model != null && st.model.nodes && Object.keys(st.model.nodes).length > 0;
+      },
+      { timeout: 25000 }
+    );
   });
 
   test.describe('Graph Editor Undo/Redo', () => {
     test.beforeEach(async ({ page }) => {
-      // Switch to graph tab
-      await page.click('#graphTab');
-      await page.waitForTimeout(500);
+      await switchToGraphAndWaitForSvg(page);
     });
 
     test('should expose undoGraph/redoGraph on devtools API', async ({ page }) => {
@@ -66,13 +85,19 @@ test.describe('Undo/Redo Smoke Tests', () => {
     test('should have undo/redo buttons in batch edit modal', async ({ page }) => {
       // Enter edit mode
       await page.click('#editBtn');
-      await page.waitForTimeout(500);
+      await page.waitForFunction(
+        () => {
+          const el = document.getElementById('guiEditMode');
+          return el && el.classList.contains('active');
+        },
+        { timeout: 8000 }
+      );
 
       // Open batch edit modal
       const batchBtn = page.locator('#batchEditBtn');
       if (await batchBtn.isVisible().catch(() => false)) {
         await batchBtn.click();
-        await page.waitForTimeout(500);
+        await expect(page.locator('#batchEditModal')).toBeVisible({ timeout: 8000 });
 
         // Verify undo/redo buttons exist
         const undoBtn = page.locator('#batchUndoBtn');
@@ -89,7 +114,13 @@ test.describe('Undo/Redo Smoke Tests', () => {
     test('should enable undo after text replacement', async ({ page }) => {
       // Enter edit mode
       await page.click('#editBtn');
-      await page.waitForTimeout(500);
+      await page.waitForFunction(
+        () => {
+          const el = document.getElementById('guiEditMode');
+          return el && el.classList.contains('active');
+        },
+        { timeout: 8000 }
+      );
 
       // Open batch edit modal
       const batchBtn = page.locator('#batchEditBtn');
@@ -98,15 +129,14 @@ test.describe('Undo/Redo Smoke Tests', () => {
         return;
       }
       await batchBtn.click();
-      await page.waitForTimeout(500);
+      await expect(page.locator('#batchEditModal')).toBeVisible({ timeout: 8000 });
 
       // Perform a text replacement using force click to bypass overlays
       await page.fill('#searchText', 'tutorial');
       await page.fill('#replaceText', 'REPLACED');
       await page.locator('#updatePreviewBtn').click({ force: true });
-      await page.waitForTimeout(500);
       await page.locator('#applyTextReplaceBtn').click({ force: true });
-      await page.waitForTimeout(500);
+      await expect(page.locator('#batchHistoryCount')).toBeVisible({ timeout: 8000 });
 
       // Verify the flow completes without errors
       const historyCount = page.locator('#batchHistoryCount');
@@ -116,7 +146,13 @@ test.describe('Undo/Redo Smoke Tests', () => {
 
     test('should display history count', async ({ page }) => {
       await page.click('#editBtn');
-      await page.waitForTimeout(500);
+      await page.waitForFunction(
+        () => {
+          const el = document.getElementById('guiEditMode');
+          return el && el.classList.contains('active');
+        },
+        { timeout: 8000 }
+      );
 
       const batchBtn = page.locator('#batchEditBtn');
       if (!(await batchBtn.isVisible().catch(() => false))) {
@@ -124,7 +160,7 @@ test.describe('Undo/Redo Smoke Tests', () => {
         return;
       }
       await batchBtn.click();
-      await page.waitForTimeout(500);
+      await expect(page.locator('#batchEditModal')).toBeVisible({ timeout: 8000 });
 
       const historyCount = page.locator('#batchHistoryCount');
       await expect(historyCount).toBeVisible();

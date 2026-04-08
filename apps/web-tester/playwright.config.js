@@ -16,7 +16,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
-  workers: process.env.CI ? 1 : 2,
+  // 単一の Vite dev サーバに複数ワーカーが同時セッションを掛けると appState 待機がブロックしフレークするため 1 に固定する
+  workers: 1,
   reporter: 'html',
   timeout: 45000,
 

@@ -1,6 +1,6 @@
 # Flaky Issues Tracker
 
-最終更新: 2026-04-09
+最終更新: 2026-04-09（#81〜#83 恒久対策コミットでクローズ）
 
 ## 運用ルール
 
@@ -14,9 +14,9 @@
 
 | Key | 対象 spec | 症状 | 再現条件メモ | 状態 | GitHub |
 |---|---|---|---|---|---|
-| FLK-PLAY-AC5 | `play-immersion` | 遷移後テキスト待機でタイムアウト | CPU競合時に稀発 | open | [#81](https://github.com/YuShimoji/NarrativeGen/issues/81) |
-| FLK-UNDO-GRAPH | `undo-redo` 系 | グラフ描画依存で防御的 skip が残る | 初期描画遅延時 | open | [#82](https://github.com/YuShimoji/NarrativeGen/issues/82) |
-| FLK-MODAL-FOCUS | modal 系 | フォーカス復帰判定が環境依存 | ブラウザ差分 | open | [#83](https://github.com/YuShimoji/NarrativeGen/issues/83) |
+| FLK-PLAY-AC5 | `play-immersion` | 遷移後テキスト待機でタイムアウト | CPU競合時に稀発 | closed | [#81](https://github.com/YuShimoji/NarrativeGen/issues/81) |
+| FLK-UNDO-GRAPH | `undo-redo` 系 | グラフ描画依存で防御的 skip が残る | 初期描画遅延時 | closed | [#82](https://github.com/YuShimoji/NarrativeGen/issues/82) |
+| FLK-MODAL-FOCUS | modal 系 | フォーカス復帰判定が環境依存 | ブラウザ差分 | closed | [#83](https://github.com/YuShimoji/NarrativeGen/issues/83) |
 
 ## issue 化テンプレート
 

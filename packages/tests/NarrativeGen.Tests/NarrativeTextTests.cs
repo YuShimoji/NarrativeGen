@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using Newtonsoft.Json.Linq;
 using NarrativeGen;
 using NgSession = NarrativeGen.Runtime.Session;
 
@@ -290,6 +291,121 @@ namespace NarrativeGen.Tests
             var result = NarrativeDisplayText.ResolveNarrativeDisplayTextTracked("Hello.", model, session);
             Assert.That(result.Text, Does.Contain("Hello."));
             Assert.That(result.Text, Does.Not.Contain("Should not appear."));
+        }
+
+        [Test]
+        public void ConversationTemplateMatcher_SkipsTemplate_WhenUsageReachesMaxUses()
+        {
+            var model = new NarrativeModel
+            {
+                StartNode = "n1",
+                Nodes = new Dictionary<string, Node> { ["n1"] = new Node { Id = "n1", Text = "x" } },
+                ConversationTemplates = new List<ConversationTemplate>
+                {
+                    new ConversationTemplate
+                    {
+                        Id = "limited_use",
+                        MaxUses = 1,
+                        Priority = 1,
+                        Text = "Limited.",
+                        Trigger = new TemplateTrigger
+                        {
+                            EventMatch = new EventMatchCondition
+                            {
+                                PropertyChecks = new List<PropertyCheck>
+                                {
+                                    new PropertyCheck
+                                    {
+                                        Key = "severity",
+                                        Op = ">=",
+                                        Value = JToken.FromObject(50)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            var evt = new Entity
+            {
+                Id = "event1",
+                Name = "Event",
+                Properties = new Dictionary<string, PropertyDef>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["severity"] = new PropertyDef { DefaultValue = 80L }
+                }
+            };
+            var session = new NgSession(
+                "n1",
+                new Dictionary<string, bool>(),
+                new Dictionary<string, double>(),
+                new Dictionary<string, object>(),
+                new List<string>(),
+                0,
+                new Dictionary<string, Entity>(StringComparer.OrdinalIgnoreCase) { [evt.Id] = evt });
+
+            var usage = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["limited_use"] = 1 };
+            var results = ConversationTemplateMatcher.FindMatchingTemplates(
+                model.ConversationTemplates!, session, model, usage);
+            Assert.That(results, Is.Empty);
+        }
+
+        [Test]
+        public void ResolveNarrativeDisplayTextTracked_DoesNotPassTemplateUsage_engineTsParity()
+        {
+            var model = new NarrativeModel
+            {
+                StartNode = "n1",
+                Nodes = new Dictionary<string, Node> { ["n1"] = new Node { Id = "n1", Text = "x" } },
+                ConversationTemplates = new List<ConversationTemplate>
+                {
+                    new ConversationTemplate
+                    {
+                        Id = "limited_use",
+                        MaxUses = 1,
+                        Priority = 1,
+                        Text = "Extra.",
+                        Trigger = new TemplateTrigger
+                        {
+                            EventMatch = new EventMatchCondition
+                            {
+                                PropertyChecks = new List<PropertyCheck>
+                                {
+                                    new PropertyCheck
+                                    {
+                                        Key = "severity",
+                                        Op = ">=",
+                                        Value = JToken.FromObject(50)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            var evt = new Entity
+            {
+                Id = "event1",
+                Name = "Event",
+                Properties = new Dictionary<string, PropertyDef>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["severity"] = new PropertyDef { DefaultValue = 80L }
+                }
+            };
+            var session = new NgSession(
+                "n1",
+                new Dictionary<string, bool>(),
+                new Dictionary<string, double>(),
+                new Dictionary<string, object>(),
+                new List<string>(),
+                0,
+                new Dictionary<string, Entity>(StringComparer.OrdinalIgnoreCase) { [evt.Id] = evt });
+
+            var r1 = NarrativeDisplayText.ResolveNarrativeDisplayTextTracked("Hello.", model, session);
+            var r2 = NarrativeDisplayText.ResolveNarrativeDisplayTextTracked("Hello.", model, session);
+            Assert.That(r1.Text, Does.Contain("Extra."));
+            Assert.That(r2.Text, Does.Contain("Extra."));
+            // engine-ts の resolveNarrativeDisplayTextTracked も usage を渡さないため、呼び出しごとにマッチし得る
         }
     }
 }

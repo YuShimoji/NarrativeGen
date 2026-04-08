@@ -12,10 +12,10 @@ async function loadModelAndEdit(page, modelName) {
 
   await page.waitForFunction(
     () => {
-      const statusEl = document.querySelector('#statusText, .status-text');
-      return statusEl && statusEl.textContent.includes('実行中');
+      const st = window.appState;
+      return st?.model != null && st.model.nodes && Object.keys(st.model.nodes).length > 0;
     },
-    { timeout: 10000 }
+    { timeout: 40000 }
   );
 
   await page.click('button:has-text("編集")');
@@ -24,11 +24,14 @@ async function loadModelAndEdit(page, modelName) {
       const el = document.getElementById('guiEditMode');
       return el && el.classList.contains('active') && el.style.display !== 'none';
     },
-    { timeout: 5000 }
+    { timeout: 20000 }
   );
 }
 
-test.describe('ConversationTemplate Panel', () => {
+test.describe.serial('template-panel', () => {
+  test.describe.configure({ timeout: 90000 });
+
+  test.describe('ConversationTemplate Panel', () => {
   test.beforeEach(async ({ page }) => {
     await loadModelAndEdit(page, 'integration_test');
   });
@@ -126,9 +129,9 @@ test.describe('ConversationTemplate Panel', () => {
     const countAfter = await page.locator('#templateTableBody > tr[data-template-idx]').count();
     expect(countAfter).toBe(countBefore - 1);
   });
-});
+  });
 
-test.describe('ConversationTemplate Panel - No Templates', () => {
+  test.describe('ConversationTemplate Panel - No Templates', () => {
   test.beforeEach(async ({ page }) => {
     await loadModelAndEdit(page, 'property_test');
   });
@@ -146,5 +149,6 @@ test.describe('ConversationTemplate Panel - No Templates', () => {
     const hint = page.locator('#templateTableBody .entity-empty-hint');
     await expect(hint).toBeVisible();
     await expect(hint).toContainText('テンプレートが定義されていません');
+  });
   });
 });

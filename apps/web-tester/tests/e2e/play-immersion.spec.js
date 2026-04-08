@@ -16,20 +16,28 @@ async function openPage(page) {
   );
 }
 
+/** 遷移アニメーション・CPU 負荷時でも落ちにくいよう余裕を持たせる */
+const PLAY_CONTENT_TIMEOUT = 15000;
+
 async function startLinearModel(page) {
-  // Select linear model from dropdown
   await page.selectOption('#modelSelect', 'linear');
   await page.click('#startBtn');
-  // Wait for session to start
   await page.waitForFunction(
-    () => window.appState?.model?.startNode === 'start',
-    { timeout: 10000 }
+    () => {
+      const st = window.appState;
+      return (
+        st?.model != null &&
+        st.model.nodes &&
+        Object.keys(st.model.nodes).length > 0 &&
+        st.model.startNode === 'start'
+      );
+    },
+    { timeout: 40000 }
   );
-  // Wait for PlayRenderer to render content
-  await page.waitForSelector('.play-content', { timeout: 5000 });
+  await page.waitForSelector('.play-content', { timeout: PLAY_CONTENT_TIMEOUT });
 }
 
-test.describe.configure({ mode: 'serial' });
+test.describe.configure({ mode: 'serial', timeout: 90000 });
 test.describe('SP-PLAY-001: Play Immersion MVP', () => {
 
   test('AC-1: paragraph fade-in — story text appears as .play-paragraph elements', async ({ page }) => {
@@ -66,18 +74,10 @@ test.describe('SP-PLAY-001: Play Immersion MVP', () => {
     // Click "Get up" choice
     await page.locator('.play-choice-btn:has-text("Get up")').click();
 
-    // Wait for new content to appear
-    await page.waitForFunction(
-      () => {
-        const content = document.querySelector('#storyView .play-content');
-        return content && content.textContent.includes('You see the door.');
-      },
-      { timeout: 5000 }
-    );
-
-    // New content should have "You see the door."
-    const content = await page.locator('#storyView .play-content').last().textContent();
-    expect(content).toContain('You see the door.');
+    // Locator + toContainText（waitForFunction よりタイムアウトとリトライが安定）
+    const latestPlay = page.locator('#storyView .play-content').last();
+    await expect(latestPlay).toBeVisible({ timeout: PLAY_CONTENT_TIMEOUT });
+    await expect(latestPlay).toContainText('You see the door.', { timeout: PLAY_CONTENT_TIMEOUT });
   });
 
   test('AC-5: mode toggle — toggle button exists and switches modes', async ({ page }) => {
@@ -111,11 +111,13 @@ test.describe('SP-PLAY-001: Play Immersion MVP', () => {
 
     // Navigate to end: start → scene1 → end
     await page.locator('.play-choice-btn:has-text("Get up")').click();
-    await page.waitForSelector('.play-choice-btn:has-text("Open door")', { timeout: 5000 });
+    await expect(page.locator('.play-choice-btn:has-text("Open door")')).toBeVisible({
+      timeout: PLAY_CONTENT_TIMEOUT,
+    });
     await page.locator('.play-choice-btn:has-text("Open door")').click();
 
     // Wait for ending to appear
-    await page.waitForSelector('.play-ending', { timeout: 5000 });
+    await page.waitForSelector('.play-ending', { timeout: PLAY_CONTENT_TIMEOUT });
 
     // Ending mark should contain "End"
     const endingMark = page.locator('.play-ending-mark');
@@ -134,21 +136,19 @@ test.describe('SP-PLAY-001: Play Immersion MVP', () => {
 
     // Navigate to end
     await page.locator('.play-choice-btn:has-text("Get up")').click();
-    await page.waitForSelector('.play-choice-btn:has-text("Open door")', { timeout: 5000 });
+    await expect(page.locator('.play-choice-btn:has-text("Open door")')).toBeVisible({
+      timeout: PLAY_CONTENT_TIMEOUT,
+    });
     await page.locator('.play-choice-btn:has-text("Open door")').click();
-    await page.waitForSelector('.play-ending', { timeout: 5000 });
+    await page.waitForSelector('.play-ending', { timeout: PLAY_CONTENT_TIMEOUT });
 
     // Click restart
     await page.locator('.play-ending-btn:has-text("最初から")').click();
 
     // Should be back at start
-    await page.waitForFunction(
-      () => {
-        const content = document.querySelector('#storyView .play-content');
-        return content && content.textContent.includes('You wake up.');
-      },
-      { timeout: 5000 }
-    );
+    await expect(page.locator('#storyView .play-content').last()).toContainText('You wake up.', {
+      timeout: PLAY_CONTENT_TIMEOUT,
+    });
   });
 
   test('AC-4: append-scroll transition — content accumulates', async ({ page }) => {
@@ -167,7 +167,7 @@ test.describe('SP-PLAY-001: Play Immersion MVP', () => {
         const contents = document.querySelectorAll('#storyView .play-content');
         return contents.length >= 2;
       },
-      { timeout: 5000 }
+      { timeout: PLAY_CONTENT_TIMEOUT }
     );
 
     // Both old and new content should be visible

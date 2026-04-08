@@ -18,10 +18,17 @@ async function openPage(page) {
 /** Helper: 新規モデルを作成 */
 async function createNewModel(page) {
   await page.click('#newModelBtn');
-  // appState.model が設定されるまで待つ
   await page.waitForFunction(
-    () => window.appState?.model?.startNode === 'start',
-    { timeout: 10000 }
+    () => {
+      const st = window.appState;
+      return (
+        st?.model != null &&
+        st.model.nodes &&
+        Object.keys(st.model.nodes).length > 0 &&
+        st.model.startNode === 'start'
+      );
+    },
+    { timeout: 40000 }
   );
 }
 
@@ -33,11 +40,11 @@ async function enterEditMode(page) {
       const el = document.getElementById('guiEditMode');
       return el && el.classList.contains('active') && el.style.display !== 'none';
     },
-    { timeout: 5000 }
+    { timeout: 12000 }
   );
 }
 
-test.describe.configure({ mode: 'serial' });
+test.describe.configure({ mode: 'serial', timeout: 90000 });
 test.describe('New Model Authoring Workflow', () => {
 
   test('新規作成ボタンで空モデルが生成される', async ({ page }) => {
