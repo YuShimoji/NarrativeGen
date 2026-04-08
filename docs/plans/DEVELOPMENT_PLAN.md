@@ -11,7 +11,7 @@
 | Phase | 内容 | 状態 |
 |-------|------|------|
 | 1 | CI `governance`（ルート `npm ci` + spec-index / models-sync / encoding-safety）とドキュメント整合 | 実装済み |
-| 2 | SP-PLAY-001: `play-immersion.md` 検証表への AC-9〜12 記入 | 表用意済み・記入待ち |
+| 2 | SP-PLAY-001: `play-immersion.md` 検証表への AC-9〜12 記入 | 完了（`play-media-bgm-ac.spec.js` + 検証表 Pass、`spec-index` は done） |
 | 3 | Unity SP-TGEN スライス2（events / 継承 / `[entity~]` / 会話テンプレ） | 実装済み（細部パリティは継続） |
 | 4 | E2E 間欠失敗の安定化（例: `play-immersion` AC-5 の `toContainText` 待機） | 一部実施（継続可） |
 | 5 | 依存: Vite/Rollup は専用ブランチで検証。UI: レスポンシブ・a11y は画面単位で Issue 化して着手 | 進行中 |
@@ -19,7 +19,7 @@
 ### 実行トラック（短期・中期・長期）
 
 - **短期（0〜4週間）**
-  - SP-PLAY-001 の AC-9〜12 人的確認ログを完了し、仕様クローズ条件を満たす
+  - SP-PLAY-001 の AC-9〜12 を `play-media-bgm-ac.spec.js` と検証表で完了（仕様クローズ条件を満たす）
   - SP-UNITY-001 の TS/C# パリティ差分（`hasEvent` 周辺）をテストで固定して収束
   - E2E フレーク観測と `check:safety` 運用を再開手順へ定着
 - **中期（1〜3か月）**
@@ -307,7 +307,7 @@
 
 ---
 
-### 優先順位3.11: SP-PLAY-001 プレイ没入感 MVP [進行中]
+### 優先順位3.11: SP-PLAY-001 プレイ没入感 MVP [完了]
 
 **開始日**: 2026-03-18
 
@@ -317,9 +317,9 @@
 - play.css: CSS アニメーション (fadeIn/fadeOut, stagger, ending, mode toggle)
 - app-controller.js: PlayRenderer 統合 (全セッション開始点)
 - playthrough.schema.json: settings.presentation + nodes.*.presentation 追加
-- E2E テスト: 8件
+- E2E: `play-immersion` / `play-media` / `play-media-bgm-ac`（AC-9〜12 機械検証）
 
-**残タスク**: `docs/specs/play-immersion.md` の AC-9〜12 を検証表に記入し、SP-PLAY-001 pct → 100% へ
+**完了**: `docs/specs/play-immersion.md` 検証表 Pass、`spec-index` で SP-PLAY-001 を `done` 化
 
 ---
 

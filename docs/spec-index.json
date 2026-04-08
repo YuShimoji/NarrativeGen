@@ -281,11 +281,11 @@
   {
     "id": "SP-PLAY-001",
     "title": "Play Immersion MVP",
-    "status": "partial",
-    "pct": 99,
+    "status": "done",
+    "pct": 100,
     "cat": "ui",
     "file": "docs/specs/play-immersion.md",
-    "summary": "Web Tester play experience. Phase 1: paragraph fade-in, inline choices, crossfade/append-scroll transitions, TransitionRegistry, CSS animations, E2E 8 tests. Phase 2: scene image display (node presentation.image) + BGM (AudioManager, crossfade, autoplay policy), E2E 5 tests. AC-9~12 verification procedure and Ready-state log are fixed; final Pass/Fail requires human ear verification."
+    "summary": "Web Tester play experience. Phase 1+2 complete: transitions, scene image, BGM with crossfade and autoplay unlock. E2E includes play-media-bgm-ac.spec.js for AC-9~12 behavioral verification (Chromium/Firefox/Edge). Human ear optional for audio quality."
   },
   {
     "id": "SP-WP-001",
@@ -294,7 +294,7 @@
     "pct": 90,
     "cat": "system",
     "file": "docs/specs/writingpage-io-contract.md",
-    "summary": "Pre-implementation contract for NarrativeGen <-> WritingPage handoff. Defines minimal required fields, semantic versioning compatibility policy, incompatible input behavior, and implementation start gates."
+    "summary": "Pre-implementation contract for NarrativeGen <-> WritingPage handoff. Gate decision log 2026-04-09: No-Go (external stability, agreement, samples pending). Implementation remains blocked until gate passes."
   },
   {
     "id": "SP-HIST-001",

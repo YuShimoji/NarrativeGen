@@ -1,6 +1,6 @@
 # Technical Debt and Improvement Tasks
 
-Last updated: 2026-04-08
+Last updated: 2026-04-09
 
 ## Overview
 This document tracks technical debt and improvement work items.
@@ -19,7 +19,7 @@ Status: in progress
 
 Remaining tasks:
 - [x] Require root `npm ci` + `check:spec-index` / `check:models-sync` / `check:encoding-safety` in CI (`governance` job).
-- [ ] Add change-review examples for spec maintenance.
+- [x] Add change-review examples for spec maintenance（[docs/operations/SPEC_INDEX_REVIEW_EXAMPLES.md](operations/SPEC_INDEX_REVIEW_EXAMPLES.md)）。
 
 ### 2. Dependency health recheck
 Status: in progress
@@ -56,7 +56,7 @@ Status: done (2026-03-17)
 - 初回ロード計測は任意。現状で問題なし
 
 ### 5. Responsive and accessibility improvements
-Status: in progress
+Status: done (baseline; 2026-04-09)
 
 Remaining tasks:
 - [x] Mobile/tablet layout definitions.

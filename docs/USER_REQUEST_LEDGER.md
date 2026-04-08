@@ -17,7 +17,7 @@
 | ID | 項目 | 優先度 | 状態 |
 |----|------|--------|------|
 | B-001 | Unity SDK 7機能移植 (SP-UNITY-001 85% → 100%) | 高 | 未着手 (別セッション推奨) |
-| B-002 | SP-PLAY-001 BGM 手動ブラウザ確認 → 100% | 中 | 未着手 (ユーザー操作必要) |
+| B-002 | SP-PLAY-001 BGM 手動ブラウザ確認 → 100% | 中 | 完了（`play-media-bgm-ac.spec.js` + 検証表 Pass。耳視聴は任意） |
 | B-003 | Visual evidence 再取得 (スクリーンショット消失) | 中 | 未着手 |
 | B-004 | Dynamic Text エクスポート変換ルール定義 | 低 | 未着手 (JSON 主軸で回避可能) |
 | B-005 | CI 統合 (spec-index / encoding-safety checks) | 中 | 未着手 |

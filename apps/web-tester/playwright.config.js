@@ -1,5 +1,16 @@
 import { defineConfig, devices } from '@playwright/test';
 
+/** Windows 等で Edge を追加検証するときのみ `PW_EDGE=1` を付与（未導入環境での失敗を避ける） */
+const edgeProject =
+  process.env.PW_EDGE === '1'
+    ? [
+        {
+          name: 'msedge',
+          use: { ...devices['Desktop Edge'], channel: 'msedge' },
+        },
+      ]
+    : []
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -28,6 +39,7 @@ export default defineConfig({
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
+    ...edgeProject,
   ],
 
   webServer: {

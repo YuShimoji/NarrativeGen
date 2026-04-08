@@ -164,6 +164,7 @@ WritingPage で執筆したテキストを NarrativeGen のノードに流し込
 
 ### Gap 1: WritingPage 連携 (Stage 2a)
 - **状態**: 延期中 (WritingPage v0.3.32 のフォーマット不安定のため)。早期実装コードは stash 退避済み
+- **着手ゲート判定 (2026-04-09)**: `docs/specs/writingpage-io-contract.md` のログ参照。**No-Go**（外部安定・合意・サンプル未充足）。SP-PLAY-001 はクローズ済みのためゲート項目4のみ充足。
 - **影響**: ライターの長文執筆体験が Web Tester の小さなテキストエリアに制約される
 - **優先度**: 中 (延期: WritingPage 安定待ち。拒否ではない)
 

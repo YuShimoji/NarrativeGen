@@ -23,6 +23,7 @@
 - 完了基準:
   - 検証表の空欄が埋まり、確認結果が追跡可能
   - `spec-index.json` 上の SP-PLAY-001 を `done` 化できる状態
+- **2026-04-09 反映**: `play-media-bgm-ac.spec.js` で AC-9〜12 を機械検証し、検証表を Pass で確定。`SP-PLAY-001` は `done`。
 
 ### ST-2: SP-UNITY-001 最終パリティ
 - 対象: `docs/specs/unity-sdk.md`, `packages/sdk-unity`, `packages/tests/NarrativeGen.Tests`

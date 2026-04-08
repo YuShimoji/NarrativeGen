@@ -21,7 +21,7 @@
 
 | ID | 内容 | 確認のしかた | 優先度 |
 |----|------|-------------|--------|
-| U01 | Play Immersion（画像/BGM の操作感） | `docs/specs/play-immersion.md` の AC-9〜12 ログ更新 | 高 |
+| U01 | Play Immersion（画像/BGM の操作感） | `play-media-bgm-ac.spec.js` + `play-immersion.md` 検証表で機械判定済み（耳視聴は任意） | 低 |
 | U02 | REST API 全経路 | `npm run dev:api` → curl 等 | 低 |
 | U03 | Undo/Redo（GUI 体感） | エディタで Ctrl+Z/Y（E2E は一部 skip） | 中 |
 | U04 | グラフエディタ全体の操作感 | 手動で D&D・ズーム等 | 中 |

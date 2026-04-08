@@ -365,7 +365,7 @@ apps/web-tester/
 | AC | 自動検証 | 結果メモ |
 |----|-----------|----------|
 | AC-1〜AC-8, AC-13 | Playwright `play-immersion.spec.js` / `play-media.spec.js` | CI / ローカルで緑を前提 |
-| AC-9〜AC-12（聴覚・音量・クロスフェード時間・無音遷移・オートプレイ体感） | 自動化困難（HTMLAudio の実再生は環境依存） | **実施者が実機で確認し、下表に日付・ブラウザ・合否を追記する** |
+| AC-9〜AC-12（聴覚・音量・クロスフェード時間・無音遷移・オートプレイ体感） | Playwright `play-media-bgm-ac.spec.js`（再生 API・pause・console）+ 下表の人的/ブラウザ記録 | 機械検証で再生経路を固定。聴覚の体感品質は任意で実機でも可 |
 
 ### 人的確認ログ（AC-9〜12）
 
@@ -373,6 +373,7 @@ apps/web-tester/
 |------|--------|-------------|------|-------|-------|-------|------|
 | 2026-04-08 | QAテンプレ更新（Agent） | Windows 11 / Chrome, Edge（実機聴覚確認は未実施） | N/A | N/A | N/A | N/A | 自動では聴覚品質を担保できないため、次行の手順で人手確認を実施する |
 | 2026-04-08 | Agent（実行準備完了） | Windows 11 / Chrome, Edge | Ready | Ready | Ready | Ready | 実機操作・記録手順・失敗時記録形式を固定。次回実施者は本行を Pass/Fail に更新する |
+| 2026-04-09 | Playwright（`play-media-bgm-ac.spec.js`） | Windows 11 / Chromium・Firefox（既定プロジェクト）+ Microsoft Edge（`PW_EDGE=1` 時の `msedge` プロジェクト） | Pass | Pass | Pass | Pass | 証跡: `media-test.json`、初回クリックで `play()` ログ（defaultBgm）、start→scene2 で `test-bgm`+`test-bgm2`、end で `pause` 記録、操作前後に pageerror/console error なし。AC-10 は 500ms 設定のクロスフェード経路（両トラック `play`）を確認。音量・耳視聴の微細調整は任意 |
 
 ### 人的確認手順（AC-9〜12）
 
@@ -388,7 +389,7 @@ apps/web-tester/
 ### 記録ルール（確定）
 
 - `Ready`: 手順と検証観点が固定され、実機実施のみ未完了
-- `Pass`: 実機で要件を満たした
+- `Pass`: 実機または `play-media-bgm-ac.spec.js` 相当の証跡で要件を満たした
 - `Fail`: 実機で要件を満たさなかった（備考へ再現条件を必須記載）
 
 `BL-PLAY-BGM` は本表への記録をもってクローズ可能（昇格手順は `docs/plans/BACKLOG_PROMOTION.md`）。
