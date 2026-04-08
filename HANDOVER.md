@@ -4,7 +4,7 @@
 
 - **日時**: 2026-04-09
 - **ブランチ**: `main` (trunk-based)
-- **直近**: 次作業実行プラン反映（SP-PLAY-001 AC-9〜12 記録ルール確定、a11y チェックリスト完了、flaky トラッカー、WritingPage I/O 契約 `SP-WP-001`）
+- **直近**: `play-media-bgm-ac.spec.js` で AC-9〜12 を機械検証・SP-PLAY-001 を `done` 化、flaky を [#81](https://github.com/YuShimoji/NarrativeGen/issues/81)〜[#83](https://github.com/YuShimoji/NarrativeGen/issues/83) に起票、`writingpage-io-contract` でゲート **No-Go** を記録（`ccd6c80` まで `origin/main` に反映済み）
 
 ## プロジェクト概要
 
@@ -55,7 +55,7 @@ NarrativeGen/
 ## 実行ロードマップ（2026 Q2-Q4）
 
 - 実行版: `docs/plans/ROADMAP_EXECUTION_2026.md`
-- **短期**: SP-PLAY-001 / SP-UNITY-001 / E2E 安定化の完了
+- **短期**: SP-PLAY-001 は完了済み。**SP-UNITY-001** の残差と **E2E 恒久対策（#81〜#83）** を優先
 - **中期**: a11y・レスポンシブ改善、回帰戦略再設計、Dynamic Text 変換方針確定
 - **長期**: WritingPage 連携、Unity 配布改善、品質ゲート高度化
 
@@ -96,3 +96,14 @@ flaky 候補トラッカー: `docs/tasks/FLAKY_ISSUES_TRACKER.md`
 WritingPage 準備仕様: `docs/specs/writingpage-io-contract.md`
 spec-index レビュー例: `docs/operations/SPEC_INDEX_REVIEW_EXAMPLES.md`
 仕様書一覧: `docs/spec-viewer.html`（`npx serve docs` → http://localhost:3000/spec-viewer.html）
+
+## 次プラン策定前の整理（推奨）
+
+次の開発プランを書く直前に、次を一度通すと状態が揃う。
+
+1. `git fetch origin` し、`main` が `origin/main` と一致していること（未 push がないこと）
+2. `npm run check:safety`（spec-index / encoding / models-sync）
+3. オプション: `npm run test:engine` と代表 E2E（例: `npm run test:e2e -- tests/e2e/play-media-bgm-ac.spec.js --project=chromium`）
+4. 未クローズの追跡: [Issues（flaky 系 #81〜#83）](https://github.com/YuShimoji/NarrativeGen/issues?q=is%3Aissue+is%3Aopen) と `docs/tasks/FLAKY_ISSUES_TRACKER.md`
+
+Edge で BGM AC を追加検証するときは `apps/web-tester` で `set PW_EDGE=1` のうえ `npx playwright test tests/e2e/play-media-bgm-ac.spec.js --project=msedge`（Windows）。

@@ -4,7 +4,7 @@
 
 **調査日**: 2026-04-09  
 **ブランチ**: `main`（trunk-based）  
-**ざっくり**: engine-ts Vitest 全緑（260件台）、E2E Playwright、モデル検証 16 通過、`npm run check:spec-index` OK。
+**ざっくり**: engine-ts Vitest 全緑（260件台）、E2E Playwright、モデル検証 16 通過、`npm run check:spec-index` OK。`main` は `origin/main` と同期済み（運用では都度 push を前提）。
 
 ---
 
@@ -72,9 +72,9 @@
 
 - 実行ドキュメント: `docs/plans/ROADMAP_EXECUTION_2026.md`
 - **短期（0〜4週間）**
-  - U01 の人的確認完了（AC-9〜12）
-  - N01 の Unity パリティ差分収束（`hasEvent` 周辺）
-  - C01（E2E 間欠失敗）の再現条件蓄積
+  - ~~U01（AC-9〜12）~~ → `play-media-bgm-ac.spec.js` と検証表で完了（耳視聴は任意）
+  - N01 の Unity パリティ残差（`docs/specs/unity-sdk.md`、NuGet 等）
+  - C01（E2E 間欠失敗）→ GitHub [#81](https://github.com/YuShimoji/NarrativeGen/issues/81)〜[#83](https://github.com/YuShimoji/NarrativeGen/issues/83) で追跡・恒久修正
 - **中期（1〜3か月）**
   - N06/N07（a11y/モバイル）を主要画面で解消
   - U03/U04 の手動回帰観点を固定し E2E と分担
@@ -95,4 +95,4 @@
 - Dynamic Text 方針:
   - `docs/specs/dynamic-text-engine.md` と `docs/specs/yarn-spinner-export.md` に変換対象/非対応/フォールバックを確定反映
 - WritingPage 準備:
-  - `docs/specs/writingpage-io-contract.md` に最小 I/O 契約・versioning・着手ゲートを定義
+  - `docs/specs/writingpage-io-contract.md` に最小 I/O 契約・versioning・着手ゲートを定義（2026-04-09 時点 **No-Go**。外部安定後に再判定）
