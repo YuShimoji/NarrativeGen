@@ -33,12 +33,12 @@
 
 | ID | 内容 | 仕様・備考 |
 |----|------|------------|
-| N01 | Unity SDK パリティ（最終差分） | SP-UNITY-001。`hasEvent`/`createEvent` は InferenceRegistry 整合済（2026-04-08）。エッジ・maxUses 等が残る |
+| N01 | Unity SDK パリティ（最終差分） | SP-UNITY-001。`hasEvent`/`createEvent` + `TemplateUsageState` による `maxUses` 補正まで実施（2026-04-08）。残は API 形状差の詰め |
 | N03 | WritingPage 連携 | 外部フォーマット安定後。`pipeline-workflow.md` で延期 |
-| N04 | Dynamic Text の Yarn ネイティブ変換 | SP-DTYARN-001 スタブ [dynamic-text-yarn-export.md](specs/dynamic-text-yarn-export.md) |
+| N04 | Dynamic Text の Yarn ネイティブ変換 | SP-DTYARN-001 最小実装済（`{variable}` / `{?flag}`）。次段は `[entity.property]` [dynamic-text-yarn-export.md](specs/dynamic-text-yarn-export.md) |
 | N05 | spec 保守の運用具体化（レビュー例など） | SP-009 系。CI `governance` は済 |
-| N06 | a11y（ARIA 等） | SP-009 残 |
-| N07 | モバイル/タブレット最適化 | SP-009 残 |
+| N06 | a11y（ARIA 等） | SP-009 部分前進（tab セマンティクス + キーボード移動）。残あり |
+| N07 | モバイル/タブレット最適化 | SP-009 1スライス完了（story/toolbar）。残あり |
 
 **仕様エントリなし項目**: なし（Session History は `docs/specs/session-history.md` と `spec-index.json` に反映済み）。
 

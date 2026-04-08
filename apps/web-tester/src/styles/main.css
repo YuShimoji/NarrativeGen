@@ -941,3 +941,54 @@ button .icon {
 .empty-state.hidden {
   display: none;
 }
+
+/* ==========================================================================
+   Responsive slices (UI-RESP-1)
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .story-sidebar {
+    width: 220px;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .tab-btn {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 820px) {
+  .story-content {
+    flex-direction: column;
+  }
+
+  .story-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    max-height: 40vh;
+  }
+
+  #toggleSidebarBtn {
+    width: 100%;
+  }
+
+  .story-content.sidebar-hidden .story-sidebar {
+    width: 100%;
+    max-height: 0;
+    border-bottom: none;
+  }
+
+  .toolbar {
+    gap: 6px;
+    padding: 6px 8px;
+  }
+
+  #graphControls {
+    gap: 6px;
+    padding: 6px 8px;
+  }
+}

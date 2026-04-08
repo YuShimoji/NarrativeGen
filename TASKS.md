@@ -7,11 +7,11 @@
 
 | 優先度 | タスク | 備考 |
 |--------|--------|------|
-| 高 | Vite / Rollup / esbuild 更新検証 | [docs/plans/vite-upgrade-branch-checklist.md](docs/plans/vite-upgrade-branch-checklist.md) |
-| 高 | SP-DTYARN-001 実装 | [docs/specs/dynamic-text-yarn-export.md](docs/specs/dynamic-text-yarn-export.md) スタブ→設計確定 |
-| 中 | Unity TS エッジ完全一致・maxUses | `docs/specs/unity-sdk.md` 未実装節 |
+| 高 | Vite 8 系の PR 判定（lint 基線整理を含む） | [docs/plans/vite-upgrade-branch-checklist.md](docs/plans/vite-upgrade-branch-checklist.md) |
+| 高 | SP-DTYARN-001 第2段階（`[entity.property]` / 複合条件） | [docs/specs/dynamic-text-yarn-export.md](docs/specs/dynamic-text-yarn-export.md) |
+| 中 | Unity TS エッジ完全一致（API 形状差の調整） | `docs/specs/unity-sdk.md` 未実装節 |
 | 中 | WritingPage 連携仕様策定 | 外部フォーマット安定後に着手 |
-| 中 | UI a11y / レスポンシブ | [docs/plans/ui-a11y-responsive-issues.md](docs/plans/ui-a11y-responsive-issues.md) |
+| 中 | UI a11y / レスポンシブ（Graph/Modal へ展開） | [docs/plans/ui-a11y-responsive-issues.md](docs/plans/ui-a11y-responsive-issues.md) |
 | 中 | GUI Undo/Redo 手動回帰テスト | E2E 防御的 skip の裏取り |
 
 ## 次に実行するコマンド

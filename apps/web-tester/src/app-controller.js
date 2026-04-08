@@ -1001,6 +1001,24 @@ function switchTab(tabName) {
     // Initialize key binding system
     keyBindingManager.updateUI()
   }
+
+  updateTabA11y(tabName)
+}
+
+function updateTabA11y(activeTabName) {
+  const tabMap = [
+    { name: 'story', el: storyTab },
+    { name: 'graph', el: graphTab },
+    { name: 'debug', el: debugTab },
+    { name: 'reference', el: referenceTab },
+    { name: 'advanced', el: advancedTab }
+  ]
+  for (const tab of tabMap) {
+    if (!tab.el) continue
+    const selected = tab.name === activeTabName
+    tab.el.setAttribute('aria-selected', selected ? 'true' : 'false')
+    tab.el.setAttribute('tabindex', selected ? '0' : '-1')
+  }
 }
 
 storyTab.addEventListener('click', () => switchTab('story'))
@@ -1008,6 +1026,21 @@ graphTab.addEventListener('click', () => switchTab('graph'))
 debugTab.addEventListener('click', () => switchTab('debug'))
 if (referenceTab) referenceTab.addEventListener('click', () => switchTab('reference'))
 advancedTab.addEventListener('click', () => switchTab('advanced'))
+
+const mainTabs = [storyTab, graphTab, debugTab, referenceTab, advancedTab].filter(Boolean)
+for (const tabEl of mainTabs) {
+  tabEl.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return
+    event.preventDefault()
+    const visibleTabs = mainTabs.filter((t) => t.style.display !== 'none')
+    const currentIndex = visibleTabs.indexOf(tabEl)
+    if (currentIndex === -1) return
+    const delta = event.key === 'ArrowRight' ? 1 : -1
+    const nextIndex = (currentIndex + delta + visibleTabs.length) % visibleTabs.length
+    visibleTabs[nextIndex].focus()
+    visibleTabs[nextIndex].click()
+  })
+}
 
 // Advanced features toggle
 if (enableAdvancedFeatures) {

@@ -57,10 +57,10 @@
     "id": "SP-009",
     "title": "Technical Debt",
     "status": "partial",
-    "pct": 90,
+    "pct": 92,
     "cat": "infra",
     "file": "docs/TECHNICAL_DEBT.md",
-    "summary": "Post-split debt cleanup. CI governance job: spec-index + models-sync + encoding-safety. Remaining: responsive/a11y, manual regression tests, E2E flake hardening"
+    "summary": "Post-split debt cleanup. CI governance job: spec-index + models-sync + encoding-safety. a11y/レスポンシブの1スライス実装済（tab a11y + mobile layout）。残: manual regression tests, E2E flake hardening"
   },
   {
     "id": "SP-010",
@@ -93,10 +93,10 @@
     "id": "SP-DTYARN-001",
     "title": "Dynamic Text to Yarn Export",
     "status": "partial",
-    "pct": 5,
+    "pct": 45,
     "cat": "data",
     "file": "docs/specs/dynamic-text-yarn-export.md",
-    "summary": "スタブ（2026-04-08）。Dynamic Text / テンプレ追記を Yarn ネイティブに寄せる将来仕様。実装は engine-ts + YarnFormatter。"
+    "summary": "最小実装（2026-04-08）: YarnFormatter で {variable} / {?flag:...} / {?!flag:...} 変換を追加。entity.property 等は次段階。"
   },
   {
     "id": "SP-REFACTOR-001",
@@ -183,10 +183,10 @@
     "id": "SP-UNITY-001",
     "title": "Unity SDK",
     "status": "partial",
-    "pct": 98,
+    "pct": 99,
     "cat": "system",
     "file": "docs/specs/unity-sdk.md",
-    "summary": "Unity C# SDK: InferenceRegistry に hasEvent/createEvent 追加（2026-04-08）。Session.events + SP-TGEN スライス2済。残: NuGet、TS エッジ完全一致・maxUses 等。"
+    "summary": "Unity C# SDK: hasEvent/createEvent に加え、TemplateUsageState 経由で maxUses 消費を補正（2026-04-08）。残: NuGet、TS エッジ完全一致の細部。"
   },
   {
     "id": "SP-PARA-001",

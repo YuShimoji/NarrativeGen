@@ -204,5 +204,79 @@ namespace NarrativeGen.Tests
             Assert.That(result.Text, Does.Contain("Hello."));
             Assert.That(result.Text, Does.Contain("Side text."));
         }
+
+        [Test]
+        public void ResolveNarrativeDisplayTextTracked_RespectsMaxUses_WithUsageState()
+        {
+            var model = new NarrativeModel
+            {
+                StartNode = "n1",
+                Nodes = new Dictionary<string, Node> { ["n1"] = new Node { Id = "n1", Text = "x" } },
+                ConversationTemplates = new List<ConversationTemplate>
+                {
+                    new ConversationTemplate
+                    {
+                        Id = "t_max1",
+                        MaxUses = 1,
+                        Text = "Only once.",
+                        Trigger = new TemplateTrigger
+                        {
+                            EventMatch = new EventMatchCondition
+                            {
+                                PropertyChecks = new List<PropertyCheck>
+                                {
+                                    new PropertyCheck
+                                    {
+                                        Key = "severity",
+                                        Op = ">=",
+                                        Value = Newtonsoft.Json.Linq.JToken.FromObject(1)
+                                    }
+                                }
+                            },
+                            SessionConditions = new List<Condition>
+                            {
+                                new FlagCondition { Type = "flag", Key = "ok", Value = true }
+                            }
+                        }
+                    }
+                }
+            };
+
+            var session = new NgSession(
+                "n1",
+                new Dictionary<string, bool> { ["ok"] = true },
+                new Dictionary<string, double>(),
+                new Dictionary<string, object>(),
+                new List<string>(),
+                0,
+                new Dictionary<string, Entity>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["evt1"] = new Entity
+                    {
+                        Id = "evt1",
+                        Name = "Event 1",
+                        Properties = new Dictionary<string, PropertyDef>(StringComparer.OrdinalIgnoreCase)
+                        {
+                            ["severity"] = new PropertyDef { DefaultValue = 10L }
+                        }
+                    }
+                });
+
+            var first = NarrativeDisplayText.ResolveNarrativeDisplayTextTracked("Hello", model, session);
+            Assert.That(first.Text, Does.Contain("Only once."));
+            Assert.That(first.TemplateUsageState.TryGetValue("t_max1", out var used1) && used1 == 1, Is.True);
+
+            var second = NarrativeDisplayText.ResolveNarrativeDisplayTextTracked(
+                "Hello",
+                model,
+                session,
+                new ResolveNarrativeDisplayTextTrackedOptions
+                {
+                    TemplateUsageState = first.TemplateUsageState
+                });
+
+            Assert.That(second.Text, Does.Not.Contain("Only once."));
+            Assert.That(second.TemplateUsageState.TryGetValue("t_max1", out var used2) && used2 == 1, Is.True);
+        }
     }
 }

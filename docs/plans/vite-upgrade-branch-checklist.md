@@ -22,3 +22,4 @@
 ## 履歴
 
 - 2026-04-08: 推奨開発プラン Phase D の運用メモとして追加（バージョンは固定しない）。
+- 2026-04-08: `feat/vite-upgrade` で `vite@8.0.7` を検証。`build:all` / `test:engine` / `test:e2e` は通過。`lint:engine` は既存エラー（engine-ts の未使用変数・import/order など）で失敗し、Vite 更新起因ではないことを確認。

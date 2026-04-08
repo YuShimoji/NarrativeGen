@@ -41,7 +41,7 @@ export class YarnFormatter {
         const bodyLines = []
 
         // Node text (split multi-line)
-        const text = node.text || ''
+        const text = this._normalizeDynamicText(node.text || '')
         for (const line of text.split('\n')) {
             if (line.trim()) {
                 bodyLines.push(line)
@@ -60,7 +60,7 @@ export class YarnFormatter {
     }
 
     _formatChoice(choice, lines) {
-        const text = choice.text || 'Continue'
+        const text = this._normalizeDynamicText(choice.text || 'Continue')
         const condition = this._buildCondition(choice.conditions)
         const conditionSuffix = condition ? ` <<if ${condition}>>` : ''
 
@@ -176,6 +176,30 @@ export class YarnFormatter {
             lines.push(`<<declare $event_${eventId} = false>>`)
         }
         return lines.length > 0 ? lines.join('\n') : ''
+    }
+
+    /**
+     * Convert a minimal subset of Dynamic Text syntax into Yarn-friendly form.
+     * Scope (SP-DTYARN-001 minimal):
+     * - {variable}      -> {$variable}
+     * - {?flag:text}    -> <<if $flag>>text<<endif>>
+     * - {?!flag:text}   -> <<if $flag == false>>text<<endif>>
+     * Non-target syntaxes are left as-is for backward compatibility.
+     */
+    _normalizeDynamicText(text) {
+        if (!text) return ''
+
+        // Conditional sections first to avoid replacing braces inside generated blocks.
+        let out = text.replace(/\{\?\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:(.*?)\}/g, (_m, flag, body) => {
+            return `<<if $${flag}>>${body}<<endif>>`
+        })
+        out = out.replace(/\{\?!\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:(.*?)\}/g, (_m, flag, body) => {
+            return `<<if $${flag} == false>>${body}<<endif>>`
+        })
+
+        // Plain variable placeholders.
+        out = out.replace(/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g, (_m, key) => `{$${key}}`)
+        return out
     }
 
     _collectEventIds(model) {

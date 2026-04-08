@@ -1,6 +1,6 @@
 # Technical Debt and Improvement Tasks
 
-Last updated: 2026-04-08
+Last updated: 2026-04-08 (next phase sync)
 
 ## Overview
 This document tracks technical debt and improvement work items.
@@ -56,11 +56,15 @@ Status: done (2026-03-17)
 - 初回ロード計測は任意。現状で問題なし
 
 ### 5. Responsive and accessibility improvements
-Status: not started
+Status: in progress
+
+Completed:
+- [x] Main tabs: `role=tablist` / `role=tab` / `aria-selected` / arrow key navigation (`apps/web-tester/index.html`, `src/app-controller.js`)
+- [x] `statusText` live region + graph controls toolbar semantics
+- [x] Story/toolbar responsive slice for tablet/mobile breakpoints (`src/styles/main.css`)
 
 Remaining tasks:
-- [ ] Mobile/tablet layout definitions.
-- [ ] ARIA labels and keyboard navigation.
+- [ ] Mobile/tablet layout definitions (graph/debug/detail panels)
 - [ ] Manual usability checks on key screens.
 
 ### 6. Node graph visual issues

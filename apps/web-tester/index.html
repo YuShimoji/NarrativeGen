@@ -309,12 +309,12 @@
       <!-- Main Content Area -->
       <div class="content-area">
         <!-- Main Content Tabs -->
-        <div class="tabs">
-          <button id="storyTab" class="tab-btn active">ストーリー</button>
-          <button id="graphTab" class="tab-btn">ノードグラフ</button>
-          <button id="debugTab" class="tab-btn">デバッグ</button>
-          <button id="referenceTab" class="tab-btn">リファレンス</button>
-          <button id="advancedTab" class="tab-btn" style="display: none;">アドバンスド</button>
+        <div class="tabs" role="tablist" aria-label="メインタブ">
+          <button id="storyTab" class="tab-btn active" role="tab" aria-selected="true" aria-controls="storyPanel">ストーリー</button>
+          <button id="graphTab" class="tab-btn" role="tab" aria-selected="false" aria-controls="graphPanel">ノードグラフ</button>
+          <button id="debugTab" class="tab-btn" role="tab" aria-selected="false" aria-controls="debugPanel">デバッグ</button>
+          <button id="referenceTab" class="tab-btn" role="tab" aria-selected="false" aria-controls="referencePanel">リファレンス</button>
+          <button id="advancedTab" class="tab-btn" role="tab" aria-selected="false" aria-controls="advancedPanel" style="display: none;">アドバンスド</button>
         </div>
 
         <div id="storyPanel" class="tab-content active">
@@ -382,7 +382,7 @@
           <div class="story-content" id="storyContent">
             <div class="story-sidebar">
               <div class="choices-container">
-                <div id="choices"></div>
+                <div id="choices" role="region" aria-label="選択肢一覧"></div>
               </div>
               <div class="state-display">
                 <pre id="stateView">{ "status": "初期化待ち" }</pre>
@@ -402,7 +402,7 @@
         </div>
 
         <div id="graphPanel" class="tab-content">
-          <div id="graphControls">
+          <div id="graphControls" role="toolbar" aria-label="グラフ操作">
             <button id="fitGraphBtn"><svg class="icon icon-sm">
                 <use href="#icon-maximize"></use>
               </svg>全体表示</button>
@@ -767,7 +767,7 @@
         </div>
       </div>
 
-      <div id="statusText">✓ 初期化完了 - モデルを読み込んでください</div>
+      <div id="statusText" role="status" aria-live="polite">✓ 初期化完了 - モデルを読み込んでください</div>
     </div>
   </div>
 

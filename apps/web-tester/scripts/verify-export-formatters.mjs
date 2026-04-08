@@ -102,6 +102,34 @@ function testYarnFormatterConditions() {
   assert.match(output, /<<set \$gold to \$gold \+ 10>>/)
 }
 
+function testYarnFormatterDynamicTextMinimal() {
+  const formatter = new YarnFormatter()
+  const model = {
+    modelType: 'test',
+    startNode: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        text: 'Hello {playerName}. {?hasKey:Door opens.} {?!hasKey:Door is locked.}',
+        choices: [
+          {
+            id: 'c1',
+            text: 'Ask {playerName}',
+            target: 'end'
+          }
+        ]
+      },
+      end: { id: 'end', text: 'End', choices: [] }
+    }
+  }
+  const output = formatter.format(model)
+
+  assert.match(output, /Hello \{\$playerName\}\./)
+  assert.match(output, /<<if \$hasKey>>Door opens\.<</)
+  assert.match(output, /<<if \$hasKey == false>>Door is locked\.<</)
+  assert.match(output, /-> Ask \{\$playerName\}/)
+}
+
 function testInvalidModels() {
   const twineFormatter = new TwineFormatter()
   const inkFormatter = new InkFormatter()
@@ -157,6 +185,7 @@ testInkFormatter()
 testCsvFormatter()
 testYarnFormatter()
 testYarnFormatterConditions()
+testYarnFormatterDynamicTextMinimal()
 testInvalidModels()
 testAllModelsAllFormatters()
 
