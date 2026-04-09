@@ -2,9 +2,10 @@
 
 ## 最終更新
 
-- **日時**: 2026-04-08
+- **日時**: 2026-04-09
 - **ブランチ**: `feat/vite-upgrade`
-- **直近**: 次期推奨開発プランを実施（Vite 8 検証、SP-DTYARN-001 最小実装、a11y/レスポンシブ 1 スライス、Unity `maxUses` 補正）
+- **直近**: ローカル `main` を `origin/main` に整合（分岐していた 1 コミットは破棄）。`npm ci` 済。engine-ts ESLint 13 件を解消し `npm run lint` 通過。`npm run check:spec-index` / `check:models-sync` / `test:engine` / `build:all` / `dotnet test` 確認済。
+- **参照（2026-04-08 時点の機能差分）**: 次期推奨開発プラン（Vite 8、SP-DTYARN-001 最小、a11y/レスポンシブ 1 スライス、Unity `maxUses` 補正）は引き続き本ブランチの文脈で有効。
 
 ## プロジェクト概要
 
@@ -48,7 +49,7 @@ NarrativeGen/
 
 ## 次の推奨作業
 
-1. **Vite 8 の継続評価**: `feat/vite-upgrade` のまま lint 基線整理後に PR 判断
+1. **Vite 8 の継続評価**: `feat/vite-upgrade` のまま PR 判断（engine-ts lint 基線は 2026-04-09 整理済）
 2. **SP-DTYARN-001 次段階**: `[entity.property]` と複合条件の Yarn 表現を設計・実装
 3. **UI a11y / レスポンシブ拡張**: graph/debug/モーダルへ同等のスライスを水平展開
 

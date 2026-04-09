@@ -1,7 +1,7 @@
 // Deterministic, non-AI paraphrase utilities for Japanese
 // NOTE: This is a lightweight heuristic module, no external deps.
 
-import type { EntityDef, PropertyDef } from './types'
+import type { EntityDef } from './types'
 import { getEntityProperties } from './entities.js'
 
 export type ParaphraseStyle = 'desu-masu' | 'da-dearu' | 'plain'

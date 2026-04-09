@@ -1,4 +1,4 @@
-import type { Model, SessionState } from './types'
+import type { Model, PropertyDef, SessionState } from './types'
 import { resolveProperty, getEntityProperties } from './entities.js'
 import type { DescriptionState } from './description-tracker.js'
 import { getUndescribedKeys, markDescribed } from './description-tracker.js'
@@ -57,8 +57,8 @@ export function expandTemplateCore(
         : (session.variables && key in session.variables)
           ? Number(session.variables[key])
           : undefined
-      if (actual !== undefined && Number.isFinite(val) && Number.isFinite(actual as number)) {
-        const a = actual as number
+      if (actual !== undefined && Number.isFinite(val) && Number.isFinite(actual)) {
+        const a = actual
         switch (op) {
           case '>=': condResult = a >= val; break
           case '<=': condResult = a <= val; break
@@ -113,8 +113,9 @@ export function expandTemplateCore(
       }
     }
     // Fallback: resolve from event entity's own properties (no inheritance)
-    if (events[entityId]?.properties?.[propKey]?.defaultValue !== undefined) {
-      return String(events[entityId].properties![propKey].defaultValue!)
+    const eventProps = events[entityId]?.properties?.[propKey]?.defaultValue
+    if (eventProps !== undefined) {
+      return String(eventProps)
     }
 
     return `[${ref}]`
@@ -213,7 +214,7 @@ export function expandTemplateWithTracking(
     if (!entity) return `[${entityId}~]`
 
     // Get all property keys (with inheritance for static entities)
-    let allProps: Record<string, import('./types').PropertyDef>
+    let allProps: Record<string, PropertyDef>
     if (model.entities && model.entities[entityId]) {
       allProps = getEntityProperties(entityId, model.entities)
     } else {

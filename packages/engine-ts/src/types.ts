@@ -1,3 +1,7 @@
+import type { CharacterDef } from './character-knowledge.js'
+import type { ConversationTemplate } from './conversation-templates.js'
+import type { PropertyAwareLexicon } from './paraphrase.js'
+
 export type FlagState = Record<string, boolean>
 export type ResourceState = Record<string, number>
 export type VariableState = Record<string, string | number>
@@ -86,10 +90,10 @@ export interface Model {
   resources?: ResourceState
   variables?: VariableState
   entities?: Record<string, EntityDef>
-  characters?: Record<string, import('./character-knowledge.js').CharacterDef>
-  paraphraseLexicon?: import('./paraphrase.js').PropertyAwareLexicon
+  characters?: Record<string, CharacterDef>
+  paraphraseLexicon?: PropertyAwareLexicon
   nodes: Record<string, NodeDef>
-  conversationTemplates?: import('./conversation-templates.js').ConversationTemplate[]
+  conversationTemplates?: ConversationTemplate[]
 }
 
 export interface SessionState {

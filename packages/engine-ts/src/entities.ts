@@ -1,4 +1,5 @@
 import fs from 'fs'
+
 import type { EntityDef, PropertyDef } from './types'
 
 /** Flat entity for CSV import (legacy compatibility) */
