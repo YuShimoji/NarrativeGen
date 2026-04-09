@@ -15,7 +15,7 @@ export const hasItemEvaluator: ConditionEvaluator<HasItemCondition> = {
     return has === condition.value
   },
 
-  getDependencies(condition: HasItemCondition): DependencyInfo {
+  getDependencies(_condition: HasItemCondition): DependencyInfo {
     return {}
   },
 }

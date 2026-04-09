@@ -87,6 +87,67 @@ test.describe('SP-PLAY-001 Phase 2: Image / BGM', () => {
     expect(nodeBgm).toContain('test-bgm2.mp3');
   });
 
+  test('AC-9: BGM — PlayRenderer applies bgmVolume from model', async ({ page }) => {
+    await openPage(page);
+    await startMediaModel(page);
+
+    // renderPlayView() は非同期のため、DOM 表示直後より BGM 適用が遅れうる
+    await page.waitForFunction(
+      () => {
+        const pr = window.__narrativeGenE2E?.getPlayRenderer?.();
+        const d = pr?.getBgmDiagnostics?.();
+        return d?.currentBgm?.includes('test-bgm.mp3');
+      },
+      { timeout: 10000 }
+    );
+
+    const diag = await page.evaluate(() => {
+      const pr = window.__narrativeGenE2E?.getPlayRenderer?.();
+      return pr?.getBgmDiagnostics?.() ?? null;
+    });
+    expect(diag).not.toBeNull();
+    expect(diag.volume).toBeCloseTo(0.4, 5);
+    expect(diag.crossfadeMs).toBe(500);
+    expect(diag.currentBgm).toContain('test-bgm.mp3');
+  });
+
+  test('AC-10: BGM — crossfade switches currentBgm to scene2 track after navigation', async ({ page }) => {
+    await openPage(page);
+    await startMediaModel(page);
+
+    await page.locator('.play-choice-btn:has-text("Investigate")').click();
+    await page.waitForFunction(
+      () => {
+        const pr = window.__narrativeGenE2E?.getPlayRenderer?.();
+        const d = pr?.getBgmDiagnostics?.();
+        return d?.unlocked === true && d?.currentBgm?.includes('test-bgm2.mp3');
+      },
+      { timeout: 15000 }
+    );
+  });
+
+  test('AC-12: autoplay — no page errors; unlock after first user gesture', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', (err) => errors.push(String(err.message)));
+
+    await openPage(page);
+    await startMediaModel(page);
+
+    const before = await page.evaluate(() => {
+      const pr = window.__narrativeGenE2E?.getPlayRenderer?.();
+      return pr?.getBgmDiagnostics?.()?.unlocked ?? null;
+    });
+    expect(before).toBe(false);
+
+    await page.locator('.play-choice-btn:has-text("Investigate")').click();
+    await page.waitForFunction(
+      () => window.__narrativeGenE2E?.getPlayRenderer?.()?.getBgmDiagnostics?.()?.unlocked === true,
+      { timeout: 10000 }
+    );
+
+    expect(errors.filter((m) => !m.includes('ResizeObserver'))).toEqual([]);
+  });
+
   test('AC-11: BGM stop — end node has bgm null and ending displays', async ({ page }) => {
     await openPage(page);
     await startMediaModel(page);

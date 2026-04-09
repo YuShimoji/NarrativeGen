@@ -952,7 +952,7 @@ button .icon {
 }
 
 /* ==========================================================================
-   Responsive (mobile/tablet baseline)
+   Responsive (mobile/tablet baseline + UI-RESP-1)
    ========================================================================== */
 @media (max-width: 1024px) {
   .story-sidebar {
@@ -963,21 +963,23 @@ button .icon {
     padding: 8px;
     gap: 6px;
   }
-}
-
-@media (max-width: 768px) {
-  .header {
-    padding: 8px;
-  }
 
   .tabs {
     overflow-x: auto;
     white-space: nowrap;
+    scrollbar-width: thin;
   }
 
   .tab-btn {
     padding: 8px 10px;
     font-size: 11px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 8px;
   }
 
   .story-content {
@@ -986,9 +988,19 @@ button .icon {
 
   .story-sidebar {
     width: 100%;
-    max-height: 180px;
+    max-height: min(40vh, 180px);
     border-right: none;
     border-bottom: 1px solid var(--color-border);
+  }
+
+  #toggleSidebarBtn {
+    width: 100%;
+  }
+
+  .story-content.sidebar-hidden .story-sidebar {
+    width: 100%;
+    max-height: 0;
+    border-bottom: none;
   }
 
   .story-view {
@@ -1001,6 +1013,11 @@ button .icon {
     width: calc(100vw - 24px);
     max-height: calc(100vh - 24px);
     padding: 14px;
+  }
+
+  .toolbar {
+    gap: 6px;
+    padding: 6px 8px;
   }
 
   #graphControls {

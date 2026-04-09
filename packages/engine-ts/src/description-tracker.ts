@@ -81,7 +81,8 @@ export function resetDescriptions(
   entityId?: string
 ): DescriptionState {
   if (entityId) {
-    const { [entityId]: _, ...rest } = state
+    const rest = { ...state }
+    delete rest[entityId]
     return rest
   }
   return {}

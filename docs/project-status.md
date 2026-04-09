@@ -21,7 +21,7 @@
 
 | ID | 内容 | 確認のしかた | 優先度 |
 |----|------|-------------|--------|
-| U01 | Play Immersion（画像/BGM の操作感） | `play-media-bgm-ac.spec.js` + `play-immersion.md` 検証表で機械判定済み（耳視聴は任意） | 低 |
+| U01 | Play Immersion（画像/BGM の操作感・聴感） | `play-media-bgm-ac.spec.js` + `play-immersion.md` で機械判定済み。耳視聴・フェード体感は任意 | 低 |
 | U02 | REST API 全経路 | `npm run dev:api` → curl 等 | 低 |
 | U03 | Undo/Redo（GUI 体感） | エディタで Ctrl+Z/Y（E2E は一部 skip） | 中 |
 | U04 | グラフエディタ全体の操作感 | 手動で D&D・ズーム等 | 中 |
@@ -33,12 +33,12 @@
 
 | ID | 内容 | 仕様・備考 |
 |----|------|------------|
-| N01 | Unity SDK パリティ（最終差分） | SP-UNITY-001。events/追跡/会話テンプレは実装済、`hasEvent` 条件等の最終突合が残る |
-| N03 | WritingPage 連携 | 外部フォーマット安定後。`pipeline-workflow.md` で延期。準備仕様: `specs/writingpage-io-contract.md` |
-| N04 | Dynamic Text の Yarn ネイティブ変換 | 未着手 |
+| N01 | Unity SDK パリティ（最終差分） | SP-UNITY-001。events / `hasEvent` / `TemplateUsageState`・`maxUses` 等は実装済。残は NuGet・expandTemplate エッジ・四半期パリティ監査（`unity-sdk.md`） |
+| N03 | WritingPage 連携 | 外部フォーマット安定後。`pipeline-workflow.md` で延期。準備: `specs/writingpage-io-contract.md` |
+| N04 | Dynamic Text の Yarn ネイティブ変換 | SP-DTYARN-001: `[entity]`/`[entity.prop]`・数値比較 `{?key op val:…}` まで（2026-04-09）。ネスト and/or・`[entity~]` 等は [dynamic-text-yarn-export.md](specs/dynamic-text-yarn-export.md) |
 | N05 | spec 保守の運用具体化（レビュー例など） | SP-009 系。CI `governance` は済 |
-| N06 | a11y（ARIA 等） | SP-009 残 |
-| N07 | モバイル/タブレット最適化 | SP-009 残 |
+| N06 | a11y（ARIA 等） | SP-009 部分前進（tab セマンティクス + キーボード移動）。残あり |
+| N07 | モバイル/タブレット最適化 | SP-009 1スライス完了（story/toolbar）。残あり |
 
 **仕様エントリなし項目**: なし（Session History は `docs/specs/session-history.md` と `spec-index.json` に反映済み）。
 

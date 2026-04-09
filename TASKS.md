@@ -1,18 +1,17 @@
 # 今後の開発タスク（現行）
 
-**最終更新**: 2026-04-07  
+**最終更新**: 2026-04-08  
 再開時の正は `HANDOVER.md`。詳細な現況は `docs/project-status.md`、仕様進捗は `docs/spec-index.json` / `docs/spec-viewer.html`。
 
 ## 未着手タスク（高〜中）
 
 | 優先度 | タスク | 備考 |
 |--------|--------|------|
-| 高 | SP-PLAY-001 手動確認（AC-9〜12） | `docs/specs/play-immersion.md` の検証表に日付/環境/合否を記入 |
-| 高 | Unity SDK パリティの最終差分整理 | スライス2実装済。`hasEvent` 条件や edge parity の最終突合 |
-| 中 | Vite / Rollup / esbuild 更新検証 | 破壊的変更のため専用ブランチで実施 |
+| 高 | Vite 8 系の PR 判定（lint 基線整理を含む） | [docs/plans/vite-upgrade-branch-checklist.md](docs/plans/vite-upgrade-branch-checklist.md) |
+| 高 | SP-DTYARN-001 第2段階（`[entity.property]` / 複合条件） | [docs/specs/dynamic-text-yarn-export.md](docs/specs/dynamic-text-yarn-export.md) |
+| 中 | Unity TS エッジ完全一致（API 形状差の調整） | `docs/specs/unity-sdk.md` 未実装節 |
 | 中 | WritingPage 連携仕様策定 | 外部フォーマット安定後に着手 |
-| 中 | Dynamic Text の Yarn 変換 | engine-ts / web-tester 跨ぎ |
-| 中 | spec 保守運用の具体化 | `docs/TECHNICAL_DEBT.md` 参照 |
+| 中 | UI a11y / レスポンシブ（Graph/Modal へ展開） | [docs/plans/ui-a11y-responsive-issues.md](docs/plans/ui-a11y-responsive-issues.md) |
 | 中 | GUI Undo/Redo 手動回帰テスト | E2E 防御的 skip の裏取り |
 
 ## 次に実行するコマンド

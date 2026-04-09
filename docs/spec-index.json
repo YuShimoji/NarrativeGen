@@ -60,7 +60,7 @@
     "pct": 95,
     "cat": "infra",
     "file": "docs/TECHNICAL_DEBT.md",
-    "summary": "Post-split debt cleanup. CI governance job: spec-index + models-sync + encoding-safety. E2E flake runbook + tracker formalized. Responsive/a11y baseline checklist closed; remaining: regression expansion and long-term quality gates."
+    "summary": "Post-split debt cleanup. CI governance job: spec-index + models-sync + encoding-safety. E2E flake runbook + tracker formalized. Responsive/a11y baseline + index.html tabpanel/dialog スライス。残: 回帰拡大・長期品質ゲート・E2E 間欠の継続対策。"
   },
   {
     "id": "SP-010",
@@ -88,6 +88,15 @@
     "cat": "data",
     "file": "docs/specs/yarn-spinner-export.md",
     "summary": "Export spec for Yarn Spinner 2.x (.yarn)"
+  },
+  {
+    "id": "SP-DTYARN-001",
+    "title": "Dynamic Text to Yarn Export",
+    "status": "partial",
+    "pct": 68,
+    "cat": "data",
+    "file": "docs/specs/dynamic-text-yarn-export.md",
+    "summary": "最小+次段（2026-04-09）: [entity]/[entity.prop]→declare+{$var}、{?key op val:...} 比較。ネストand/or・[entity~]・ParaphraseLexicon は未。"
   },
   {
     "id": "SP-REFACTOR-001",
@@ -177,7 +186,7 @@
     "pct": 96,
     "cat": "system",
     "file": "docs/specs/unity-sdk.md",
-    "summary": "Unity C# SDK: Session.events, ExpandTemplateWithTracking, ConversationTemplateMatcher (maxUses with usageState), ResolveNarrativeDisplayTextTracked parity with TS (no usage in resolve path; tests in NarrativeTextTests). Remaining: NuGet distribution, expandTemplate edge cases."
+    "summary": "Unity C# SDK: Session.events, hasEvent/createEvent, TemplateUsageState/maxUses, ResolveNarrativeDisplayTextTracked の TS パリティ（resolve 経路は usage 非伝播）。残: NuGet、expandTemplate エッジ、四半期パリティ監査（unity-sdk.md）。"
   },
   {
     "id": "SP-PARA-001",
@@ -219,10 +228,10 @@
     "id": "SP-TGEN-001",
     "title": "Narrative Text Generation Pipeline (SSoT)",
     "status": "partial",
-    "pct": 92,
+    "pct": 94,
     "cat": "core",
     "file": "docs/specs/narrative-text-generation-pipeline.md",
-    "summary": "段階0〜3 + Web 追跡連携。Unity 側に ResolveNarrativeDisplayTextTracked / events / [entity~] / templates 相当を実装済み。Gaps: model.metadata ランタイム置換, TS/C# の細部完全一致。"
+    "summary": "段階0〜3 + Web 追跡連携。Unity は hasEvent/createEvent まで InferenceRegistry 整合（2026-04-08）。Gaps: metadata 展開は当面スコープ外決定、TS/C# エッジ・maxUses 等。"
   },
   {
     "id": "SP-PARA-002",
@@ -285,7 +294,7 @@
     "pct": 100,
     "cat": "ui",
     "file": "docs/specs/play-immersion.md",
-    "summary": "Web Tester play experience. Phase 1+2 complete: transitions, scene image, BGM with crossfade and autoplay unlock. E2E includes play-media-bgm-ac.spec.js for AC-9~12 behavioral verification (Chromium/Firefox/Edge). Human ear optional for audio quality."
+    "summary": "Web Tester play experience. Phase 1+2 complete: transitions, scene image, BGM; E2E `play-media-bgm-ac.spec.js` + `play-immersion` で AC-9〜12 を機械検証（Chromium/Firefox/Edge 任意）。聴感品質は任意。"
   },
   {
     "id": "SP-WP-001",

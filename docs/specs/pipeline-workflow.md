@@ -201,7 +201,10 @@ WritingPage で執筆したテキストを NarrativeGen のノードに流し込
 - SP-INF-UI-001: Inference UI Integration (Stage 3 の検証ツール)
 - SP-PLAY-001: Play Immersion (Stage 3 のプレイテスト)
 - SP-EXP-YARN-001: Yarn Spinner Export (Stage 4)
+- SP-DTYARN-001: Dynamic Text → Yarn（Stage 4 拡張、[dynamic-text-yarn-export.md](dynamic-text-yarn-export.md)、計画中）
 - SP-UNITY-001: Unity SDK (Stage 5)
+
+**メモ**: Web 依存のメジャー更新は [vite-upgrade-branch-checklist.md](../plans/vite-upgrade-branch-checklist.md)。WritingPage 連携は引き続き外部フォーマット安定待ち。
 
 ---
 

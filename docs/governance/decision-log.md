@@ -43,3 +43,4 @@
 | 2026-03-18 | SP-PLAY-001: Phase 1はテキスト演出のみ | テキストのみ / 画像含む / 画像+BGM | スコープを絞りプレイ基盤を先に確立。画像/BGMはPhase 2 |
 | 2026-03-18 | UI設計はマウス操作主体 (NarrativeGenにも適用) | マウス主体 / キーボード主体 | WritingPageでの決定をNarrativeGenにも適用 |
 | 2026-03-27 | SP-PIPE-001 方向性確定: 1人運用/WritingPage次スライス/JSON主軸/AI支援スコープ外/AUTHORING_GUIDE拡張 | 各項目に複数択 | Pipeline仕様の5件HUMAN_AUTHORITY全件レビュー完了。次スライスはWritingPage連携 |
+| 2026-04-08 | BL-TGEN-META: `model.metadata` のランタイム `{…}` 展開は当面エンジン本線に載せない | 載せる / 載せない / 要件後にIssue | `resolveNarrativeDisplayText*` 本線で未使用。パイプライン API への組み込みはニーズ確定後に GitHub Issue 化し SP-TGEN / `narrative-text-generation-pipeline.md` §7 を更新してから実装。起票用文案は `docs/plans/issue-stubs/BL-TGEN-META.md` |

@@ -61,6 +61,11 @@ export class AudioManager {
     return this.#currentSrc
   }
 
+  /** @returns {number} Base volume 0-1 (applied to active element) */
+  get volume() {
+    return this.#volume
+  }
+
   /** @param {number} v Volume 0-1 */
   set volume(v) {
     this.#volume = Math.max(0, Math.min(1, v))
@@ -68,6 +73,11 @@ export class AudioManager {
     if (active && !active.paused) {
       active.volume = this.#volume
     }
+  }
+
+  /** @returns {number} Crossfade duration in milliseconds */
+  get crossfadeDuration() {
+    return this.#crossfadeDuration
   }
 
   /** @param {number} ms Crossfade duration in milliseconds */

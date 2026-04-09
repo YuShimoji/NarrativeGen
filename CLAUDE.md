@@ -74,7 +74,7 @@
 ### sdk-unity
 
 - UPM パッケージ形式
-- InferenceRegistry: 条件8種 / エフェクト7種 (TS パリティ)
+- InferenceRegistry: 条件9種 / エフェクト8種 (hasEvent / createEvent 含む、TS パリティ)
 - Session: Flags, Resources, Variables, Inventory, Time
 
 ## Decision Log

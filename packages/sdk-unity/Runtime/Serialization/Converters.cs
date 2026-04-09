@@ -90,6 +90,7 @@ namespace NarrativeGen.Serialization
                 "addItem" => new AddItemEffect(),
                 "removeItem" => new RemoveItemEffect(),
                 "goto" => new GotoEffect(),
+                "createEvent" => new CreateEventEffect(),
                 _ => throw new JsonSerializationException($"Unknown effect type '{type}'")
             };
             serializer.Populate(jo.CreateReader(), result);

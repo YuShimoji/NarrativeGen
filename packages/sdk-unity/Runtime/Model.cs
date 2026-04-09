@@ -278,7 +278,7 @@ namespace NarrativeGen
     }
 
     /// <summary>
-    /// Condition that checks whether a dynamic event entity exists in session.events.
+    /// engine-ts の hasEvent に対応。session.events に動的イベント ID が存在するかを検査する。
     /// </summary>
     public class HasEventCondition : Condition
     {
@@ -418,5 +418,29 @@ namespace NarrativeGen
     {
         [JsonProperty("key")]
         public string Key { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// createEvent エフェクト（engine-ts <c>event-entity.ts</c> と同等のセッションへの動的エンティティ追加）。
+    /// </summary>
+    public class CreateEventEffect : Effect
+    {
+        [JsonProperty("id")]
+        public string Id { get; set; } = string.Empty;
+
+        [JsonProperty("name")]
+        public string Name { get; set; } = string.Empty;
+
+        [JsonProperty("properties")]
+        public Dictionary<string, CreateEventPropertyInput>? Properties { get; set; }
+    }
+
+    /// <summary>
+    /// createEvent.properties エントリの簡略形（defaultValue のみ）。
+    /// </summary>
+    public class CreateEventPropertyInput
+    {
+        [JsonProperty("defaultValue")]
+        public object? DefaultValue { get; set; }
     }
 }

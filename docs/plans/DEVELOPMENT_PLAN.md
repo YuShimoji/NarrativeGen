@@ -47,6 +47,46 @@
 - Dynamic Text export policy
   - `docs/specs/dynamic-text-engine.md` / `docs/specs/yarn-spinner-export.md` に方針を同期
 
+### Phase 5 からの接続
+
+Phase 5 では専用ブランチでの Vite 検証と UI 改善の Issue 化までを計画した。Phase 6 以降は、その検証結果の **`main` への取り込み**と、データ導線（Dynamic Text → Yarn）、品質（E2E / a11y）、Unity パリティを並列可能なトラックで進める。
+
+---
+
+## 2026-04 後半〜 優先順位（Phase 6 以降）
+
+| Phase | 内容 | 状態 |
+|-------|------|------|
+| 6 | Vite 8: Rollup wasm `overrides` 付きツールチェーンを `main` で維持（`feat/vite-upgrade` をマージ済み） | 実装済み |
+| 7 | SP-DTYARN-001: `[entity]` / 数値比較ほか Yarn 表現の拡張 | 一部実装済（2026-04-09）。ネスト and/or・`[entity~]` 等は継続 |
+| 8 | SP-009 横展開: グラフ / デバッグ / モーダルの a11y・レスポンシブ | 継続（`docs/plans/ui-a11y-responsive-issues.md` 等） |
+| 並列 | E2E 間欠安定化（Playwright）、SP-UNITY-001 残パリティ（[unity-sdk.md](../specs/unity-sdk.md)、C# テスト） | 継続 |
+
+### Phase 6〜8 の実行順（概要）
+
+1. **Phase 6** 完了後、Phase 7・8 を本トランクで並列着手。
+2. **E2E 安定化**と**Unity パリティ**は Phase 6 と並行で継続可能。
+3. **WritingPage 連携**は [pipeline-workflow.md](../specs/pipeline-workflow.md) / `writingpage-io-contract.md` のゲートに従いスコープ外（No-Go 継続時は実装しない）。
+
+### 意思決定の目安
+
+| タイミング | 内容 |
+|------------|------|
+| 依存メジャーアップ時 | Vite/Rollup を専用ブランチで検証してから `main` へ（破壊的 `audit fix --force` は避ける） |
+| DTYARN 拡張前 | 新構文の Yarn 側表現を [dynamic-text-yarn-export.md](../specs/dynamic-text-yarn-export.md) に固定してから実装 |
+| a11y 各スライス開始時 | graph / debug / modal の着手順（影響・工数で選択） |
+| 四半期または外部更新時 | WritingPage 再開の要否（ゲート再判定） |
+
+### 手動確認の目安
+
+| タイミング | 内容 |
+|------------|------|
+| 大きなフロント変更の PR 前 | ローカル `npm run test:e2e`（代表スペックでも可） |
+| `main` 取り込み直後 | `npm run dev` で主要導線スモーク |
+| DTYARN 受け入れ時 | 生成 `.yarn` の実機 Yarn Spinner 確認 |
+| 任意 | Play BGM 聴感（[project-status.md](../project-status.md) U01） |
+| a11y スライス完了ごと | キーボード・簡易スクリーンリーダー確認（15〜30 分目安） |
+
 ---
 
 ## 現在の実装済み機能 (コードソースから確認)
@@ -111,7 +151,7 @@
 |------|------|
 | MinimalNarrativeController | JSON TextAsset読込によるランタイム |
 | Inventory | add/remove/has/list/clear/toJSON (engine-tsからの移植) |
-| InferenceRegistry | 条件8種 / エフェクト7種 (TS パリティ) |
+| InferenceRegistry | 条件9種 / エフェクト8種 (hasEvent / createEvent 含む、TS パリティ) |
 
 ### テスト
 
@@ -310,6 +350,7 @@
 ### 優先順位3.11: SP-PLAY-001 プレイ没入感 MVP [完了]
 
 **開始日**: 2026-03-18
+**完了日**: 2026-04-08
 
 - TransitionRegistry: Strategy パターンでノード遷移方式を登録・切替
 - CrossfadeTransition / AppendScrollTransition: 2つの組み込み遷移

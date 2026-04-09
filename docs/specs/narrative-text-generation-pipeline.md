@@ -114,8 +114,8 @@
 
 1. **著者向け表記の併存**: レガシー `{flag:…}` 等と `{name}` 形式はモデル上併存しうる。ランタイムは `template.ts` で段階0→段階1の単一順序。**コードパス上の二重適用は解消済み**（`expandTemplate` 直前とコア内での重複なし）。
 2. **`Undo` / セーブと `DescriptionState`（Web Tester）**: **解消済み**。`pushHistory` と同タイミングで `AppState` に `descriptionState` スナップショットを積み、プレイ Undo（PlayRenderer 本線・レガシー選択肢）で `pop` して復元する。localStorage セッションはスキーマ **1.1.0**（`descriptionState` 付き）で保存し、**1.0.0** 読込時は `descriptionState` 欠落を `{}` とみなす。スロット／オートセーブ（`SaveManager`）も `descriptionState` を含む（バージョン 1.1）。
-3. **`model.metadata` の `{…}` 置換**: 本 API に未搭載（本線で未使用のため）。
-4. **Unity C#**: **部分移植** — `NarrativeText.ExpandTemplate` で段階0+コア（`[entity]` 基本形・`{?}`・`{}`）まで。`session.events`、`[entity~]`、会話テンプレートは未着手（[unity-sdk.md](unity-sdk.md) 参照）。
+3. **`model.metadata` の `{…}` 置換**: 本 API に未搭載（本線で未使用のため）。2026-04-08 決定: 当面実装しない。要件時は [issue-stubs/BL-TGEN-META.md](../plans/issue-stubs/BL-TGEN-META.md) から Issue 起票。
+4. **Unity C#**: **ほぼ対応** — `ExpandTemplateWithTracking`、`ResolveNarrativeDisplayTextTracked`、`session.events`、`hasEvent`/`createEvent`（InferenceRegistry）は [unity-sdk.md](unity-sdk.md) 参照。残差はエッジケース・`maxUses` 消費など。
 
 ## 8. 関連仕様
 

@@ -13,12 +13,15 @@ namespace NarrativeGen
         public IReadOnlyDictionary<string, HashSet<string>>? DescriptionState { get; set; }
         public int DescriptionSeed { get; set; }
         public bool AppendConversationTemplates { get; set; } = true;
+        public IReadOnlyDictionary<string, int>? TemplateUsageState { get; set; }
     }
 
     public sealed class ResolveNarrativeDisplayTextTrackedResult
     {
         public string Text { get; set; } = string.Empty;
         public Dictionary<string, HashSet<string>> DescriptionState { get; set; } =
+            new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, int> TemplateUsageState { get; set; } =
             new(StringComparer.OrdinalIgnoreCase);
     }
 
@@ -43,6 +46,12 @@ namespace NarrativeGen
             var appendTemplates = options?.AppendConversationTemplates ?? true;
             var descIn = options?.DescriptionState;
             var seed = options?.DescriptionSeed ?? 0;
+            var usageState = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            if (options?.TemplateUsageState != null)
+            {
+                foreach (var kv in options.TemplateUsageState)
+                    usageState[kv.Key] = kv.Value;
+            }
 
             string resolved;
             Dictionary<string, HashSet<string>> descriptionState;
@@ -65,18 +74,23 @@ namespace NarrativeGen
                 model.ConversationTemplates is { Count: > 0 } templates &&
                 session.Events.Count > 0)
             {
-                var matches = ConversationTemplateMatcher.FindMatchingTemplates(templates, session, model);
+                var matches = ConversationTemplateMatcher.FindMatchingTemplates(templates, session, model, usageState);
                 if (matches.Count > 0)
                 {
                     var insertions = string.Join(" ", matches.Select(m => m.ExpandedText));
                     resolved = string.IsNullOrEmpty(resolved) ? insertions : resolved + " " + insertions;
+                    foreach (var match in matches)
+                    {
+                        usageState = ConversationTemplateMatcher.RecordTemplateUsage(usageState, match.TemplateId);
+                    }
                 }
             }
 
             return new ResolveNarrativeDisplayTextTrackedResult
             {
                 Text = resolved,
-                DescriptionState = descriptionState
+                DescriptionState = descriptionState,
+                TemplateUsageState = usageState
             };
         }
 

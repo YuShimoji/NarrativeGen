@@ -102,6 +102,67 @@ function testYarnFormatterConditions() {
   assert.match(output, /<<set \$gold to \$gold \+ 10>>/)
 }
 
+function testYarnFormatterDynamicTextMinimal() {
+  const formatter = new YarnFormatter()
+  const model = {
+    modelType: 'test',
+    startNode: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        text: 'Hello {playerName}. {?hasKey:Door opens.} {?!hasKey:Door is locked.}',
+        choices: [
+          {
+            id: 'c1',
+            text: 'Ask {playerName}',
+            target: 'end'
+          }
+        ]
+      },
+      end: { id: 'end', text: 'End', choices: [] }
+    }
+  }
+  const output = formatter.format(model)
+
+  assert.match(output, /Hello \{\$playerName\}\./)
+  assert.match(output, /<<if \$hasKey>>Door opens\.<</)
+  assert.match(output, /<<if \$hasKey == false>>Door is locked\.<</)
+  assert.match(output, /-> Ask \{\$playerName\}/)
+}
+
+function testYarnFormatterDynamicTextEntityAndComparison() {
+  const formatter = new YarnFormatter()
+  const model = {
+    modelType: 'test',
+    startNode: 'start',
+    entities: {
+      npc: {
+        id: 'npc',
+        name: 'Merchant',
+        properties: {
+          mood: { key: 'mood', type: 'string', defaultValue: 'calm' },
+          gold: { key: 'gold', type: 'number', defaultValue: 99 }
+        }
+      }
+    },
+    nodes: {
+      start: {
+        id: 'start',
+        text: 'Talk to [npc]. Mood is [npc.mood]. {?gold>=10:Rich hint.}',
+        choices: []
+      }
+    }
+  }
+  const output = formatter.format(model)
+
+  assert.match(output, /<<declare \$npc_name = "Merchant">>/)
+  assert.match(output, /<<declare \$npc_mood = "calm">>/)
+  assert.match(output, /<<declare \$npc_gold = 99>>/)
+  assert.match(output, /Talk to \{\$npc_name\}\./)
+  assert.match(output, /Mood is \{\$npc_mood\}\./)
+  assert.match(output, /<<if \$gold >= 10>>Rich hint\.<<endif>>/)
+}
+
 function testInvalidModels() {
   const twineFormatter = new TwineFormatter()
   const inkFormatter = new InkFormatter()
@@ -157,6 +218,8 @@ testInkFormatter()
 testCsvFormatter()
 testYarnFormatter()
 testYarnFormatterConditions()
+testYarnFormatterDynamicTextMinimal()
+testYarnFormatterDynamicTextEntityAndComparison()
 testInvalidModels()
 testAllModelsAllFormatters()
 

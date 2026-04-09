@@ -19,7 +19,7 @@ Status: in progress
 
 Remaining tasks:
 - [x] Require root `npm ci` + `check:spec-index` / `check:models-sync` / `check:encoding-safety` in CI (`governance` job).
-- [x] Add change-review examples for spec maintenance（[docs/operations/SPEC_INDEX_REVIEW_EXAMPLES.md](operations/SPEC_INDEX_REVIEW_EXAMPLES.md)）。
+- [x] Add change-review examples for spec maintenance（[docs/operations/SPEC_INDEX_REVIEW_EXAMPLES.md](operations/SPEC_INDEX_REVIEW_EXAMPLES.md) および `docs/governance/spec-change-review-examples.md`）。
 
 ### 2. Dependency health recheck
 Status: in progress
@@ -56,13 +56,17 @@ Status: done (2026-03-17)
 - 初回ロード計測は任意。現状で問題なし
 
 ### 5. Responsive and accessibility improvements
-Status: done (baseline; 2026-04-09)
+Status: in progress（baseline 2026-04-09 まで完了、水平展開は Phase 8）
+
+Completed:
+- [x] Mobile/tablet layout baseline（`main.css` ブレークポイント）
+- [x] Main tabs: `role=tablist` / `role=tab` / `aria-selected` / arrow key navigation（`bootstrap.js` / `app-controller.js`）
+- [x] `statusText` live region、グラフツールバー、`index.html` の tabpanel / 代表モーダル `role=dialog`、グラフ SVG `role=img`
+- [x] 画面別チェックリスト (`docs/checklists/A11Y_RESPONSIVE_CHECKLIST.md`)
 
 Remaining tasks:
-- [x] Mobile/tablet layout definitions.
-- [x] ARIA labels and keyboard navigation.
-- [x] Manual usability checks on key screens (手順/記録ルールを整備済み)
-- [x] 画面別チェックリスト作成 (`docs/checklists/A11Y_RESPONSIVE_CHECKLIST.md`)
+- [ ] graph/debug/追加モーダルの継続スライス（キーボード・フォーカストラップの統一確認）
+- [ ] Manual usability checks on key screens（チェックリストに沿った記録）
 
 ### 6. Node graph visual issues
 Status: done (2026-03-17)
@@ -188,13 +192,9 @@ Source: `docs/plans/ROADMAP_EXECUTION_2026.md`
 
 昇格手順: [docs/plans/BACKLOG_PROMOTION.md](plans/BACKLOG_PROMOTION.md)。
 
-次の項目はプロダクト要件が固まるまで **実装スコープ外** とし、ここにのみ記録する。
+**BL-TGEN-META** は 2026-04-08 決定: 当面コアに載せない。要件発生時は [docs/plans/issue-stubs/BL-TGEN-META.md](plans/issue-stubs/BL-TGEN-META.md) を元に GitHub Issue を起票する。
 
-| ID | 項目 | 備考 |
-|----|------|------|
-| BL-TGEN-META | `model.metadata` の `{…}` 展開をランタイム文章 API に載せるか | SP-TGEN セクション7・本線未使用 |
-
-（`BL-PLAY-BGM` は `docs/specs/play-immersion.md` の「検証記録」表へ移設。記入完了後は Issue 昇格または表のみで完結可。）
+（`BL-PLAY-BGM` は `docs/specs/play-immersion.md` の検証記録で E2E + 診断 API によりクローズ。）
 
 ---
 

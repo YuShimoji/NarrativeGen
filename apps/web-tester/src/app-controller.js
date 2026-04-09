@@ -140,6 +140,12 @@ function initPlayRenderer() {
   }
   // Insert mode toggle button
   insertModeToggle()
+
+  // 開発時のみ: Playwright が PlayRenderer の BGM 診断を読むためのフック（本番ビルドでは無効）
+  if (import.meta.env.DEV) {
+    window.__narrativeGenE2E = window.__narrativeGenE2E ?? {}
+    window.__narrativeGenE2E.getPlayRenderer = () => playRenderer
+  }
 }
 
 function insertModeToggle() {
@@ -152,6 +158,7 @@ function insertModeToggle() {
   const toggle = document.createElement('button')
   toggle.className = 'play-mode-toggle'
   toggle.title = 'Transition mode'
+  toggle.setAttribute('aria-label', '\u30d7\u30ec\u30a4\u9078\u629e\u80a2\u306e\u9077\u79fb\u30e2\u30fc\u30c9\u3092\u5207\u66ff\uff08\u30af\u30ed\u30b9\u30d5\u30a7\u30fc\u30c9\u307e\u305f\u306f\u8ffd\u8a18\u30b9\u30af\u30ed\u30fc\u30eb\uff09')
   updateToggleLabel(toggle)
   toggle.addEventListener('click', () => {
     playRenderer.toggleMode()
@@ -994,6 +1001,24 @@ function switchTab(tabName) {
     // Initialize key binding system
     keyBindingManager.updateUI()
   }
+
+  updateTabA11y(tabName)
+}
+
+function updateTabA11y(activeTabName) {
+  const tabMap = [
+    { name: 'story', el: storyTab },
+    { name: 'graph', el: graphTab },
+    { name: 'debug', el: debugTab },
+    { name: 'reference', el: referenceTab },
+    { name: 'advanced', el: advancedTab }
+  ]
+  for (const tab of tabMap) {
+    if (!tab.el) continue
+    const selected = tab.name === activeTabName
+    tab.el.setAttribute('aria-selected', selected ? 'true' : 'false')
+    tab.el.setAttribute('tabindex', selected ? '0' : '-1')
+  }
 }
 
 storyTab.addEventListener('click', () => switchTab('story'))
@@ -1001,6 +1026,21 @@ graphTab.addEventListener('click', () => switchTab('graph'))
 debugTab.addEventListener('click', () => switchTab('debug'))
 if (referenceTab) referenceTab.addEventListener('click', () => switchTab('reference'))
 advancedTab.addEventListener('click', () => switchTab('advanced'))
+
+const mainTabs = [storyTab, graphTab, debugTab, referenceTab, advancedTab].filter(Boolean)
+for (const tabEl of mainTabs) {
+  tabEl.addEventListener('keydown', (event) => {
+    if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return
+    event.preventDefault()
+    const visibleTabs = mainTabs.filter((t) => t.style.display !== 'none')
+    const currentIndex = visibleTabs.indexOf(tabEl)
+    if (currentIndex === -1) return
+    const delta = event.key === 'ArrowRight' ? 1 : -1
+    const nextIndex = (currentIndex + delta + visibleTabs.length) % visibleTabs.length
+    visibleTabs[nextIndex].focus()
+    visibleTabs[nextIndex].click()
+  })
+}
 
 // Advanced features toggle
 if (enableAdvancedFeatures) {
