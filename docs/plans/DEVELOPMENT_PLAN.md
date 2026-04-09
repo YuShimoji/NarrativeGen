@@ -20,6 +20,46 @@
 - **Vite 8+ / esbuild / rollup**: `npm audit fix --force` 相当は破壊的のため、`feat/vite-upgrade` 等のブランチで `npm run build:all`・Playwright・`package.json` の `overrides`（Rollup wasm）を確認してから main へ。
 - **a11y / レスポンシブ**: ストーリービュー、グラフエディタ、プレイ画面、モーダルをそれぞれ Issue に分け、ARIA・キーボード・ブレークポイントを段階適用。
 
+### Phase 5 からの接続
+
+Phase 5 では専用ブランチでの Vite 検証と UI 改善の Issue 化までを計画した。Phase 6 以降は、その検証結果の **`main` への取り込み**と、データ導線（Dynamic Text → Yarn）、品質（E2E / a11y）、Unity パリティを並列可能なトラックで進める。
+
+---
+
+## 2026-04 後半〜 優先順位（Phase 6 以降）
+
+| Phase | 内容 | 状態 |
+|-------|------|------|
+| 6 | Vite 8: `feat/vite-upgrade` を PR レビュー後に `main` マージ（`package.json` の Rollup wasm `overrides` 維持、CI 緑） | 進行中 |
+| 7 | SP-DTYARN-001 次段: `[entity.property]` と段階的な複合条件の Yarn 表現（[dynamic-text-yarn-export.md](../specs/dynamic-text-yarn-export.md) → `YarnFormatter.js` + `verify-export-formatters`） | 計画→実装 |
+| 8 | SP-009 横展開: グラフ / デバッグ / モーダルの a11y・レスポンシブ（画面単位スライス、Issue 化推奨） | 計画→実装 |
+| 並列 | E2E 間欠安定化（Playwright）、SP-UNITY-001 残パリティ（[unity-sdk.md](../specs/unity-sdk.md)、C# テスト） | 継続 |
+
+### Phase 6〜8 の実行順（概要）
+
+1. **Phase 6** を優先。マージ完了後に Phase 7・8 を本トランクで並列着手しやすい。
+2. **E2E 安定化**と**Unity パリティ**は Phase 6 と並行で継続可能。
+3. **WritingPage 連携**は [pipeline-workflow.md](../specs/pipeline-workflow.md) の方針どおりスコープ外（外部フォーマット安定まで）。
+
+### 意思決定の目安
+
+| タイミング | 内容 |
+|------------|------|
+| PR オープン直後（0〜2 日） | Vite 8 を `main` に取り込むか（CI・ローカル `npm run test:e2e` を根拠に Go/No-Go） |
+| DTYARN 実装前（短いスパイク後） | `[entity.property]` の Yarn 側表現（プレーン文字列化 vs `<<set>>` 等）を仕様に固定 |
+| a11y 各スライス開始時 | graph / debug / modal の着手順（影響・工数で選択） |
+| 四半期または外部更新時 | WritingPage 再開の要否（現状は延期継続でよいか） |
+
+### 手動確認の目安
+
+| タイミング | 内容 |
+|------------|------|
+| Vite PR マージ前 | ローカル `npm run test:e2e`（可能なら複数回） |
+| `main` 取り込み直後 | `npm run dev` で主要導線スモーク（ビルド・プレイ・エクスポート） |
+| DTYARN 受け入れ時 | 生成 `.yarn` を Yarn Spinner または実プロジェクトで読む実機確認 |
+| 任意 | Play BGM 聴感（[project-status.md](../project-status.md) U01） |
+| a11y スライス完了ごと | キーボード・簡易スクリーンリーダー確認（15〜30 分目安） |
+
 ---
 
 ## 現在の実装済み機能 (コードソースから確認)
