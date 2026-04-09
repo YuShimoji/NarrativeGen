@@ -92,9 +92,15 @@ test.describe('SP-PLAY-001: Play Immersion MVP', () => {
     const initialText = await toggle.textContent();
     expect(initialText).toContain('Crossfade');
 
-    // Click toggle — wait for label to avoid batch-run races with CSS/layout
+    // Click toggle — DOM 更新を明示待ちしてから検証（並列 E2E のレイアウト競合を緩和）
     await toggle.click();
-    await expect(toggle).toContainText(/Scroll/i, { timeout: 8000 });
+    await page.waitForFunction(
+      () => {
+        const el = document.querySelector('.play-mode-toggle');
+        return el && /Scroll/i.test(el.textContent || '');
+      },
+      { timeout: 12000 }
+    );
 
     // localStorage should be updated
     const stored = await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY);
@@ -102,7 +108,13 @@ test.describe('SP-PLAY-001: Play Immersion MVP', () => {
 
     // Toggle back
     await toggle.click();
-    await expect(toggle).toContainText(/Crossfade/i, { timeout: 8000 });
+    await page.waitForFunction(
+      () => {
+        const el = document.querySelector('.play-mode-toggle');
+        return el && /Crossfade/i.test(el.textContent || '');
+      },
+      { timeout: 12000 }
+    );
   });
 
   test('AC-6: ending display — shows End marker and restart button at terminal node', async ({ page }) => {

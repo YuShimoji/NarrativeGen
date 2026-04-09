@@ -31,17 +31,17 @@ export class YarnFormatter {
         }
 
         for (const [nodeId, node] of Object.entries(model.nodes)) {
-            parts.push(this._formatNode(nodeId, node))
+            parts.push(this._formatNode(nodeId, node, model))
         }
 
         return parts.join('\n')
     }
 
-    _formatNode(nodeId, node) {
+    _formatNode(nodeId, node, model) {
         const bodyLines = []
 
         // Node text (split multi-line)
-        const text = this._normalizeDynamicText(node.text || '')
+        const text = this._normalizeDynamicText(node.text || '', model)
         for (const line of text.split('\n')) {
             if (line.trim()) {
                 bodyLines.push(line)
@@ -51,7 +51,7 @@ export class YarnFormatter {
         // Choices
         if (node.choices && node.choices.length > 0) {
             for (const choice of node.choices) {
-                this._formatChoice(choice, bodyLines)
+                this._formatChoice(choice, bodyLines, model)
             }
         }
 
@@ -59,8 +59,8 @@ export class YarnFormatter {
         return this._buildNodeBlock(this._sanitizeId(nodeId), body)
     }
 
-    _formatChoice(choice, lines) {
-        const text = this._normalizeDynamicText(choice.text || 'Continue')
+    _formatChoice(choice, lines, model) {
+        const text = this._normalizeDynamicText(choice.text || 'Continue', model)
         const condition = this._buildCondition(choice.conditions)
         const conditionSuffix = condition ? ` <<if ${condition}>>` : ''
 
@@ -114,8 +114,8 @@ export class YarnFormatter {
             case 'hasEvent':
                 return c.value ? `$event_${c.key}` : `$event_${c.key} == false`
             case 'property':
-                // Property conditions mapped to $entity_key variables
-                return `$${c.entity}_${c.key} ${c.op} ${typeof c.value === 'string' ? `"${c.value}"` : c.value}`
+                // Property conditions mapped to $entity_key variables (segments aligned with _varSegment)
+                return `$${this._varSegment(c.entity)}_${this._varSegment(c.key)} ${c.op} ${typeof c.value === 'string' ? `"${c.value}"` : c.value}`
             case 'timeWindow':
                 return `$time >= ${c.start} and $time <= ${c.end}`
             default:
@@ -143,7 +143,7 @@ export class YarnFormatter {
                 return `<<set $inventory_${effect.key} to false>>`
             case 'createEvent':
                 // Events are runtime-only; emit flag marker + comment
-                return `<<set $event_${effect.id} to true>> // createEvent: ${effect.name || effect.id}`
+                return `<<set $event_${this._varSegment(effect.id)} to true>> // createEvent: ${effect.name || effect.id}`
             default:
                 return null
         }
@@ -173,31 +173,115 @@ export class YarnFormatter {
         // Declare event flags (collected from createEvent effects)
         const eventIds = this._collectEventIds(model)
         for (const eventId of eventIds) {
-            lines.push(`<<declare $event_${eventId} = false>>`)
+            lines.push(`<<declare $event_${this._varSegment(eventId)} = false>>`)
+        }
+        // Entity display names and property defaults (SP-DTYARN-001: [entity] / [entity.prop])
+        for (const line of this._buildEntityDeclarations(model)) {
+            lines.push(line)
         }
         return lines.length > 0 ? lines.join('\n') : ''
     }
 
     /**
-     * Convert a minimal subset of Dynamic Text syntax into Yarn-friendly form.
-     * Scope (SP-DTYARN-001 minimal):
-     * - {variable}      -> {$variable}
-     * - {?flag:text}    -> <<if $flag>>text<<endif>>
-     * - {?!flag:text}   -> <<if $flag == false>>text<<endif>>
+     * Yarn variable name segment (entity id, property key, event id, etc.)
+     */
+    _varSegment(part) {
+        return String(part).replace(/[^a-zA-Z0-9_]/g, '_')
+    }
+
+    _yarnStringLiteral(value) {
+        const s = String(value)
+        return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+    }
+
+    /**
+     * <<declare>> lines for model.entities so [id] / [id.prop] can map to {$id_name}, {$id_prop}.
+     */
+    _buildEntityDeclarations(model) {
+        const lines = []
+        if (!model || !model.entities) return lines
+        for (const [entityId, ent] of Object.entries(model.entities)) {
+            const prefix = this._varSegment(entityId)
+            const nameLit = this._yarnStringLiteral(ent.name ?? entityId)
+            lines.push(`<<declare $${prefix}_name = "${nameLit}">>`)
+            const props = ent.properties || {}
+            for (const [propKey, propDef] of Object.entries(props)) {
+                if (propDef == null || propDef.defaultValue === undefined) continue
+                const pk = this._varSegment(propKey)
+                const v = propDef.defaultValue
+                const varName = `${prefix}_${pk}`
+                if (typeof v === 'number' && Number.isFinite(v)) {
+                    lines.push(`<<declare $${varName} = ${v}>>`)
+                } else if (typeof v === 'boolean') {
+                    lines.push(`<<declare $${varName} = ${v}>>`)
+                } else {
+                    lines.push(`<<declare $${varName} = "${this._yarnStringLiteral(v)}">>`)
+                }
+            }
+        }
+        return lines
+    }
+
+    /**
+     * Convert a subset of Dynamic Text syntax into Yarn-friendly form.
+     * SP-DTYARN-001:
+     * - {variable}           -> {$variable}
+     * - {?flag:text}        -> <<if $flag>>text<<endif>>
+     * - {?!flag:text}       -> <<if $flag == false>>text<<endif>>
+     * - {?key op val:text}  -> <<if $key op val>>text<<endif>> (resource/variable 数値比較、単一行 body 想定)
+     * - {?!key op val:text} -> <<if !($key op val)>>text<<endif>>
+     * - [entity.property]   -> {$entity_property}（model.entities の declare と整合）
+     * - [entity]            -> {$entity_name}
      * Non-target syntaxes are left as-is for backward compatibility.
      */
-    _normalizeDynamicText(text) {
+    _normalizeDynamicText(text, model) {
         if (!text) return ''
 
-        // Conditional sections first to avoid replacing braces inside generated blocks.
-        let out = text.replace(/\{\?\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:(.*?)\}/g, (_m, flag, body) => {
+        // Comparison conditionals (before simple flag patterns).
+        const cmpOps = '(>=|<=|>|<|==|!=)'
+        let out = text.replace(
+            new RegExp(`\\{\\?\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*${cmpOps}\\s*(\\S+?)\\s*:(.*?)\\}`, 'gs'),
+            (_m, key, op, rawVal, body) => {
+                const rhs = /^-?\d+(\.\d+)?$/.test(String(rawVal).trim())
+                    ? String(rawVal).trim()
+                    : `"${this._yarnStringLiteral(String(rawVal).replace(/^"|"$/g, ''))}"`
+                return `<<if $${key} ${op} ${rhs}>>${body}<<endif>>`
+            }
+        )
+        out = out.replace(
+            new RegExp(`\\{\\?!\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*${cmpOps}\\s*(\\S+?)\\s*:(.*?)\\}`, 'gs'),
+            (_m, key, op, rawVal, body) => {
+                const rhs = /^-?\d+(\.\d+)?$/.test(String(rawVal).trim())
+                    ? String(rawVal).trim()
+                    : `"${this._yarnStringLiteral(String(rawVal).replace(/^"|"$/g, ''))}"`
+                return `<<if !($${key} ${op} ${rhs})>>${body}<<endif>>`
+            }
+        )
+
+        // Simple flag conditionals.
+        out = out.replace(/\{\?\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:(.*?)\}/g, (_m, flag, body) => {
             return `<<if $${flag}>>${body}<<endif>>`
         })
         out = out.replace(/\{\?!\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:(.*?)\}/g, (_m, flag, body) => {
             return `<<if $${flag} == false>>${body}<<endif>>`
         })
 
-        // Plain variable placeholders.
+        // [entity] / [entity.propKey]（propKey は先頭の . 以降すべて。model.entities があるときのみ変換）
+        if (model && model.entities) {
+            out = out.replace(/\[([^\]]+)\]/g, (_m, ref) => {
+                const dot = ref.indexOf('.')
+                if (dot === -1) {
+                    return `{${'$' + this._varSegment(ref) + '_name'}}`
+                }
+                const entId = ref.slice(0, dot)
+                const propKey = ref.slice(dot + 1)
+                if (!propKey) return _m
+                const vn = `${this._varSegment(entId)}_${this._varSegment(propKey)}`
+                return `{${'$' + vn}}`
+            })
+        }
+
+        // Plain variable placeholders (after conditionals so we do not break generated <<if>>).
         out = out.replace(/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g, (_m, key) => `{$${key}}`)
         return out
     }

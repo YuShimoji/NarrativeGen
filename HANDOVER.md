@@ -44,7 +44,7 @@ NarrativeGen/
 ## 既知の課題
 
 - E2E バッチで稀に失敗しうる（`play-immersion` AC-5 は `toContainText` 待機で緩和）
-- Dynamic Text の Yarn 変換: 最小実装に加え Phase 7 で `[entity.property]` 等の次段を進める（仕様 `docs/specs/dynamic-text-yarn-export.md`）
+- Dynamic Text の Yarn 変換（SP-DTYARN-001）: `[entity]` / `[entity.prop]`・数値比較 `{?key op val:…}` まで拡張（2026-04-09）。詳細は `docs/specs/dynamic-text-yarn-export.md`
 - リポジトリ内のソース配置は `**packages/`（小文字）** を正とする（現役ドキュメント表記を統一済み）。Unity 側の埋め込み先フォルダ名はエディタ既定の `**Packages/`** のまま（`packages/sdk-unity/README.md` 参照）
 
 ## 次の推奨作業（Phase 6 以降と同一順）
