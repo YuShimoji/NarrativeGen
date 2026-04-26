@@ -69,7 +69,7 @@
     "pct": 100,
     "cat": "system",
     "file": "docs/plans/DEVELOPMENT_PLAN.md",
-    "summary": "Single source for roadmap and progress"
+    "summary": "Single roadmap source. Current state is HANDOVER.md; spec status is spec-index.json; long-term decisions are in docs/governance/decision-log.md."
   },
   {
     "id": "SP-VAR-001",

@@ -29,4 +29,4 @@
 ## 運用ルール
 
 - ユーザーが一度説明した非交渉条件は、同一ブロック内でここへ固定する
-- `project-context.md` の DECISION LOG には理由を短く残し、ここには条件そのものを残す
+- 長期決定の理由は `docs/governance/decision-log.md` に短く残し、ここには条件そのものを残す

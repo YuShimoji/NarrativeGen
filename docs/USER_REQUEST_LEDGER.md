@@ -10,17 +10,17 @@
 
 ## 未反映の是正要求
 
-- (なし -- SP-PIPE-001 本文反映、project-context.md 同期は本セッションで実施)
+- (なし)
 
 ## Backlog Delta
 
 | ID | 項目 | 優先度 | 状態 |
 |----|------|--------|------|
-| B-001 | Unity SDK 7機能移植 (SP-UNITY-001 85% → 100%) | 高 | 未着手 (別セッション推奨) |
+| B-001 | Unity SDK 残パリティ (SP-UNITY-001 96% → 100%) | 高 | 未着手 (NuGet、expandTemplate エッジ、四半期監査) |
 | B-002 | SP-PLAY-001 BGM 手動ブラウザ確認 → 100% | 中 | 完了（`play-media-bgm-ac.spec.js` + 検証表 Pass。耳視聴は任意） |
 | B-003 | Visual evidence 再取得 (スクリーンショット消失) | 中 | 未着手 |
 | B-004 | Dynamic Text エクスポート変換ルール定義 | 低 | 未着手 (JSON 主軸で回避可能) |
-| B-005 | CI 統合 (spec-index / encoding-safety checks) | 中 | 未着手 |
+| B-005 | CI 統合 (spec-index / encoding-safety / models-sync checks) | 中 | 完了（governance job） |
 | B-006 | GUI Undo/Redo 手動回帰テスト | 中 | 未着手 |
 
 ## 今後明文化すべきこと
@@ -30,7 +30,7 @@
 
 ## ロードマップ上の扱い（2026-04 更新）
 
-- 参照: `docs/plans/ROADMAP_EXECUTION_2026.md`
+- 参照: `docs/plans/DEVELOPMENT_PLAN.md`
 - WritingPage 連携は **長期トラック（3〜6か月）** で扱う
 - 着手条件:
   - 外部フォーマットが安定していること

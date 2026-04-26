@@ -15,7 +15,7 @@ Status: in progress
 - Added syntax and reference validation for `docs/spec-index.json`.
 - Script: `scripts/spec-index-check.mjs`
 - Command: `npm run check:spec-index`
-- Workflow note added to `docs/plans/DEVELOPMENT_PLAN.md`.
+- Workflow note is maintained in `docs/plans/DEVELOPMENT_PLAN.md`.
 
 Remaining tasks:
 - [x] Require root `npm ci` + `check:spec-index` / `check:models-sync` / `check:encoding-safety` in CI (`governance` job).
@@ -123,7 +123,8 @@ Status: mitigated (2026-03-22)
 Status: ongoing
 
 Remaining tasks:
-- [x] HANDOVER.md / TASKS.md / DEVELOPMENT_PLAN.md を最新状態に同期 (2026-03-17)
+- [x] HANDOVER.md / DEVELOPMENT_PLAN.md を最新状態に同期 (2026-03-17)
+- [x] Docs Authority Reset: HANDOVER.md を通常再開入口に一本化し、古い状態・タスク・補助線文書を削除 (2026-04-27)
 - [x] 旧テスト手順参照を doctor / README / troubleshooting で現行ドキュメントに修正 (2026-03-17)
 - [ ] Periodic legacy document review.
 - [ ] Normalize mojibake-affected legacy planning documents.
@@ -132,7 +133,7 @@ Remaining tasks:
 
 ## Roadmap-aligned debt closure (2026 Q2-Q4)
 
-Source: `docs/plans/ROADMAP_EXECUTION_2026.md`
+Source: `docs/plans/DEVELOPMENT_PLAN.md`
 
 ### Short term (0-4 weeks)
 - [x] Close SP-PLAY-001 human verification gap (AC-9 to AC-12 logging readiness + evidence format).

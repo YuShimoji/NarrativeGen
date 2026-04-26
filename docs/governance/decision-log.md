@@ -42,5 +42,11 @@
 | 2026-03-18 | SP-PLAY-001: ノード遷移はcrossfade+append-scroll両対応 | crossfadeのみ / append-scrollのみ / 両方切替 | 用途に応じて切替可能にする。拡張可能なTransitionRegistry設計で将来のAnimation追加も受容 |
 | 2026-03-18 | SP-PLAY-001: Phase 1はテキスト演出のみ | テキストのみ / 画像含む / 画像+BGM | スコープを絞りプレイ基盤を先に確立。画像/BGMはPhase 2 |
 | 2026-03-18 | UI設計はマウス操作主体 (NarrativeGenにも適用) | マウス主体 / キーボード主体 | WritingPageでの決定をNarrativeGenにも適用 |
+| 2026-03-23 | SP-PIPE-001 Pipeline Workflow ドラフト策定 | Pipeline先行 / SP-PLAY-001閉じ優先 / WritingPage先行 / 体験ウォークスルー | 基盤は揃っている。次は「誰が何をどう使うか」の言語化。Pipelineなしで機能だけ増やすと未使用機能が増える |
+| 2026-03-26 | 孤立ドキュメント・偽テスト・陳腐化仕様の整理削除 | 個別対応 / バッチ削除 | task-scoutで L01-L07 を特定。対象をまとめて処理した方が速い |
+| 2026-03-26 | デッドコード除去・UI改善・CSS重複解消 | Excise先行 / Advance先行 / 並行 | 保守に偏らないよう Excise→Advance→Refactor。empty stateとサイドバーなどユーザーに見える変更を含めた |
 | 2026-03-27 | SP-PIPE-001 方向性確定: 1人運用/WritingPage次スライス/JSON主軸/AI支援スコープ外/AUTHORING_GUIDE拡張 | 各項目に複数択 | Pipeline仕様の5件HUMAN_AUTHORITY全件レビュー完了。次スライスはWritingPage連携 |
+| 2026-04-03 | WritingPage連携の早期実装を stash 退避 | stash / ブランチ分離 / 仕様先行 | 相手 v0.3.32 のフォーマットが不安定。行数は小さく再実装しやすい |
+| 2026-04-03 | SP-PIPE-001 完了と canonical docs 実記述化 | 仕様本文反映 / テンプレ維持 | 5件を本文に反映し、AUTHORING_GUIDEとプロジェクト記憶文書をテンプレ状態から脱却させた |
 | 2026-04-08 | BL-TGEN-META: `model.metadata` のランタイム `{…}` 展開は当面エンジン本線に載せない | 載せる / 載せない / 要件後にIssue | `resolveNarrativeDisplayText*` 本線で未使用。パイプライン API への組み込みはニーズ確定後に GitHub Issue 化し SP-TGEN / `narrative-text-generation-pipeline.md` §7 を更新してから実装。起票用文案は `docs/plans/issue-stubs/BL-TGEN-META.md` |
+| 2026-04-27 | Docs Authority Reset: HANDOVER.md を通常再開入口に一本化 | 強削除 / 降格中心 / 最小同期 | 古い状態・タスク・補助線文書が正本風に残り、再開時の判断を汚していた。Git履歴をアーカイブとし、残す正本の役割を分離する |

@@ -5,7 +5,7 @@
 - **日時**: 2026-04-09
 - **ブランチ**: `main`（trunk-based）
 - **直近**: `feat/vite-upgrade` を `main` にマージ（Vite 8、engine-ts lint 基線、SP-DTYARN-001 次段、index.html a11y スライス、play-immersion AC-5 安定化）。既存の `play-media-bgm-ac`・SP-PLAY-001 done・WritingPage No-Go・E2E #81〜#83 トラッキングは維持。
-- **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`（実行版 `docs/plans/ROADMAP_EXECUTION_2026.md` と Phase 6 以降セクション）
+- **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`
 
 ## プロジェクト概要
 
@@ -59,7 +59,7 @@ NarrativeGen/
 
 ## 実行ロードマップ（2026 Q2-Q4）
 
-- 実行版: `docs/plans/ROADMAP_EXECUTION_2026.md`
+- 正本: `docs/plans/DEVELOPMENT_PLAN.md`
 - **短期**: SP-UNITY-001 残差、E2E 恒久対策（#81〜#83）、SP-DTYARN 継続
 - **中期**: a11y・レスポンシブ、回帰戦略、Dynamic Text / Yarn 境界の残タスク
 - **長期**: WritingPage（ゲート Pass 後）、Unity 配布、品質ゲート高度化

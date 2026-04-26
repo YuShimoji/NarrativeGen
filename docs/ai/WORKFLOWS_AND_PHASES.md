@@ -3,19 +3,15 @@ Ruleset-Version: v18
 Status: canonical
 
 ## Recommended read order on resume / continue / refresh
-1. `docs/ai/CORE_RULESET.md`
-2. `docs/ai/DECISION_GATES.md`
-3. `docs/ai/STATUS_AND_HANDOFF.md`
-4. `docs/ai/WORKFLOWS_AND_PHASES.md`
-5. `docs/INVARIANTS.md`
-6. `docs/USER_REQUEST_LEDGER.md`
-7. `docs/OPERATOR_WORKFLOW.md`
-8. `docs/INTERACTION_NOTES.md`
-9. runtime / context / registry / boundary docs
+1. `HANDOVER.md`
+2. `docs/spec-index.json` or `docs/spec-viewer.html` when spec status matters
+3. `docs/plans/DEVELOPMENT_PLAN.md` when roadmap priority matters
+4. `docs/INVARIANTS.md`, `docs/USER_REQUEST_LEDGER.md`, `docs/OPERATOR_WORKFLOW.md`, or `docs/INTERACTION_NOTES.md` only when the task needs durable project memory
+5. `docs/ai/*.md` only when changing or auditing AI workflow behavior
 
 ## Resume / Continue / Refresh
 ### Resume
-Recover project-local canonical context first, then identify the active artifact and bottleneck.
+Start from `HANDOVER.md`, then identify the active artifact and bottleneck from the linked current docs. Do not require broad pre-reading unless the task needs it.
 
 ### Continue
 Do not rely on momentum. Re-check whether the current block still matches the bottleneck, actor, and value path.
@@ -61,6 +57,7 @@ Good workflow-proof tasks:
 Do not compress unrelated intents into one ask.
 Do not use markdown tables in a short ask field.
 Do not present broad re-explanation prompts when canonical context already exists.
+Do not recreate session-state, runtime-state, restart-roadmap, or context-cache files. Current state belongs in `HANDOVER.md`.
 
 ## Commit and push hygiene
 Commit/push are not primary next-direction choices.

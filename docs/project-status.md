@@ -70,7 +70,7 @@
 
 ## 6. ロードマップ運用（2026 Q2-Q4）
 
-- 実行ドキュメント: `docs/plans/ROADMAP_EXECUTION_2026.md`
+- 実行ドキュメント: `docs/plans/DEVELOPMENT_PLAN.md`
 - **短期（0〜4週間）**
   - ~~U01（AC-9〜12）~~ → `play-media-bgm-ac.spec.js` と検証表で完了（耳視聴は任意）
   - N01 の Unity パリティ残差（`docs/specs/unity-sdk.md`、NuGet 等）

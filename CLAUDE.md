@@ -24,7 +24,7 @@
 
 ## IDEA POOL
 
-バックログ・アイデアのたたき台は [`docs/USER_REQUEST_LEDGER.md`](docs/USER_REQUEST_LEDGER.md)。長期の決定の**全件**は [`docs/governance/decision-log.md`](docs/governance/decision-log.md)。セッション用の補助線は [`docs/project-context.md`](docs/project-context.md)。
+バックログ・アイデアのたたき台は [`docs/USER_REQUEST_LEDGER.md`](docs/USER_REQUEST_LEDGER.md)。長期の決定の**全件**は [`docs/governance/decision-log.md`](docs/governance/decision-log.md)。通常再開時の入口は [`HANDOVER.md`](HANDOVER.md)。
 
 ## Commands
 
@@ -89,4 +89,4 @@
 
 ## Project Context
 
-最新の状態・CI・次の作業は **[HANDOVER.md](HANDOVER.md)**。セッション用の補助線は **[docs/project-context.md](docs/project-context.md)**。
+最新の状態・CI・次の作業は **[HANDOVER.md](HANDOVER.md)**。

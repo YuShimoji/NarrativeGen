@@ -25,8 +25,10 @@ Use these meanings strictly:
 
 Selection of a `proposed` item for deeper review does **not** upgrade it to `approved`.
 
-## FEATURE_REGISTRY discipline
-For each feature candidate, keep at least:
+## Feature and backlog status discipline
+Use `docs/spec-index.json` for specification lifecycle state and `docs/USER_REQUEST_LEDGER.md` for durable user requests or backlog deltas. Do not create a separate feature registry unless the user explicitly asks for one.
+
+For each feature candidate that is tracked in a surviving doc, keep at least:
 - short description
 - priority
 - status
