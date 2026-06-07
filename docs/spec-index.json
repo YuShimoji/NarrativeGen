@@ -182,11 +182,11 @@
   {
     "id": "SP-UNITY-001",
     "title": "Unity SDK",
-    "status": "partial",
-    "pct": 96,
+    "status": "done",
+    "pct": 100,
     "cat": "system",
     "file": "docs/specs/unity-sdk.md",
-    "summary": "Unity C# SDK: Session.events, hasEvent/createEvent, TemplateUsageState/maxUses, ResolveNarrativeDisplayTextTracked の TS パリティ（resolve 経路は usage 非伝播）。残: NuGet、expandTemplate エッジ、四半期パリティ監査（unity-sdk.md）。"
+    "summary": "Unity C# SDK: Session.events, hasEvent/createEvent applicator, TemplateUsageState/maxUses, ResolveNarrativeDisplayTextTracked の TS パリティ。expandTemplate 主要エッジ回帰とローカル NuGet pack 準備済み。UPM-first、NuGet 公開はスコープ外。"
   },
   {
     "id": "SP-PARA-001",

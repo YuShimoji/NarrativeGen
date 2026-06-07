@@ -113,6 +113,7 @@ namespace NarrativeGen
             reg.RegisterEffect(new AddItemApplicator());
             reg.RegisterEffect(new RemoveItemApplicator());
             reg.RegisterEffect(new GotoApplicator());
+            reg.RegisterEffect(new CreateEventApplicator());
         }
     }
 
@@ -333,6 +334,56 @@ namespace NarrativeGen
         {
             var go = (GotoEffect)effect;
             return session.With(currentNodeId: go.Target);
+        }
+    }
+
+    internal class CreateEventApplicator : IEffectApplicator
+    {
+        public string Type => "createEvent";
+
+        public Session Apply(Effect effect, Session session)
+        {
+            var createEvent = (CreateEventEffect)effect;
+            var events = new Dictionary<string, Entity>(session.Events, StringComparer.OrdinalIgnoreCase)
+            {
+                [createEvent.Id] = new Entity
+                {
+                    Id = createEvent.Id,
+                    Name = createEvent.Name,
+                    Properties = NormalizeProperties(createEvent.Properties)
+                }
+            };
+
+            return session.With(events: events);
+        }
+
+        private static Dictionary<string, PropertyDef>? NormalizeProperties(
+            Dictionary<string, CreateEventPropertyInput>? properties)
+        {
+            if (properties == null || properties.Count == 0)
+                return null;
+
+            var normalized = new Dictionary<string, PropertyDef>(StringComparer.OrdinalIgnoreCase);
+            foreach (var kv in properties)
+            {
+                normalized[kv.Key] = new PropertyDef
+                {
+                    Key = kv.Key,
+                    Type = InferPropertyType(kv.Value.DefaultValue),
+                    DefaultValue = kv.Value.DefaultValue
+                };
+            }
+            return normalized;
+        }
+
+        private static string InferPropertyType(object? value)
+        {
+            return value switch
+            {
+                bool => "boolean",
+                byte or sbyte or short or ushort or int or uint or long or ulong or float or double or decimal => "number",
+                _ => "string"
+            };
         }
     }
 }

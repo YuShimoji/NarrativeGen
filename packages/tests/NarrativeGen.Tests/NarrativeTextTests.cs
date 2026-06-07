@@ -66,6 +66,39 @@ namespace NarrativeGen.Tests
         }
 
         [Test]
+        public void ExpandTemplate_BuiltInEntityFields_And_UnknownsRemain()
+        {
+            var model = MinimalModel();
+            var session = new NgSession("n1", null, null, null, null, 0);
+
+            var expanded = NarrativeText.ExpandTemplate(
+                "[apple.name]|[apple.description]|[apple.cost]|[apple.id]|[missing]|[apple.missing]",
+                model,
+                session);
+
+            Assert.AreEqual("Apple|Red|3|apple|[missing]|[apple.missing]", expanded);
+        }
+
+        [Test]
+        public void ExpandTemplate_Conditional_ResourceVariableAndInventory()
+        {
+            var model = MinimalModel();
+            var session = new NgSession(
+                "n1",
+                new Dictionary<string, bool>(),
+                new Dictionary<string, double> { ["gold"] = 100 },
+                new Dictionary<string, object> { ["health"] = 75, ["has_key"] = true },
+                new List<string> { "sword" },
+                0);
+
+            Assert.AreEqual("Rich", NarrativeText.ExpandTemplate("{?gold>=50:Rich}", model, session));
+            Assert.AreEqual("Healthy", NarrativeText.ExpandTemplate("{?health>50:Healthy}", model, session));
+            Assert.AreEqual("Has key", NarrativeText.ExpandTemplate("{?has_key:Has key}", model, session));
+            Assert.AreEqual("Armed", NarrativeText.ExpandTemplate("{?sword:Armed}", model, session));
+            Assert.AreEqual(string.Empty, NarrativeText.ExpandTemplate("{?gold>=200:Too rich}", model, session));
+        }
+
+        [Test]
         public void ExpandTemplate_EventEntity_Bracket_ResolvesName()
         {
             var model = MinimalModel();
@@ -80,6 +113,31 @@ namespace NarrativeGen.Tests
                 new Dictionary<string, Entity>(StringComparer.OrdinalIgnoreCase) { ["evt1"] = ev });
 
             Assert.AreEqual("Strange Light here", NarrativeText.ExpandTemplate("[evt1] here", model, session));
+        }
+
+        [Test]
+        public void ExpandTemplate_EventEntity_Property_ResolvesDirectProperty()
+        {
+            var model = MinimalModel();
+            var ev = new Entity
+            {
+                Id = "evt1",
+                Name = "Strange Light",
+                Properties = new Dictionary<string, PropertyDef>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["severity"] = new PropertyDef { DefaultValue = 42L }
+                }
+            };
+            var session = new NgSession(
+                "n1",
+                null,
+                null,
+                null,
+                null,
+                0,
+                new Dictionary<string, Entity>(StringComparer.OrdinalIgnoreCase) { ["evt1"] = ev });
+
+            Assert.AreEqual("42", NarrativeText.ExpandTemplate("[evt1.severity]", model, session));
         }
 
         [Test]

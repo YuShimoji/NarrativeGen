@@ -7,6 +7,17 @@
     <AssemblyName>NarrativeGen.Unity</AssemblyName>
     <RootNamespace>NarrativeGen</RootNamespace>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <PackageId>NarrativeGen.Unity</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>YuShimoji</Authors>
+    <Company>YuShimoji</Company>
+    <Description>NarrativeGen Unity SDK. UPM remains the primary distribution path; this project can be packed locally for .NET/NuGet integration experiments.</Description>
+    <PackageTags>narrative;unity;interactive-fiction;story-engine</PackageTags>
+    <PackageProjectUrl>https://github.com/YuShimoji/NarrativeGen</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/YuShimoji/NarrativeGen</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Runtime\**\*.cs" Exclude="Runtime\MinimalNarrativeController.cs" />
@@ -14,5 +25,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>

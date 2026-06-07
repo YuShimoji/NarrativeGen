@@ -16,7 +16,7 @@
 
 | ID | 項目 | 優先度 | 状態 |
 |----|------|--------|------|
-| B-001 | Unity SDK 残パリティ (SP-UNITY-001 96% → 100%) | 高 | 未着手 (NuGet、expandTemplate エッジ、四半期監査) |
+| B-001 | Unity SDK 残パリティ (SP-UNITY-001 96% → 100%) | 高 | 完了（C# createEvent runtime、expandTemplate 主要エッジ、ローカル NuGet pack 準備。公開は human-owned） |
 | B-002 | SP-PLAY-001 BGM 手動ブラウザ確認 → 100% | 中 | 完了（`play-media-bgm-ac.spec.js` + 検証表 Pass。耳視聴は任意） |
 | B-003 | Visual evidence 再取得 (スクリーンショット消失) | 中 | 未着手 |
 | B-004 | Dynamic Text エクスポート変換ルール定義 | 低 | 未着手 (JSON 主軸で回避可能) |

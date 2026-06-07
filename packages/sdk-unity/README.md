@@ -1,6 +1,6 @@
 # NarrativeGen Unity SDK
 
-Minimal C# SDK mirroring the TypeScript engine API. Intended for use in Unity as a UPM package.
+Minimal C# SDK mirroring the TypeScript engine API. Intended for use in Unity as a UPM package. UPM is the primary distribution path; NuGet packing is available for local .NET integration experiments.
 
 ## Installation
 
@@ -15,6 +15,16 @@ Minimal C# SDK mirroring the TypeScript engine API. Intended for use in Unity as
 1. Clone this repository
 2. Copy `packages/sdk-unity` folder into your Unity project's `Packages/` directory
 
+### Option 3: Local NuGet Pack (Experimental)
+
+Use this only when you need a local `.nupkg` for .NET-side integration checks. Public NuGet publishing and package ID ownership are intentionally out of scope.
+
+```powershell
+dotnet pack .\packages\sdk-unity\NarrativeGen.Unity.csproj -c Release
+```
+
+The package is written under `packages/sdk-unity/bin/Release/`.
+
 ## Dependencies
 
 Requires:
@@ -28,6 +38,7 @@ Requires:
 - `Engine.GetAvailableChoices(session, model)` - Get choices for current node
 - `Engine.ApplyChoice(session, model, choiceId)` - Apply choice and advance state
 - `Engine.Serialize(session)` / `Engine.Deserialize(payload)` - Session persistence
+- `createEvent` / `hasEvent` - Dynamic event entities via the built-in inference registry
 
 ## Quick Example
 

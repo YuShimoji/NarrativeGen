@@ -1,18 +1,19 @@
 # AGENTS.md
 
-Codex adapter. Keep thin.
+Primary thin adapter for AI coding tools. Do not store project state, decision logs, output style, or workflow mandates here.
 
-## Normal Resume
+## Read Order
 
-Read `HANDOVER.md` first. It is the single restart entrypoint and points to the current state, next work, commands, and supporting docs.
+1. `HANDOVER.md`
+2. `README.md`
+3. `docs/ai/*.md` when task touches agent workflow or decision gates
+4. `docs/spec-index.json` and the relevant spec files when behavior changes
 
-## Rules
+## Adapter Rules
 
-- Shared AI behavior rules live in `docs/ai/*.md`.
-- Project memory lives in `docs/INVARIANTS.md`, `docs/USER_REQUEST_LEDGER.md`, `docs/OPERATOR_WORKFLOW.md`, and `docs/INTERACTION_NOTES.md`.
-- Specification status lives in `docs/spec-index.json`.
-- Long-term decisions live in `docs/governance/decision-log.md`.
-- Do not recreate session-state or restart-roadmap files; use `HANDOVER.md` for current handoff state.
+- Current state and next work belong in `HANDOVER.md`, not in agent-entry files.
+- Project facts belong in visible docs such as `README.md`, `docs/spec-index.json`, and `docs/governance/decision-log.md`.
+- Do not recreate hidden session-state, restart-roadmap, or output-style rule files.
 - Read-only phases stay read-only.
 - Selection of a proposed item is not implementation approval.
 - Human-owned creative/manual work does not become assistant-owned by default.

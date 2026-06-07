@@ -30,6 +30,14 @@ namespace NarrativeGen.Tests
         }
 
         [Test]
+        public void Builtins_IncludeCreateEventEffect()
+        {
+            Engine.LoadModel("{\"modelType\":\"adventure-playthrough\",\"startNode\":\"a\",\"nodes\":{\"a\":{\"id\":\"a\",\"text\":\"x\",\"choices\":[]}}}");
+
+            Assert.That(InferenceRegistry.Instance.GetSupportedEffects(), Does.Contain("createEvent"));
+        }
+
+        [Test]
         public void CreateEventApplicator_MergesIntoSessionEvents()
         {
             Engine.LoadModel("{\"modelType\":\"adventure-playthrough\",\"startNode\":\"a\",\"nodes\":{\"a\":{\"id\":\"a\",\"text\":\"x\",\"choices\":[]}}}");

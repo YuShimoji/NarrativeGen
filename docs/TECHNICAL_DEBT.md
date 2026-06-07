@@ -1,6 +1,6 @@
 # Technical Debt and Improvement Tasks
 
-Last updated: 2026-04-09
+Last updated: 2026-04-30
 
 ## Overview
 This document tracks technical debt and improvement work items.
@@ -138,6 +138,7 @@ Source: `docs/plans/DEVELOPMENT_PLAN.md`
 ### Short term (0-4 weeks)
 - [x] Close SP-PLAY-001 human verification gap (AC-9 to AC-12 logging readiness + evidence format).
 - [x] Close SP-UNITY-001 TS/C# parity edge around `hasEvent` template conditions.
+- [x] Close SP-UNITY-001 residual parity (`createEvent` applicator, `expandTemplate` major edges, local NuGet pack readiness).
 - [x] Add a repeatable E2E flake incident note format and keep records per failure.
 
 ### Mid term (1-3 months)
@@ -147,7 +148,7 @@ Source: `docs/plans/DEVELOPMENT_PLAN.md`
 
 ### Long term (3-6 months)
 - [ ] Start WritingPage integration only after external format stabilization.
-- [ ] Improve Unity distribution path (UPM-first, additional channel evaluation).
+- [x] Improve Unity distribution path (UPM-first, local NuGet pack readiness; public publishing remains human-owned).
 - [ ] Promote quality gates from "check set" to release readiness criteria.
 - [x] Define WritingPage pre-implementation I/O contract and start gates.
 
@@ -186,6 +187,7 @@ Source: `docs/plans/DEVELOPMENT_PLAN.md`
 | Empty state UI | 2026-03-26 | ストーリー/グラフタブに未ロード時プレースホルダー追加 |
 | Sidebar toggle CSS fix | 2026-03-26 | .sidebar-hidden CSSルール欠落を修正 |
 | spec-index gap | 2026-03-26 | SP-HIST-001 (Session History) エントリ追加、33エントリに |
+| Unity SDK residual parity | 2026-04-30 | C# `createEvent` runtime、`expandTemplate` 主要エッジ回帰、ローカル NuGet pack 準備 |
 
 ---
 

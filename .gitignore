@@ -38,3 +38,8 @@ test-results/
 packages/sdk-unity/src/
 .serena/
 nul
+
+# Tool-local overrides
+.codex/
+.claude/settings.local.json
+.cursorrules

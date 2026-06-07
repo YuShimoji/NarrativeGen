@@ -1,25 +1,21 @@
 # Development Plan
 
 Status: roadmap source of truth
-Last updated: 2026-04-27
+Last updated: 2026-04-30
 
 This file is the single roadmap document. Current state and next resume steps live in the root `HANDOVER.md`; feature/spec status lives in `docs/spec-index.json`; durable decisions live in `docs/governance/decision-log.md`.
 
 ## Current Priorities
 
-1. **SP-UNITY-001 residual parity**
-   - Finish Unity SDK parity work that remains after `hasEvent`, `createEvent`, `TemplateUsageState`, and `maxUses`.
-   - Focus areas: NuGet/distribution notes, `expandTemplate` edge cases, and quarterly TS/C# parity audit.
-
-2. **SP-DTYARN-001 continuation**
+1. **SP-DTYARN-001 continuation**
    - Extend Dynamic Text to Yarn conversion beyond the implemented `[entity]`, `[entity.prop]`, and numeric comparison support.
    - Fix the intended Yarn representation in `docs/specs/dynamic-text-yarn-export.md` before code changes.
 
-3. **SP-009 UI quality expansion**
+2. **SP-009 UI quality expansion**
    - Continue a11y/responsive work from the completed baseline into graph, debug, and remaining modal surfaces.
    - Track screen-level checks in `docs/checklists/A11Y_RESPONSIVE_CHECKLIST.md`.
 
-4. **E2E and regression stability**
+3. **E2E and regression stability**
    - Continue issue-backed flaky follow-up for GitHub #81-#83 and `docs/tasks/FLAKY_ISSUES_TRACKER.md`.
    - Add or formalize negative-path import/export checks where they remove manual uncertainty.
 
@@ -32,13 +28,14 @@ This file is the single roadmap document. Current state and next resume steps li
 ## Long-Term Tracks
 
 - **WritingPage integration** remains blocked until `docs/specs/writingpage-io-contract.md` gates pass.
-- **Unity distribution** remains UPM-first, with NuGet or additional channel work handled as a distribution improvement rather than runtime divergence.
+- **Unity distribution** remains UPM-first. Local NuGet pack readiness is complete; public publishing remains outside assistant-owned implementation.
 - **Quality gates** should stay centered on spec integrity, model sync, compatibility, and regression evidence.
 
 ## Completed Foundations
 
 - CI governance checks are in place for spec index, model sync, and encoding safety.
 - SP-PLAY-001 is done; AC-9 to AC-12 are covered by `play-media-bgm-ac.spec.js` plus the spec verification table.
+- SP-UNITY-001 is done; `createEvent` applies through the C# runtime, `expandTemplate` major parity edges are covered, and local NuGet pack metadata is present.
 - Vite 8 is merged to `main` with the Rollup wasm override maintained.
 - Web Tester has baseline a11y/responsive improvements and runbook-backed E2E flaky handling.
 - WritingPage has a preparation contract and a recorded No-Go gate.

@@ -2,9 +2,9 @@
 
 ## 最終更新
 
-- **日時**: 2026-04-09
+- **日時**: 2026-06-08
 - **ブランチ**: `main`（trunk-based）
-- **直近**: `feat/vite-upgrade` を `main` にマージ（Vite 8、engine-ts lint 基線、SP-DTYARN-001 次段、index.html a11y スライス、play-immersion AC-5 安定化）。既存の `play-media-bgm-ac`・SP-PLAY-001 done・WritingPage No-Go・E2E #81〜#83 トラッキングは維持。
+- **直近**: SP-UNITY-001 を done 化（C# `createEvent` applicator 登録、`Engine.ApplyChoice` 経路の回帰、`expandTemplate` 主要エッジケース、ローカル NuGet pack メタデータ）。併せて Codex/Claude/Cursor の repo-local 起動上書きを整理し、Codex の thread 開始時モデル固定を削除。
 - **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`
 
 ## プロジェクト概要
@@ -26,6 +26,15 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-08 引き継ぎ
+
+- **作業目的**: Codex thread 開始時の project-local モデル指定エラーをなくし、別端末が `main` から同じ状態で再開できるようにする。
+- **効果**: `.codex/config.toml` の `model` / `approval_policy` / `sandbox_mode` 固定を削除。存在しない Claude hook を呼ぶ `.claude/settings.local.json` と重複した `.cursorrules` も削除。`.gitignore` で tool-local override を再追跡しない。
+- **要件**: 再開入口は `AGENTS.md` → `HANDOVER.md` → `README.md`。現在状態は `HANDOVER.md`、仕様状態は `docs/spec-index.json`、ロードマップは `docs/plans/DEVELOPMENT_PLAN.md`。
+- **状態**: SP-UNITY-001 は `docs/spec-index.json` 上で done / 100%。`docs/specs/unity-sdk.md`、Unity SDK 実装、C# 回帰、NuGet pack メタデータは同じ変更セットに含まれる。
+- **owner**: assistant-owned の repo-local 設定整理と Unity SDK 残差反映は完了。NuGet 公開判断、WritingPage 着手判断、手動ブラウザ聴取は human-owned。
+- **next move**: 別端末では `git pull --ff-only origin main` 後、必要に応じて `npm run check:safety` と `dotnet test .\packages\tests\NarrativeGen.Tests` を実行し、次の実装候補は SP-DTYARN-001 または SP-009 UI 品質展開から選ぶ。
+
 ### CI・テスト
 
 - **GitHub Actions**: `governance`（ルート `npm ci` + `check:spec-index` / `check:models-sync` / `check:encoding-safety`）、`engine-ts`、`web-tester`、`sdk-unity`（.NET 9）
@@ -33,11 +42,12 @@ NarrativeGen/
 - **web-tester**: Vite 8 ビルド、`verify-export-formatters`
 - **E2E**: Playwright（`apps/web-tester/tests/e2e`）
 - **C#**: `packages/tests/NarrativeGen.Tests` で `dotnet test`
+- **今回のローカル検証**: `git diff --check`、`npm run check:safety`、`dotnet test .\packages\tests\NarrativeGen.Tests`、`dotnet pack .\packages\sdk-unity\NarrativeGen.Unity.csproj -c Release`
 
 ### 仕様書（spec-index.json）
 
 - **エントリ**: 36 件（`SP-WP-001` 含む。`npm run check:spec-index` で検証）
-- **partial**: SP-009、SP-UNITY-001、SP-TGEN-001、SP-DTYARN-001、SP-WP-001 ほか
+- **partial**: SP-009、SP-TGEN-001、SP-DTYARN-001、SP-WP-001 ほか
 - **SP-PLAY-001**: done（100%）
 - **SP-PIPE-001**: done（デザイナパイプライン。WritingPage 連携は延期）
 
@@ -50,19 +60,19 @@ NarrativeGen/
 
 ## 次の推奨作業
 
-1. **SP-UNITY-001 残差**: NuGet 配布、`expandTemplate` エッジの列挙とテスト拡充（`unity-sdk.md`・四半期パリティ監査）
-2. **SP-DTYARN-001 継続**: ネスト条件・`[entity~]` 等の仕様固定と実装
-3. **SP-009 / Phase 8**: graph・debug・モーダルの a11y・レスポンシブ水平展開（`docs/plans/ui-a11y-responsive-issues.md`）
-4. **TD §7 / E2E**: import ネガティブ手動確認または E2E 化の検討、flaky Issue の消化
+1. **SP-DTYARN-001 継続**: ネスト条件・`[entity~]` 等の仕様固定と実装
+2. **SP-009 / Phase 8**: graph・debug・モーダルの a11y・レスポンシブ水平展開（`docs/plans/ui-a11y-responsive-issues.md`）
+3. **TD §7 / E2E**: import ネガティブ手動確認または E2E 化の検討、flaky Issue の消化
+4. **品質ゲート高度化**: `check:*` セットを release readiness 基準として整理
 
 **スコープ外（ゲート通過まで）**: WritingPage 実装は `writingpage-io-contract.md` が No-Go の間は行わない。
 
 ## 実行ロードマップ（2026 Q2-Q4）
 
 - 正本: `docs/plans/DEVELOPMENT_PLAN.md`
-- **短期**: SP-UNITY-001 残差、E2E 恒久対策（#81〜#83）、SP-DTYARN 継続
+- **短期**: SP-DTYARN 継続、E2E/回帰の恒久運用、SP-009 Phase 8
 - **中期**: a11y・レスポンシブ、回帰戦略、Dynamic Text / Yarn 境界の残タスク
-- **長期**: WritingPage（ゲート Pass 後）、Unity 配布、品質ゲート高度化
+- **長期**: WritingPage（ゲート Pass 後）、品質ゲート高度化、必要時の NuGet 公開判断（human-owned）
 
 ## 中期実装の更新点（2026-04）
 
@@ -70,6 +80,7 @@ NarrativeGen/
 - モバイル/タブレット baseline responsive（`main.css` / `play.css`）
 - E2E runbook・flaky トラッカー
 - SP-DTYARN-001 次段（YarnFormatter + verify-export-formatters）
+- SP-UNITY-001 残差完了（C# createEvent runtime、expandTemplate 回帰、ローカル NuGet pack 準備）
 - WritingPage I/O 契約と着手ゲート（No-Go 記録）
 
 ## 再開手順

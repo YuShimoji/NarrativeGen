@@ -2,7 +2,7 @@
 
 **再開・次アクションの正**: ルート [`HANDOVER.md`](../HANDOVER.md)。**仕様の正**: [`spec-index.json`](spec-index.json) と [`spec-viewer.html`](spec-viewer.html)。テスト件数などの数値は都度 `npm run test:engine` / `npm run test:e2e` / `dotnet test` で確認すること。
 
-**調査日**: 2026-04-09  
+**調査日**: 2026-04-30
 **ブランチ**: `main`（trunk-based）  
 **ざっくり**: engine-ts Vitest 全緑（260件台）、E2E Playwright、モデル検証 16 通過、`npm run check:spec-index` OK。`main` は `origin/main` と同期済み（運用では都度 push を前提）。
 
@@ -12,7 +12,7 @@
 
 - **エンジン（TypeScript）**: モデル読込・セッション・条件/効果・推論・Entity-Property・Dynamic Text・イベント・在庫・変数・エンコード安全・モデル同期など。入口は `packages/engine-ts`。
 - **Web Tester**: 編集 GUI・グラフ・プレイ没入・推論 UI・5形式エクスポート・検証パネルなど。入口は `apps/web-tester`。
-- **Unity SDK**: `packages/sdk-unity`。TS との差分は **SP-UNITY-001**（[`specs/unity-sdk.md`](specs/unity-sdk.md)）。
+- **Unity SDK**: `packages/sdk-unity`。**SP-UNITY-001 done**（[`specs/unity-sdk.md`](specs/unity-sdk.md)）。UPM-first、ローカル NuGet pack 準備済み。
 - **レガシー参照用仕様**（参照専用・現行の正ではない）: [`specs/legacy/OpenSpec-WebTester.md`](specs/legacy/OpenSpec-WebTester.md)、[`specs/legacy/PHASE2_GRAPH_EDITOR_DESIGN.md`](specs/legacy/PHASE2_GRAPH_EDITOR_DESIGN.md)。
 
 ---
@@ -33,7 +33,6 @@
 
 | ID | 内容 | 仕様・備考 |
 |----|------|------------|
-| N01 | Unity SDK パリティ（最終差分） | SP-UNITY-001。events / `hasEvent` / `TemplateUsageState`・`maxUses` 等は実装済。残は NuGet・expandTemplate エッジ・四半期パリティ監査（`unity-sdk.md`） |
 | N03 | WritingPage 連携 | 外部フォーマット安定後。`pipeline-workflow.md` で延期。準備: `specs/writingpage-io-contract.md` |
 | N04 | Dynamic Text の Yarn ネイティブ変換 | SP-DTYARN-001: `[entity]`/`[entity.prop]`・数値比較 `{?key op val:…}` まで（2026-04-09）。ネスト and/or・`[entity~]` 等は [dynamic-text-yarn-export.md](specs/dynamic-text-yarn-export.md) |
 | N05 | spec 保守の運用具体化（レビュー例など） | SP-009 系。CI `governance` は済 |
@@ -73,7 +72,7 @@
 - 実行ドキュメント: `docs/plans/DEVELOPMENT_PLAN.md`
 - **短期（0〜4週間）**
   - ~~U01（AC-9〜12）~~ → `play-media-bgm-ac.spec.js` と検証表で完了（耳視聴は任意）
-  - N01 の Unity パリティ残差（`docs/specs/unity-sdk.md`、NuGet 等）
+  - ~~N01 の Unity パリティ残差~~ → `createEvent` runtime、`expandTemplate` 主要エッジ、ローカル NuGet pack 準備まで完了（公開は human-owned）
   - C01（E2E 間欠失敗）→ GitHub [#81](https://github.com/YuShimoji/NarrativeGen/issues/81)〜[#83](https://github.com/YuShimoji/NarrativeGen/issues/83) で追跡・恒久修正
 - **中期（1〜3か月）**
   - N06/N07（a11y/モバイル）を主要画面で解消
