@@ -229,4 +229,35 @@ test.describe('New Model Authoring Workflow', () => {
     const choices = page.locator('.play-choice-btn');
     await expect(choices).toHaveCount(2, { timeout: 5000 });
   });
+
+  test('vertical-slice.json をサンプルから読み込み proof ending まで遊べる', async ({ page }) => {
+    await openPage(page);
+
+    await page.selectOption('#modelSelect', 'vertical-slice');
+    await page.click('#startBtn');
+
+    await page.waitForFunction(
+      () => window.appState?.model?.nodes?.desk != null,
+      { timeout: 15000 }
+    );
+
+    const storyView = page.locator('#storyView');
+    await expect(storyView).toContainText('Midnight is close', { timeout: 10000 });
+
+    await page.locator('.play-choice-btn:has-text("Open the old notebook")').click();
+    await expect(storyView).toContainText('The story finally has a spine', { timeout: 10000 });
+
+    await page.locator('.play-choice-btn:has-text("Interview Mira")').click();
+    await expect(page.locator('.play-choice-btn:has-text("Ask Mira for the archive key")')).toBeVisible({ timeout: 10000 });
+
+    await page.locator('.play-choice-btn:has-text("Ask Mira for the archive key")').click();
+    await expect(page.locator('.play-choice-btn:has-text("Spend focus to decode the ledger")')).toBeVisible({ timeout: 10000 });
+
+    await page.locator('.play-choice-btn:has-text("Spend focus to decode the ledger")').click();
+    await expect(storyView).toContainText('You have enough proof to publish', { timeout: 10000 });
+
+    await page.locator('.play-choice-btn:has-text("Publish with proof")').click();
+    await expect(storyView).toContainText('Ending: the story runs with receipts', { timeout: 10000 });
+    await expect(page.locator('.play-ending')).toBeVisible({ timeout: 10000 });
+  });
 });

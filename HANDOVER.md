@@ -2,9 +2,9 @@
 
 ## 最終更新
 
-- **日時**: 2026-06-08
+- **日時**: 2026-06-15
 - **ブランチ**: `main`（trunk-based）
-- **直近**: SP-UNITY-001 を done 化（C# `createEvent` applicator 登録、`Engine.ApplyChoice` 経路の回帰、`expandTemplate` 主要エッジケース、ローカル NuGet pack メタデータ）。併せて Codex/Claude/Cursor の repo-local 起動上書きを整理し、Codex の thread 開始時モデル固定を削除。
+- **直近**: Agent 指示リセット。`AGENTS.md` / `CLAUDE.md` / `.claude/CLAUDE.md` を薄い入口に戻し、通常再開の運用正本を `docs/REPO_LOCAL_RULES.md` に分離。`docs/ai/*.md` は v20 相当に更新し、毎回全文読ませる正本ではなく必要 gate の参照先に降格。
 - **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`
 
 ## プロジェクト概要
@@ -26,11 +26,29 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-15 Playable first 縦切り正本化
+
+- **作業目的**: 旧方針の Green first をいったん止め、実際に遊べる story generation/playback の縦切りを開発判断の正本にする。
+- **効果**: `models/examples/vertical-slice.json` を Web Tester から選べる 12 node の canonical playable sample とし、`models/spreadsheets/vertical-slice.csv` を writer-facing companion artifact として追加。proof route は `Open the old notebook` -> `Interview Mira` -> `Ask Mira for the archive key` -> `Spend focus to decode the ledger` -> `Publish with proof`。
+- **要件**: この縦切りは開始ノード、2系統以上の分岐、flag/resource/variable、条件付き選択肢、3 endings、mock AI adoption 相当の接続余白を含む。実装判断では playable route の成立を先に見る。
+- **状態**: engine acceptance で JSON load、静的到達性、proof/under-evidenced/mock-adoption routes、dynamic text、JSON save/reload、mock provider generated node adoption、CSV readability を固定。Web Tester sample と Playwright smoke を追加。GUI 編集開始時の元モデル保存 import 漏れも修正し、Browser smoke で `vertical-slice.json` -> proof ending 到達と console warn/error なしを確認。
+- **owner**: canonical vertical slice と acceptance は assistant-owned。AI UI の生成ボタン結線、CSV import の schema 準拠、slot save/load のブラウザ手動確認は次スライスで assistant-owned にできる。
+- **next move**: 次回は UI 側の構造破断を縦切りに従属させて直す。優先は `generateNextNodeUI()` の未結線/表示-only 経路を、mock provider の「生成 -> 採用 -> ノード追加 -> 選択肢接続 -> 保存 -> 再読込」導線に寄せること。
+
+### 2026-06-15 Agent 指示リセット
+
+- **作業目的**: project-local Agent 指示を新しい状態で始められるようにし、NLMYTGen 型の「薄い入口 + 短い repo-local rules + 現在状態は HANDOVER」構成へ寄せる。
+- **効果**: `AGENTS.md` は入口ポインタ、`docs/REPO_LOCAL_RULES.md` は通常再開・ask hygiene・reporting・git/test follow-through、`HANDOVER.md` は現在状態、`docs/spec-index.json` は spec lifecycle という分担に整理。
+- **要件**: 通常の AI 再開入口は `AGENTS.md` → `docs/REPO_LOCAL_RULES.md` → `HANDOVER.md`。`README.md`、`docs/spec-index.json`、`docs/ai/*.md` はタスクで必要な範囲だけ読む。参照先が欠けている場合は stale とみなし、ブロッカーにしない。
+- **状態**: レガシーな session-state / restart-roadmap / output-style / runtime-state の再作成は禁止。`.serena/` は ignored のツールキャッシュとして未追跡のまま扱う。
+- **owner**: repo-local Agent 指示の整理は assistant-owned。次スライス選定、WritingPage 着手判断、NuGet 公開判断、UI/創作判断は human-owned または shared。
+- **next move**: 次回実装に入る場合は `HANDOVER.md` の推奨候補から SP-DTYARN-001 または SP-009 を選び、該当 spec / checklist だけを読んで着手する。
+
 ### 2026-06-08 引き継ぎ
 
 - **作業目的**: Codex thread 開始時の project-local モデル指定エラーをなくし、別端末が `main` から同じ状態で再開できるようにする。
 - **効果**: `.codex/config.toml` の `model` / `approval_policy` / `sandbox_mode` 固定を削除。存在しない Claude hook を呼ぶ `.claude/settings.local.json` と重複した `.cursorrules` も削除。`.gitignore` で tool-local override を再追跡しない。
-- **要件**: 再開入口は `AGENTS.md` → `HANDOVER.md` → `README.md`。現在状態は `HANDOVER.md`、仕様状態は `docs/spec-index.json`、ロードマップは `docs/plans/DEVELOPMENT_PLAN.md`。
+- **要件**: 現在の再開入口は `AGENTS.md` → `docs/REPO_LOCAL_RULES.md` → `HANDOVER.md`。現在状態は `HANDOVER.md`、仕様状態は `docs/spec-index.json`、ロードマップは `docs/plans/DEVELOPMENT_PLAN.md`。
 - **状態**: SP-UNITY-001 は `docs/spec-index.json` 上で done / 100%。`docs/specs/unity-sdk.md`、Unity SDK 実装、C# 回帰、NuGet pack メタデータは同じ変更セットに含まれる。
 - **owner**: assistant-owned の repo-local 設定整理と Unity SDK 残差反映は完了。NuGet 公開判断、WritingPage 着手判断、手動ブラウザ聴取は human-owned。
 - **next move**: 別端末では `git pull --ff-only origin main` 後、必要に応じて `npm run check:safety` と `dotnet test .\packages\tests\NarrativeGen.Tests` を実行し、次の実装候補は SP-DTYARN-001 または SP-009 UI 品質展開から選ぶ。
@@ -42,7 +60,7 @@ NarrativeGen/
 - **web-tester**: Vite 8 ビルド、`verify-export-formatters`
 - **E2E**: Playwright（`apps/web-tester/tests/e2e`）
 - **C#**: `packages/tests/NarrativeGen.Tests` で `dotnet test`
-- **今回のローカル検証**: `git diff --check`、`npm run check:safety`、`dotnet test .\packages\tests\NarrativeGen.Tests`、`dotnet pack .\packages\sdk-unity\NarrativeGen.Unity.csproj -c Release`
+- **今回のローカル検証**: `git diff --check`、`npm run check:safety`、`npm run build:engine`、`npm run build:tester`、`npm run validate`、`npm run test:engine`、`npm run test -w @narrativegen/engine-ts -- test/vertical-slice.spec.ts`、`npm run test:e2e -- apps/web-tester/tests/e2e/new-model-workflow.spec.js --project=chromium --grep "vertical-slice"`、Browser smoke（`vertical-slice.json` から proof ending 到達）
 
 ### 仕様書（spec-index.json）
 
@@ -60,10 +78,10 @@ NarrativeGen/
 
 ## 次の推奨作業
 
-1. **SP-DTYARN-001 継続**: ネスト条件・`[entity~]` 等の仕様固定と実装
-2. **SP-009 / Phase 8**: graph・debug・モーダルの a11y・レスポンシブ水平展開（`docs/plans/ui-a11y-responsive-issues.md`）
-3. **TD §7 / E2E**: import ネガティブ手動確認または E2E 化の検討、flaky Issue の消化
-4. **品質ゲート高度化**: `check:*` セットを release readiness 基準として整理
+1. **Playable vertical slice 継続**: `vertical-slice.json` を基準に AI mock 採用 UI と save/load 再読込のブラウザ導線を接続
+2. **CSV import 正本化**: 現行 CSV manager の `modelType`/schema/initial state 欠落と legacy handler との二重経路を診断し、縦切り CSV の import を正常経路へ寄せる
+3. **SP-DTYARN-001 継続**: 縦切りを壊さない範囲でネスト条件・`[entity~]` 等の仕様固定と実装
+4. **SP-009 / Phase 8**: graph・debug・モーダルの a11y・レスポンシブ水平展開（`docs/plans/ui-a11y-responsive-issues.md`）
 
 **スコープ外（ゲート通過まで）**: WritingPage 実装は `writingpage-io-contract.md` が No-Go の間は行わない。
 

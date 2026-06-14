@@ -4,12 +4,36 @@ NarrativeGen is an interactive narrative engine for node-and-choice stories. It 
 
 ## Resume First
 
-Use [`HANDOVER.md`](HANDOVER.md) as the single restart entrypoint. It contains the current state, recommended next work, validation commands, and links to supporting docs.
+For AI agents, start with [`AGENTS.md`](AGENTS.md), then [`docs/REPO_LOCAL_RULES.md`](docs/REPO_LOCAL_RULES.md), then [`HANDOVER.md`](HANDOVER.md). For human resume, [`HANDOVER.md`](HANDOVER.md) remains the current-state entrypoint with recommended next work, validation commands, and links to supporting docs.
 
 - Authoring workflow: [`docs/AUTHORING_GUIDE.md`](docs/AUTHORING_GUIDE.md)
 - Roadmap: [`docs/plans/DEVELOPMENT_PLAN.md`](docs/plans/DEVELOPMENT_PLAN.md)
 - Spec index: [`docs/spec-index.json`](docs/spec-index.json) / [`docs/spec-viewer.html`](docs/spec-viewer.html)
 - Long-term decisions: [`docs/governance/decision-log.md`](docs/governance/decision-log.md)
+
+## Playable Vertical Slice First
+
+The current canonical playable artifact is:
+
+- JSON model: [`models/examples/vertical-slice.json`](models/examples/vertical-slice.json)
+- Writer-facing CSV companion: [`models/spreadsheets/vertical-slice.csv`](models/spreadsheets/vertical-slice.csv)
+- Web Tester sample: select `vertical-slice.json`, then click `実行`
+
+Shortest local review:
+
+```powershell
+npm run dev
+# open http://localhost:5173/
+# select vertical-slice.json -> 実行
+```
+
+The proof route is:
+
+```text
+Open the old notebook -> Interview Mira -> Ask Mira for the archive key -> Spend focus to decode the ledger -> Publish with proof
+```
+
+This route must stay playable before broader test, lint, CI, schema, or refactor work is treated as the main progress signal.
 
 ## Project Layout
 
@@ -89,7 +113,7 @@ See [`packages/sdk-unity/README.md`](packages/sdk-unity/README.md) for API detai
 ## Operations Notes
 
 - Historical planning and session-state files are not kept as repo documents; use Git history when needed.
-- Current restart state belongs in `HANDOVER.md`.
+- Agent operating rules belong in `docs/REPO_LOCAL_RULES.md`; current restart state belongs in `HANDOVER.md`.
 - Roadmap intent belongs in `docs/plans/DEVELOPMENT_PLAN.md`.
 - Durable decisions belong in `docs/governance/decision-log.md`.
 - Encoding and spec safety checks are part of normal doc and config work.

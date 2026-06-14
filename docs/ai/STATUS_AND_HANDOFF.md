@@ -1,11 +1,11 @@
 # STATUS_AND_HANDOFF.md
-Ruleset-Version: v18
+Ruleset-Version: v20
 Status: canonical
 
 ## Scope and usage
 This file is a **supplementary rubric** for AI-oriented handoff quality checks.
 Use it when updating `docs/ai/*` canonical docs or when reviewing handoff/report quality.
-For normal development resume, prioritize `HANDOVER.md`, `docs/project-status.md`, and `docs/spec-index.json`.
+For normal development resume, prioritize `docs/REPO_LOCAL_RULES.md`, `HANDOVER.md`, and `docs/spec-index.json`. Use `docs/project-status.md` as a supporting status reference, not the restart authority.
 
 ## Feature status semantics
 Keep priority separate from status.
@@ -75,5 +75,29 @@ A robust handoff should preserve:
 Do not claim progress merely because:
 - a doc was created during refresh
 - a framework-compliant report was produced
+- a list of changed files was shown
 - a low-friction helper feature was specified
 Report what became easier, safer, or more real for the actual artifact path.
+
+## Closeout chain minimum
+
+Final responses should not merely summarize activity; they should make the next move executable.
+
+Do not force fixed section names or emit internal labels unless the user asks for that structure. Preserve the logical chain in normal language: what is complete, what was deliberately not changed, what changed for the workflow or decision space, what evidence supports it, what uncertainty remains, who moves next, and what happens after any return from the user.
+
+File paths, line numbers, commits, and test names are evidence, not explanation. Put the user-readable meaning first, then cite files as support.
+
+If the next blocker depends on operator input, explain why work is waiting and what can still run in parallel. A response that ends with only "please check" or "continue from here" is incomplete unless the exact required input and follow-up work are already clear.
+
+## Residual work contract
+
+When reporting residual work, give each item enough context to act:
+
+- purpose
+- effect
+- requirements
+- current state
+- owner
+- next move
+
+Avoid `P0/P1`, path lists, or test names as the explanation.

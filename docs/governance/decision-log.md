@@ -4,6 +4,8 @@
 
 | 日付 | 決定事項 | 選択肢 | 決定理由 |
 |------|----------|--------|----------|
+| 2026-06-15 | 開発優先順を Playable first, then green に切替 | Playable first / Green first 継続 / CI先行 | `vertical-slice.json` を作家が短編を作りブラウザで遊ぶ正本成果物にし、テスト・lint・schema・CI・doctor・リファクタリングを体験保護の衛兵に戻すため |
+| 2026-06-15 | Agent 指示リセット: 薄い入口 + repo-local rules + HANDOVER 現在状態に整理 | NLMYTGen 型に更新 / AGENTS肥大化 / v18 docs維持 | Agent入口に手順・状態・履歴を溜めず、通常再開の読了予算を `AGENTS.md` -> `docs/REPO_LOCAL_RULES.md` -> `HANDOVER.md` に固定するため |
 | 2026-03-16 | ブランチ統合: ローカルをmaster→mainに切替 | main切替 / masterにマージ / 保留 | origin/mainが正。masterのEntity/Inventory変更は既にcherry-pick済み。337ファイル差分 |
 | 2026-03-07 | Ollama (ローカルLLM) プロバイダを完全削除 | A) OpenRouter統合 / B) Ollama改善 / C) 処理 / D) 完全削除 | 精度・リソース費用に難あり。非AIパラフレーズがオフライン対応済み。AIProviderインターフェースは拡張可能なため将来再実装可能 |
 | 2026-03-07 | レガシーDoc 7件を当時の archive に移動 | 移動 / 保留 | Windsurf AI Collab Rules x3 + ヒント集.md x3 + REPORT_CONFIG.yml。CLAUDE.md更新で不使用。移動スクリプト不在 |

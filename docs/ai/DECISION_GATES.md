@@ -1,5 +1,5 @@
 # DECISION_GATES.md
-Ruleset-Version: v18
+Ruleset-Version: v20
 Status: canonical
 
 ## Active Artifact and Change Relation
@@ -25,6 +25,8 @@ The following do not become standard options without explicit re-approval:
 - boundary-stopped or responsibility-external items
 
 ## Value Validation Gate
+Scope: new frontiers, proposed features, and unapproved new directions only. Existing approved implementation work, bug fixes, validation hardening, docs consistency work, and maintenance of done features do not need to re-prove value unless their scope changes.
+
 Before entering PLAN MODE or specification work for a proposed item, answer all of these in one sentence each:
 1. What workflow step or integration point will the output feed into?
 2. What manual step, judgment, copy, or transfer is actually removed?
@@ -42,6 +44,17 @@ Every next-step option and every PLAN MODE entry must state:
 - owner artifact: what artifact this actor actually owns
 If the task is a human-owned creative/manual step, the assistant may support or scaffold it, but must not silently become the actor.
 
+## Task Connectivity Gate
+Before applying a prompt template, checklist, or short response contract to a manual/shared action, state:
+- what file, project, or tool must be opened
+- what artifact is created or modified
+- the source object or anchor
+- actor and owner artifact
+- what `PASS` / `FAIL` / `OK` / `NG` means
+- when to stop and replan
+
+If any field is missing, do not collapse the task into a template. Resolve the missing field first.
+
 ## Workflow-Proof Gate
 If the project depends on a human-authored production workflow, do not jump to quantity expansion (content writing, asset proliferation, mass production) before the workflow has been proven once end-to-end.
 Examples of workflow proof:
@@ -49,11 +62,14 @@ Examples of workflow proof:
 - operator edits → tool runs → result observed
 
 ## Read-Only Refresh Gate
-During REFRESH / REANCHOR / SCAN / AUDIT:
+Trigger condition: only when the user explicitly declares REFRESH / REANCHOR / SCAN / AUDIT in the current block. Do not self-trigger this gate by interpretation.
+
+During a declared read-only block:
 - no writes to long-lived repo files
 - no commits / pushes
 - no mutation justified only by “while we are here”
 Creating local scratch notes is acceptable only if explicitly asked and clearly not treated as project progress.
+If the user explicitly asks for mutation in the same block, that explicit request is the mutation scope.
 
 ## Write Failure Hard Stop
 If any of the following occurs in the current block, stop before commit/push/handoff-complete:

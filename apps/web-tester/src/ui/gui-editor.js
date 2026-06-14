@@ -5,7 +5,7 @@
 
 import { getCurrentModelName, getCurrentSession } from '../core/session.js'
 import { resolveNarrativeDisplayText } from '../../../../packages/engine-ts/dist/browser.js'
-import { NODE_TEMPLATES, DRAFT_MODEL_STORAGE_KEY } from '../config/constants.js'
+import { NODE_TEMPLATES, DRAFT_MODEL_STORAGE_KEY, ORIGINAL_MODEL_STORAGE_KEY } from '../config/constants.js'
 import { NodeRenderer } from './node-renderer.js'
 import { ModelUpdater } from './model-updater.js'
 import { NodeManager } from './node-manager.js'

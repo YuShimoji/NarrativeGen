@@ -2,6 +2,11 @@
 
 Claude Code project pointer. The primary entrypoint is `../AGENTS.md`.
 
-Read `../HANDOVER.md` for current state and next work, then use project docs only as needed for the task.
+Normal route:
 
-Do not store output style, session state, or decision logs in this file.
+1. `../AGENTS.md`
+2. `../docs/REPO_LOCAL_RULES.md`
+3. `../HANDOVER.md`
+
+Use additional project docs only when the task needs them. Do not store output
+style, session state, hooks, procedures, or decision logs in this file.
