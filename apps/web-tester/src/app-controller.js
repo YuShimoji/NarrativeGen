@@ -1069,6 +1069,33 @@ function initAIProviderInstance() {
   }
 }
 
+function toAdoptionIdSegment(value) {
+  const segment = String(value || 'node')
+    .trim()
+    .replace(/[^a-zA-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .toLowerCase()
+  return segment || 'node'
+}
+
+function getNextAiAdoptionIds(model, sourceNodeId) {
+  const sourceSegment = toAdoptionIdSegment(sourceNodeId)
+  const sourceNode = model.nodes[sourceNodeId]
+  const existingChoiceIds = new Set((sourceNode?.choices ?? []).map(choice => choice.id))
+
+  let index = 1
+  let nodeId = `ai_adopted_${sourceSegment}_${index}`
+  let choiceId = `adopt_ai_${sourceSegment}_${index}`
+
+  while (model.nodes[nodeId] || existingChoiceIds.has(choiceId)) {
+    index += 1
+    nodeId = `ai_adopted_${sourceSegment}_${index}`
+    choiceId = `adopt_ai_${sourceSegment}_${index}`
+  }
+
+  return { nodeId, choiceId }
+}
+
 async function generateNextNodeUI() {
   if (!aiProviderInstance) {
     initAIProviderInstance()
@@ -1101,40 +1128,45 @@ async function generateNextNodeUI() {
     }
 
     const generatedText = await aiProviderInstance.generateNextNode(context)
+    const { nodeId: newNodeId, choiceId: newChoiceId } = getNextAiAdoptionIds(
+      appState.model,
+      currentSession.nodeId
+    )
+    const adoptionChoice = {
+      id: newChoiceId,
+      text: 'Adopt mock continuation',
+      target: newNodeId
+    }
 
-    // Create new node with AI-generated content
-    const newNodeId = `ai_generated_${Date.now()}`
-    const newChoiceId = `c_ai_${Date.now()}`
-
-    // Add AI-generated node to model
     appState.model.nodes[newNodeId] = {
       id: newNodeId,
       text: generatedText,
-      choices: [
-        {
-          id: newChoiceId,
-          text: '続ける',
-          target: newNodeId // Loop back to self for now (can be edited later)
-        }
-      ]
+      choices: []
+    }
+    const originalChoices = currentNode.choices
+    currentNode.choices = [...(currentNode.choices ?? []), adoptionChoice]
+
+    const validationErrors = validateModel(appState.model)
+    if (validationErrors.length > 0) {
+      delete appState.model.nodes[newNodeId]
+      currentNode.choices = originalChoices
+      throw new Error(`AI採用後のモデル検証に失敗しました: ${validationErrors.join('; ')}`)
     }
 
-    // Update current node's choice to point to new node
-    const currentChoices = currentNode.choices || []
-    if (currentChoices.length > 0) {
-      // Update the first choice to point to AI-generated node
-      currentChoices[0].target = newNodeId
-    } else {
-      // Add new choice if none exist
-      currentNode.choices = [{
-        id: newChoiceId,
-        text: 'AI生成シーンへ',
-        target: newNodeId
-      }]
-    }
+    appState.model = appState.model
+    renderState()
+    renderChoices()
+    renderStory()
+    updateMermaidDiagramIfVisible()
 
-    setStatus(`AIで新しいノードを生成しました: ${newNodeId}`, 'success')
-    aiOutput.textContent = `生成されたテキスト:\n${generatedText}`
+    setStatus(`AI mockをモデルに採用しました: ${newNodeId}`, 'success')
+    aiOutput.textContent = [
+      '✅ mock AI result adopted into the model',
+      `node: ${newNodeId}`,
+      `choice: ${newChoiceId}`,
+      '',
+      generatedText
+    ].join('\n')
 
     // Optionally update graph if visible
     if (graphPanel.classList.contains('active')) {
@@ -1149,6 +1181,10 @@ async function generateNextNodeUI() {
     generateNextNodeBtn.disabled = false
     generateNextNodeBtn.textContent = '次のノードを生成'
   }
+}
+
+if (generateNextNodeBtn) {
+  generateNextNodeBtn.addEventListener('click', generateNextNodeUI)
 }
 
 function renderNodeList() {

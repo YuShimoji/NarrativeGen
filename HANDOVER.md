@@ -26,6 +26,15 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-15 Web Tester AI mock adoption 導線
+
+- **作業目的**: Web Tester の AI mock 生成を一時表示から、実際の model node/choice として採用できる導線へ寄せる。
+- **効果**: `vertical-slice.json` の `drafting` など現在ノードから `ai_adopted_<node>_<n>` を `model.nodes` に追加し、`adopt_ai_<node>_<n>` choice で到達可能にする。既存 choice は上書きしないため proof route は保持される。
+- **要件**: API キー不要の mock provider を対象にし、採用後の model validation error は正常経路にしない。JSON export/import 後も追加 node と choice が残ることを Playwright で確認する。
+- **状態**: `apps/web-tester/src/app-controller.js` で AI 生成ボタンを model adoption に結線。focused E2E `vertical-slice-ai-adoption.spec.js` で proof route、mock adoption、JSON 保存、ページ reload 後の JSON 再読込、追加 choice 到達を確認。
+- **owner**: Web Tester AI mock adoption は assistant-owned。CSV import/schema 正本化、slot save/load の model 永続化確認、origin/HEAD 不一致の repo authority cleanup は次スライス候補。
+- **next move**: 次回は CSV import/schema canonicalization を縦切り CSV に寄せるか、slot save/load が mutable model を保持するかをブラウザ導線で確認する。
+
 ### 2026-06-15 Playable first 縦切り正本化
 
 - **作業目的**: 旧方針の Green first をいったん止め、実際に遊べる story generation/playback の縦切りを開発判断の正本にする。
