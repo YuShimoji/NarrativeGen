@@ -2,9 +2,11 @@
 
 ## 最終更新
 
-- **日時**: 2026-06-15
+- **日時**: 2026-06-22
 - **ブランチ**: `main`（trunk-based）
-- **直近**: Agent 指示リセット。`AGENTS.md` / `CLAUDE.md` / `.claude/CLAUDE.md` を薄い入口に戻し、通常再開の運用正本を `docs/REPO_LOCAL_RULES.md` に分離。`docs/ai/*.md` は v20 相当に更新し、毎回全文読ませる正本ではなく必要 gate の参照先に降格。
+- **HEAD**: `4d2919bed87ec053749c23bb825d76f8e5c7cd88` (`feat: persist ai adoption in save slots`)
+- **直近**: Web Tester の AI mock adoption は JSON export/import と SaveManager slot save/load の両方で永続化確認済み。`vertical-slice.json` の `drafting -> adopt_ai_drafting_1 -> ai_adopted_drafting_1` が page reload 後の slot load でも到達可能。
+- **repo authority 注意**: `origin/HEAD` はまだ `origin/open-ws/engine-skeleton-2025-09-02` を指す可能性がある。作業正本は `main` / `origin/main`。
 - **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`
 
 ## プロジェクト概要
@@ -78,7 +80,7 @@ NarrativeGen/
 - **web-tester**: Vite 8 ビルド、`verify-export-formatters`
 - **E2E**: Playwright（`apps/web-tester/tests/e2e`）
 - **C#**: `packages/tests/NarrativeGen.Tests` で `dotnet test`
-- **今回のローカル検証**: `git diff --check`、`npm run check:safety`、`npm run build:engine`、`npm run build:tester`、`npm run validate`、`npm run test:engine`、`npm run test -w @narrativegen/engine-ts -- test/vertical-slice.spec.ts`、`npm run test:e2e -- apps/web-tester/tests/e2e/new-model-workflow.spec.js --project=chromium --grep "vertical-slice"`、Browser smoke（`vertical-slice.json` から proof ending 到達）
+- **今回のローカル検証**: `git diff --check`、`npm run check:safety`、`npm run build:tester`、`npm run test -w @narrativegen/engine-ts -- test/vertical-slice.spec.ts`、`npm run test:e2e -- apps/web-tester/tests/e2e/vertical-slice-ai-adoption.spec.js --project=chromium`（proof route、JSON reload adoption、slot reload adoption の 3 件 Pass）
 
 ### 仕様書（spec-index.json）
 
@@ -96,8 +98,8 @@ NarrativeGen/
 
 ## 次の推奨作業
 
-1. **Playable vertical slice 継続**: `vertical-slice.json` を基準に AI mock 採用 UI と save/load 再読込のブラウザ導線を接続
-2. **CSV import 正本化**: 現行 CSV manager の `modelType`/schema/initial state 欠落と legacy handler との二重経路を診断し、縦切り CSV の import を正常経路へ寄せる
+1. **CSV import 正本化**: 現行 CSV manager の `modelType`/schema/initial state 欠落と legacy handler との二重経路を診断し、縦切り CSV の import を正常経路へ寄せる
+2. **SaveManager 補強確認**: 旧 slot 互換と auto-save 経路が必要なら、model snapshot 復元の focused E2E を追加する
 3. **SP-DTYARN-001 継続**: 縦切りを壊さない範囲でネスト条件・`[entity~]` 等の仕様固定と実装
 4. **SP-009 / Phase 8**: graph・debug・モーダルの a11y・レスポンシブ水平展開（`docs/plans/ui-a11y-responsive-issues.md`）
 
