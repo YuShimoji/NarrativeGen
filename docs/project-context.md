@@ -34,7 +34,7 @@
 
 ## Decision Log（session 13 以降）
 
-それ以前の長期記録は [`governance/decision-log.md`](governance/decision-log.md)。ルート [`CLAUDE.md`](../CLAUDE.md) には直近3件の抜粋のみ。
+それ以前の長期記録は [`governance/decision-log.md`](governance/decision-log.md)。現在判断に効く抜粋は本ファイルに集約する。
 
 | 日付 | 決定事項 | 選択肢 | 決定理由 |
 |------|----------|--------|----------|
@@ -49,4 +49,4 @@
 
 ## IDEA POOL
 
-[`CLAUDE.md`](../CLAUDE.md) の IDEA POOL 節 → [`USER_REQUEST_LEDGER.md`](USER_REQUEST_LEDGER.md)。
+IDEA POOL は [`USER_REQUEST_LEDGER.md`](USER_REQUEST_LEDGER.md) に集約する。

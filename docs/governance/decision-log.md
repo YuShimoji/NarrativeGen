@@ -1,12 +1,12 @@
 # Decision Log（全件）
 
-ルート [`CLAUDE.md`](../../CLAUDE.md) には直近の抜粋のみ掲載。ここに**日付順の全記録**を置く（主に 2026-03-16 〜 2026-03-27 のブロック）。
+ここに**日付順の全記録**を置く（主に 2026-03-16 〜 2026-03-27 のブロック）。現在判断に使う補助線は [`docs/project-context.md`](../project-context.md) に置く。
 
 | 日付 | 決定事項 | 選択肢 | 決定理由 |
 |------|----------|--------|----------|
 | 2026-03-16 | ブランチ統合: ローカルをmaster→mainに切替 | main切替 / masterにマージ / 保留 | origin/mainが正。masterのEntity/Inventory変更は既にcherry-pick済み。337ファイル差分 |
 | 2026-03-07 | Ollama (ローカルLLM) プロバイダを完全削除 | A) OpenRouter統合 / B) Ollama改善 / C) 処理 / D) 完全削除 | 精度・リソース費用に難あり。非AIパラフレーズがオフライン対応済み。AIProviderインターフェースは拡張可能なため将来再実装可能 |
-| 2026-03-07 | レガシーDoc 7件を当時の archive に移動 | 移動 / 保留 | Windsurf AI Collab Rules x3 + ヒント集.md x3 + REPORT_CONFIG.yml。CLAUDE.md更新で不使用。移動スクリプト不在 |
+| 2026-03-07 | レガシーDoc 7件を当時の archive に移動 | 移動 / 保留 | Windsurf AI Collab Rules x3 + ヒント集.md x3 + REPORT_CONFIG.yml。旧 root agent doc 更新で不使用。移動スクリプト不在 |
 | 2026-03-07 | 旧計画Doc 4件削除。DEVELOPMENT_PLAN.mdで置換 | archive移動 / 部分統合 / 完全削除 | MID_TERM_TASKS, NEXT_PHASE_PROPOSAL, features-status, RESTART_ROADMAPはShared Workflows削除に伴いレガシー化。コード探索ベースの新プランで置換 |
 | 2026-03-07 | AIバッチ校閲・全ノード一括AI言い換えを削除 | 含める / 削除 / 保留 | コスト対効果疑問。BatchEditorの検索置換バッチは子続 |
 | 2026-03-07 | コラボ機能(バージョン管理/マルチユーザー/共有リンク)を削除 | 部分利用 / 全保留 / 全削除 | スコープ過大。シングルユーザーツールとして運用 |

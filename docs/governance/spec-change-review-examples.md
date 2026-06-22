@@ -16,7 +16,7 @@
 ## 例3: 仕様ファイルをリネーム・移動したとき
 
 - [ ] `spec-index.json` の `file` を新パスに更新
-- [ ] リポジトリ内参照（`HANDOVER.md`, `CLAUDE.md`, 他 spec からのリンク）を一括 grep で確認
+- [ ] リポジトリ内参照（`HANDOVER.md`, agent entry docs, 他 spec からのリンク）を一括 grep で確認
 
 ## 例4: 破壊的モデル変更（JSON Schema）のとき
 

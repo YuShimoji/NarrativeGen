@@ -9,8 +9,8 @@
 | 順 | ファイル | 用途 |
 |----|----------|------|
 | 1 | [`HANDOVER.md`](../../HANDOVER.md)（ルート） | 直近の状態・CI・次の推奨作業・再開コマンド |
-| 2 | [`CLAUDE.md`](../../CLAUDE.md) | キーパス・コマンド・Decision Log（長期は [`docs/governance/decision-log.md`](../governance/decision-log.md)） |
-| 3 | [`docs/project-context.md`](../project-context.md) | セッション用の焦点・補助線 |
+| 2 | [`docs/project-context.md`](../project-context.md) | セッション用の焦点・補助線 |
+| 3 | [`docs/governance/decision-log.md`](../governance/decision-log.md) | 長期 Decision Log |
 
 ## 仕様（Source of Truth）
 
