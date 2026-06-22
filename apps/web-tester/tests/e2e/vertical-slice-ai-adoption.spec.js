@@ -3,17 +3,24 @@ import path from 'node:path';
 import { test, expect } from '@playwright/test';
 
 const ADVANCED_ENABLED_STORAGE_KEY = 'narrativeGenAdvancedEnabled';
+const SAVE_KEY_PREFIX = 'narrativeGen_save_slot_';
 const ADOPTED_NODE_ID = 'ai_adopted_drafting_1';
 const ADOPTION_CHOICE_ID = 'adopt_ai_drafting_1';
 const ADOPTION_CHOICE_TEXT = 'Adopt mock continuation';
 
-async function openPage(page, { advanced = false } = {}) {
-  await page.addInitScript(({ storageKey, enabled }) => {
+async function openPage(page, { advanced = false, preserveStorageOnReload = false } = {}) {
+  await page.addInitScript(({ storageKey, enabled, preserve }) => {
+    if (preserve && sessionStorage.getItem('narrativegen-e2e-storage-seeded') === 'true') {
+      return;
+    }
     localStorage.clear();
     if (enabled) {
       localStorage.setItem(storageKey, 'true');
     }
-  }, { storageKey: ADVANCED_ENABLED_STORAGE_KEY, enabled: advanced });
+    if (preserve) {
+      sessionStorage.setItem('narrativegen-e2e-storage-seeded', 'true');
+    }
+  }, { storageKey: ADVANCED_ENABLED_STORAGE_KEY, enabled: advanced, preserve: preserveStorageOnReload });
 
   await page.goto('/');
   await page.waitForFunction(
@@ -93,6 +100,51 @@ async function assertAdoptedModelShape(page) {
     use_mock_ai: 'ai_mock_scene',
     cut_short: 'rushed_end',
   });
+}
+
+async function saveCurrentStateToSlot(page, slotId = 1) {
+  await page.click('#debugTab');
+  await page.click('#refreshSavesBtn');
+  const saveButton = page.locator(`.save-btn[data-slot="${slotId}"]`);
+  await expect(saveButton).toBeEnabled({ timeout: 5000 });
+  await saveButton.click();
+
+  await page.waitForFunction(
+    ({ prefix, slot, nodeId, choiceId }) => {
+      const raw = localStorage.getItem(`${prefix}${slot}`);
+      if (!raw) return false;
+      const saveData = JSON.parse(raw);
+      const choices = saveData.model?.nodes?.drafting?.choices ?? [];
+      return Boolean(
+        saveData.session?.nodeId === 'drafting' &&
+        saveData.model?.nodes?.[nodeId] &&
+        choices.some(choice => choice.id === choiceId && choice.target === nodeId)
+      );
+    },
+    { prefix: SAVE_KEY_PREFIX, slot: slotId, nodeId: ADOPTED_NODE_ID, choiceId: ADOPTION_CHOICE_ID },
+    { timeout: 10000 }
+  );
+}
+
+async function loadStateFromSlot(page, slotId = 1) {
+  await page.click('#debugTab');
+  await page.click('#refreshSavesBtn');
+  const loadButton = page.locator(`.load-btn[data-slot="${slotId}"]`);
+  await expect(loadButton).toBeEnabled({ timeout: 5000 });
+  await loadButton.click();
+
+  await page.waitForFunction(
+    ({ nodeId, choiceId }) => {
+      const model = window.appState?.model;
+      return Boolean(
+        window.__NARRATIVEGEN_DEVTOOLS__?.getState().currentNodeId === 'drafting' &&
+        model?.nodes?.[nodeId] &&
+        model.nodes.drafting?.choices?.some(choice => choice.id === choiceId && choice.target === nodeId)
+      );
+    },
+    { nodeId: ADOPTED_NODE_ID, choiceId: ADOPTION_CHOICE_ID },
+    { timeout: 15000 }
+  );
 }
 
 test.describe('Vertical slice AI mock adoption', () => {
@@ -176,6 +228,45 @@ test.describe('Vertical slice AI mock adoption', () => {
 
     await page.locator(`.play-choice-btn:has-text("${ADOPTION_CHOICE_TEXT}")`).click();
     await expect(page.locator('#storyView')).toContainText(exportedModel.nodes[ADOPTED_NODE_ID].text, { timeout: 10000 });
+    await page.waitForFunction(
+      nodeId => window.__NARRATIVEGEN_DEVTOOLS__?.getState().currentNodeId === nodeId,
+      ADOPTED_NODE_ID,
+      { timeout: 10000 }
+    );
+  });
+
+  test('mock AI result survives SaveManager slot reload', async ({ page }) => {
+    await openPage(page, { advanced: true, preserveStorageOnReload: true });
+    await loadVerticalSlice(page);
+    await navigateToDrafting(page);
+
+    await page.click('#advancedTab');
+    await expect(page.locator('#generateNextNodeBtn')).toBeVisible({ timeout: 5000 });
+    await page.locator('#generateNextNodeBtn').click();
+
+    await expect(page.locator('#aiOutput')).toContainText(`node: ${ADOPTED_NODE_ID}`, { timeout: 10000 });
+    await assertAdoptedModelShape(page);
+
+    const adoptedNodeText = await page.evaluate(
+      nodeId => window.appState.model.nodes[nodeId].text,
+      ADOPTED_NODE_ID
+    );
+
+    await saveCurrentStateToSlot(page, 1);
+    await page.reload();
+    await page.waitForFunction(
+      () => typeof window.__NARRATIVEGEN_DEVTOOLS__?.getState === 'function',
+      undefined,
+      { timeout: 15000 }
+    );
+
+    await loadStateFromSlot(page, 1);
+    await assertAdoptedModelShape(page);
+
+    await page.click('#storyTab');
+    await expect(page.locator(`.play-choice-btn:has-text("${ADOPTION_CHOICE_TEXT}")`)).toBeVisible({ timeout: 10000 });
+    await page.locator(`.play-choice-btn:has-text("${ADOPTION_CHOICE_TEXT}")`).click();
+    await expect(page.locator('#storyView')).toContainText(adoptedNodeText, { timeout: 10000 });
     await page.waitForFunction(
       nodeId => window.__NARRATIVEGEN_DEVTOOLS__?.getState().currentNodeId === nodeId,
       ADOPTED_NODE_ID,

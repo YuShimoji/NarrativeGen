@@ -1745,7 +1745,8 @@ saveManager.initialize({
     renderState,
     renderChoices,
     renderStory,
-    renderDebugInfo
+    renderDebugInfo,
+    initPlayRenderer
   },
   saveSlotsContainer: saveSlots
 })

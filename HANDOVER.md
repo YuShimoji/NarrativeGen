@@ -26,6 +26,15 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-22 Web Tester AI mock adoption slot persistence
+
+- **作業目的**: AI mock adoption 後の mutable model が Web Tester の SaveManager slot save/load 経路でも保持されるかを、playable vertical slice 上で確認する。
+- **効果**: slot save data に model snapshot を含め、page reload 後の slot load でも `drafting -> adopt_ai_drafting_1 -> ai_adopted_drafting_1` が到達可能になった。JSON export/import だけでなく、Web Tester 内の通常保存ループでも採用済み node/choice が残る。
+- **要件**: 既存 `truth_end` proof route と JSON export/import adoption route を壊さない。保存データに invalid model snapshot がある場合は正常経路扱いしない。CSV import/schema、AI provider 追加、graph UI、Unity、大規模 refactor には広げない。
+- **状態**: `apps/web-tester/src/features/save-manager.js` が save data に model snapshot を保存し、slot load 時に model/session/story UI を復元する。`apps/web-tester/tests/e2e/vertical-slice-ai-adoption.spec.js` に slot save/load 後の adoption 到達確認を追加し、Chromium focused E2E で proof route、JSON reload route、slot reload route の 3 件が Pass。
+- **owner**: Web Tester slot persistence は assistant-owned。CSV import/schema canonicalization と origin/HEAD 不一致 cleanup は別スライス候補。
+- **next move**: 次回は CSV import/schema canonicalization を縦切り CSV に寄せるか、SaveManager の旧 slot 互換/auto-save 経路を必要に応じて追加検証する。
+
 ### 2026-06-15 Web Tester AI mock adoption 導線
 
 - **作業目的**: Web Tester の AI mock 生成を一時表示から、実際の model node/choice として採用できる導線へ寄せる。

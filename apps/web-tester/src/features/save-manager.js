@@ -33,7 +33,8 @@ export class SaveManager {
       renderState: null,
       renderChoices: null,
       renderStory: null,
-      renderDebugInfo: null
+      renderDebugInfo: null,
+      initPlayRenderer: null
     }
     
     /** @type {HTMLElement|null} セーブスロット表示要素 */
@@ -91,6 +92,31 @@ export class SaveManager {
    * @param {string} [modelName] - モデル名
    * @returns {Object} セーブデータ
    */
+  _cloneJson(value) {
+    return JSON.parse(JSON.stringify(value))
+  }
+
+  _restoreModelFromSaveData(saveData) {
+    if (!this.appState) return
+
+    if (!saveData.model) {
+      if (!this.appState.model) {
+        throw new Error('Save data does not include a model snapshot')
+      }
+      return
+    }
+
+    const restoredModel = this._cloneJson(saveData.model)
+    if (!restoredModel?.nodes || !restoredModel.startNode || !restoredModel.nodes[restoredModel.startNode]) {
+      throw new Error('Save data includes an invalid model snapshot')
+    }
+    if (!restoredModel.nodes[saveData.session.nodeId]) {
+      throw new Error('Saved session points to a missing model node')
+    }
+
+    this.appState.model = restoredModel
+  }
+
   createSaveData(session, modelName) {
     let descriptionState = {}
     if (this.appState?.descriptionState && typeof this.appState.descriptionState === 'object') {
@@ -111,6 +137,7 @@ export class SaveManager {
         variables: { ...session.variables },
         time: session.time
       },
+      model: this.appState?.model ? this._cloneJson(this.appState.model) : null,
       storyLog: this.appState ? [...this.appState.storyLog] : [],
       descriptionState
     }
@@ -123,6 +150,8 @@ export class SaveManager {
    * @private
    */
   _restoreSessionFromSaveData(saveData) {
+    this._restoreModelFromSaveData(saveData)
+
     const restoredSession = {
       nodeId: saveData.session.nodeId,
       flags: { ...saveData.session.flags },
@@ -451,7 +480,8 @@ export class SaveManager {
    * UIを更新
    */
   updateUI() {
-    const { renderState, renderChoices, renderStory, renderDebugInfo } = this.uiCallbacks
+    const { initPlayRenderer, renderState, renderChoices, renderStory, renderDebugInfo } = this.uiCallbacks
+    if (initPlayRenderer) initPlayRenderer()
     if (renderState) renderState()
     if (renderChoices) renderChoices()
     if (renderStory) renderStory()
