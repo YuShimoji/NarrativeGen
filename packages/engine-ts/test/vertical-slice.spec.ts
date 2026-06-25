@@ -51,30 +51,52 @@ function reachableNodeIds(model: Model): Set<string> {
   return reachable
 }
 
-function parseCsvLine(line: string): string[] {
-  const cells: string[] = []
+function parseCsvRows(text: string): string[][] {
+  const rows: string[][] = []
+  let row: string[] = []
   let current = ''
   let inQuotes = false
 
-  for (let i = 0; i < line.length; i += 1) {
-    const char = line[i]
+  const pushRow = () => {
+    row.push(current)
+    if (row.some((cell) => cell.trim().length > 0)) {
+      rows.push(row)
+    }
+    row = []
+    current = ''
+  }
+
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i]
     if (char === '"') {
-      if (inQuotes && line[i + 1] === '"') {
+      if (inQuotes && text[i + 1] === '"') {
         current += '"'
         i += 1
       } else {
         inQuotes = !inQuotes
       }
     } else if (char === ',' && !inQuotes) {
-      cells.push(current)
+      row.push(current)
       current = ''
+    } else if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && text[i + 1] === '\n') i += 1
+      pushRow()
+    } else if (char === '\n' || char === '\r') {
+      if (char === '\r' && text[i + 1] === '\n') i += 1
+      current += '\n'
     } else {
       current += char
     }
   }
 
-  cells.push(current)
-  return cells
+  if (inQuotes) {
+    throw new Error('CSV has an unterminated quoted field')
+  }
+  if (current.length > 0 || row.length > 0) {
+    pushRow()
+  }
+
+  return rows
 }
 
 describe('vertical-slice.json - playable first acceptance', () => {
@@ -207,8 +229,9 @@ describe('vertical-slice.json - playable first acceptance', () => {
 
 describe('vertical-slice.csv - writer-facing companion artifact', () => {
   it('is readable and keeps JSON choices parseable', () => {
-    const lines = fs.readFileSync(csvPath, 'utf-8').trim().split(/\r?\n/)
-    const header = parseCsvLine(lines[0])
+    const rows = parseCsvRows(fs.readFileSync(csvPath, 'utf-8'))
+    const header = rows[0]
+    const dataRows = rows.slice(1)
 
     expect(header).toEqual([
       'id',
@@ -222,24 +245,24 @@ describe('vertical-slice.csv - writer-facing companion artifact', () => {
       'initial_variables',
       'settings_presentation',
     ])
-    expect(lines).toHaveLength(13)
+    expect(dataRows).toHaveLength(12)
 
-    const rows = lines.slice(1).map(parseCsvLine)
-    expect(rows.map((row) => row[0])).toContain('desk')
-    expect(rows.map((row) => row[0])).toContain('truth_end')
-    expect(rows.find((row) => row[0] === 'mira')?.[1]).toBe('Mira')
-    expect(rows[0][4]).toBe('adventure-playthrough')
-    expect(rows[0][5]).toBe('desk')
-    expect(rows[0][6]).toContain('found_hook=false')
-    expect(rows[0][7]).toContain('focus=2')
-    expect(rows[0][8]).toContain('lead_name=the missing bell')
-    expect(JSON.parse(rows[0][9])).toEqual({
+    expect(dataRows.map((row) => row[0])).toContain('desk')
+    expect(dataRows.map((row) => row[0])).toContain('truth_end')
+    expect(dataRows.find((row) => row[0] === 'mira')?.[1]).toBe('Mira')
+    expect(dataRows[0][2]).toContain('planning board.\n\nFocus: {focus} | Evidence: {evidence}\nLead: {lead_name}')
+    expect(dataRows[0][4]).toBe('adventure-playthrough')
+    expect(dataRows[0][5]).toBe('desk')
+    expect(dataRows[0][6]).toContain('found_hook=false')
+    expect(dataRows[0][7]).toContain('focus=2')
+    expect(dataRows[0][8]).toContain('lead_name=the missing bell')
+    expect(JSON.parse(dataRows[0][9])).toEqual({
       defaultTransition: 'append-scroll',
       paragraphDelay: 60,
       transitionDuration: 180,
     })
 
-    for (const row of rows) {
+    for (const row of dataRows) {
       expect(() => JSON.parse(row[3])).not.toThrow()
     }
   })

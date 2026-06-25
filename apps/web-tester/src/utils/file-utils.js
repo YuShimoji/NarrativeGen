@@ -75,8 +75,52 @@ export function parseJsonSafe(text, filename = 'file') {
  * @returns {string[][]} パースされたCSVデータ
  */
 export function parseCsv(text, delimiter = ',') {
-  const lines = text.trim().split(/\r?\n/)
-  return lines.map(line => parseCsvLine(line, delimiter))
+  const rows = []
+  let row = []
+  let current = ''
+  let inQuotes = false
+
+  const pushRow = () => {
+    row.push(current)
+    if (row.some(cell => cell.trim().length > 0)) {
+      rows.push(row)
+    }
+    row = []
+    current = ''
+  }
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i]
+
+    if (char === '"') {
+      if (inQuotes && text[i + 1] === '"') {
+        current += '"'
+        i++
+      } else {
+        inQuotes = !inQuotes
+      }
+    } else if (char === delimiter && !inQuotes) {
+      row.push(current)
+      current = ''
+    } else if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && text[i + 1] === '\n') i++
+      pushRow()
+    } else if (char === '\n' || char === '\r') {
+      if (char === '\r' && text[i + 1] === '\n') i++
+      current += '\n'
+    } else {
+      current += char
+    }
+  }
+
+  if (inQuotes) {
+    throw new Error('CSV has an unterminated quoted field')
+  }
+  if (current.length > 0 || row.length > 0) {
+    pushRow()
+  }
+
+  return rows
 }
 
 /**

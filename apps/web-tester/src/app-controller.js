@@ -35,7 +35,7 @@ import { setupThemeEventListeners } from './ui/theme.js'
 import { PlayRenderer } from './ui/play/PlayRenderer.js'
 
 // Utilities
-import { downloadFile, parseCsvLine } from './utils/file-utils.js'
+import { downloadFile, parseCsv } from './utils/file-utils.js'
 import { isCsvModelFileName, parseCsvModel } from './utils/model-csv-import.js'
 import { formatCsvModel } from './utils/model-csv-export.js'
 import Logger from './core/logger.js'
@@ -385,13 +385,13 @@ function showCsvPreview(file) {
   reader.onload = (e) => {
     const text = e.target.result
     const delimiter = text.includes('\t') ? '\t' : ','
-    const lines = text.trim().split(/\r?\n/).slice(0, 11) // First 10 lines + header
+    const rows = parseCsv(text, delimiter)
+    const previewRows = rows.slice(0, 11) // First 10 rows + header
     const table = document.createElement('table')
     table.className = 'csv-table'
 
-    lines.forEach((line, index) => {
+    previewRows.forEach((cells, index) => {
       const row = document.createElement('tr')
-      const cells = parseCsvLine(line, delimiter)
       cells.forEach(cell => {
         const cellEl = document.createElement(index === 0 ? 'th' : 'td')
         cellEl.textContent = cell
@@ -400,10 +400,10 @@ function showCsvPreview(file) {
       table.appendChild(row)
     })
 
-    if (lines.length >= 11) {
+    if (rows.length > 11) {
       const row = document.createElement('tr')
       const cell = document.createElement('td')
-      cell.colSpan = parseCsvLine(lines[0], delimiter).length
+      cell.colSpan = rows[0]?.length || 1
       cell.textContent = '... (以降省略)'
       cell.style.textAlign = 'center'
       cell.style.fontStyle = 'italic'

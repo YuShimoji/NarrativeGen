@@ -1,4 +1,4 @@
-import { parseCsvLine } from './file-utils.js'
+import { parseCsv } from './file-utils.js'
 
 const MODEL_TYPE = 'adventure-playthrough'
 
@@ -33,10 +33,7 @@ function detectDelimiter(text, filename = '') {
 }
 
 function parseRows(text, delimiter) {
-  return text
-    .split(/\r?\n/)
-    .filter((line) => line.trim().length > 0)
-    .map((line) => parseCsvLine(line, delimiter))
+  return parseCsv(text, delimiter)
 }
 
 function parseBoolean(value) {

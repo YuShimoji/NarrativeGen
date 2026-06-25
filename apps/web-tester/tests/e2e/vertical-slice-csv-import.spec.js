@@ -2,6 +2,7 @@ import path from 'node:path';
 import { test, expect } from '@playwright/test';
 
 const csvPath = path.resolve(process.cwd(), 'models/spreadsheets/vertical-slice.csv');
+const multilineDeskText = 'planning board.\n\nFocus: {focus} | Evidence: {evidence}\nLead: {lead_name}';
 
 async function openPage(page) {
   await page.addInitScript(() => {
@@ -54,6 +55,7 @@ test.describe('Vertical slice CSV import', () => {
         flags: model.flags,
         resources: model.resources,
         variables: model.variables,
+        deskText: model.nodes.desk.text,
         miraSpeaker: model.nodes.mira.speaker,
         sessionNodeId: session.nodeId,
         sessionResources: session.resources,
@@ -104,6 +106,7 @@ test.describe('Vertical slice CSV import', () => {
     expect(modelShape.decodeEffects).toEqual([
       { type: 'addResource', key: 'focus', delta: -1 },
     ]);
+    expect(modelShape.deskText).toContain(multilineDeskText);
 
     const storyView = page.locator('#storyView');
     await page.locator('.play-choice-btn:has-text("Open the old notebook")').click();

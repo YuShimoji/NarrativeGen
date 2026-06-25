@@ -12,12 +12,12 @@ const CSV_HEADERS = [
 ]
 
 function csvCell(value) {
-  const text = value == null ? '' : String(value)
+  const text = normalizeLineEndings(value)
   return `"${text.replace(/"/g, '""')}"`
 }
 
-function flattenText(value) {
-  return String(value ?? '').replace(/\s*\r?\n\s*/g, ' ').trim()
+function normalizeLineEndings(value) {
+  return String(value ?? '').replace(/\r\n?/g, '\n')
 }
 
 function encodeKeyValuePairs(values) {
@@ -53,9 +53,7 @@ export function formatCsvModel(model) {
     const row = [
       node.id || nodeId,
       node.speaker || '',
-      // The current CSV parser is line-oriented, so exported prose uses spaces
-      // instead of embedded newlines until multiline CSV parsing is added.
-      flattenText(node.text),
+      node.text || '',
       JSON.stringify(node.choices || []),
       isFirstRow ? (model.modelType || 'adventure-playthrough') : '',
       isFirstRow ? (model.startNode || nodeId) : '',
@@ -70,4 +68,3 @@ export function formatCsvModel(model) {
 
   return `${rows.join('\n')}\n`
 }
-

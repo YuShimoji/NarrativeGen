@@ -82,7 +82,10 @@ function testCsvFormatterRoundTripShape() {
     }
   }
 
-  const parsed = parseCsvModel(formatter.format(model), { filename: 'roundtrip.csv' })
+  const output = formatter.format(model)
+  assert.ok(output.includes('"A first line.\n\nA second line."'))
+
+  const parsed = parseCsvModel(output, { filename: 'roundtrip.csv' })
   assert.equal(parsed.modelType, model.modelType)
   assert.equal(parsed.startNode, model.startNode)
   assert.deepEqual(parsed.flags, model.flags)
@@ -90,7 +93,7 @@ function testCsvFormatterRoundTripShape() {
   assert.deepEqual(parsed.variables, model.variables)
   assert.deepEqual(parsed.settings, model.settings)
   assert.equal(parsed.nodes.start.speaker, 'Narrator')
-  assert.equal(parsed.nodes.start.text, 'A first line. A second line.')
+  assert.equal(parsed.nodes.start.text, 'A first line.\n\nA second line.')
   assert.deepEqual(parsed.nodes.start.choices[0].conditions, model.nodes.start.choices[0].conditions)
   assert.deepEqual(parsed.nodes.start.choices[0].effects, model.nodes.start.choices[0].effects)
 }

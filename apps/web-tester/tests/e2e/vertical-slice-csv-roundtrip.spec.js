@@ -3,6 +3,11 @@ import path from 'node:path';
 import { test, expect } from '@playwright/test';
 
 const csvPath = path.resolve(process.cwd(), 'models/spreadsheets/vertical-slice.csv');
+const multilineDeskText = 'planning board.\n\nFocus: {focus} | Evidence: {evidence}\nLead: {lead_name}';
+
+function normalizeNewlines(text) {
+  return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+}
 
 async function openPage(page) {
   await page.addInitScript(() => {
@@ -83,9 +88,10 @@ test.describe('Vertical slice CSV export roundtrip', () => {
 
     const importedParity = await page.evaluate(() => ({
       speaker: window.appState.model.nodes.mira.speaker,
+      deskText: window.appState.model.nodes.desk.text,
       presentation: window.appState.model.settings?.presentation,
     }));
-    expect(importedParity).toEqual({
+    expect(importedParity).toMatchObject({
       speaker: 'Mira',
       presentation: {
         defaultTransition: 'append-scroll',
@@ -93,6 +99,7 @@ test.describe('Vertical slice CSV export roundtrip', () => {
         transitionDuration: 180,
       },
     });
+    expect(importedParity.deskText).toContain(multilineDeskText);
 
     const downloadPromise = page.waitForEvent('download');
     await page.click('#exportCsvBtn');
@@ -102,9 +109,10 @@ test.describe('Vertical slice CSV export roundtrip', () => {
     const exportedPath = path.join(testInfo.outputDir, 'vertical-slice-exported.csv');
     await download.saveAs(exportedPath);
 
-    const exportedCsv = readFileSync(exportedPath, 'utf8');
+    const exportedCsv = normalizeNewlines(readFileSync(exportedPath, 'utf8'));
     expect(exportedCsv).toContain('id,speaker,text,choices,model_type,start_node,initial_flags,initial_resources,initial_variables,settings_presentation');
     expect(exportedCsv).toContain('"mira","Mira"');
+    expect(exportedCsv).toContain('"desk","","Midnight is close. Your editor needs a playable short story, not another planning board.\n\nFocus: {focus} | Evidence: {evidence}\nLead: {lead_name}"');
     expect(exportedCsv).toContain('"adventure-playthrough"');
     expect(exportedCsv).toContain('"desk"');
     expect(exportedCsv).toContain('"found_hook=false;trusted_mira=false;ai_draft_adopted=false"');
@@ -127,6 +135,7 @@ test.describe('Vertical slice CSV export roundtrip', () => {
         settings: model.settings,
         resources: model.resources,
         variables: model.variables,
+        deskText: model.nodes.desk.text,
         miraSpeaker: model.nodes.mira.speaker,
         decodeConditions: decodeChoice.conditions,
         decodeEffects: decodeChoice.effects,
@@ -160,6 +169,7 @@ test.describe('Vertical slice CSV export roundtrip', () => {
     expect(roundTrippedShape.decodeEffects).toEqual([
       { type: 'addResource', key: 'focus', delta: -1 },
     ]);
+    expect(roundTrippedShape.deskText).toContain(multilineDeskText);
 
     await playProofRoute(page);
   });
