@@ -28,6 +28,15 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-25 Terminal handover sync
+
+- **Restart authority**: after this handover-sync slice, the current branch is `main`, the active remote authority is `origin/main`, and a fresh terminal should start with `git fetch origin --prune && git pull --ff-only origin main`.
+- **Current shipped state**: playable vertical slice, AI mock adoption persistence, canonical CSV import/export, CSV fixture parity, multiline CSV text preservation, and legacy Web Tester `CsvManager` cleanup are all preserved in project history and documented in this file.
+- **Most recent pushed work before this sync**: `550aaac14ad8134be6f3c8186bff164e4388f67e` (`chore: consolidate web tester csv paths`). This sync entry only refreshes handover context so another terminal can resume without reconstructing thread state.
+- **Canonical CSV ownership**: model CSV import is `#csvFileInput` -> preview -> `parseCsvModel()`; direct CSV export and generic `CsvFormatter` both use `formatCsvModel()`. Non-model CSV report helpers remain intentionally separate.
+- **Known repo debt**: `origin/HEAD` may still point at `origin/open-ws/engine-skeleton-2025-09-02`; do not treat that as the active working branch. Stash entries from earlier work remain intentionally untouched.
+- **Next entry points**: `origin/HEAD` cleanup, focused CSV/JSON parity expansion, spreadsheet authoring fixture exploration, or SP-DTYARN continuation.
+
 ### 2026-06-25 Legacy CSV path cleanup
 
 - **Work purpose**: remove the disconnected Web Tester `CsvManager` path now that model CSV import/export/multiline roundtrip is owned by canonical utilities.
