@@ -210,18 +210,37 @@ describe('vertical-slice.csv - writer-facing companion artifact', () => {
     const lines = fs.readFileSync(csvPath, 'utf-8').trim().split(/\r?\n/)
     const header = parseCsvLine(lines[0])
 
-    expect(header).toEqual(['id', 'text', 'choices', 'initial_flags', 'initial_resources', 'initial_variables'])
+    expect(header).toEqual([
+      'id',
+      'speaker',
+      'text',
+      'choices',
+      'model_type',
+      'start_node',
+      'initial_flags',
+      'initial_resources',
+      'initial_variables',
+      'settings_presentation',
+    ])
     expect(lines).toHaveLength(13)
 
     const rows = lines.slice(1).map(parseCsvLine)
     expect(rows.map((row) => row[0])).toContain('desk')
     expect(rows.map((row) => row[0])).toContain('truth_end')
-    expect(rows[0][3]).toContain('found_hook=false')
-    expect(rows[0][4]).toContain('focus=2')
-    expect(rows[0][5]).toContain('lead_name=the missing bell')
+    expect(rows.find((row) => row[0] === 'mira')?.[1]).toBe('Mira')
+    expect(rows[0][4]).toBe('adventure-playthrough')
+    expect(rows[0][5]).toBe('desk')
+    expect(rows[0][6]).toContain('found_hook=false')
+    expect(rows[0][7]).toContain('focus=2')
+    expect(rows[0][8]).toContain('lead_name=the missing bell')
+    expect(JSON.parse(rows[0][9])).toEqual({
+      defaultTransition: 'append-scroll',
+      paragraphDelay: 60,
+      transitionDuration: 180,
+    })
 
     for (const row of rows) {
-      expect(() => JSON.parse(row[2])).not.toThrow()
+      expect(() => JSON.parse(row[3])).not.toThrow()
     }
   })
 })

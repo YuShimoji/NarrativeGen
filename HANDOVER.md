@@ -28,12 +28,19 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-25 CSV fixture parity
+
+- **Work purpose**: make `models/spreadsheets/vertical-slice.csv` itself carry the small parity fields that the CSV importer/exporter already understood: node `speaker` and first-row `settings_presentation`.
+- **Effect**: the canonical CSV fixture now imports with `mira.speaker = "Mira"` and `settings.presentation = { defaultTransition: "append-scroll", paragraphDelay: 60, transitionDuration: 180 }`. Exporting that imported model writes the same canonical columns, and re-importing the exported CSV preserves those meanings.
+- **Preserved contract**: CSV fixture -> Web Tester import -> CSV export -> exported CSV re-import keeps `modelType`, `startNode`, initial flags/resources/variables, choice conditions/effects, `speaker`, and first-row presentation settings while the proof route still reaches `truth_end`.
+- **Still deferred**: multiline CSV parsing is still intentionally out of scope, so node prose remains flattened in the CSV fixture/export. Legacy `CsvManager` audit and `origin/HEAD` cleanup remain separate repo debt; broader JSON/CSV parity should stay opt-in and small.
+
 ### 2026-06-25 CSV export/roundtrip
 
 - **Work purpose**: close the smallest writer-facing CSV loop: import `models/spreadsheets/vertical-slice.csv`, export the active Web Tester model as CSV, re-import that exported CSV, and still reach the proof ending.
 - **Effect**: the dedicated CSV export button now downloads a canonical compact CSV instead of delegating to the disconnected legacy export modal. The generic export formatter and the CSV button share `apps/web-tester/src/utils/model-csv-export.js`, so one serializer owns column order and quoting.
 - **Roundtrip contract**: exported CSV preserves node id/text, choices JSON, targets, choice conditions/effects, `modelType`, `startNode`, and first-row initial flags/resources/variables. The CSV importer also accepts optional `speaker` and first-row `settings_presentation` columns, so JSON-origin models that carry those fields can keep them through CSV export/import.
-- **Known semantic boundary**: the current checked-in `models/spreadsheets/vertical-slice.csv` still does not contain `speaker` or `settings.presentation`, so importing that fixture cannot recreate the original JSON presentation metadata. CSV prose is still line-oriented; exporter flattens embedded node-text newlines to spaces until multiline CSV parsing is intentionally added.
+- **Known semantic boundary**: `models/spreadsheets/vertical-slice.csv` now carries `speaker` and first-row `settings_presentation`; CSV prose is still line-oriented, so exporter flattens embedded node-text newlines to spaces until multiline CSV parsing is intentionally added.
 - **Validation**: `npm run check:safety`, `npm run build:tester`, `npm run test -w @narrativegen/web-tester`, `npm run test:e2e -- apps/web-tester/tests/e2e/vertical-slice-csv-import.spec.js --project=chromium`, `npm run test:e2e -- apps/web-tester/tests/e2e/vertical-slice-ai-adoption.spec.js --project=chromium`, and `npm run test:e2e -- apps/web-tester/tests/e2e/vertical-slice-csv-roundtrip.spec.js --project=chromium` passed.
 
 ### 2026-06-25 CSV import/schema canonicalization
@@ -41,7 +48,7 @@ NarrativeGen/
 - **作業目的**: `models/spreadsheets/vertical-slice.csv` を writer-facing companion のまま Web Tester の通常 CSV import 経路で schema-valid な playable model に変換し、proof route まで到達できるようにした。
 - **効果**: `id,text,choices` の JSON-in-cell CSV と従来の `node_id,node_text,choice_*` CSV の両方を `apps/web-tester/src/utils/model-csv-import.js` で canonical model に正規化。CSV ボタンは実ファイル選択 -> preview -> import に接続され、validation error がある model は適用前に停止する。`vertical-slice.csv` には初期 `flags/resources/variables` を追加し、CSV 単体で `focus=2` / `evidence=0` / `lead_name` / `draft_status` を復元できる。
 - **検証**: parser 直実行で 12 node / `startNode=desk` / `decode_ledger` conditions/effects を確認し、engine 直実行で `open_notebook -> interview_mira -> ask_key -> decode_ledger -> publish_with_proof` が `truth_end` 到達。`npm run test -w @narrativegen/engine-ts -- test/vertical-slice.spec.ts`、`npm run check:safety`、`npm run build:tester`、`npm run test:e2e -- apps/web-tester/tests/e2e/vertical-slice-csv-import.spec.js --project=chromium`、`npm run test:e2e -- apps/web-tester/tests/e2e/vertical-slice-ai-adoption.spec.js --project=chromium`、`git diff --check` は pass。
-- **残り**: CSV import は閉じた。CSV export/roundtrip も専用 download と再 import の proof route までは閉じたが、checked-in companion CSV 自体はまだ `speaker` / `settings.presentation` を持たない。必要なら次スライスで fixture 側の列追加か multiline CSV parser 方針を決める。
+- **残り**: CSV import は閉じた。CSV export/roundtrip と checked-in companion CSV の `speaker` / `settings.presentation` parity も閉じた。必要なら次スライスで multiline CSV parser 方針か legacy CsvManager audit を決める。
 
 ### 2026-06-22 Web Tester AI mock adoption slot persistence
 

@@ -81,6 +81,19 @@ test.describe('Vertical slice CSV export roundtrip', () => {
     await openPage(page);
     await importCsv(page, csvPath, 'vertical-slice.csv');
 
+    const importedParity = await page.evaluate(() => ({
+      speaker: window.appState.model.nodes.mira.speaker,
+      presentation: window.appState.model.settings?.presentation,
+    }));
+    expect(importedParity).toEqual({
+      speaker: 'Mira',
+      presentation: {
+        defaultTransition: 'append-scroll',
+        paragraphDelay: 60,
+        transitionDuration: 180,
+      },
+    });
+
     const downloadPromise = page.waitForEvent('download');
     await page.click('#exportCsvBtn');
     const download = await downloadPromise;
@@ -91,11 +104,13 @@ test.describe('Vertical slice CSV export roundtrip', () => {
 
     const exportedCsv = readFileSync(exportedPath, 'utf8');
     expect(exportedCsv).toContain('id,speaker,text,choices,model_type,start_node,initial_flags,initial_resources,initial_variables,settings_presentation');
+    expect(exportedCsv).toContain('"mira","Mira"');
     expect(exportedCsv).toContain('"adventure-playthrough"');
     expect(exportedCsv).toContain('"desk"');
     expect(exportedCsv).toContain('"found_hook=false;trusted_mira=false;ai_draft_adopted=false"');
     expect(exportedCsv).toContain('"focus=2;evidence=0"');
     expect(exportedCsv).toContain('"lead_name=the missing bell;draft_status=unwritten"');
+    expect(exportedCsv).toContain('"{""defaultTransition"":""append-scroll"",""paragraphDelay"":60,""transitionDuration"":180}"');
     expect(exportedCsv).toContain('""id"":""decode_ledger""');
     expect(exportedCsv).toContain('""conditions""');
     expect(exportedCsv).toContain('""effects""');
@@ -109,8 +124,10 @@ test.describe('Vertical slice CSV export roundtrip', () => {
       return {
         modelType: model.modelType,
         startNode: model.startNode,
+        settings: model.settings,
         resources: model.resources,
         variables: model.variables,
+        miraSpeaker: model.nodes.mira.speaker,
         decodeConditions: decodeChoice.conditions,
         decodeEffects: decodeChoice.effects,
       };
@@ -119,6 +136,13 @@ test.describe('Vertical slice CSV export roundtrip', () => {
     expect(roundTrippedShape).toMatchObject({
       modelType: 'adventure-playthrough',
       startNode: 'desk',
+      settings: {
+        presentation: {
+          defaultTransition: 'append-scroll',
+          paragraphDelay: 60,
+          transitionDuration: 180,
+        },
+      },
       resources: {
         focus: 2,
         evidence: 0,
@@ -127,6 +151,7 @@ test.describe('Vertical slice CSV export roundtrip', () => {
         lead_name: 'the missing bell',
         draft_status: 'unwritten',
       },
+      miraSpeaker: 'Mira',
     });
     expect(roundTrippedShape.decodeConditions).toEqual([
       { type: 'resource', key: 'evidence', op: '>=', value: 2 },
@@ -139,4 +164,3 @@ test.describe('Vertical slice CSV export roundtrip', () => {
     await playProofRoute(page);
   });
 });
-

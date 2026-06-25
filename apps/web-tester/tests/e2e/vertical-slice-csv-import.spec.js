@@ -50,9 +50,11 @@ test.describe('Vertical slice CSV import', () => {
       return {
         modelType: model.modelType,
         startNode: model.startNode,
+        settings: model.settings,
         flags: model.flags,
         resources: model.resources,
         variables: model.variables,
+        miraSpeaker: model.nodes.mira.speaker,
         sessionNodeId: session.nodeId,
         sessionResources: session.resources,
         sessionVariables: session.variables,
@@ -64,6 +66,13 @@ test.describe('Vertical slice CSV import', () => {
     expect(modelShape).toMatchObject({
       modelType: 'adventure-playthrough',
       startNode: 'desk',
+      settings: {
+        presentation: {
+          defaultTransition: 'append-scroll',
+          paragraphDelay: 60,
+          transitionDuration: 180,
+        },
+      },
       flags: {
         found_hook: false,
         trusted_mira: false,
@@ -77,6 +86,7 @@ test.describe('Vertical slice CSV import', () => {
         lead_name: 'the missing bell',
         draft_status: 'unwritten',
       },
+      miraSpeaker: 'Mira',
       sessionNodeId: 'desk',
       sessionResources: {
         focus: 2,
