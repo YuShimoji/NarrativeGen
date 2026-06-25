@@ -28,6 +28,13 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-25 Legacy CSV path cleanup
+
+- **Work purpose**: remove the disconnected Web Tester `CsvManager` path now that model CSV import/export/multiline roundtrip is owned by canonical utilities.
+- **Effect**: the old `apps/web-tester/src/ui/csv.js` manager, its `main.js` construction, null modal initialization, stale `csvImportModal`/`csvExportModal` bindings, and the obsolete export-modal comment were removed. The deleted manager depended on DOM IDs that no longer exist and carried a duplicate line-oriented parser/exporter that could flatten multiline prose.
+- **Canonical ownership after cleanup**: model CSV import is `#csvFileInput` -> preview -> `parseCsvModel()` in `apps/web-tester/src/utils/model-csv-import.js`; the direct CSV export button and generic `CsvFormatter` both use `formatCsvModel()` in `apps/web-tester/src/utils/model-csv-export.js`. `exportCsv()` in `file-utils.js` remains for non-model CSV reports, and lexicon/hierarchy CSV helpers remain intentionally separate.
+- **Still deferred**: `origin/HEAD` cleanup, broader CSV/JSON parity, and spreadsheet authoring fixture exploration remain separate slices.
+
 ### 2026-06-25 CSV multiline text preservation
 
 - **Work purpose**: make CSV a safer writer-facing authoring surface for paragraph prose by preserving standard quoted multiline text through import, export, and re-import.

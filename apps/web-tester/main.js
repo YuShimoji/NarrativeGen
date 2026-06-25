@@ -11,7 +11,6 @@ import { StoryManager } from './src/ui/story.js'
 import { DebugManager } from './src/ui/debug.js'
 import { GuiEditorManager } from './src/ui/gui-editor.js'
 import { ReferenceManager } from './src/ui/reference.js'
-import { CsvManager } from './src/ui/csv.js'
 import { AiManager } from './src/ui/ai.js'
 import { LexiconManager } from './src/ui/lexicon.js'
 import { SearchManager } from './src/ui/SearchManager.js'
@@ -60,7 +59,6 @@ async function bootstrapApp() {
     debugManager: new DebugManager(appState),
     guiEditorManager: new GuiEditorManager(appState),
     referenceManager: new ReferenceManager(),
-    csvManager: new CsvManager(appState),
     aiManager: new AiManager(appState),
     lexiconManager: new LexiconManager(),
     searchManager: new SearchManager(),

@@ -72,13 +72,6 @@ export class ExportModal {
         const formatId = this.formatSelect.value
         const filename = this.filenameInput.value.trim() || 'story'
 
-        // We need to get the current model from app invocation or pass it in show
-        // For now, let's assume we can get it via a global or passed in constructor/init
-        // But better design: emit event or callback.
-        // However, looking at CsvManager etc, they access appState directly.
-        // Let's rely on the main.js glue to handle the data retrieval or bind it.
-
-        // Actually, to keep it clean, let's emit a custom event or callback.
         if (this.onExport) {
             try {
                 await this.onExport(formatId, filename)

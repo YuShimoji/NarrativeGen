@@ -187,10 +187,6 @@ export function getUIElements() {
         referenceToc: document.getElementById('referenceToc'),
         referenceContent: document.getElementById('referenceContent'),
 
-        // CSV modal elements
-        csvImportModal: document.getElementById('csvImportModal'),
-        csvExportModal: document.getElementById('csvExportModal'),
-
         // Advanced panel sub-elements
         aiSettings: document.getElementById('aiSettings'),
         keyBindingSettings: document.getElementById('keyBindingSettings'),

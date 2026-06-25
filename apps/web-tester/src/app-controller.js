@@ -71,7 +71,7 @@ export function initializeApp({ appState, managers, keyBindingManager, exportMan
   // Destructure managers
   const {
     dom, eventManager, storyManager, graphManager, debugManager,
-    guiEditorManager, referenceManager, csvManager, aiManager,
+    guiEditorManager, referenceManager, aiManager,
     lexiconManager, searchManager, themeManager, validationPanel,
     lexiconUIManager, keyBindingUIManager, mermaidPreviewManager, saveManager
   } = managers
@@ -115,7 +115,7 @@ export function initializeApp({ appState, managers, keyBindingManager, exportMan
   manageTemplatesBtn, templateModal, customTemplateNameInput,
   saveCustomTemplateBtn, customTemplateList, closeTemplateModalBtn,
   customTemplateGroup, runValidationBtn, validationContainer,
-  referenceToc, referenceContent, csvImportModal, csvExportModal,
+  referenceToc, referenceContent,
   aiSettings, keyBindingSettings, aiActions, lexiconEditor,
   paraphraseModal, cancelParaphraseBtn,
   newModelBtn
@@ -1820,9 +1820,6 @@ guiEditorManager.setGraphManager(graphManager)
 
 // Initialize reference manager
 referenceManager.initialize(referenceToc, referenceContent)
-
-// Initialize CSV manager
-csvManager.initialize(csvImportModal, csvExportModal)
 
 // Initialize AI manager
 aiManager.initialize(aiOutput, generateNextNodeBtn, paraphraseCurrentBtn)
