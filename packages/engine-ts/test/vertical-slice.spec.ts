@@ -210,12 +210,15 @@ describe('vertical-slice.csv - writer-facing companion artifact', () => {
     const lines = fs.readFileSync(csvPath, 'utf-8').trim().split(/\r?\n/)
     const header = parseCsvLine(lines[0])
 
-    expect(header).toEqual(['id', 'text', 'choices'])
+    expect(header).toEqual(['id', 'text', 'choices', 'initial_flags', 'initial_resources', 'initial_variables'])
     expect(lines).toHaveLength(13)
 
     const rows = lines.slice(1).map(parseCsvLine)
     expect(rows.map((row) => row[0])).toContain('desk')
     expect(rows.map((row) => row[0])).toContain('truth_end')
+    expect(rows[0][3]).toContain('found_hook=false')
+    expect(rows[0][4]).toContain('focus=2')
+    expect(rows[0][5]).toContain('lead_name=the missing bell')
 
     for (const row of rows) {
       expect(() => JSON.parse(row[2])).not.toThrow()

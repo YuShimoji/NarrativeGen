@@ -36,6 +36,7 @@ import { PlayRenderer } from './ui/play/PlayRenderer.js'
 
 // Utilities
 import { parseCsvLine } from './utils/file-utils.js'
+import { isCsvModelFileName, parseCsvModel } from './utils/model-csv-import.js'
 import Logger from './core/logger.js'
 import {
   getCurrentSession,
@@ -382,13 +383,14 @@ function showCsvPreview(file) {
   const reader = new FileReader()
   reader.onload = (e) => {
     const text = e.target.result
+    const delimiter = text.includes('\t') ? '\t' : ','
     const lines = text.trim().split(/\r?\n/).slice(0, 11) // First 10 lines + header
     const table = document.createElement('table')
     table.className = 'csv-table'
 
     lines.forEach((line, index) => {
       const row = document.createElement('tr')
-      const cells = parseCsvLine(line, line.includes('\t') ? '\t' : ',')
+      const cells = parseCsvLine(line, delimiter)
       cells.forEach(cell => {
         const cellEl = document.createElement(index === 0 ? 'th' : 'td')
         cellEl.textContent = cell
@@ -400,7 +402,7 @@ function showCsvPreview(file) {
     if (lines.length >= 11) {
       const row = document.createElement('tr')
       const cell = document.createElement('td')
-      cell.colSpan = lines[0].split(line.includes('\t') ? '\t' : ',').length
+      cell.colSpan = parseCsvLine(lines[0], delimiter).length
       cell.textContent = '... (以降省略)'
       cell.style.textAlign = 'center'
       cell.style.fontStyle = 'italic'
@@ -714,6 +716,11 @@ function formatChoiceLabel(choice) {
 }
 
 async function loadCustomModel(file) {
+  if (isCsvModelFileName(file.name)) {
+    const text = await file.text()
+    return parseCsvModel(text, { filename: file.name })
+  }
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = (e) => {
@@ -727,6 +734,37 @@ async function loadCustomModel(file) {
     reader.onerror = () => reject(new Error('ファイルの読み込みに失敗しました'))
     reader.readAsText(file)
   })
+}
+
+function validateLoadedModel(model) {
+  const validationErrors = validateModel(model)
+  if (validationErrors.length > 0) {
+    showErrors(validationErrors)
+    setStatus(`Model validation failed: ${validationErrors.length} error(s)`, 'warn')
+    throw new Error(`Model validation failed: ${validationErrors.join('; ')}`)
+  }
+  hideErrors()
+}
+
+function commitLoadedModel(model, modelName, statusMessage) {
+  applyModelParaphraseLexicon(model)
+  appState.model = model
+  startNewSession(appState.model)
+  setCurrentModelName(modelName)
+  setStatus(statusMessage, 'success')
+  initPlayRenderer()
+  initStory()
+  startAutoSave()
+}
+
+async function importCsvFile(file) {
+  const model = await loadCustomModel(file)
+  validateLoadedModel(model)
+  commitLoadedModel(model, file.name, `CSV ${file.name} 繧貞ｮ溯｡御ｸｭ`)
+  renderState()
+  renderChoices()
+  renderStory()
+  updateMermaidDiagramIfVisible()
 }
 
 async function loadSampleModel(sampleId) {
@@ -822,6 +860,7 @@ fileInput.addEventListener('change', async (e) => {
       loadEntitiesCatalog(),
     ])
 
+    validateLoadedModel(model)
     applyModelParaphraseLexicon(model)
     appState.model = model
     startNewSession(appState.model)
@@ -885,8 +924,8 @@ dropZone.addEventListener('drop', async (e) => {
   e.preventDefault()
   dropZone.style.backgroundColor = ''
   const file = e.dataTransfer.files[0]
-  if (!file || !file.name.endsWith('.json')) {
-    setStatus('JSON ファイルをドロップしてください', 'warn')
+  if (!file || !/\.(json|csv|tsv)$/i.test(file.name)) {
+    setStatus('JSON/CSV/TSV file required', 'warn')
     return
   }
   setControlsEnabled(false)
@@ -899,7 +938,7 @@ dropZone.addEventListener('drop', async (e) => {
     ])
 
     // Validate model
-    const validationErrors = validateModel(model.nodes)
+    const validationErrors = validateModel(model)
     if (validationErrors.length > 0) {
       showErrors(validationErrors)
       setStatus(`モデルにエラーがあります: ${validationErrors.length}件`, 'warn')
@@ -1893,7 +1932,15 @@ if (graphSettingsBtn) {
 // CSV import/export event listeners
 if (importCsvBtn) {
   importCsvBtn.addEventListener('click', () => {
-    csvManager.showCsvImportModal()
+    csvFileInput?.click()
+  })
+}
+
+if (csvFileInput) {
+  csvFileInput.addEventListener('change', () => {
+    const file = csvFileInput.files[0]
+    if (!file) return
+    showCsvPreview(file)
   })
 }
 
