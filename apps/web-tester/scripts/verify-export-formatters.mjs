@@ -7,6 +7,7 @@ import { CsvFormatter } from '../src/features/export/formatters/CsvFormatter.js'
 import { InkFormatter } from '../src/features/export/formatters/InkFormatter.js'
 import { TwineFormatter } from '../src/features/export/formatters/TwineFormatter.js'
 import { YarnFormatter } from '../src/features/export/formatters/YarnFormatter.js'
+import { parseCsvModel } from '../src/utils/model-csv-import.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -40,9 +41,58 @@ function testCsvFormatter() {
   const formatter = new CsvFormatter()
   const output = formatter.format(sampleModel)
 
-  assert.match(output, /^id,text,choices$/m)
-  assert.match(output, /^"start","A locked door blocks your way\."/m)
-  assert.match(output, /"hall","You found a key in the hall\."/)
+  assert.match(output, /^id,speaker,text,choices,model_type,start_node,initial_flags,initial_resources,initial_variables,settings_presentation$/m)
+  assert.match(output, /^"start","","A locked door blocks your way\."/m)
+  assert.match(output, /"hall","","You found a key in the hall\."/)
+  assert.match(output, /"hasKey=false"/)
+  assert.match(output, /"start"/)
+}
+
+function testCsvFormatterRoundTripShape() {
+  const formatter = new CsvFormatter()
+  const model = {
+    modelType: 'adventure-playthrough',
+    startNode: 'start',
+    flags: { hasKey: false },
+    resources: { focus: 2, evidence: 0 },
+    variables: { lead_name: 'the missing bell' },
+    settings: {
+      presentation: {
+        defaultTransition: 'append-scroll',
+        paragraphDelay: 60,
+        transitionDuration: 180
+      }
+    },
+    nodes: {
+      start: {
+        id: 'start',
+        speaker: 'Narrator',
+        text: 'A first line.\n\nA second line.',
+        choices: [
+          {
+            id: 'open',
+            text: 'Open',
+            target: 'end',
+            conditions: [{ type: 'resource', key: 'focus', op: '>=', value: 1 }],
+            effects: [{ type: 'addResource', key: 'focus', delta: -1 }]
+          }
+        ]
+      },
+      end: { id: 'end', text: 'Done', choices: [] }
+    }
+  }
+
+  const parsed = parseCsvModel(formatter.format(model), { filename: 'roundtrip.csv' })
+  assert.equal(parsed.modelType, model.modelType)
+  assert.equal(parsed.startNode, model.startNode)
+  assert.deepEqual(parsed.flags, model.flags)
+  assert.deepEqual(parsed.resources, model.resources)
+  assert.deepEqual(parsed.variables, model.variables)
+  assert.deepEqual(parsed.settings, model.settings)
+  assert.equal(parsed.nodes.start.speaker, 'Narrator')
+  assert.equal(parsed.nodes.start.text, 'A first line. A second line.')
+  assert.deepEqual(parsed.nodes.start.choices[0].conditions, model.nodes.start.choices[0].conditions)
+  assert.deepEqual(parsed.nodes.start.choices[0].effects, model.nodes.start.choices[0].effects)
 }
 
 function testYarnFormatter() {
@@ -171,7 +221,10 @@ function testInvalidModels() {
 
   assert.throws(() => twineFormatter.format(null), /Invalid model/)
   assert.throws(() => inkFormatter.format({}), /Invalid model/)
-  assert.equal(csvFormatter.format(null), 'id,text,choices\n')
+  assert.equal(
+    csvFormatter.format(null),
+    'id,speaker,text,choices,model_type,start_node,initial_flags,initial_resources,initial_variables,settings_presentation\n'
+  )
   assert.throws(() => yarnFormatter.format(null), /Invalid model/)
   assert.throws(() => yarnFormatter.format({}), /Invalid model/)
 }
@@ -216,6 +269,7 @@ function testAllModelsAllFormatters() {
 testTwineFormatter()
 testInkFormatter()
 testCsvFormatter()
+testCsvFormatterRoundTripShape()
 testYarnFormatter()
 testYarnFormatterConditions()
 testYarnFormatterDynamicTextMinimal()

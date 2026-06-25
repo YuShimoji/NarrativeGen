@@ -35,8 +35,9 @@ import { setupThemeEventListeners } from './ui/theme.js'
 import { PlayRenderer } from './ui/play/PlayRenderer.js'
 
 // Utilities
-import { parseCsvLine } from './utils/file-utils.js'
+import { downloadFile, parseCsvLine } from './utils/file-utils.js'
 import { isCsvModelFileName, parseCsvModel } from './utils/model-csv-import.js'
+import { formatCsvModel } from './utils/model-csv-export.js'
 import Logger from './core/logger.js'
 import {
   getCurrentSession,
@@ -1345,6 +1346,17 @@ function downloadExportModel(filename) {
   URL.revokeObjectURL(url)
 }
 
+function getExportBaseName(modelName) {
+  const baseName = String(modelName || 'model').replace(/\.(json|csv|tsv)$/i, '')
+  return baseName || 'model'
+}
+
+function downloadCsvExportModel(filename) {
+  const exportModel = buildExportModel()
+  if (!exportModel) return
+  downloadFile(formatCsvModel(exportModel), filename, 'text/csv;charset=utf-8')
+}
+
 downloadBtn.addEventListener('click', () => {
   if (!appState.model) return
   downloadExportModel('model.json')
@@ -1709,7 +1721,7 @@ if (exportBtn) {
     }
     const currentName = getCurrentModelName() || 'story'
     // extension is added by manager, so just pass name
-    const filename = currentName.replace(/\.json$/i, '')
+    const filename = getExportBaseName(currentName)
     exportModalInstance.show(filename)
   })
 }
@@ -1946,7 +1958,13 @@ if (csvFileInput) {
 
 if (exportCsvBtn) {
   exportCsvBtn.addEventListener('click', () => {
-    csvManager.showCsvExportModal()
+    if (!appState.model) {
+      setStatus('Load a model before exporting CSV', 'warn')
+      return
+    }
+    const filename = `${getExportBaseName(getCurrentModelName())}.csv`
+    downloadCsvExportModel(filename)
+    setStatus(`CSV exported: ${filename}`, 'success')
   })
 }
 

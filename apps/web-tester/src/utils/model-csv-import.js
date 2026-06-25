@@ -97,6 +97,23 @@ function parseInitialState(firstDataRow, index) {
   }
 }
 
+function parseJsonObjectCell(rawValue, label) {
+  if (!rawValue) return null
+
+  let parsed
+  try {
+    parsed = JSON.parse(rawValue)
+  } catch (error) {
+    throw new Error(`${label} JSON parse failed: ${error.message}`)
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error(`${label} must be a JSON object`)
+  }
+
+  return parsed
+}
+
 function parseComparison(raw, label) {
   const match = String(raw).trim().match(/^([A-Za-z0-9_.-]+)\s*(>=|<=|==|!=|>|<|contains|!contains)\s*(.+)$/)
   if (!match) throw new Error(`Invalid ${label} expression "${raw}"`)
@@ -262,7 +279,7 @@ function getModelType(firstDataRow, index) {
 
 function buildModel({ firstDataRow, index, startNode, nodes }) {
   const initial = parseInitialState(firstDataRow, index)
-  return {
+  const model = {
     modelType: getModelType(firstDataRow, index),
     startNode,
     flags: initial.flags,
@@ -270,10 +287,21 @@ function buildModel({ firstDataRow, index, startNode, nodes }) {
     variables: initial.variables,
     nodes,
   }
+
+  const settingsPresentation = parseJsonObjectCell(
+    cell(firstDataRow, findIndex(index, ['settings_presentation', 'presentation_settings'])),
+    'settings_presentation'
+  )
+  if (settingsPresentation) {
+    model.settings = { presentation: settingsPresentation }
+  }
+
+  return model
 }
 
 function parseCompactRows(rows, index) {
   const idIdx = findIndex(index, ['id'])
+  const speakerIdx = findIndex(index, ['speaker'])
   const textIdx = findIndex(index, ['text'])
   const choicesIdx = findIndex(index, ['choices'])
   const startNodeIdx = findIndex(index, ['start_node', 'startnode'])
@@ -292,11 +320,15 @@ function parseCompactRows(rows, index) {
       startNode = cell(row, startNodeIdx) || nodeId
     }
 
-    nodes[nodeId] = {
+    const node = {
       id: nodeId,
       text: cell(row, textIdx),
       choices: parseChoicesJson(cell(row, choicesIdx), rowNumber),
     }
+    const speaker = cell(row, speakerIdx)
+    if (speaker) node.speaker = speaker
+
+    nodes[nodeId] = node
   })
 
   if (!firstDataRow || !startNode) throw new Error('CSV does not contain any node rows')
@@ -305,6 +337,7 @@ function parseCompactRows(rows, index) {
 
 function parseSplitRows(rows, index) {
   const nodeIdIdx = findIndex(index, ['node_id'])
+  const speakerIdx = findIndex(index, ['speaker'])
   const nodeTextIdx = findIndex(index, ['node_text'])
   const choiceIdIdx = findIndex(index, ['choice_id'])
   const choiceTextIdx = findIndex(index, ['choice_text'])
@@ -332,6 +365,9 @@ function parseSplitRows(rows, index) {
     if (!nodes[nodeId]) {
       nodes[nodeId] = { id: nodeId, text: '', choices: [] }
     }
+
+    const speaker = cell(row, speakerIdx)
+    if (speaker) nodes[nodeId].speaker = speaker
 
     const nodeText = cell(row, nodeTextIdx)
     if (nodeText) nodes[nodeId].text = nodeText
