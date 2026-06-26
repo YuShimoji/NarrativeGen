@@ -28,6 +28,14 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-26 Spreadsheet authoring sample fixture
+
+- **Work purpose**: add a small writer-facing CSV fixture that exercises the compact spreadsheet schema outside the larger vertical-slice sample.
+- **Effect**: `models/spreadsheets/authoring-sample.csv` now demonstrates first-row presentation settings, two speakers, multiline node prose, initial flags/resources/variables, a flag/resource-gated choice, effects that change flags/resources/variables, and three endings. The fixture stays on the existing canonical CSV header and JSON-in-cell choice shape.
+- **Play route**: import the CSV in Web Tester, then choose `Check the mailbox -> Pin the poster -> Invite Mara to the stage -> Publish the launch plan -> Open the doors` to reach `launch_end`. The gated publish choice depends on `poster_ready=true` and `proof>=2`.
+- **Validation owner**: `apps/web-tester/tests/e2e/authoring-sample-csv-roundtrip.spec.js` imports the fixture, exports CSV, re-imports the exported file, checks speaker/multiline/settings/condition/effect parity, and replays the launch route.
+- **Still deferred**: broader CSV/JSON parity, extra Web Tester sample-list UX for spreadsheet files, and legacy non-model CSV helpers remain separate slices.
+
 ### 2026-06-25 Terminal handover sync
 
 - **Restart authority**: after this handover-sync slice, the current branch is `main`, the active remote authority is `origin/main`, and a fresh terminal should start with `git fetch origin --prune && git pull --ff-only origin main`.

@@ -17,6 +17,7 @@ The current canonical playable artifact is:
 
 - JSON model: [`models/examples/vertical-slice.json`](models/examples/vertical-slice.json)
 - Writer-facing CSV companion: [`models/spreadsheets/vertical-slice.csv`](models/spreadsheets/vertical-slice.csv)
+- Spreadsheet authoring sample: [`models/spreadsheets/authoring-sample.csv`](models/spreadsheets/authoring-sample.csv)
 - Web Tester sample: select `vertical-slice.json`, then click `実行`
 
 Shortest local review:
