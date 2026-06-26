@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { test, expect } from '@playwright/test';
 
-const csvPath = path.resolve(process.cwd(), 'models/spreadsheets/authoring-sample.csv');
 const multilineFrontDeskText = 'room opens in twenty minutes.\n\nGoal: {theme}\nProof: {proof}';
 
 function normalizeNewlines(text) {
@@ -52,6 +51,23 @@ async function importCsv(page, filePath, expectedName) {
         state?.nodeCount === 8;
     },
     expectedName,
+    { timeout: 15000 }
+  );
+  await expect(page.locator('#errorPanel')).not.toHaveClass(/show/);
+}
+
+async function loadSampleCsv(page) {
+  await expect(page.locator('#sampleCsvBtn')).toBeVisible({ timeout: 10000 });
+  await page.click('#sampleCsvBtn');
+
+  await page.waitForFunction(
+    () => {
+      const state = window.__NARRATIVEGEN_DEVTOOLS__?.getState();
+      return state?.currentModelName === 'authoring-sample.csv' &&
+        state?.currentNodeId === 'front_desk' &&
+        state?.nodeCount === 8;
+    },
+    undefined,
     { timeout: 15000 }
   );
   await expect(page.locator('#errorPanel')).not.toHaveClass(/show/);
@@ -151,7 +167,7 @@ async function playLaunchRoute(page) {
 test.describe('Authoring sample CSV export roundtrip', () => {
   test('preserves speaker, multiline text, settings, and gated effects through export and re-import', async ({ page }, testInfo) => {
     await openPage(page);
-    await importCsv(page, csvPath, 'authoring-sample.csv');
+    await loadSampleCsv(page);
 
     expectAuthoringShape(await readAuthoringShape(page));
     await playLaunchRoute(page);

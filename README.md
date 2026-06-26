@@ -19,6 +19,7 @@ The current canonical playable artifact is:
 - Writer-facing CSV companion: [`models/spreadsheets/vertical-slice.csv`](models/spreadsheets/vertical-slice.csv)
 - Spreadsheet authoring sample: [`models/spreadsheets/authoring-sample.csv`](models/spreadsheets/authoring-sample.csv)
 - Web Tester sample: select `vertical-slice.json`, then click `実行`
+- Web Tester CSV sample: click `Sample CSV` to load `authoring-sample.csv`, then use `CSV` export/re-import for the spreadsheet roundtrip.
 
 Shortest local review:
 

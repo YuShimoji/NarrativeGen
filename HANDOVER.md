@@ -28,6 +28,14 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-26 Web Tester CSV sample access
+
+- **Work purpose**: make the writer-facing `authoring-sample.csv` discoverable from Web Tester without requiring a repo file search.
+- **Access decision**: adding a full CSV sample selector would create a new sample-management pattern, but a toolbar-level `Sample CSV` button is low-risk because it uses the existing `parseCsvModel()` / validation / session commit path and leaves the JSON sample selector unchanged.
+- **Writer path**: start Web Tester, click `Sample CSV`, play `Check the mailbox -> Pin the poster -> Invite Mara to the stage -> Publish the launch plan -> Open the doors`, then use the existing CSV export/import flow for roundtrip review.
+- **Validation owner**: `apps/web-tester/tests/e2e/authoring-sample-csv-roundtrip.spec.js` now starts from the visible `Sample CSV` access path before export/re-import and route replay.
+- **Still deferred**: a broader sample browser, CSV/JSON parity expansion, and non-model CSV helper cleanup remain separate slices.
+
 ### 2026-06-26 Spreadsheet authoring sample fixture
 
 - **Work purpose**: add a small writer-facing CSV fixture that exercises the compact spreadsheet schema outside the larger vertical-slice sample.

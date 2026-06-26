@@ -38,6 +38,7 @@ import { PlayRenderer } from './ui/play/PlayRenderer.js'
 import { downloadFile, parseCsv } from './utils/file-utils.js'
 import { isCsvModelFileName, parseCsvModel } from './utils/model-csv-import.js'
 import { formatCsvModel } from './utils/model-csv-export.js'
+import authoringSampleCsv from '../../../models/spreadsheets/authoring-sample.csv?raw'
 import Logger from './core/logger.js'
 import {
   getCurrentSession,
@@ -80,7 +81,7 @@ export function initializeApp({ appState, managers, keyBindingManager, exportMan
   const {
   startBtn, choicesContainer, stateView, statusText, modelSelect,
   fileInput, uploadBtn, dropZone, previewTopBtn, downloadTopBtn,
-  importCsvBtn, csvFileInput, exportCsvBtn, guiEditMode, guiEditBtn,
+  importCsvBtn, csvFileInput, sampleCsvBtn, exportCsvBtn, guiEditMode, guiEditBtn,
   nodeList, addNodeBtn, previewBtn, downloadBtn, saveGuiBtn, cancelGuiBtn,
   nodeSearchInput, clearSearchBtn, nodeFilterSelect, searchResultCount,
   storyView, errorPanel, errorList, csvPreviewModal, csvFileName,
@@ -762,6 +763,16 @@ async function importCsvFile(file) {
   const model = await loadCustomModel(file)
   validateLoadedModel(model)
   commitLoadedModel(model, file.name, `CSV ${file.name} 繧貞ｮ溯｡御ｸｭ`)
+  renderState()
+  renderChoices()
+  renderStory()
+  updateMermaidDiagramIfVisible()
+}
+
+function loadAuthoringSampleCsv() {
+  const model = parseCsvModel(authoringSampleCsv, 'authoring-sample.csv')
+  validateLoadedModel(model)
+  commitLoadedModel(model, 'authoring-sample.csv', 'CSV sample authoring-sample.csv loaded')
   renderState()
   renderChoices()
   renderStory()
@@ -1950,6 +1961,19 @@ if (csvFileInput) {
     const file = csvFileInput.files[0]
     if (!file) return
     showCsvPreview(file)
+  })
+}
+
+if (sampleCsvBtn) {
+  sampleCsvBtn.addEventListener('click', () => {
+    try {
+      loadAuthoringSampleCsv()
+    } catch (err) {
+      console.error(err)
+      clearSession()
+      stopAutoSave()
+      setStatus(`CSV sample load failed: ${err?.message ?? err}`, 'warn')
+    }
   })
 }
 

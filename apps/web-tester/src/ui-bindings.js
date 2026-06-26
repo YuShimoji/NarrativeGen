@@ -23,6 +23,7 @@ export function getUIElements() {
         downloadTopBtn: document.getElementById('downloadTopBtn'),
         importCsvBtn: document.getElementById('importCsvBtn'),
         csvFileInput: document.getElementById('csvFileInput'),
+        sampleCsvBtn: document.getElementById('sampleCsvBtn'),
         exportCsvBtn: document.getElementById('exportCsvBtn'),
         guiEditMode: document.getElementById('guiEditMode'),
         guiEditBtn: document.getElementById('editBtn'),
