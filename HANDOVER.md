@@ -34,8 +34,16 @@ NarrativeGen/
 - **Current shipped state**: playable vertical slice, AI mock adoption persistence, canonical CSV import/export, CSV fixture parity, multiline CSV text preservation, and legacy Web Tester `CsvManager` cleanup are all preserved in project history and documented in this file.
 - **Most recent pushed work before this sync**: `550aaac14ad8134be6f3c8186bff164e4388f67e` (`chore: consolidate web tester csv paths`). This sync entry only refreshes handover context so another terminal can resume without reconstructing thread state.
 - **Canonical CSV ownership**: model CSV import is `#csvFileInput` -> preview -> `parseCsvModel()`; direct CSV export and generic `CsvFormatter` both use `formatCsvModel()`. Non-model CSV report helpers remain intentionally separate.
-- **Known repo debt**: `origin/HEAD` may still point at `origin/open-ws/engine-skeleton-2025-09-02`; do not treat that as the active working branch. Stash entries from earlier work remain intentionally untouched.
-- **Next entry points**: `origin/HEAD` cleanup, focused CSV/JSON parity expansion, spreadsheet authoring fixture exploration, or SP-DTYARN continuation.
+- **Known repo debt**: superseded by the 2026-06-26 repo authority cleanup entry below; `origin/HEAD` now points at `origin/main`. Stash entries from earlier work remain intentionally untouched.
+- **Next entry points**: focused CSV/JSON parity expansion, spreadsheet authoring fixture exploration, or SP-DTYARN continuation.
+
+### 2026-06-26 Repo authority origin/HEAD cleanup
+
+- **Work purpose**: remove the recurring branch authority mismatch where GitHub/default remote HEAD pointed at `open-ws/engine-skeleton-2025-09-02` while active development used `main`.
+- **Action taken**: verified `main` was in sync with `origin/main`, confirmed GitHub default branch was still the old `open-ws` branch, changed the repository default branch to `main` with `gh repo edit --default-branch main`, then refreshed the local symbolic ref with `git remote set-head origin -a`.
+- **Final authority state**: `gh repo view --json defaultBranchRef` reports `main`, `git remote show origin` reports `HEAD branch: main`, and `git symbolic-ref refs/remotes/origin/HEAD` reports `refs/remotes/origin/main`.
+- **Preserved boundary**: no branches were deleted, no force-push/rebase/reset was used, stash entries were untouched, and no story/CSV/Web Tester files changed.
+- **Validation**: `npm run check:safety` and focused CSV roundtrip E2E passed after the authority change.
 
 ### 2026-06-25 Legacy CSV path cleanup
 
