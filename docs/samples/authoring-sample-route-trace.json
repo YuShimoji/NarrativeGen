@@ -1,0 +1,758 @@
+{
+  "fixturePath": "models/spreadsheets/authoring-sample.csv",
+  "model": {
+    "initialState": {
+      "flags": {
+        "has_invite": false,
+        "poster_ready": false
+      },
+      "resources": {
+        "energy": 2,
+        "proof": 0
+      },
+      "variables": {
+        "draft_status": "outline",
+        "theme": "neighborhood repair"
+      }
+    },
+    "modelType": "adventure-playthrough",
+    "nodeCount": 8,
+    "presentation": {
+      "defaultTransition": "append-scroll",
+      "paragraphDelay": 45,
+      "transitionDuration": 140
+    },
+    "startNode": "front_desk"
+  },
+  "roundtripPreservation": {
+    "multilineProsePreserved": true,
+    "pinPosterEffectsPreserved": true,
+    "publishConditionsPreserved": true,
+    "publishEffectsPreserved": true,
+    "settingsPresentationPreserved": true,
+    "speakerPreserved": true
+  },
+  "routeTracePath": "docs/samples/authoring-sample-route-trace.json",
+  "routes": [
+    {
+      "choiceIds": [
+        "check_mailbox",
+        "pin_poster",
+        "invite_mara",
+        "publish_manifesto",
+        "open_doors"
+      ],
+      "description": "Collects invite and poster proof before publishing the launch plan.",
+      "ending": {
+        "displayText": "Ending: the launch has witnesses. The proof route shows the room why neighborhood repair can begin tonight.",
+        "nodeId": "launch_end",
+        "rawText": "Ending: the launch has witnesses. The proof route shows the room why {theme} can begin tonight.",
+        "speaker": "Mara"
+      },
+      "finalState": {
+        "flags": {
+          "has_invite": true,
+          "poster_ready": true
+        },
+        "inventory": [],
+        "nodeId": "launch_end",
+        "resources": {
+          "energy": 1,
+          "proof": 3
+        },
+        "time": 5,
+        "variables": {
+          "draft_status": "ready",
+          "theme": "neighborhood repair"
+        }
+      },
+      "id": "launch-proof-route",
+      "name": "Launch proof route",
+      "nodeSequence": [
+        "front_desk",
+        "mailbox",
+        "poster",
+        "stage",
+        "launch",
+        "launch_end"
+      ],
+      "steps": [
+        {
+          "effectsApplied": [
+            {
+              "key": "has_invite",
+              "type": "setFlag",
+              "value": true
+            },
+            {
+              "delta": 1,
+              "key": "proof",
+              "type": "addResource"
+            }
+          ],
+          "fromNode": {
+            "displayText": "The community room opens in twenty minutes.\n\nGoal: neighborhood repair\nProof: 0",
+            "gatedChoices": [],
+            "nodeId": "front_desk",
+            "rawText": "The community room opens in twenty minutes.\n\nGoal: {theme}\nProof: {proof}",
+            "speaker": "Narrator",
+            "visibleChoices": [
+              {
+                "effects": [
+                  {
+                    "key": "has_invite",
+                    "type": "setFlag",
+                    "value": true
+                  },
+                  {
+                    "delta": 1,
+                    "key": "proof",
+                    "type": "addResource"
+                  }
+                ],
+                "id": "check_mailbox",
+                "target": "mailbox",
+                "text": "Check the mailbox"
+              },
+              {
+                "id": "skip_to_stage",
+                "target": "stage",
+                "text": "Skip to the stage"
+              }
+            ]
+          },
+          "selectedChoice": {
+            "effects": [
+              {
+                "key": "has_invite",
+                "type": "setFlag",
+                "value": true
+              },
+              {
+                "delta": 1,
+                "key": "proof",
+                "type": "addResource"
+              }
+            ],
+            "id": "check_mailbox",
+            "target": "mailbox",
+            "text": "Check the mailbox"
+          },
+          "stateChanges": {
+            "flags": {
+              "has_invite": {
+                "after": true,
+                "before": false
+              }
+            },
+            "resources": {
+              "proof": {
+                "after": 1,
+                "before": 0
+              }
+            },
+            "time": {
+              "after": 1,
+              "before": 0
+            }
+          },
+          "toNodeId": "mailbox"
+        },
+        {
+          "effectsApplied": [
+            {
+              "key": "poster_ready",
+              "type": "setFlag",
+              "value": true
+            },
+            {
+              "delta": 1,
+              "key": "proof",
+              "type": "addResource"
+            },
+            {
+              "key": "draft_status",
+              "type": "setVariable",
+              "value": "poster pinned"
+            }
+          ],
+          "fromNode": {
+            "displayText": "Mara has left a folded note: \"Bring one proof, then make the room believe the rest.\" Invite ready: true",
+            "gatedChoices": [],
+            "nodeId": "mailbox",
+            "rawText": "Mara has left a folded note: \"Bring one proof, then make the room believe the rest.\" Invite ready: {has_invite}",
+            "speaker": "Mara",
+            "visibleChoices": [
+              {
+                "effects": [
+                  {
+                    "key": "poster_ready",
+                    "type": "setFlag",
+                    "value": true
+                  },
+                  {
+                    "delta": 1,
+                    "key": "proof",
+                    "type": "addResource"
+                  },
+                  {
+                    "key": "draft_status",
+                    "type": "setVariable",
+                    "value": "poster pinned"
+                  }
+                ],
+                "id": "pin_poster",
+                "target": "poster",
+                "text": "Pin the poster"
+              },
+              {
+                "id": "return_to_stage",
+                "target": "stage",
+                "text": "Return to the stage"
+              }
+            ]
+          },
+          "selectedChoice": {
+            "effects": [
+              {
+                "key": "poster_ready",
+                "type": "setFlag",
+                "value": true
+              },
+              {
+                "delta": 1,
+                "key": "proof",
+                "type": "addResource"
+              },
+              {
+                "key": "draft_status",
+                "type": "setVariable",
+                "value": "poster pinned"
+              }
+            ],
+            "id": "pin_poster",
+            "target": "poster",
+            "text": "Pin the poster"
+          },
+          "stateChanges": {
+            "flags": {
+              "poster_ready": {
+                "after": true,
+                "before": false
+              }
+            },
+            "resources": {
+              "proof": {
+                "after": 2,
+                "before": 1
+              }
+            },
+            "time": {
+              "after": 2,
+              "before": 1
+            },
+            "variables": {
+              "draft_status": {
+                "after": "poster pinned",
+                "before": "outline"
+              }
+            }
+          },
+          "toNodeId": "poster"
+        },
+        {
+          "effectsApplied": [
+            {
+              "delta": -1,
+              "key": "energy",
+              "type": "addResource"
+            }
+          ],
+          "fromNode": {
+            "displayText": "The poster looks handmade, but it names the exact promise: neighborhood repair. The wall now has a first witness.",
+            "gatedChoices": [],
+            "nodeId": "poster",
+            "rawText": "The poster looks handmade, but it names the exact promise: {theme}. {?poster_ready:The wall now has a first witness.}",
+            "speaker": "Narrator",
+            "visibleChoices": [
+              {
+                "effects": [
+                  {
+                    "delta": -1,
+                    "key": "energy",
+                    "type": "addResource"
+                  }
+                ],
+                "id": "invite_mara",
+                "target": "stage",
+                "text": "Invite Mara to the stage"
+              }
+            ]
+          },
+          "selectedChoice": {
+            "effects": [
+              {
+                "delta": -1,
+                "key": "energy",
+                "type": "addResource"
+              }
+            ],
+            "id": "invite_mara",
+            "target": "stage",
+            "text": "Invite Mara to the stage"
+          },
+          "stateChanges": {
+            "resources": {
+              "energy": {
+                "after": 1,
+                "before": 2
+              }
+            },
+            "time": {
+              "after": 3,
+              "before": 2
+            }
+          },
+          "toNodeId": "stage"
+        },
+        {
+          "effectsApplied": [
+            {
+              "key": "draft_status",
+              "type": "setVariable",
+              "value": "ready"
+            }
+          ],
+          "fromNode": {
+            "displayText": "Mara checks the chairs, then the door. Proof: 2 | Energy: 1 The poster gives the room a first promise.",
+            "gatedChoices": [],
+            "nodeId": "stage",
+            "rawText": "Mara checks the chairs, then the door. Proof: {proof} | Energy: {energy} {?poster_ready:The poster gives the room a first promise.}",
+            "speaker": "Mara",
+            "visibleChoices": [
+              {
+                "conditions": [
+                  {
+                    "key": "poster_ready",
+                    "type": "flag",
+                    "value": true
+                  },
+                  {
+                    "key": "proof",
+                    "op": ">=",
+                    "type": "resource",
+                    "value": 2
+                  }
+                ],
+                "effects": [
+                  {
+                    "key": "draft_status",
+                    "type": "setVariable",
+                    "value": "ready"
+                  }
+                ],
+                "id": "publish_manifesto",
+                "target": "launch",
+                "text": "Publish the launch plan"
+              },
+              {
+                "id": "host_quiet_circle",
+                "target": "quiet_end",
+                "text": "Host a quiet circle"
+              },
+              {
+                "id": "draft_anyway",
+                "target": "draft_end",
+                "text": "Draft anyway"
+              }
+            ]
+          },
+          "selectedChoice": {
+            "conditions": [
+              {
+                "key": "poster_ready",
+                "type": "flag",
+                "value": true
+              },
+              {
+                "key": "proof",
+                "op": ">=",
+                "type": "resource",
+                "value": 2
+              }
+            ],
+            "effects": [
+              {
+                "key": "draft_status",
+                "type": "setVariable",
+                "value": "ready"
+              }
+            ],
+            "id": "publish_manifesto",
+            "target": "launch",
+            "text": "Publish the launch plan"
+          },
+          "stateChanges": {
+            "time": {
+              "after": 4,
+              "before": 3
+            },
+            "variables": {
+              "draft_status": {
+                "after": "ready",
+                "before": "poster pinned"
+              }
+            }
+          },
+          "toNodeId": "launch"
+        },
+        {
+          "effectsApplied": [
+            {
+              "delta": 1,
+              "key": "proof",
+              "type": "addResource"
+            }
+          ],
+          "fromNode": {
+            "displayText": "The room can feel the plan becoming public. Draft: ready",
+            "gatedChoices": [],
+            "nodeId": "launch",
+            "rawText": "The room can feel the plan becoming public. Draft: {draft_status}",
+            "speaker": "Narrator",
+            "visibleChoices": [
+              {
+                "effects": [
+                  {
+                    "delta": 1,
+                    "key": "proof",
+                    "type": "addResource"
+                  }
+                ],
+                "id": "open_doors",
+                "target": "launch_end",
+                "text": "Open the doors"
+              }
+            ]
+          },
+          "selectedChoice": {
+            "effects": [
+              {
+                "delta": 1,
+                "key": "proof",
+                "type": "addResource"
+              }
+            ],
+            "id": "open_doors",
+            "target": "launch_end",
+            "text": "Open the doors"
+          },
+          "stateChanges": {
+            "resources": {
+              "proof": {
+                "after": 3,
+                "before": 2
+              }
+            },
+            "time": {
+              "after": 5,
+              "before": 4
+            }
+          },
+          "toNodeId": "launch_end"
+        }
+      ]
+    },
+    {
+      "choiceIds": [
+        "skip_to_stage",
+        "host_quiet_circle"
+      ],
+      "description": "Skips proof collection and reaches the quiet ending.",
+      "ending": {
+        "displayText": "Ending: the circle is kind but quiet. People stay, yet the plan has less proof than it needs.",
+        "nodeId": "quiet_end",
+        "rawText": "Ending: the circle is kind but quiet. People stay, yet the plan has less proof than it needs.",
+        "speaker": "Mara"
+      },
+      "finalState": {
+        "flags": {
+          "has_invite": false,
+          "poster_ready": false
+        },
+        "inventory": [],
+        "nodeId": "quiet_end",
+        "resources": {
+          "energy": 2,
+          "proof": 0
+        },
+        "time": 2,
+        "variables": {
+          "draft_status": "outline",
+          "theme": "neighborhood repair"
+        }
+      },
+      "id": "quiet-circle-route",
+      "name": "Quiet circle route",
+      "nodeSequence": [
+        "front_desk",
+        "stage",
+        "quiet_end"
+      ],
+      "steps": [
+        {
+          "effectsApplied": [],
+          "fromNode": {
+            "displayText": "The community room opens in twenty minutes.\n\nGoal: neighborhood repair\nProof: 0",
+            "gatedChoices": [],
+            "nodeId": "front_desk",
+            "rawText": "The community room opens in twenty minutes.\n\nGoal: {theme}\nProof: {proof}",
+            "speaker": "Narrator",
+            "visibleChoices": [
+              {
+                "effects": [
+                  {
+                    "key": "has_invite",
+                    "type": "setFlag",
+                    "value": true
+                  },
+                  {
+                    "delta": 1,
+                    "key": "proof",
+                    "type": "addResource"
+                  }
+                ],
+                "id": "check_mailbox",
+                "target": "mailbox",
+                "text": "Check the mailbox"
+              },
+              {
+                "id": "skip_to_stage",
+                "target": "stage",
+                "text": "Skip to the stage"
+              }
+            ]
+          },
+          "selectedChoice": {
+            "id": "skip_to_stage",
+            "target": "stage",
+            "text": "Skip to the stage"
+          },
+          "stateChanges": {
+            "time": {
+              "after": 1,
+              "before": 0
+            }
+          },
+          "toNodeId": "stage"
+        },
+        {
+          "effectsApplied": [],
+          "fromNode": {
+            "displayText": "Mara checks the chairs, then the door. Proof: 0 | Energy: 2 ",
+            "gatedChoices": [
+              {
+                "conditions": [
+                  {
+                    "key": "poster_ready",
+                    "type": "flag",
+                    "value": true
+                  },
+                  {
+                    "key": "proof",
+                    "op": ">=",
+                    "type": "resource",
+                    "value": 2
+                  }
+                ],
+                "effects": [
+                  {
+                    "key": "draft_status",
+                    "type": "setVariable",
+                    "value": "ready"
+                  }
+                ],
+                "id": "publish_manifesto",
+                "target": "launch",
+                "text": "Publish the launch plan"
+              }
+            ],
+            "nodeId": "stage",
+            "rawText": "Mara checks the chairs, then the door. Proof: {proof} | Energy: {energy} {?poster_ready:The poster gives the room a first promise.}",
+            "speaker": "Mara",
+            "visibleChoices": [
+              {
+                "id": "host_quiet_circle",
+                "target": "quiet_end",
+                "text": "Host a quiet circle"
+              },
+              {
+                "id": "draft_anyway",
+                "target": "draft_end",
+                "text": "Draft anyway"
+              }
+            ]
+          },
+          "selectedChoice": {
+            "id": "host_quiet_circle",
+            "target": "quiet_end",
+            "text": "Host a quiet circle"
+          },
+          "stateChanges": {
+            "time": {
+              "after": 2,
+              "before": 1
+            }
+          },
+          "toNodeId": "quiet_end"
+        }
+      ]
+    },
+    {
+      "choiceIds": [
+        "skip_to_stage",
+        "draft_anyway"
+      ],
+      "description": "Skips proof collection and reaches the under-evidenced draft ending.",
+      "ending": {
+        "displayText": "Ending: the draft exists, but it still reads like an outline. The missing poster and proof are visible in the route.",
+        "nodeId": "draft_end",
+        "rawText": "Ending: the draft exists, but it still reads like an outline. The missing poster and proof are visible in the route.",
+        "speaker": "Narrator"
+      },
+      "finalState": {
+        "flags": {
+          "has_invite": false,
+          "poster_ready": false
+        },
+        "inventory": [],
+        "nodeId": "draft_end",
+        "resources": {
+          "energy": 2,
+          "proof": 0
+        },
+        "time": 2,
+        "variables": {
+          "draft_status": "outline",
+          "theme": "neighborhood repair"
+        }
+      },
+      "id": "draft-anyway-route",
+      "name": "Draft anyway route",
+      "nodeSequence": [
+        "front_desk",
+        "stage",
+        "draft_end"
+      ],
+      "steps": [
+        {
+          "effectsApplied": [],
+          "fromNode": {
+            "displayText": "The community room opens in twenty minutes.\n\nGoal: neighborhood repair\nProof: 0",
+            "gatedChoices": [],
+            "nodeId": "front_desk",
+            "rawText": "The community room opens in twenty minutes.\n\nGoal: {theme}\nProof: {proof}",
+            "speaker": "Narrator",
+            "visibleChoices": [
+              {
+                "effects": [
+                  {
+                    "key": "has_invite",
+                    "type": "setFlag",
+                    "value": true
+                  },
+                  {
+                    "delta": 1,
+                    "key": "proof",
+                    "type": "addResource"
+                  }
+                ],
+                "id": "check_mailbox",
+                "target": "mailbox",
+                "text": "Check the mailbox"
+              },
+              {
+                "id": "skip_to_stage",
+                "target": "stage",
+                "text": "Skip to the stage"
+              }
+            ]
+          },
+          "selectedChoice": {
+            "id": "skip_to_stage",
+            "target": "stage",
+            "text": "Skip to the stage"
+          },
+          "stateChanges": {
+            "time": {
+              "after": 1,
+              "before": 0
+            }
+          },
+          "toNodeId": "stage"
+        },
+        {
+          "effectsApplied": [],
+          "fromNode": {
+            "displayText": "Mara checks the chairs, then the door. Proof: 0 | Energy: 2 ",
+            "gatedChoices": [
+              {
+                "conditions": [
+                  {
+                    "key": "poster_ready",
+                    "type": "flag",
+                    "value": true
+                  },
+                  {
+                    "key": "proof",
+                    "op": ">=",
+                    "type": "resource",
+                    "value": 2
+                  }
+                ],
+                "effects": [
+                  {
+                    "key": "draft_status",
+                    "type": "setVariable",
+                    "value": "ready"
+                  }
+                ],
+                "id": "publish_manifesto",
+                "target": "launch",
+                "text": "Publish the launch plan"
+              }
+            ],
+            "nodeId": "stage",
+            "rawText": "Mara checks the chairs, then the door. Proof: {proof} | Energy: {energy} {?poster_ready:The poster gives the room a first promise.}",
+            "speaker": "Mara",
+            "visibleChoices": [
+              {
+                "id": "host_quiet_circle",
+                "target": "quiet_end",
+                "text": "Host a quiet circle"
+              },
+              {
+                "id": "draft_anyway",
+                "target": "draft_end",
+                "text": "Draft anyway"
+              }
+            ]
+          },
+          "selectedChoice": {
+            "id": "draft_anyway",
+            "target": "draft_end",
+            "text": "Draft anyway"
+          },
+          "stateChanges": {
+            "time": {
+              "after": 2,
+              "before": 1
+            }
+          },
+          "toNodeId": "draft_end"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 1
+}

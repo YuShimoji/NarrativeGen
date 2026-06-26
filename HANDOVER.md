@@ -28,6 +28,14 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-26 Authoring sample story readback
+
+- **Work purpose**: make the `Sample CSV` authoring fixture inspectable as a small story capsule instead of relying only on green E2E evidence.
+- **Readback artifacts**: `docs/samples/authoring-sample-readback.md` is the human-readable route readback; `docs/samples/authoring-sample-route-trace.json` is the deterministic machine trace behind it.
+- **What it proves**: `models/spreadsheets/authoring-sample.csv` loads through the canonical CSV parser, validates through the engine model loader, traverses three selected routes, records visible and gated choices, effects, state changes, node sequences, and endings, and confirms speaker, multiline prose, `settings.presentation`, publish conditions, and key effects survive CSV export/re-import.
+- **Regenerate or inspect**: run `npm run build:authoring-readback -w @narrativegen/web-tester` to refresh both artifacts, or `npm run check:authoring-readback -w @narrativegen/web-tester` to fail on drift. Open `docs/samples/authoring-sample-readback.md` for review; use the JSON trace when a future change needs exact route/state assertions.
+- **Still deferred**: a broader CSV sample browser, broader CSV/JSON parity, SP-DTYARN continuation, and narrative quality review remain separate slices. The current readback is automated evidence, not a human prose-quality acceptance.
+
 ### 2026-06-26 Terminal handover sync after CSV sample access
 
 - **Restart authority**: current branch is `main`, active remote authority is `origin/main`, and the latest pushed work before this sync is `b4c77c911f4fd96cb10527e934212c103580ac13` (`feat: surface spreadsheet authoring sample`). `HEAD...origin/main` was `0 0` before adding this docs-only sync entry.
