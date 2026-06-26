@@ -28,6 +28,14 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-26 Terminal handover sync after CSV sample access
+
+- **Restart authority**: current branch is `main`, active remote authority is `origin/main`, and the latest pushed work before this sync is `b4c77c911f4fd96cb10527e934212c103580ac13` (`feat: surface spreadsheet authoring sample`). `HEAD...origin/main` was `0 0` before adding this docs-only sync entry.
+- **Current shipped state**: Web Tester now exposes `authoring-sample.csv` through the toolbar `Sample CSV` button, using the existing CSV parser/validation/session commit path. The authoring sample fixture, CSV export/re-import roundtrip, vertical-slice CSV roundtrip, and AI adoption E2Es were green before this handover sync.
+- **Resume path**: from a fresh terminal run `git fetch origin --prune` then `git pull --ff-only origin main`; start Web Tester with `npm run dev`; click `Sample CSV`; play `Check the mailbox -> Pin the poster -> Invite Mara to the stage -> Publish the launch plan -> Open the doors`; use existing CSV export/import for roundtrip review.
+- **Preserved boundary**: no stash entries were applied, no branch authority settings were touched, and no schema/engine/AI/Unity/SaveManager/graph semantics changed. This entry only captures the terminal handoff context in project history.
+- **Next entry points**: a broader sample browser, focused CSV/JSON parity expansion, non-model CSV helper cleanup, or SP-DTYARN continuation remain separate slices.
+
 ### 2026-06-26 Web Tester CSV sample access
 
 - **Work purpose**: make the writer-facing `authoring-sample.csv` discoverable from Web Tester without requiring a repo file search.
