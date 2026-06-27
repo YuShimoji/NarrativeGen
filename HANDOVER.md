@@ -28,6 +28,13 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-28 Authoring sample logic audit
+
+- **Work purpose**: turn the generated authoring-sample readback into an internal story-logic/authoring adequacy audit before asking for any human narrative review.
+- **Audit artifact**: `docs/samples/authoring-sample-logic-audit.md` classifies the fixture as adequate, with warnings for non-consequential `energy`, the slightly shortcut-like `skip_to_stage` route, and the untraced optional `return_to_stage` partial-proof route.
+- **Conclusion**: no contradiction or unreachable required route was found, so no fixture fix was made. Human review is now useful only if bounded to fixture suitability and route clarity; broad prose-quality review remains optional and separate.
+- **Next possible axes**: a bounded fixture fix for `energy` causality and `skip_to_stage` wording, a bounded narrative quality review from the readback plus audit, SP-DTYARN continuation, or broader CSV/JSON parity.
+
 ### 2026-06-26 Authoring sample story readback
 
 - **Work purpose**: make the `Sample CSV` authoring fixture inspectable as a small story capsule instead of relying only on green E2E evidence.
