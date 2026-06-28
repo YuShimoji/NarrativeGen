@@ -45,7 +45,7 @@ Ending text:
 > Goal: neighborhood repair
 > Proof: 0
 
-   - Visible choices: `check_mailbox` "Check the mailbox" -> `mailbox`; `skip_to_stage` "Skip to the stage" -> `stage`
+   - Visible choices: `check_mailbox` "Check the mailbox" -> `mailbox`; `start_without_proof` "Start the meeting without proof" -> `stage`
    - Gated choices: none
    - Selected: `check_mailbox` "Check the mailbox" -> `mailbox`
    - Effects applied: set flag has_invite=true; add resource proof +1
@@ -75,9 +75,9 @@ Ending text:
 
 > Mara checks the chairs, then the door. Proof: 2 | Energy: 1 The poster gives the room a first promise.
 
-   - Visible choices: `publish_manifesto` "Publish the launch plan" -> `launch` [conditions: flag poster_ready=true; resource proof >= 2]; `host_quiet_circle` "Host a quiet circle" -> `quiet_end`; `draft_anyway` "Draft anyway" -> `draft_end`
+   - Visible choices: `publish_manifesto` "Publish the launch plan" -> `launch` [conditions: flag poster_ready=true; resource proof >= 2; resource energy >= 1]; `host_quiet_circle` "Host a quiet circle" -> `quiet_end`; `draft_anyway` "Draft anyway" -> `draft_end`
    - Gated choices: none
-   - Selected: `publish_manifesto` "Publish the launch plan" -> `launch` [conditions: flag poster_ready=true; resource proof >= 2]
+   - Selected: `publish_manifesto` "Publish the launch plan" -> `launch` [conditions: flag poster_ready=true; resource proof >= 2; resource energy >= 1]
    - Effects applied: set variable draft_status=ready
    - State changes: variables.draft_status: "poster pinned" -> "ready"; time: 3 -> 4
 
@@ -93,9 +93,9 @@ Ending text:
 
 ### Quiet circle route (`quiet-circle-route`)
 
-Skips proof collection and reaches the quiet ending.
+Starts the meeting without proof and reaches the quiet ending.
 
-- Choice IDs: `skip_to_stage` -> `host_quiet_circle`
+- Choice IDs: `start_without_proof` -> `host_quiet_circle`
 - Node sequence: `front_desk` -> `stage` -> `quiet_end`
 - Ending: `quiet_end` (Mara)
 
@@ -110,9 +110,9 @@ Ending text:
 > Goal: neighborhood repair
 > Proof: 0
 
-   - Visible choices: `check_mailbox` "Check the mailbox" -> `mailbox`; `skip_to_stage` "Skip to the stage" -> `stage`
+   - Visible choices: `check_mailbox` "Check the mailbox" -> `mailbox`; `start_without_proof` "Start the meeting without proof" -> `stage`
    - Gated choices: none
-   - Selected: `skip_to_stage` "Skip to the stage" -> `stage`
+   - Selected: `start_without_proof` "Start the meeting without proof" -> `stage`
    - Effects applied: none
    - State changes: time: 0 -> 1
 
@@ -121,16 +121,16 @@ Ending text:
 > Mara checks the chairs, then the door. Proof: 0 | Energy: 2
 
    - Visible choices: `host_quiet_circle` "Host a quiet circle" -> `quiet_end`; `draft_anyway` "Draft anyway" -> `draft_end`
-   - Gated choices: `publish_manifesto` "Publish the launch plan" -> `launch` [conditions: flag poster_ready=true; resource proof >= 2]
+   - Gated choices: `publish_manifesto` "Publish the launch plan" -> `launch` [conditions: flag poster_ready=true; resource proof >= 2; resource energy >= 1]
    - Selected: `host_quiet_circle` "Host a quiet circle" -> `quiet_end`
    - Effects applied: none
    - State changes: time: 1 -> 2
 
 ### Draft anyway route (`draft-anyway-route`)
 
-Skips proof collection and reaches the under-evidenced draft ending.
+Starts the meeting without proof and reaches the under-evidenced draft ending.
 
-- Choice IDs: `skip_to_stage` -> `draft_anyway`
+- Choice IDs: `start_without_proof` -> `draft_anyway`
 - Node sequence: `front_desk` -> `stage` -> `draft_end`
 - Ending: `draft_end` (Narrator)
 
@@ -145,9 +145,9 @@ Ending text:
 > Goal: neighborhood repair
 > Proof: 0
 
-   - Visible choices: `check_mailbox` "Check the mailbox" -> `mailbox`; `skip_to_stage` "Skip to the stage" -> `stage`
+   - Visible choices: `check_mailbox` "Check the mailbox" -> `mailbox`; `start_without_proof` "Start the meeting without proof" -> `stage`
    - Gated choices: none
-   - Selected: `skip_to_stage` "Skip to the stage" -> `stage`
+   - Selected: `start_without_proof` "Start the meeting without proof" -> `stage`
    - Effects applied: none
    - State changes: time: 0 -> 1
 
@@ -156,7 +156,52 @@ Ending text:
 > Mara checks the chairs, then the door. Proof: 0 | Energy: 2
 
    - Visible choices: `host_quiet_circle` "Host a quiet circle" -> `quiet_end`; `draft_anyway` "Draft anyway" -> `draft_end`
-   - Gated choices: `publish_manifesto` "Publish the launch plan" -> `launch` [conditions: flag poster_ready=true; resource proof >= 2]
+   - Gated choices: `publish_manifesto` "Publish the launch plan" -> `launch` [conditions: flag poster_ready=true; resource proof >= 2; resource energy >= 1]
    - Selected: `draft_anyway` "Draft anyway" -> `draft_end`
    - Effects applied: none
    - State changes: time: 1 -> 2
+
+### Partial proof return route (`partial-proof-return-route`)
+
+Collects the invite proof, returns before the poster is ready, and shows why publishing stays gated.
+
+- Choice IDs: `check_mailbox` -> `return_to_stage` -> `host_quiet_circle`
+- Node sequence: `front_desk` -> `mailbox` -> `stage` -> `quiet_end`
+- Ending: `quiet_end` (Mara)
+
+Ending text:
+
+> Ending: the circle is kind but quiet. People stay, yet the plan has less proof than it needs.
+
+1. `front_desk` (Narrator)
+
+> The community room opens in twenty minutes.
+>
+> Goal: neighborhood repair
+> Proof: 0
+
+   - Visible choices: `check_mailbox` "Check the mailbox" -> `mailbox`; `start_without_proof` "Start the meeting without proof" -> `stage`
+   - Gated choices: none
+   - Selected: `check_mailbox` "Check the mailbox" -> `mailbox`
+   - Effects applied: set flag has_invite=true; add resource proof +1
+   - State changes: flags.has_invite: false -> true; resources.proof: 0 -> 1; time: 0 -> 1
+
+2. `mailbox` (Mara)
+
+> Mara has left a folded note: "Bring one proof, then make the room believe the rest." Invite ready: true
+
+   - Visible choices: `pin_poster` "Pin the poster" -> `poster`; `return_to_stage` "Return to the stage" -> `stage`
+   - Gated choices: none
+   - Selected: `return_to_stage` "Return to the stage" -> `stage`
+   - Effects applied: none
+   - State changes: time: 1 -> 2
+
+3. `stage` (Mara)
+
+> Mara checks the chairs, then the door. Proof: 1 | Energy: 2
+
+   - Visible choices: `host_quiet_circle` "Host a quiet circle" -> `quiet_end`; `draft_anyway` "Draft anyway" -> `draft_end`
+   - Gated choices: `publish_manifesto` "Publish the launch plan" -> `launch` [conditions: flag poster_ready=true; resource proof >= 2; resource energy >= 1]
+   - Selected: `host_quiet_circle` "Host a quiet circle" -> `quiet_end`
+   - Effects applied: none
+   - State changes: time: 2 -> 3

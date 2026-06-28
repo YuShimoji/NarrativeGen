@@ -28,12 +28,13 @@ NarrativeGen/
 
 ## 現在の状態
 
-### 2026-06-28 Authoring sample logic audit
+### 2026-06-28 Authoring sample bounded fixture fix
 
-- **Work purpose**: turn the generated authoring-sample readback into an internal story-logic/authoring adequacy audit before asking for any human narrative review.
-- **Audit artifact**: `docs/samples/authoring-sample-logic-audit.md` classifies the fixture as adequate, with warnings for non-consequential `energy`, the slightly shortcut-like `skip_to_stage` route, and the untraced optional `return_to_stage` partial-proof route.
-- **Conclusion**: no contradiction or unreachable required route was found, so no fixture fix was made. Human review is now useful only if bounded to fixture suitability and route clarity; broad prose-quality review remains optional and separate.
-- **Next possible axes**: a bounded fixture fix for `energy` causality and `skip_to_stage` wording, a bounded narrative quality review from the readback plus audit, SP-DTYARN continuation, or broader CSV/JSON parity.
+- **Work purpose**: close the bounded warnings from `docs/samples/authoring-sample-logic-audit.md` without widening into schema, engine, UI, SaveManager, AI, Unity, graph, local LLM, or sample-browser work.
+- **Effect**: `models/spreadsheets/authoring-sample.csv` now makes `energy` consequential by requiring `energy >= 1` for `publish_manifesto`, replaces the shortcut-like `skip_to_stage` route with `start_without_proof`, and keeps the same compact success/failure fixture shape.
+- **Readback state**: `docs/samples/authoring-sample-readback.md` and `docs/samples/authoring-sample-route-trace.json` were regenerated with four selected routes, including `partial-proof-return-route` for `check_mailbox -> return_to_stage -> host_quiet_circle`.
+- **Audit conclusion**: the previous automated warnings for resource causality, shortcut feel, and untraced partial return are resolved. Human review is now useful only if bounded to fixture suitability, route clarity, and wording polish; broad prose-quality review remains optional and separate.
+- **Next possible axes**: bounded human narrative review from the readback plus audit, SP-DTYARN continuation, or broader CSV/JSON parity. No stash entries were applied.
 
 ### 2026-06-26 Authoring sample story readback
 

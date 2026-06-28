@@ -115,9 +115,9 @@
                 "text": "Check the mailbox"
               },
               {
-                "id": "skip_to_stage",
+                "id": "start_without_proof",
                 "target": "stage",
-                "text": "Skip to the stage"
+                "text": "Start the meeting without proof"
               }
             ]
           },
@@ -342,6 +342,12 @@
                     "op": ">=",
                     "type": "resource",
                     "value": 2
+                  },
+                  {
+                    "key": "energy",
+                    "op": ">=",
+                    "type": "resource",
+                    "value": 1
                   }
                 ],
                 "effects": [
@@ -379,6 +385,12 @@
                 "op": ">=",
                 "type": "resource",
                 "value": 2
+              },
+              {
+                "key": "energy",
+                "op": ">=",
+                "type": "resource",
+                "value": 1
               }
             ],
             "effects": [
@@ -465,10 +477,10 @@
     },
     {
       "choiceIds": [
-        "skip_to_stage",
+        "start_without_proof",
         "host_quiet_circle"
       ],
-      "description": "Skips proof collection and reaches the quiet ending.",
+      "description": "Starts the meeting without proof and reaches the quiet ending.",
       "ending": {
         "displayText": "Ending: the circle is kind but quiet. People stay, yet the plan has less proof than it needs.",
         "nodeId": "quiet_end",
@@ -527,16 +539,16 @@
                 "text": "Check the mailbox"
               },
               {
-                "id": "skip_to_stage",
+                "id": "start_without_proof",
                 "target": "stage",
-                "text": "Skip to the stage"
+                "text": "Start the meeting without proof"
               }
             ]
           },
           "selectedChoice": {
-            "id": "skip_to_stage",
+            "id": "start_without_proof",
             "target": "stage",
-            "text": "Skip to the stage"
+            "text": "Start the meeting without proof"
           },
           "stateChanges": {
             "time": {
@@ -563,6 +575,12 @@
                     "op": ">=",
                     "type": "resource",
                     "value": 2
+                  },
+                  {
+                    "key": "energy",
+                    "op": ">=",
+                    "type": "resource",
+                    "value": 1
                   }
                 ],
                 "effects": [
@@ -610,10 +628,10 @@
     },
     {
       "choiceIds": [
-        "skip_to_stage",
+        "start_without_proof",
         "draft_anyway"
       ],
-      "description": "Skips proof collection and reaches the under-evidenced draft ending.",
+      "description": "Starts the meeting without proof and reaches the under-evidenced draft ending.",
       "ending": {
         "displayText": "Ending: the draft exists, but it still reads like an outline. The missing poster and proof are visible in the route.",
         "nodeId": "draft_end",
@@ -672,16 +690,16 @@
                 "text": "Check the mailbox"
               },
               {
-                "id": "skip_to_stage",
+                "id": "start_without_proof",
                 "target": "stage",
-                "text": "Skip to the stage"
+                "text": "Start the meeting without proof"
               }
             ]
           },
           "selectedChoice": {
-            "id": "skip_to_stage",
+            "id": "start_without_proof",
             "target": "stage",
-            "text": "Skip to the stage"
+            "text": "Start the meeting without proof"
           },
           "stateChanges": {
             "time": {
@@ -708,6 +726,12 @@
                     "op": ">=",
                     "type": "resource",
                     "value": 2
+                  },
+                  {
+                    "key": "energy",
+                    "op": ">=",
+                    "type": "resource",
+                    "value": 1
                   }
                 ],
                 "effects": [
@@ -750,6 +774,245 @@
             }
           },
           "toNodeId": "draft_end"
+        }
+      ]
+    },
+    {
+      "choiceIds": [
+        "check_mailbox",
+        "return_to_stage",
+        "host_quiet_circle"
+      ],
+      "description": "Collects the invite proof, returns before the poster is ready, and shows why publishing stays gated.",
+      "ending": {
+        "displayText": "Ending: the circle is kind but quiet. People stay, yet the plan has less proof than it needs.",
+        "nodeId": "quiet_end",
+        "rawText": "Ending: the circle is kind but quiet. People stay, yet the plan has less proof than it needs.",
+        "speaker": "Mara"
+      },
+      "finalState": {
+        "flags": {
+          "has_invite": true,
+          "poster_ready": false
+        },
+        "inventory": [],
+        "nodeId": "quiet_end",
+        "resources": {
+          "energy": 2,
+          "proof": 1
+        },
+        "time": 3,
+        "variables": {
+          "draft_status": "outline",
+          "theme": "neighborhood repair"
+        }
+      },
+      "id": "partial-proof-return-route",
+      "name": "Partial proof return route",
+      "nodeSequence": [
+        "front_desk",
+        "mailbox",
+        "stage",
+        "quiet_end"
+      ],
+      "steps": [
+        {
+          "effectsApplied": [
+            {
+              "key": "has_invite",
+              "type": "setFlag",
+              "value": true
+            },
+            {
+              "delta": 1,
+              "key": "proof",
+              "type": "addResource"
+            }
+          ],
+          "fromNode": {
+            "displayText": "The community room opens in twenty minutes.\n\nGoal: neighborhood repair\nProof: 0",
+            "gatedChoices": [],
+            "nodeId": "front_desk",
+            "rawText": "The community room opens in twenty minutes.\n\nGoal: {theme}\nProof: {proof}",
+            "speaker": "Narrator",
+            "visibleChoices": [
+              {
+                "effects": [
+                  {
+                    "key": "has_invite",
+                    "type": "setFlag",
+                    "value": true
+                  },
+                  {
+                    "delta": 1,
+                    "key": "proof",
+                    "type": "addResource"
+                  }
+                ],
+                "id": "check_mailbox",
+                "target": "mailbox",
+                "text": "Check the mailbox"
+              },
+              {
+                "id": "start_without_proof",
+                "target": "stage",
+                "text": "Start the meeting without proof"
+              }
+            ]
+          },
+          "selectedChoice": {
+            "effects": [
+              {
+                "key": "has_invite",
+                "type": "setFlag",
+                "value": true
+              },
+              {
+                "delta": 1,
+                "key": "proof",
+                "type": "addResource"
+              }
+            ],
+            "id": "check_mailbox",
+            "target": "mailbox",
+            "text": "Check the mailbox"
+          },
+          "stateChanges": {
+            "flags": {
+              "has_invite": {
+                "after": true,
+                "before": false
+              }
+            },
+            "resources": {
+              "proof": {
+                "after": 1,
+                "before": 0
+              }
+            },
+            "time": {
+              "after": 1,
+              "before": 0
+            }
+          },
+          "toNodeId": "mailbox"
+        },
+        {
+          "effectsApplied": [],
+          "fromNode": {
+            "displayText": "Mara has left a folded note: \"Bring one proof, then make the room believe the rest.\" Invite ready: true",
+            "gatedChoices": [],
+            "nodeId": "mailbox",
+            "rawText": "Mara has left a folded note: \"Bring one proof, then make the room believe the rest.\" Invite ready: {has_invite}",
+            "speaker": "Mara",
+            "visibleChoices": [
+              {
+                "effects": [
+                  {
+                    "key": "poster_ready",
+                    "type": "setFlag",
+                    "value": true
+                  },
+                  {
+                    "delta": 1,
+                    "key": "proof",
+                    "type": "addResource"
+                  },
+                  {
+                    "key": "draft_status",
+                    "type": "setVariable",
+                    "value": "poster pinned"
+                  }
+                ],
+                "id": "pin_poster",
+                "target": "poster",
+                "text": "Pin the poster"
+              },
+              {
+                "id": "return_to_stage",
+                "target": "stage",
+                "text": "Return to the stage"
+              }
+            ]
+          },
+          "selectedChoice": {
+            "id": "return_to_stage",
+            "target": "stage",
+            "text": "Return to the stage"
+          },
+          "stateChanges": {
+            "time": {
+              "after": 2,
+              "before": 1
+            }
+          },
+          "toNodeId": "stage"
+        },
+        {
+          "effectsApplied": [],
+          "fromNode": {
+            "displayText": "Mara checks the chairs, then the door. Proof: 1 | Energy: 2 ",
+            "gatedChoices": [
+              {
+                "conditions": [
+                  {
+                    "key": "poster_ready",
+                    "type": "flag",
+                    "value": true
+                  },
+                  {
+                    "key": "proof",
+                    "op": ">=",
+                    "type": "resource",
+                    "value": 2
+                  },
+                  {
+                    "key": "energy",
+                    "op": ">=",
+                    "type": "resource",
+                    "value": 1
+                  }
+                ],
+                "effects": [
+                  {
+                    "key": "draft_status",
+                    "type": "setVariable",
+                    "value": "ready"
+                  }
+                ],
+                "id": "publish_manifesto",
+                "target": "launch",
+                "text": "Publish the launch plan"
+              }
+            ],
+            "nodeId": "stage",
+            "rawText": "Mara checks the chairs, then the door. Proof: {proof} | Energy: {energy} {?poster_ready:The poster gives the room a first promise.}",
+            "speaker": "Mara",
+            "visibleChoices": [
+              {
+                "id": "host_quiet_circle",
+                "target": "quiet_end",
+                "text": "Host a quiet circle"
+              },
+              {
+                "id": "draft_anyway",
+                "target": "draft_end",
+                "text": "Draft anyway"
+              }
+            ]
+          },
+          "selectedChoice": {
+            "id": "host_quiet_circle",
+            "target": "quiet_end",
+            "text": "Host a quiet circle"
+          },
+          "stateChanges": {
+            "time": {
+              "after": 3,
+              "before": 2
+            }
+          },
+          "toNodeId": "quiet_end"
         }
       ]
     }

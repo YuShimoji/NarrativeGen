@@ -126,6 +126,7 @@ function expectAuthoringShape(shape) {
   expect(shape.publishConditions).toEqual([
     { type: 'flag', key: 'poster_ready', value: true },
     { type: 'resource', key: 'proof', op: '>=', value: 2 },
+    { type: 'resource', key: 'energy', op: '>=', value: 1 },
   ]);
   expect(shape.publishEffects).toEqual([
     { type: 'setVariable', key: 'draft_status', value: 'ready' },

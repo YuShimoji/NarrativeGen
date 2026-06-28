@@ -29,14 +29,20 @@ const routes = [
   {
     id: 'quiet-circle-route',
     name: 'Quiet circle route',
-    description: 'Skips proof collection and reaches the quiet ending.',
-    choiceIds: ['skip_to_stage', 'host_quiet_circle'],
+    description: 'Starts the meeting without proof and reaches the quiet ending.',
+    choiceIds: ['start_without_proof', 'host_quiet_circle'],
   },
   {
     id: 'draft-anyway-route',
     name: 'Draft anyway route',
-    description: 'Skips proof collection and reaches the under-evidenced draft ending.',
-    choiceIds: ['skip_to_stage', 'draft_anyway'],
+    description: 'Starts the meeting without proof and reaches the under-evidenced draft ending.',
+    choiceIds: ['start_without_proof', 'draft_anyway'],
+  },
+  {
+    id: 'partial-proof-return-route',
+    name: 'Partial proof return route',
+    description: 'Collects the invite proof, returns before the poster is ready, and shows why publishing stays gated.',
+    choiceIds: ['check_mailbox', 'return_to_stage', 'host_quiet_circle'],
   },
 ]
 
