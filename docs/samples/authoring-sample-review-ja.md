@@ -1,5 +1,7 @@
 # Authoring Sample Japanese Human Review Brief
 
+この文書が authoring sample の primary human review surface です。分岐マップ、登場要素レジストリ、状態変数レジストリ、場所 / 空間関係、bounded review guide を含みます。詳細な route trace が必要な場合だけ `docs/samples/authoring-sample-readback.md` を開いてください。
+
 この文書は `models/spreadsheets/authoring-sample.csv` を人間が確認するための日本語レビュー面です。英語の readback と route trace を読む前に、物語として何が起きているか、何を見ればよいかを掴むための橋渡しとして使います。これは本番用の日本語訳でも、最終的な物語承認でもありません。
 
 ## 物語の概要
@@ -131,6 +133,10 @@ flowchart TD
 
 今回の不足は authoring sample 固有でもありますが、今後の story sample review surface でも再発しやすい構造的な不足です。新しいサンプルを人間レビューに出す前には、少なくとも次の要素を揃えると、route trace の逆変換になりにくくなります。
 
+- primary review surface
+- detailed trace
+- machine trace
+- audit note
 - story brief
 - route overview
 - entity / item registry

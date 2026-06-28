@@ -1,5 +1,7 @@
 # Authoring Sample Story Readback
 
+> Role: this file is the detailed route trace / technical readback. For human narrative review, start with `docs/samples/authoring-sample-review-ja.md`; it contains the branch map, entity registry, state-variable registry, place/spatial relations, and bounded review guide.
+
 ## Story Brief
 
 This fixture is a small Mara-centered community-room story about trying to make a neighborhood repair plan credible before a meeting begins. The player can gather an invite note, pin a poster, bring Mara to the stage, or begin without enough proof. The main pressure is whether the plan has enough visible evidence, remaining energy, and public readiness to justify publishing it. Player choices change the invite flag, poster readiness, proof count, energy count, and draft status before the final branch. The endings distinguish a witnessed launch, a kind but under-supported quiet circle, and a draft that still reads like an outline.

@@ -28,6 +28,14 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-28 Authoring sample review entrypoint consolidation
+
+- **Work purpose**: remove the artifact-identity trap where a user naturally opens `docs/samples/authoring-sample-readback.md` and misses the visual review pack in `docs/samples/authoring-sample-review-ja.md`.
+- **Primary opening order**: start with `docs/samples/authoring-sample-review-ja.md` for human review, then use `docs/samples/authoring-sample-readback.md` for detailed technical route trace, `docs/samples/authoring-sample-route-trace.json` for machine trace, and `docs/samples/authoring-sample-logic-audit.md` for audit history.
+- **Effect**: README, HANDOVER, and the generated readback now distinguish the primary human review surface from the technical readback. `authoring-sample-review-ja.md` also declares itself as the primary human review surface.
+- **Pattern note**: future samples should declare four roles explicitly: primary review surface, detailed trace, machine trace, and audit note. This keeps human review from defaulting to route-log archaeology.
+- **Next possible axes**: bounded human narrative review, small wording polish if the review pack exposes rough fixture language, SP-DTYARN continuation, or broader CSV/JSON parity. No stash entries were applied.
+
 ### 2026-06-28 Authoring sample visual review pack
 
 - **Work purpose**: strengthen the authoring sample review surface beyond prose and bullet lists, so branch structure, appearing elements, state variables, and source-backed place relations are visible at a glance.
@@ -65,9 +73,9 @@ NarrativeGen/
 ### 2026-06-26 Authoring sample story readback
 
 - **Work purpose**: make the `Sample CSV` authoring fixture inspectable as a small story capsule instead of relying only on green E2E evidence.
-- **Readback artifacts**: `docs/samples/authoring-sample-readback.md` is the human-readable route readback; `docs/samples/authoring-sample-route-trace.json` is the deterministic machine trace behind it.
+- **Readback artifacts**: `docs/samples/authoring-sample-review-ja.md` is the current human review entrypoint; `docs/samples/authoring-sample-readback.md` is the detailed route readback; `docs/samples/authoring-sample-route-trace.json` is the deterministic machine trace behind it.
 - **What it proves**: `models/spreadsheets/authoring-sample.csv` loads through the canonical CSV parser, validates through the engine model loader, traverses three selected routes, records visible and gated choices, effects, state changes, node sequences, and endings, and confirms speaker, multiline prose, `settings.presentation`, publish conditions, and key effects survive CSV export/re-import.
-- **Regenerate or inspect**: run `npm run build:authoring-readback -w @narrativegen/web-tester` to refresh both artifacts, or `npm run check:authoring-readback -w @narrativegen/web-tester` to fail on drift. Open `docs/samples/authoring-sample-readback.md` for review; use the JSON trace when a future change needs exact route/state assertions.
+- **Regenerate or inspect**: run `npm run build:authoring-readback -w @narrativegen/web-tester` to refresh both generated trace artifacts, or `npm run check:authoring-readback -w @narrativegen/web-tester` to fail on drift. Open `docs/samples/authoring-sample-review-ja.md` for human review first; use the readback and JSON trace when a future change needs exact route/state assertions.
 - **Still deferred**: a broader CSV sample browser, broader CSV/JSON parity, SP-DTYARN continuation, and narrative quality review remain separate slices. The current readback is automated evidence, not a human prose-quality acceptance.
 
 ### 2026-06-26 Terminal handover sync after CSV sample access

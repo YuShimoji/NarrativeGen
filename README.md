@@ -18,9 +18,14 @@ The current canonical playable artifact is:
 - JSON model: [`models/examples/vertical-slice.json`](models/examples/vertical-slice.json)
 - Writer-facing CSV companion: [`models/spreadsheets/vertical-slice.csv`](models/spreadsheets/vertical-slice.csv)
 - Spreadsheet authoring sample: [`models/spreadsheets/authoring-sample.csv`](models/spreadsheets/authoring-sample.csv)
-- Authoring sample readback: [`docs/samples/authoring-sample-readback.md`](docs/samples/authoring-sample-readback.md)
+- Authoring sample human review surface: [`docs/samples/authoring-sample-review-ja.md`](docs/samples/authoring-sample-review-ja.md)
+- Authoring sample detailed technical readback: [`docs/samples/authoring-sample-readback.md`](docs/samples/authoring-sample-readback.md)
+- Authoring sample machine route trace: [`docs/samples/authoring-sample-route-trace.json`](docs/samples/authoring-sample-route-trace.json)
+- Authoring sample logic audit: [`docs/samples/authoring-sample-logic-audit.md`](docs/samples/authoring-sample-logic-audit.md)
 - Web Tester sample: select `vertical-slice.json`, then click `実行`
 - Web Tester CSV sample: click `Sample CSV` to load `authoring-sample.csv`, then use `CSV` export/re-import for the spreadsheet roundtrip.
+
+For human review of the authoring sample, open the Japanese review surface first. Use the detailed readback for exact route steps, the JSON trace for machine-readable state, and the logic audit for audit history.
 
 Shortest local review:
 
