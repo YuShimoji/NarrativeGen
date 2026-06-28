@@ -28,6 +28,15 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-28 Authoring sample visual review pack
+
+- **Work purpose**: strengthen the authoring sample review surface beyond prose and bullet lists, so branch structure, appearing elements, state variables, and source-backed place relations are visible at a glance.
+- **Artifact strategy**: kept `docs/samples/authoring-sample-review-ja.md` as the core review surface and expanded it in place, rather than adding more sidecar files, because this preserves the existing Japanese entry point and avoids review-pack fragmentation.
+- **Effect**: the brief now includes a Mermaid branch map, entity registry, state-variable registry, place/relation diagram, place relation table, and a short review-pack pattern note for future samples.
+- **Map decision**: no full geographic map was created. The source supports community room, mailbox, wall/poster, stage, and door as places or spatial anchors, but does not support exact distance, direction, or containment for every relation; the artifact therefore uses a grounded relation diagram/table instead of inventing geography.
+- **Pattern judgment**: this is partly an authoring-sample-local fix, but the underlying gap is systemic for future sample review surfaces. Future review packs should include story brief, route overview, entity/item registry, state-variable registry, place/relation registry, and optional visual branch map.
+- **Next possible axes**: bounded human narrative review, small wording polish if the review pack exposes rough fixture language, SP-DTYARN continuation, or broader CSV/JSON parity. No stash entries were applied.
+
 ### 2026-06-28 Authoring sample Japanese review brief
 
 - **Work purpose**: add a Japanese bounded human-review surface so the authoring sample can be inspected without machine-translation decoding or reverse-engineering model fields first.
