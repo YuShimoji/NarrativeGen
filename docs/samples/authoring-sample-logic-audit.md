@@ -2,6 +2,10 @@
 
 Scope: internal agent audit of `models/spreadsheets/authoring-sample.csv` as a compact writer-facing fixture, using the generated readback and route trace. This does not accept prose quality for production use and does not request user narrative review.
 
+## Readback Clarity Note
+
+The fixture logic remains adequate, but the first generated readback exposed model structure before story meaning. `docs/samples/authoring-sample-readback.md` now opens with a Story Brief, human state/actor explanations, and route overview before the detailed trace and technical capsule, so future review can start from narrative meaning rather than reverse-engineering route logs.
+
 ## Inputs Inspected
 
 - `models/spreadsheets/authoring-sample.csv`

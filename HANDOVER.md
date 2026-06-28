@@ -28,6 +28,15 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-28 Authoring sample semantic readback clarity
+
+- **User observation**: the readback was syntactically interpretable but semantically hard to read; the opening Model Capsule made the artifact feel like decoded structure rather than a coherent story specimen.
+- **Work purpose**: make `docs/samples/authoring-sample-readback.md` human-readable before model-readable, without changing CSV columns, engine semantics, Web Tester UI, fixture routes, SaveManager, AI, Unity, graph, local LLM, or sample-browser scope.
+- **Effect**: the generated readback now opens with a Story Brief, a "What Appears / What Changes" section, route overview, and authoring-semantics explanation before the detailed deterministic route trace.
+- **Technical state**: `apps/web-tester/scripts/build-authoring-sample-readback.mjs` owns the new Markdown order; `docs/samples/authoring-sample-route-trace.json` did not change because route execution data stayed stable.
+- **Review position**: bounded human narrative review is now more useful because the artifact first explains who appears, what changes, and why each route matters. Broad prose-quality review remains optional and separate.
+- **Next possible axes**: bounded human narrative review, small wording polish if the readback still exposes awkward fixture prose, SP-DTYARN continuation, or broader CSV/JSON parity. No stash entries were applied.
+
 ### 2026-06-28 Authoring sample bounded fixture fix
 
 - **Work purpose**: close the bounded warnings from `docs/samples/authoring-sample-logic-audit.md` without widening into schema, engine, UI, SaveManager, AI, Unity, graph, local LLM, or sample-browser work.

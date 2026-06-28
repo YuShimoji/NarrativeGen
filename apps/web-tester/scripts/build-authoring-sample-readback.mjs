@@ -309,37 +309,66 @@ function checkLine(name, passed) {
   return `- ${name}: ${passed ? 'pass' : 'fail'}`
 }
 
+function routeOverview(route) {
+  const overview = {
+    'launch-proof-route':
+      'The player gathers the invite note, pins the poster, spends energy to bring Mara on stage, and can publish because proof, poster readiness, and energy all satisfy the gate. This route demonstrates the intended success path.',
+    'quiet-circle-route':
+      'The player starts the meeting without proof and chooses a quiet circle. This route demonstrates that the story can continue warmly while the publish choice remains hidden.',
+    'draft-anyway-route':
+      'The player starts without proof and creates an under-evidenced draft. This route demonstrates a distinct low-proof ending from the same stage pressure.',
+    'partial-proof-return-route':
+      'The player checks the mailbox, returns before pinning the poster, and still cannot publish. This route demonstrates that partial proof is not enough when poster readiness is missing.',
+  }
+
+  return overview[route.id] ?? route.description
+}
+
 function renderMarkdown(trace) {
   const lines = [
     '# Authoring Sample Story Readback',
     '',
-    `Fixture: \`${trace.fixturePath}\``,
-    `Route trace JSON: \`${trace.routeTracePath}\``,
-    `Generator: \`npm run build:authoring-readback -w @narrativegen/web-tester\``,
-    `Check: \`npm run check:authoring-readback -w @narrativegen/web-tester\``,
+    '## Story Brief',
     '',
-    '## Model Capsule',
+    'This fixture is a small Mara-centered community-room story about trying to make a neighborhood repair plan credible before a meeting begins. The player can gather an invite note, pin a poster, bring Mara to the stage, or begin without enough proof. The main pressure is whether the plan has enough visible evidence, remaining energy, and public readiness to justify publishing it. Player choices change the invite flag, poster readiness, proof count, energy count, and draft status before the final branch. The endings distinguish a witnessed launch, a kind but under-supported quiet circle, and a draft that still reads like an outline.',
     '',
-    `- Model type: \`${trace.model.modelType}\``,
-    `- Start node: \`${trace.model.startNode}\``,
-    `- Node count: ${trace.model.nodeCount}`,
-    `- Initial flags: \`${JSON.stringify(trace.model.initialState.flags)}\``,
-    `- Initial resources: \`${JSON.stringify(trace.model.initialState.resources)}\``,
-    `- Initial variables: \`${JSON.stringify(trace.model.initialState.variables)}\``,
-    `- Presentation settings: \`${JSON.stringify(trace.model.presentation)}\``,
+    'Reader note: this artifact is a story/readback bridge for understanding the CSV fixture. It is not final prose acceptance, and the detailed trace exists to make the fixture inspectable after the story meaning is clear.',
     '',
-    '## CSV Roundtrip Preservation',
+    '## What Appears / What Changes',
     '',
-    checkLine('speaker fields survive export/re-import', trace.roundtripPreservation.speakerPreserved),
-    checkLine('multiline front_desk prose survives export/re-import', trace.roundtripPreservation.multilineProsePreserved),
-    checkLine('settings.presentation survives export/re-import', trace.roundtripPreservation.settingsPresentationPreserved),
-    checkLine('publish_manifesto conditions survive export/re-import', trace.roundtripPreservation.publishConditionsPreserved),
-    checkLine('publish_manifesto effects survive export/re-import', trace.roundtripPreservation.publishEffectsPreserved),
-    checkLine('pin_poster effects survive export/re-import', trace.roundtripPreservation.pinPosterEffectsPreserved),
+    '- Main actor: Mara, framed by a narrator in a community room just before a neighborhood repair meeting.',
+    '- Important objects and concepts: the mailbox note, the invite, the handmade poster, the stage, the launch plan, and public proof that the plan is ready.',
+    '- `has_invite`: whether the player found Mara\'s note and has a reason to bring the meeting forward.',
+    '- `poster_ready`: whether the visible poster has been pinned, making the plan concrete for the room.',
+    '- `proof`: how much evidence or public support the player has gathered. Publishing requires at least 2 proof before the final launch step adds one more.',
+    '- `energy`: the remaining effort available to bring Mara on stage. Publishing also requires at least 1 energy, so the resource is consequential rather than decorative.',
+    '- `draft_status`: the plan\'s authoring state, moving from `outline` to `poster pinned` to `ready` on the full proof route.',
     '',
-    '## Routes',
+    '## Route Overview',
     '',
   ]
+
+  for (const route of trace.routes) {
+    lines.push(`- ${route.name}: ${routeOverview(route)}`)
+  }
+
+  lines.push(
+    '',
+    '## Authoring Semantics Shown By This CSV',
+    '',
+    '- Speaker fields show who is speaking (`Narrator` and `Mara`) and survive export/re-import.',
+    '- Multiline prose appears in the opening node, so paragraph breaks are part of the fixture rather than a separate prose-only case.',
+    '- Initial values establish the story state before any choice: no invite, no poster, zero proof, two energy, and an outline draft.',
+    '- Effects show how choices change flags, resources, and variables: checking the mailbox sets `has_invite`, pinning the poster sets `poster_ready`, and later choices update proof, energy, and `draft_status`.',
+    '- Condition-gated choices show why publishing is not always available: `publish_manifesto` needs `poster_ready=true`, `proof >= 2`, and `energy >= 1`.',
+    '- Multiple endings show that the same compact CSV can express success, soft failure, and under-evidenced draft outcomes.',
+    '- Export/re-import preservation proves the spreadsheet form keeps the same speakers, multiline text, settings, conditions, and effects.',
+    '',
+    '## Detailed Route Trace',
+    '',
+    'This section renders the deterministic route trace. Use it after the brief and overview when you need exact choices, visible/gated options, effects, and state changes.',
+    ''
+  )
 
   for (const route of trace.routes) {
     lines.push(
@@ -372,6 +401,32 @@ function renderMarkdown(trace) {
       )
     })
   }
+
+  lines.push(
+    '## Preservation / Roundtrip Notes',
+    '',
+    checkLine('speaker fields survive export/re-import', trace.roundtripPreservation.speakerPreserved),
+    checkLine('multiline front_desk prose survives export/re-import', trace.roundtripPreservation.multilineProsePreserved),
+    checkLine('settings.presentation survives export/re-import', trace.roundtripPreservation.settingsPresentationPreserved),
+    checkLine('publish_manifesto conditions survive export/re-import', trace.roundtripPreservation.publishConditionsPreserved),
+    checkLine('publish_manifesto effects survive export/re-import', trace.roundtripPreservation.publishEffectsPreserved),
+    checkLine('pin_poster effects survive export/re-import', trace.roundtripPreservation.pinPosterEffectsPreserved),
+    '',
+    '## Model Capsule / Technical Appendix',
+    '',
+    `- Fixture: \`${trace.fixturePath}\``,
+    `- Route trace JSON: \`${trace.routeTracePath}\``,
+    `- Generator: \`npm run build:authoring-readback -w @narrativegen/web-tester\``,
+    `- Check: \`npm run check:authoring-readback -w @narrativegen/web-tester\``,
+    `- Model type: \`${trace.model.modelType}\``,
+    `- Start node: \`${trace.model.startNode}\``,
+    `- Node count: ${trace.model.nodeCount}`,
+    `- Initial flags: \`${JSON.stringify(trace.model.initialState.flags)}\``,
+    `- Initial resources: \`${JSON.stringify(trace.model.initialState.resources)}\``,
+    `- Initial variables: \`${JSON.stringify(trace.model.initialState.variables)}\``,
+    `- Presentation settings: \`${JSON.stringify(trace.model.presentation)}\``,
+    ''
+  )
 
   return `${lines.join('\n').replace(/\n+$/u, '')}\n`
 }
