@@ -28,14 +28,19 @@ export interface AIConfig {
 }
 
 export class MockAIProvider implements AIProvider {
-  async generateNextNode(_context: StoryContext): Promise<string> {
-    // Return a simple continuation
-    const samples = [
-      '次のシーンへ進みます。',
-      '物語が続きます。',
-      '新しい展開が始まります。'
-    ]
-    return samples[Math.floor(Math.random() * samples.length)]
+  async generateNextNode(context: StoryContext): Promise<string> {
+    const contextText = [
+      ...context.previousNodes.map((node) => node.text),
+      context.currentNodeText,
+      context.choiceText ?? '',
+    ].join('\n')
+    const lead = extractLead(contextText)
+
+    return [
+      `Mock continuation: ${lead} stops being a loose note and becomes a reachable clue.`,
+      'A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path.',
+      'It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.',
+    ].join(' ')
   }
 
   async paraphrase(text: string, _options?: ParaphraseOptions): Promise<string[]> {
@@ -47,6 +52,17 @@ export class MockAIProvider implements AIProvider {
     }
     return variants
   }
+}
+
+function extractLead(text: string): string {
+  const leadMatches = [...text.matchAll(/Lead:\s*([^\n]+)/gi)]
+  const leadLine = leadMatches.at(-1)?.[1]?.trim()
+  if (leadLine) return leadLine
+
+  const quoted = text.match(/["“]([^"”]{4,80})["”]/)?.[1]?.trim()
+  if (quoted) return quoted
+
+  return 'the clue'
 }
 
 export function createAIProvider(config: AIConfig): AIProvider {
@@ -202,4 +218,3 @@ ${text}
 言い換えバリエーション：`
   }
 }
-

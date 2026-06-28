@@ -1,0 +1,552 @@
+{
+  "artifacts": {
+    "readbackPath": "docs/samples/generated-specimen-readback.md",
+    "reviewPath": "docs/samples/generated-specimen-review-ja.md",
+    "routeTracePath": "docs/samples/generated-specimen-route-trace.json",
+    "specimenModelPath": "docs/samples/generated-specimen-model.json"
+  },
+  "assessment": {
+    "defer": [
+      "OpenAI provider, local LLM, schema expansion, and Web Tester redesign"
+    ],
+    "fix": [
+      "next bounded slice can make generator output structured enough to propose a choice/effect pair"
+    ],
+    "pass": [
+      "mock generator output is serialized as a concrete node",
+      "generated node is reachable from the existing drafting route",
+      "review route reaches the existing proof ending"
+    ],
+    "warn": [
+      "mock prose remains formulaic",
+      "choice and effect glue is supplied by the specimen builder rather than the provider"
+    ]
+  },
+  "generatedNode": {
+    "choices": [
+      {
+        "effects": [
+          {
+            "delta": 2,
+            "key": "evidence",
+            "type": "addResource"
+          }
+        ],
+        "id": "connect_generated_specimen_archive",
+        "target": "archive",
+        "text": "Connect the generated clue to the archive"
+      }
+    ],
+    "id": "generated_specimen_continuation",
+    "text": "Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it."
+  },
+  "generatorPath": {
+    "context": {
+      "choiceText": "Adopt continuation into the graph",
+      "currentNodeText": "The scene is still thin. You can either accept a mock AI continuation into the graph or publish a fragment.\n\nDraft: unwritten\n\nLead: the clocktower bell",
+      "previousNodes": [
+        {
+          "id": "desk",
+          "text": "Midnight is close. Your editor needs a playable short story, not another planning board.\n\nFocus: 2 | Evidence: 0\nLead: the missing bell"
+        },
+        {
+          "id": "notebook",
+          "text": "The notebook has one usable hook: the clocktower bell. A margin note says Mira heard it first.\n\nThe story finally has a spine."
+        }
+      ]
+    },
+    "entrypoint": "createAIProvider({ provider: \"mock\" }).generateNextNode",
+    "inputRoute": [
+      "open_notebook",
+      "draft_scene"
+    ],
+    "provider": "mock",
+    "sourceModelPath": "models/examples/vertical-slice.json",
+    "sourceNodeId": "drafting"
+  },
+  "modelDelta": {
+    "addedChoiceIds": [
+      "adopt_generated_specimen",
+      "connect_generated_specimen_archive"
+    ],
+    "addedNodeIds": [
+      "generated_specimen_continuation"
+    ],
+    "sourceNodeCount": 12,
+    "specimenNodeCount": 13
+  },
+  "route": {
+    "choiceIds": [
+      "open_notebook",
+      "draft_scene",
+      "adopt_generated_specimen",
+      "connect_generated_specimen_archive",
+      "decode_ledger",
+      "publish_with_proof"
+    ],
+    "ending": {
+      "displayText": "Ending: the story runs with receipts. By dawn, readers can play the path from hook to proof and reload the save without losing the thread.",
+      "gatedChoices": [],
+      "nodeId": "truth_end",
+      "rawText": "Ending: the story runs with receipts. By dawn, readers can play the path from hook to proof and reload the save without losing the thread.",
+      "speaker": null,
+      "visibleChoices": []
+    },
+    "finalState": {
+      "flags": {
+        "ai_draft_adopted": true,
+        "found_hook": true,
+        "trusted_mira": false
+      },
+      "inventory": [],
+      "nodeId": "truth_end",
+      "resources": {
+        "evidence": 3,
+        "focus": 0
+      },
+      "time": 6,
+      "variables": {
+        "draft_status": "generated specimen adopted",
+        "lead_name": "the clocktower bell"
+      }
+    },
+    "nodeSequence": [
+      "desk",
+      "notebook",
+      "drafting",
+      "generated_specimen_continuation",
+      "archive",
+      "reveal",
+      "truth_end"
+    ],
+    "steps": [
+      {
+        "fromNode": {
+          "displayText": "Midnight is close. Your editor needs a playable short story, not another planning board.\n\nFocus: 2 | Evidence: 0\nLead: the missing bell",
+          "gatedChoices": [],
+          "nodeId": "desk",
+          "rawText": "Midnight is close. Your editor needs a playable short story, not another planning board.\n\nFocus: {focus} | Evidence: {evidence}\nLead: {lead_name}",
+          "speaker": null,
+          "visibleChoices": [
+            {
+              "effects": [
+                {
+                  "key": "found_hook",
+                  "type": "setFlag",
+                  "value": true
+                },
+                {
+                  "delta": 1,
+                  "key": "evidence",
+                  "type": "addResource"
+                },
+                {
+                  "key": "lead_name",
+                  "type": "setVariable",
+                  "value": "the clocktower bell"
+                }
+              ],
+              "id": "open_notebook",
+              "target": "notebook",
+              "text": "Open the old notebook"
+            },
+            {
+              "effects": [
+                {
+                  "delta": -1,
+                  "key": "focus",
+                  "type": "addResource"
+                },
+                {
+                  "key": "lead_name",
+                  "type": "setVariable",
+                  "value": "the rain signal"
+                }
+              ],
+              "id": "listen_alley",
+              "target": "alley",
+              "text": "Listen to the alley outside"
+            }
+          ]
+        },
+        "selectedChoice": {
+          "effects": [
+            {
+              "key": "found_hook",
+              "type": "setFlag",
+              "value": true
+            },
+            {
+              "delta": 1,
+              "key": "evidence",
+              "type": "addResource"
+            },
+            {
+              "key": "lead_name",
+              "type": "setVariable",
+              "value": "the clocktower bell"
+            }
+          ],
+          "id": "open_notebook",
+          "target": "notebook",
+          "text": "Open the old notebook"
+        },
+        "stateChanges": {
+          "flags": {
+            "found_hook": {
+              "after": true,
+              "before": false
+            }
+          },
+          "resources": {
+            "evidence": {
+              "after": 1,
+              "before": 0
+            }
+          },
+          "time": {
+            "after": 1,
+            "before": 0
+          },
+          "variables": {
+            "lead_name": {
+              "after": "the clocktower bell",
+              "before": "the missing bell"
+            }
+          }
+        },
+        "toNodeId": "notebook"
+      },
+      {
+        "fromNode": {
+          "displayText": "The notebook has one usable hook: the clocktower bell. A margin note says Mira heard it first.\n\nThe story finally has a spine.",
+          "gatedChoices": [],
+          "nodeId": "notebook",
+          "rawText": "The notebook has one usable hook: {lead_name}. A margin note says Mira heard it first.\n\n{?found_hook:The story finally has a spine.}",
+          "speaker": null,
+          "visibleChoices": [
+            {
+              "effects": [
+                {
+                  "key": "trusted_mira",
+                  "type": "setFlag",
+                  "value": true
+                },
+                {
+                  "delta": 1,
+                  "key": "evidence",
+                  "type": "addResource"
+                }
+              ],
+              "id": "interview_mira",
+              "target": "mira",
+              "text": "Interview Mira"
+            },
+            {
+              "effects": [
+                {
+                  "delta": -1,
+                  "key": "focus",
+                  "type": "addResource"
+                }
+              ],
+              "id": "draft_scene",
+              "target": "drafting",
+              "text": "Draft a brave scene"
+            }
+          ]
+        },
+        "selectedChoice": {
+          "effects": [
+            {
+              "delta": -1,
+              "key": "focus",
+              "type": "addResource"
+            }
+          ],
+          "id": "draft_scene",
+          "target": "drafting",
+          "text": "Draft a brave scene"
+        },
+        "stateChanges": {
+          "resources": {
+            "focus": {
+              "after": 1,
+              "before": 2
+            }
+          },
+          "time": {
+            "after": 2,
+            "before": 1
+          }
+        },
+        "toNodeId": "drafting"
+      },
+      {
+        "fromNode": {
+          "displayText": "The scene is still thin. You can either accept a mock AI continuation into the graph or publish a fragment.\n\nDraft: unwritten\n",
+          "gatedChoices": [],
+          "nodeId": "drafting",
+          "rawText": "The scene is still thin. You can either accept a mock AI continuation into the graph or publish a fragment.\n\nDraft: {draft_status}\n{?ai_draft_adopted:The generated scene is already connected.}",
+          "speaker": null,
+          "visibleChoices": [
+            {
+              "effects": [
+                {
+                  "key": "ai_draft_adopted",
+                  "type": "setFlag",
+                  "value": true
+                },
+                {
+                  "key": "draft_status",
+                  "type": "setVariable",
+                  "value": "mock scene adopted"
+                }
+              ],
+              "id": "use_mock_ai",
+              "target": "ai_mock_scene",
+              "text": "Use the mock AI continuation"
+            },
+            {
+              "id": "cut_short",
+              "target": "rushed_end",
+              "text": "Cut the scene short"
+            },
+            {
+              "effects": [
+                {
+                  "key": "ai_draft_adopted",
+                  "type": "setFlag",
+                  "value": true
+                },
+                {
+                  "key": "draft_status",
+                  "type": "setVariable",
+                  "value": "generated specimen adopted"
+                }
+              ],
+              "id": "adopt_generated_specimen",
+              "target": "generated_specimen_continuation",
+              "text": "Adopt the generated specimen"
+            }
+          ]
+        },
+        "selectedChoice": {
+          "effects": [
+            {
+              "key": "ai_draft_adopted",
+              "type": "setFlag",
+              "value": true
+            },
+            {
+              "key": "draft_status",
+              "type": "setVariable",
+              "value": "generated specimen adopted"
+            }
+          ],
+          "id": "adopt_generated_specimen",
+          "target": "generated_specimen_continuation",
+          "text": "Adopt the generated specimen"
+        },
+        "stateChanges": {
+          "flags": {
+            "ai_draft_adopted": {
+              "after": true,
+              "before": false
+            }
+          },
+          "time": {
+            "after": 3,
+            "before": 2
+          },
+          "variables": {
+            "draft_status": {
+              "after": "generated specimen adopted",
+              "before": "unwritten"
+            }
+          }
+        },
+        "toNodeId": "generated_specimen_continuation"
+      },
+      {
+        "fromNode": {
+          "displayText": "Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.",
+          "gatedChoices": [],
+          "nodeId": "generated_specimen_continuation",
+          "rawText": "Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.",
+          "speaker": null,
+          "visibleChoices": [
+            {
+              "effects": [
+                {
+                  "delta": 2,
+                  "key": "evidence",
+                  "type": "addResource"
+                }
+              ],
+              "id": "connect_generated_specimen_archive",
+              "target": "archive",
+              "text": "Connect the generated clue to the archive"
+            }
+          ]
+        },
+        "selectedChoice": {
+          "effects": [
+            {
+              "delta": 2,
+              "key": "evidence",
+              "type": "addResource"
+            }
+          ],
+          "id": "connect_generated_specimen_archive",
+          "target": "archive",
+          "text": "Connect the generated clue to the archive"
+        },
+        "stateChanges": {
+          "resources": {
+            "evidence": {
+              "after": 3,
+              "before": 1
+            }
+          },
+          "time": {
+            "after": 4,
+            "before": 3
+          }
+        },
+        "toNodeId": "archive"
+      },
+      {
+        "fromNode": {
+          "displayText": "The archive shelves are locked by habit more than steel. Evidence: 3 | Focus: 1",
+          "gatedChoices": [],
+          "nodeId": "archive",
+          "rawText": "The archive shelves are locked by habit more than steel. Evidence: {evidence} | Focus: {focus}",
+          "speaker": null,
+          "visibleChoices": [
+            {
+              "conditions": [
+                {
+                  "key": "evidence",
+                  "op": ">=",
+                  "type": "resource",
+                  "value": 2
+                },
+                {
+                  "key": "focus",
+                  "op": ">=",
+                  "type": "resource",
+                  "value": 1
+                }
+              ],
+              "effects": [
+                {
+                  "delta": -1,
+                  "key": "focus",
+                  "type": "addResource"
+                }
+              ],
+              "id": "decode_ledger",
+              "target": "reveal",
+              "text": "Spend focus to decode the ledger"
+            },
+            {
+              "id": "take_obvious_answer",
+              "target": "false_end",
+              "text": "Take the obvious answer"
+            }
+          ]
+        },
+        "selectedChoice": {
+          "conditions": [
+            {
+              "key": "evidence",
+              "op": ">=",
+              "type": "resource",
+              "value": 2
+            },
+            {
+              "key": "focus",
+              "op": ">=",
+              "type": "resource",
+              "value": 1
+            }
+          ],
+          "effects": [
+            {
+              "delta": -1,
+              "key": "focus",
+              "type": "addResource"
+            }
+          ],
+          "id": "decode_ledger",
+          "target": "reveal",
+          "text": "Spend focus to decode the ledger"
+        },
+        "stateChanges": {
+          "resources": {
+            "focus": {
+              "after": 0,
+              "before": 1
+            }
+          },
+          "time": {
+            "after": 5,
+            "before": 4
+          }
+        },
+        "toNodeId": "reveal"
+      },
+      {
+        "fromNode": {
+          "displayText": "The ledger proves the clocktower bell marked the night the mayor erased the flood records.\n\nEvidence: 3\nYou have enough proof to publish.",
+          "gatedChoices": [],
+          "nodeId": "reveal",
+          "rawText": "The ledger proves {lead_name} marked the night the mayor erased the flood records.\n\nEvidence: {evidence}\n{?evidence>=3:You have enough proof to publish.}",
+          "speaker": null,
+          "visibleChoices": [
+            {
+              "conditions": [
+                {
+                  "key": "evidence",
+                  "op": ">=",
+                  "type": "resource",
+                  "value": 3
+                }
+              ],
+              "id": "publish_with_proof",
+              "target": "truth_end",
+              "text": "Publish with proof"
+            },
+            {
+              "id": "publish_as_rumor",
+              "target": "false_end",
+              "text": "Publish as rumor"
+            }
+          ]
+        },
+        "selectedChoice": {
+          "conditions": [
+            {
+              "key": "evidence",
+              "op": ">=",
+              "type": "resource",
+              "value": 3
+            }
+          ],
+          "id": "publish_with_proof",
+          "target": "truth_end",
+          "text": "Publish with proof"
+        },
+        "stateChanges": {
+          "time": {
+            "after": 6,
+            "before": 5
+          }
+        },
+        "toNodeId": "truth_end"
+      }
+    ]
+  },
+  "schemaVersion": 1
+}

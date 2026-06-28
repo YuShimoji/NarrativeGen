@@ -28,6 +28,15 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-28 Generated specimen review pack
+
+- **Work purpose**: close the review-surface improvement loop and return to the main generator question: whether NarrativeGen can produce one concrete, human-reviewable story specimen.
+- **Generator path used**: `MockAIProvider.generateNextNode` from `packages/engine-ts/src/ai-provider.ts`, executed by `npm run build:generated-specimen -w @narrativegen/web-tester` after the `vertical-slice.json` route reaches `drafting` through `open_notebook -> draft_scene`.
+- **Active generated artifact**: `docs/samples/generated-specimen-model.json` adds `generated_specimen_continuation` to the vertical-slice graph. The review route is `open_notebook -> draft_scene -> adopt_generated_specimen -> connect_generated_specimen_archive -> decode_ledger -> publish_with_proof`.
+- **Review surface**: `docs/samples/generated-specimen-review-ja.md` is the primary human review surface; `docs/samples/generated-specimen-readback.md` is the detailed technical trace; `docs/samples/generated-specimen-route-trace.json` is the machine trace.
+- **Readability assessment**: the specimen is concrete and route-playable, but still mock/formulaic. The generated text supplies a reachable archive clue; the script supplies the choice/effect glue that connects it to the existing proof route.
+- **Next minimal improvement candidates**: make generator output structured enough to propose one choice/effect pair, pass a richer story packet into `generateNextNode`, or keep this specimen as the baseline while returning to SP-DTYARN continuation. No stash entries were applied.
+
 ### 2026-06-28 Authoring sample review entrypoint consolidation
 
 - **Work purpose**: remove the artifact-identity trap where a user naturally opens `docs/samples/authoring-sample-readback.md` and misses the visual review pack in `docs/samples/authoring-sample-review-ja.md`.

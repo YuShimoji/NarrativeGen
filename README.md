@@ -22,10 +22,14 @@ The current canonical playable artifact is:
 - Authoring sample detailed technical readback: [`docs/samples/authoring-sample-readback.md`](docs/samples/authoring-sample-readback.md)
 - Authoring sample machine route trace: [`docs/samples/authoring-sample-route-trace.json`](docs/samples/authoring-sample-route-trace.json)
 - Authoring sample logic audit: [`docs/samples/authoring-sample-logic-audit.md`](docs/samples/authoring-sample-logic-audit.md)
+- Generated specimen model: [`docs/samples/generated-specimen-model.json`](docs/samples/generated-specimen-model.json)
+- Generated specimen human review surface: [`docs/samples/generated-specimen-review-ja.md`](docs/samples/generated-specimen-review-ja.md)
 - Web Tester sample: select `vertical-slice.json`, then click `実行`
 - Web Tester CSV sample: click `Sample CSV` to load `authoring-sample.csv`, then use `CSV` export/re-import for the spreadsheet roundtrip.
 
 For human review of the authoring sample, open the Japanese review surface first. Use the detailed readback for exact route steps, the JSON trace for machine-readable state, and the logic audit for audit history.
+
+For review of the first generated story specimen, open the generated specimen review surface first. It shows the mock-provider output, the adopted node path, and the current pass/warn/fix/defer assessment.
 
 Shortest local review:
 

@@ -15,6 +15,19 @@ describe('MockAIProvider', () => {
         expect(result.length).toBeGreaterThan(0)
     })
 
+    it('generates a deterministic reviewable continuation from context', async () => {
+        const provider = new MockAIProvider()
+        const context: StoryContext = {
+            previousNodes: [{ id: 'desk', text: 'Lead: the clocktower bell' }],
+            currentNodeText: 'The scene is still thin.',
+            choiceText: 'Adopt continuation'
+        }
+        const result = await provider.generateNextNode(context)
+        expect(result).toContain('Mock continuation')
+        expect(result).toContain('the clocktower bell')
+        expect(result).toContain('archive stairs')
+    })
+
     it('generates paraphrase variants', async () => {
         const provider = new MockAIProvider()
         const text = 'これはテストです。'

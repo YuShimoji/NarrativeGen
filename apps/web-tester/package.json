@@ -8,6 +8,8 @@
     "build": "vite build && npm run copy:models",
     "build:authoring-readback": "node ./scripts/build-authoring-sample-readback.mjs",
     "check:authoring-readback": "node ./scripts/build-authoring-sample-readback.mjs --check",
+    "build:generated-specimen": "node ./scripts/build-generated-specimen.mjs",
+    "check:generated-specimen": "node ./scripts/build-generated-specimen.mjs --check",
     "copy:models": "node ./scripts/copy-models-to-dist.mjs",
     "preview": "vite preview",
     "lint": "node -e \"console.log('web-tester: lint not configured (skipped)')\"",
