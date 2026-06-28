@@ -28,6 +28,14 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-28 Authoring sample Japanese review brief
+
+- **Work purpose**: add a Japanese bounded human-review surface so the authoring sample can be inspected without machine-translation decoding or reverse-engineering model fields first.
+- **Artifact**: `docs/samples/authoring-sample-review-ja.md` summarizes premise, actors, state variables, route meanings, CSV authoring semantics, bounded review questions, and non-goals in Japanese.
+- **Use**: this is now the recommended surface for the next bounded human narrative observation. It asks for fixture suitability, route clarity, state-change meaning, and wording roughness only; it is not production prose acceptance, a full localization pass, or final narrative canon.
+- **Source grounding**: the brief is sourced from `docs/samples/authoring-sample-readback.md`, `docs/samples/authoring-sample-route-trace.json`, `docs/samples/authoring-sample-logic-audit.md`, and `models/spreadsheets/authoring-sample.csv`.
+- **Next possible axes**: bounded human narrative review, small wording polish if the brief exposes rough fixture language, SP-DTYARN continuation, or broader CSV/JSON parity. No stash entries were applied.
+
 ### 2026-06-28 Authoring sample semantic readback clarity
 
 - **User observation**: the readback was syntactically interpretable but semantically hard to read; the opening Model Capsule made the artifact feel like decoded structure rather than a coherent story specimen.
