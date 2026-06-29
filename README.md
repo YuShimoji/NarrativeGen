@@ -24,12 +24,15 @@ The current canonical playable artifact is:
 - Authoring sample logic audit: [`docs/samples/authoring-sample-logic-audit.md`](docs/samples/authoring-sample-logic-audit.md)
 - Generated specimen model: [`docs/samples/generated-specimen-model.json`](docs/samples/generated-specimen-model.json)
 - Generated specimen human review surface: [`docs/samples/generated-specimen-review-ja.md`](docs/samples/generated-specimen-review-ja.md)
+- SP-DTYARN generator bridge readiness: [`docs/samples/spdtyarn-generator-bridge-readiness.md`](docs/samples/spdtyarn-generator-bridge-readiness.md)
 - Web Tester sample: select `vertical-slice.json`, then click `実行`
 - Web Tester CSV sample: click `Sample CSV` to load `authoring-sample.csv`, then use `CSV` export/re-import for the spreadsheet roundtrip.
 
 For human review of the authoring sample, open the Japanese review surface first. Use the detailed readback for exact route steps, the JSON trace for machine-readable state, and the logic audit for audit history.
 
 For review of the first generated story specimen, open the generated specimen review surface first. It shows the story packet input, mock-provider structured proposal, generator/builder ownership boundary, adopted node path, and current pass/warn/fix/defer assessment.
+
+For SP-DTYARN generator bridge work, open the bridge readiness artifact first. It records the current runnable export path, the missing packet-to-proposal seam, and why no nonmock SP-DTYARN story specimen has been produced yet.
 
 Shortest local review:
 

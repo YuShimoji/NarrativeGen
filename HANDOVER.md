@@ -28,6 +28,15 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-30 SP-DTYARN generator bridge readiness
+
+- **Work purpose**: inspect the SP-DTYARN / generator bridge question after syncing from `origin/main`, and decide whether a nonmock generated specimen can be produced without faking generator behavior.
+- **Decision**: classified as `partial_generator_path`. `apps/web-tester/src/features/export/formatters/YarnFormatter.js` is a runnable NarrativeGen-model-to-Yarn export path, but it does not consume `StoryContextPacket`, does not return `StructuredContinuationProposal`, and does not adopt a generated node into a playable model.
+- **Effect**: added `docs/samples/spdtyarn-generator-bridge-readiness.md` as the active bridge-readiness artifact. It inventories the runnable SP-DTYARN export path, current generated-specimen packet/proposal path, missing bridge seam, and minimal next move.
+- **Requirement boundary**: no OpenAI/local LLM work, CSV schema fields, Web Tester UI redesign, core transition semantics, or broad SP-DTYARN redesign were added. No stash entries were applied.
+- **State**: no nonmock SP-DTYARN story specimen was produced. The honest next implementation is a small deterministic bridge adapter, separate from `YarnFormatter`, that consumes `StoryContextPacket` and returns `StructuredContinuationProposal`.
+- **Owner / next move**: assistant can implement the adapter in a future slice; acceptance should prove packet facts are read, proposal shape matches the existing adoption path, adopted model remains playable to `truth_end`, and readback separates adapter-generated fields from builder-added fields.
+
 ### 2026-06-30 Story packet generator specimen
 
 - **Work purpose**: make the generated-specimen path inspectable as input packet -> structured proposal -> model adoption, without adding OpenAI/local LLM work, CSV schema fields, Web Tester UI redesign, or core engine transition changes.
