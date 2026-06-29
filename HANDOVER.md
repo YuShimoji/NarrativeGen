@@ -2,11 +2,11 @@
 
 ## 最終更新
 
-- **日時**: 2026-06-22
+- **日時**: 2026-06-29
 - **ブランチ**: `main`（trunk-based）
-- **HEAD**: `4d2919bed87ec053749c23bb825d76f8e5c7cd88` (`feat: persist ai adoption in save slots`)
-- **直近**: Web Tester の AI mock adoption は JSON export/import と SaveManager slot save/load の両方で永続化確認済み。`vertical-slice.json` の `drafting -> adopt_ai_drafting_1 -> ai_adopted_drafting_1` が page reload 後の slot load でも到達可能。
-- **repo authority 注意**: `origin/HEAD` はまだ `origin/open-ws/engine-skeleton-2025-09-02` を指す可能性がある。作業正本は `main` / `origin/main`。
+- **HEAD**: `4f14bfb7b12b928a354cc4a60c08b2b554d8277a` (`feat: add generator specimen review pack`)
+- **直近**: 生成本流の最小観測として `MockAIProvider.generateNextNode` から `docs/samples/generated-specimen-model.json` を生成し、`docs/samples/generated-specimen-review-ja.md` / readback / route trace で人間レビュー可能にした。
+- **repo authority 注意**: `origin/HEAD` は `origin/main`。作業正本は `main` / `origin/main`。
 - **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`
 
 ## プロジェクト概要
@@ -27,6 +27,15 @@ NarrativeGen/
 ```
 
 ## 現在の状態
+
+### 2026-06-29 Terminal handover sync after generated specimen
+
+- **Restart authority**: `main` is current and pushed. Last verified local HEAD was `4f14bfb7b12b928a354cc4a60c08b2b554d8277a` (`feat: add generator specimen review pack`) with `HEAD...origin/main = 0 0`.
+- **Current shipped state**: the authoring sample review surfaces are sufficient for broad overview, and the first generated story specimen now exists. Start human review from `docs/samples/generated-specimen-review-ja.md`; use `docs/samples/generated-specimen-readback.md` for exact route steps and `docs/samples/generated-specimen-route-trace.json` for machine trace.
+- **Resume path**: from a fresh terminal run `git fetch origin --prune` then `git pull --ff-only origin main`; inspect `docs/samples/generated-specimen-review-ja.md`; regenerate/check with `npm run check:generated-specimen -w @narrativegen/web-tester`.
+- **Last validation package before this handover**: `npm run build:engine`, `npm run check:generated-specimen -w @narrativegen/web-tester`, `npm run test -w @narrativegen/engine-ts`, `npm run check:authoring-readback -w @narrativegen/web-tester`, `npm run check:safety`, `npm run build:tester`, `npm run test -w @narrativegen/web-tester`, `npm run lint:engine`, and the three focused Playwright regressions for AI adoption, authoring CSV roundtrip, and vertical-slice CSV roundtrip passed.
+- **Preserved boundary**: no stash entries were applied. Stashes remain historical/local context only; do not apply them unless a future user explicitly promotes that work.
+- **Next entry points**: structured generator output for one choice/effect pair, richer story packet input to `generateNextNode`, or SP-DTYARN continuation. Keep generated specimen review centered on concrete story output rather than returning to authoring-sample polish.
 
 ### 2026-06-28 Generated specimen review pack
 
