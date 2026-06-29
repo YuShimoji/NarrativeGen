@@ -5,7 +5,8 @@
 ## Generator Path
 
 - Source model: `models/examples/vertical-slice.json`
-- Generator: `createAIProvider({ provider: "mock" }).generateNextNode(...)`
+- Generator: `createAIProvider({ provider: "mock" }).generateContinuationProposal(...)`
+- Compatibility path: `generateNextNode(...)` still returns the proposal text only.
 - Source node: `drafting` after `open_notebook -> draft_scene`
 - Generated node: `generated_specimen_continuation`
 - Active artifact: `docs/samples/generated-specimen-model.json`
@@ -14,10 +15,81 @@
 
 > Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.
 
+## Structured Proposal
+
+- Node id hint: `generated_specimen_continuation`
+- Follow-up choice id hint: `connect_generated_specimen_archive`
+- Follow-up target: `archive`
+- Follow-up effects: add resource evidence +2
+
+Ownership boundary:
+
+```json
+{
+  "builder_added": [
+    {
+      "field": "source_adoption_choice",
+      "value": {
+        "effects": [
+          {
+            "key": "ai_draft_adopted",
+            "type": "setFlag",
+            "value": true
+          },
+          {
+            "key": "draft_status",
+            "type": "setVariable",
+            "value": "generated specimen adopted"
+          }
+        ],
+        "id": "adopt_generated_specimen",
+        "target": "generated_specimen_continuation",
+        "text": "Adopt the generated specimen"
+      }
+    },
+    {
+      "field": "artifact_serialization_and_readback",
+      "value": [
+        "docs/samples/generated-specimen-model.json",
+        "docs/samples/generated-specimen-route-trace.json",
+        "docs/samples/generated-specimen-readback.md",
+        "docs/samples/generated-specimen-review-ja.md"
+      ]
+    }
+  ],
+  "generator_provided": {
+    "fields": [
+      "nodeIdHint",
+      "text",
+      "followUpChoice.idHint",
+      "followUpChoice.text",
+      "followUpChoice.targetId",
+      "followUpChoice.effects"
+    ],
+    "follow_up_choice": {
+      "effects": [
+        {
+          "delta": 2,
+          "key": "evidence",
+          "type": "addResource"
+        }
+      ],
+      "idHint": "connect_generated_specimen_archive",
+      "targetId": "archive",
+      "text": "Connect the generated clue to the archive"
+    },
+    "node_id_hint": "generated_specimen_continuation",
+    "text": "Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it."
+  },
+  "validation_adjusted": []
+}
+```
+
 ## Structure Summary
 
 - The generated node is adopted from `drafting` through `adopt_generated_specimen`.
-- The generated node connects back to the existing `archive` route through `connect_generated_specimen_archive`.
+- The generated node connects back to the existing `archive` route through the provider-proposed `connect_generated_specimen_archive` follow-up choice.
+- The provider-proposed follow-up effect adds evidence so the existing proof gate can be tested.
 - The route then reuses existing proof logic: archive decode, reveal, and proof ending.
 
 ## Detailed Route Trace
@@ -97,7 +169,8 @@ Ending text:
 
 ## Assessment Snapshot
 
-- pass: the generator produces a concrete reachable story node, not only a test assertion.
-- warn: the mock prose is formulaic and the structural choice/effect glue is supplied by the specimen builder.
-- fix: next bounded slice should make the generator propose richer structure or receive a more explicit story packet.
+- pass: the generator produces a structured continuation packet with text, one follow-up choice, target, and effect.
+- pass: the structured packet is serialized as a concrete reachable story node, not only a test assertion.
+- warn: the mock prose is formulaic and the source adoption choice is still builder scaffolding.
+- fix: next bounded slice can pass a richer story packet into the generator or broaden structured output beyond the mock provider.
 - defer: OpenAI provider, local LLM, Web Tester redesign, and schema expansion are outside this specimen slice.

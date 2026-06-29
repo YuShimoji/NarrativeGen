@@ -28,6 +28,15 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-29 Structured generator output specimen
+
+- **Work purpose**: reduce the previous generated-specimen warning that the script supplied all choice/effect glue, without changing OpenAI, local LLM, CSV schema, Web Tester UI, or core transition semantics.
+- **Effect**: `MockAIProvider.generateContinuationProposal` now returns a deterministic structured continuation packet: generated node id hint, generated text, one follow-up choice id/text, target id, and an `addResource evidence +2` effect. `generateNextNode` remains compatible and still returns text only.
+- **Builder boundary**: `apps/web-tester/scripts/build-generated-specimen.mjs` now adopts the provider proposal for the generated node's follow-up choice/effect and records `generator_provided`, `builder_added`, and `validation_adjusted` in the route trace, readback, and Japanese review surface. The source adoption choice from `drafting` remains explicit builder scaffolding.
+- **Active artifacts**: `docs/samples/generated-specimen-review-ja.md` is still the human review entrypoint; `docs/samples/generated-specimen-readback.md` and `docs/samples/generated-specimen-route-trace.json` now show the structured proposal and ownership boundary. `docs/samples/generated-specimen-model.json` remains route-playable to `truth_end`.
+- **Validation for this slice**: `npm run build:engine`, `npm run test -w @narrativegen/engine-ts` (22 files / 275 tests), `npm run build:generated-specimen -w @narrativegen/web-tester`, `npm run check:generated-specimen -w @narrativegen/web-tester`, `npm run check:safety`, `npm run build:tester`, and the focused Chromium E2Es for AI adoption, authoring sample CSV roundtrip, and vertical-slice CSV roundtrip passed.
+- **Next entry points**: pass a richer story packet into the structured mock generator, broaden structured output beyond mock-only evidence, or return to SP-DTYARN continuation. Keep future claims honest: this is structured mock evidence, not real AI quality acceptance.
+
 ### 2026-06-29 Terminal handover sync after generated specimen
 
 - **Restart authority**: `main` is current and pushed. The generated-specimen feature baseline before this handover sync was `4f14bfb7b12b928a354cc4a60c08b2b554d8277a` (`feat: add generator specimen review pack`); after pull, use `git log -1 --oneline` and `git rev-list --left-right --count "HEAD...origin/main"` to confirm the latest sync commit and parity.

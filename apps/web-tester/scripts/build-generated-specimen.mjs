@@ -217,40 +217,157 @@ function buildGenerationContext(model) {
   }
 }
 
-function adoptGeneratedNode(model, generatedText) {
+function fallbackStructuredProposal(generatedText) {
+  return {
+    nodeIdHint: adoptionNodeId,
+    text: generatedText,
+    followUpChoice: {
+      idHint: connectChoiceId,
+      text: 'Connect the generated clue to the archive',
+      targetId: 'archive',
+      effects: [{ type: 'addResource', key: 'evidence', delta: 2 }],
+    },
+    ownership: {
+      generatorProvided: ['text'],
+      builderAdded: [
+        'nodeIdHint',
+        'followUpChoice.idHint',
+        'followUpChoice.text',
+        'followUpChoice.targetId',
+        'followUpChoice.effects',
+      ],
+      validationAdjusted: [],
+    },
+  }
+}
+
+async function generateStructuredProposal(provider, context) {
+  if (typeof provider.generateContinuationProposal === 'function') {
+    return provider.generateContinuationProposal(context)
+  }
+
+  const generatedText = await provider.generateNextNode(context)
+  return fallbackStructuredProposal(generatedText)
+}
+
+function adoptionChoice() {
+  return {
+    id: adoptionChoiceId,
+    text: 'Adopt the generated specimen',
+    target: adoptionNodeId,
+    effects: [
+      { type: 'setFlag', key: 'ai_draft_adopted', value: true },
+      { type: 'setVariable', key: 'draft_status', value: 'generated specimen adopted' },
+    ],
+  }
+}
+
+function normalizeStructuredProposal(model, proposal) {
+  const builderAdded = [...(proposal.ownership?.builderAdded ?? [])]
+  const validationAdjusted = [...(proposal.ownership?.validationAdjusted ?? [])]
+  const generatorProvided = [...(proposal.ownership?.generatorProvided ?? [])]
+
+  const followUpChoice = proposal.followUpChoice ?? {}
+  let targetId = followUpChoice.targetId ?? 'archive'
+  if (!model.nodes[targetId]) {
+    validationAdjusted.push(`followUpChoice.targetId: ${targetId} -> archive`)
+    targetId = 'archive'
+  }
+
+  const effects = Array.isArray(followUpChoice.effects) && followUpChoice.effects.length
+    ? followUpChoice.effects
+    : [{ type: 'addResource', key: 'evidence', delta: 2 }]
+  if (!Array.isArray(followUpChoice.effects) || followUpChoice.effects.length === 0) {
+    builderAdded.push('followUpChoice.effects')
+  }
+
+  if (proposal.nodeIdHint !== adoptionNodeId) {
+    validationAdjusted.push(`nodeIdHint: ${proposal.nodeIdHint ?? 'missing'} -> ${adoptionNodeId}`)
+  }
+  if (followUpChoice.idHint !== connectChoiceId) {
+    validationAdjusted.push(`followUpChoice.idHint: ${followUpChoice.idHint ?? 'missing'} -> ${connectChoiceId}`)
+  }
+  if (!followUpChoice.text) {
+    builderAdded.push('followUpChoice.text')
+  }
+
+  const normalizedProposal = {
+    nodeIdHint: proposal.nodeIdHint ?? adoptionNodeId,
+    text: proposal.text,
+    followUpChoice: {
+      idHint: followUpChoice.idHint ?? connectChoiceId,
+      text: followUpChoice.text ?? 'Connect the generated clue to the archive',
+      targetId,
+      effects,
+    },
+    ownership: {
+      generatorProvided,
+      builderAdded,
+      validationAdjusted,
+    },
+  }
+
+  return {
+    proposal: normalizedProposal,
+    adoptedNodeId: adoptionNodeId,
+    adoptedFollowUpChoice: {
+      id: connectChoiceId,
+      text: normalizedProposal.followUpChoice.text,
+      target: normalizedProposal.followUpChoice.targetId,
+      effects: normalizedProposal.followUpChoice.effects,
+    },
+    ownershipBoundary: {
+      generator_provided: {
+        fields: generatorProvided,
+        node_id_hint: normalizedProposal.nodeIdHint,
+        text: normalizedProposal.text,
+        follow_up_choice: normalizedProposal.followUpChoice,
+      },
+      builder_added: [
+        {
+          field: 'source_adoption_choice',
+          value: summarizeChoice(adoptionChoice()),
+        },
+        {
+          field: 'artifact_serialization_and_readback',
+          value: [
+            toRepoPath(specimenModelPath),
+            toRepoPath(tracePath),
+            toRepoPath(readbackPath),
+            toRepoPath(reviewPath),
+          ],
+        },
+        ...builderAdded.map((field) => ({ field })),
+      ],
+      validation_adjusted: validationAdjusted,
+    },
+  }
+}
+
+function adoptGeneratedProposal(model, rawProposal) {
   const specimenModel = clone(model)
   const sourceNode = specimenModel.nodes.drafting
   if (!sourceNode) {
     throw new Error('Expected source node `drafting` to exist in vertical-slice.json')
   }
+  const structured = normalizeStructuredProposal(specimenModel, rawProposal)
 
   sourceNode.choices = [
     ...(sourceNode.choices ?? []),
-    {
-      id: adoptionChoiceId,
-      text: 'Adopt the generated specimen',
-      target: adoptionNodeId,
-      effects: [
-        { type: 'setFlag', key: 'ai_draft_adopted', value: true },
-        { type: 'setVariable', key: 'draft_status', value: 'generated specimen adopted' },
-      ],
-    },
+    adoptionChoice(),
   ]
 
   specimenModel.nodes[adoptionNodeId] = {
     id: adoptionNodeId,
-    text: generatedText,
-    choices: [
-      {
-        id: connectChoiceId,
-        text: 'Connect the generated clue to the archive',
-        target: 'archive',
-        effects: [{ type: 'addResource', key: 'evidence', delta: 2 }],
-      },
-    ],
+    text: structured.proposal.text,
+    choices: [structured.adoptedFollowUpChoice],
   }
 
-  return loadModel(specimenModel)
+  return {
+    model: loadModel(specimenModel),
+    proposal: structured.proposal,
+    ownershipBoundary: structured.ownershipBoundary,
+  }
 }
 
 function describeCondition(condition) {
@@ -317,6 +434,10 @@ function quoteText(text) {
     .join('\n')
 }
 
+function fencedJson(value) {
+  return ['```json', stableStringify(value), '```'].join('\n')
+}
+
 function renderReadback(trace) {
   const lines = [
     '# Generated Specimen Readback',
@@ -326,7 +447,8 @@ function renderReadback(trace) {
     '## Generator Path',
     '',
     '- Source model: `models/examples/vertical-slice.json`',
-    '- Generator: `createAIProvider({ provider: "mock" }).generateNextNode(...)`',
+    '- Generator: `createAIProvider({ provider: "mock" }).generateContinuationProposal(...)`',
+    '- Compatibility path: `generateNextNode(...)` still returns the proposal text only.',
     '- Source node: `drafting` after `open_notebook -> draft_scene`',
     `- Generated node: \`${adoptionNodeId}\``,
     `- Active artifact: \`${trace.artifacts.specimenModelPath}\``,
@@ -335,10 +457,22 @@ function renderReadback(trace) {
     '',
     quoteText(trace.generatedNode.text),
     '',
+    '## Structured Proposal',
+    '',
+    `- Node id hint: \`${trace.structuredProposal.nodeIdHint}\``,
+    `- Follow-up choice id hint: \`${trace.structuredProposal.followUpChoice.idHint}\``,
+    `- Follow-up target: \`${trace.structuredProposal.followUpChoice.targetId}\``,
+    `- Follow-up effects: ${trace.structuredProposal.followUpChoice.effects.map(describeEffect).join('; ')}`,
+    '',
+    'Ownership boundary:',
+    '',
+    fencedJson(trace.ownershipBoundary),
+    '',
     '## Structure Summary',
     '',
     '- The generated node is adopted from `drafting` through `adopt_generated_specimen`.',
-    '- The generated node connects back to the existing `archive` route through `connect_generated_specimen_archive`.',
+    '- The generated node connects back to the existing `archive` route through the provider-proposed `connect_generated_specimen_archive` follow-up choice.',
+    '- The provider-proposed follow-up effect adds evidence so the existing proof gate can be tested.',
     '- The route then reuses existing proof logic: archive decode, reveal, and proof ending.',
     '',
     '## Detailed Route Trace',
@@ -370,9 +504,10 @@ function renderReadback(trace) {
   lines.push(
     '## Assessment Snapshot',
     '',
-    '- pass: the generator produces a concrete reachable story node, not only a test assertion.',
-    '- warn: the mock prose is formulaic and the structural choice/effect glue is supplied by the specimen builder.',
-    '- fix: next bounded slice should make the generator propose richer structure or receive a more explicit story packet.',
+    '- pass: the generator produces a structured continuation packet with text, one follow-up choice, target, and effect.',
+    '- pass: the structured packet is serialized as a concrete reachable story node, not only a test assertion.',
+    '- warn: the mock prose is formulaic and the source adoption choice is still builder scaffolding.',
+    '- fix: next bounded slice can pass a richer story packet into the generator or broaden structured output beyond the mock provider.',
     '- defer: OpenAI provider, local LLM, Web Tester redesign, and schema expansion are outside this specimen slice.',
     ''
   )
@@ -388,19 +523,26 @@ function renderReview(trace) {
     '',
     '## Story Brief',
     '',
-    '元モデルは `vertical-slice.json` の短い調査物語です。プレイヤーは古いノートを開き、未完成の場面を下書きし、mock generator が作った continuation を graph に採用します。生成されたノードは、時計塔の鐘という手がかりを archive の ledger path に接続し、既存の proof ending まで到達可能にします。',
+    '元モデルは `vertical-slice.json` の短い調査物語です。プレイヤーは古いノートを開き、未完成の場面を下書きし、mock generator が作った structured continuation proposal を graph に採用します。生成されたノードは、時計塔の鐘という手がかりを archive の ledger path に接続し、既存の proof ending まで到達可能にします。',
     '',
     '## 生成された specimen',
     '',
     `- Active artifact: \`${trace.artifacts.specimenModelPath}\``,
     `- Generated node: \`${adoptionNodeId}\``,
-    '- Generator path: `MockAIProvider.generateNextNode` from `packages/engine-ts/src/ai-provider.ts`',
+    '- Generator path: `MockAIProvider.generateContinuationProposal` from `packages/engine-ts/src/ai-provider.ts`',
+    '- Compatibility path: `MockAIProvider.generateNextNode` still returns the generated text.',
     '- Source route: `open_notebook -> draft_scene`',
     '- Review route: `open_notebook -> draft_scene -> adopt_generated_specimen -> connect_generated_specimen_archive -> decode_ledger -> publish_with_proof`',
     '',
     'Generated text:',
     '',
     quoteText(trace.generatedNode.text),
+    '',
+    'Structured proposal:',
+    '',
+    `- nodeIdHint: \`${trace.structuredProposal.nodeIdHint}\``,
+    `- followUpChoice: \`${trace.structuredProposal.followUpChoice.idHint}\` / "${trace.structuredProposal.followUpChoice.text}" -> \`${trace.structuredProposal.followUpChoice.targetId}\``,
+    `- effect: ${trace.structuredProposal.followUpChoice.effects.map(describeEffect).join('; ')}`,
     '',
     '## Route Overview / Structure Summary',
     '',
@@ -425,13 +567,25 @@ function renderReview(trace) {
     '- `draft_status`: `generated specimen adopted` に変わり、下書きが生成ノードとして graph に入ったことを示します。',
     '- `evidence`: generated clue を archive に接続すると `+2` され、既存の proof gate を通れる状態になります。',
     '',
+    '## Generator / Builder Boundary',
+    '',
+    '- generator_provided: generated node id hint、node text、follow-up choice id hint、choice text、target id、effect。',
+    '- builder_added: `drafting` から generated node へ入る source adoption choice と artifact/readback scaffolding。',
+    '- validation_adjusted: 今回は proposal が既存 specimen IDs と schema-valid effect を返すため、追加補正なし。',
+    '',
+    'Boundary readback:',
+    '',
+    fencedJson(trace.ownershipBoundary),
+    '',
     '## 生成品質メモ',
     '',
     '- pass: 生成例は具体的な node text として存在し、route 上で到達・通過できます。',
+    '- pass: mock generator は本文だけでなく、follow-up choice / target / effect を structured proposal として返しています。',
     '- pass: 生成結果は既存モデルの proof route に接続され、ending まで読めます。',
     '- warn: mock prose はまだ説明的で、名作品質の本文ではありません。',
-    '- warn: node choice/effect は generator ではなく specimen builder が補っています。',
-    '- fix: 次の bounded slice では、generator に structured output または story packet を渡し、choice/effect 生成の責務を少しだけ増やす余地があります。',
+    '- warn: `drafting` から generated node へ入る adoption choice は、まだ specimen builder 側の scaffolding です。',
+    '- warn: structured proposal は mock provider の証拠であり、OpenAI/local LLM の生成品質証明ではありません。',
+    '- fix: 次の bounded slice では、generator により明示的な story packet を渡すか、mock 以外へ structured output の責務を広げる余地があります。',
     '- defer: OpenAI provider、local LLM、Web Tester 大改造、新CSV schema は今回の対象外です。',
     '',
     '## Review-Pack Pattern Note',
@@ -446,14 +600,14 @@ function renderReview(trace) {
   return `${lines.join('\n').replace(/\n+$/u, '')}\n`
 }
 
-function buildTrace(sourceModel, specimenModel, generation, generatedText) {
+function buildTrace(sourceModel, specimenModel, generation, structuredResult) {
   const route = runRoute(specimenModel, reviewRoute)
 
   return {
     schemaVersion: 1,
     generatorPath: {
       provider: 'mock',
-      entrypoint: 'createAIProvider({ provider: "mock" }).generateNextNode',
+      entrypoint: 'createAIProvider({ provider: "mock" }).generateContinuationProposal',
       sourceModelPath: toRepoPath(sourceModelPath),
       sourceNodeId: generation.sourceNodeId,
       inputRoute: generation.inputRoute,
@@ -471,24 +625,28 @@ function buildTrace(sourceModel, specimenModel, generation, generatedText) {
       addedNodeIds: [adoptionNodeId],
       addedChoiceIds: [adoptionChoiceId, connectChoiceId],
     },
+    structuredProposal: structuredResult.proposal,
+    ownershipBoundary: structuredResult.ownershipBoundary,
     generatedNode: {
       id: adoptionNodeId,
-      text: generatedText,
+      text: structuredResult.proposal.text,
       choices: specimenModel.nodes[adoptionNodeId].choices,
     },
     route,
     assessment: {
       pass: [
-        'mock generator output is serialized as a concrete node',
+        'mock generator output is structured as node text plus one follow-up choice/effect proposal',
+        'structured proposal is serialized as a concrete node',
         'generated node is reachable from the existing drafting route',
         'review route reaches the existing proof ending',
       ],
       warn: [
         'mock prose remains formulaic',
-        'choice and effect glue is supplied by the specimen builder rather than the provider',
+        'source adoption choice from drafting is still builder scaffolding',
+        'structured continuation proposal is mock-only evidence, not real provider quality',
       ],
       fix: [
-        'next bounded slice can make generator output structured enough to propose a choice/effect pair',
+        'next bounded slice can pass a richer story packet into the generator or broaden structured output beyond the mock provider',
       ],
       defer: [
         'OpenAI provider, local LLM, schema expansion, and Web Tester redesign',
@@ -535,10 +693,11 @@ async function main() {
   const sourceModel = loadModel(sourceRaw)
   const generation = buildGenerationContext(sourceModel)
   const provider = createAIProvider({ provider: 'mock' })
-  const generatedText = await provider.generateNextNode(generation.context)
-  const specimenModel = adoptGeneratedNode(sourceModel, generatedText)
+  const structuredProposal = await generateStructuredProposal(provider, generation.context)
+  const structuredResult = adoptGeneratedProposal(sourceModel, structuredProposal)
+  const specimenModel = structuredResult.model
   clearSessionCaches()
-  const trace = buildTrace(sourceModel, specimenModel, generation, generatedText)
+  const trace = buildTrace(sourceModel, specimenModel, generation, structuredResult)
 
   const specimenModelContent = modelStringify(specimenModel)
   const traceContent = `${stableStringify(trace)}\n`

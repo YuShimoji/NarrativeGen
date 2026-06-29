@@ -10,16 +10,18 @@
       "OpenAI provider, local LLM, schema expansion, and Web Tester redesign"
     ],
     "fix": [
-      "next bounded slice can make generator output structured enough to propose a choice/effect pair"
+      "next bounded slice can pass a richer story packet into the generator or broaden structured output beyond the mock provider"
     ],
     "pass": [
-      "mock generator output is serialized as a concrete node",
+      "mock generator output is structured as node text plus one follow-up choice/effect proposal",
+      "structured proposal is serialized as a concrete node",
       "generated node is reachable from the existing drafting route",
       "review route reaches the existing proof ending"
     ],
     "warn": [
       "mock prose remains formulaic",
-      "choice and effect glue is supplied by the specimen builder rather than the provider"
+      "source adoption choice from drafting is still builder scaffolding",
+      "structured continuation proposal is mock-only evidence, not real provider quality"
     ]
   },
   "generatedNode": {
@@ -55,7 +57,7 @@
         }
       ]
     },
-    "entrypoint": "createAIProvider({ provider: \"mock\" }).generateNextNode",
+    "entrypoint": "createAIProvider({ provider: \"mock\" }).generateContinuationProposal",
     "inputRoute": [
       "open_notebook",
       "draft_scene"
@@ -74,6 +76,64 @@
     ],
     "sourceNodeCount": 12,
     "specimenNodeCount": 13
+  },
+  "ownershipBoundary": {
+    "builder_added": [
+      {
+        "field": "source_adoption_choice",
+        "value": {
+          "effects": [
+            {
+              "key": "ai_draft_adopted",
+              "type": "setFlag",
+              "value": true
+            },
+            {
+              "key": "draft_status",
+              "type": "setVariable",
+              "value": "generated specimen adopted"
+            }
+          ],
+          "id": "adopt_generated_specimen",
+          "target": "generated_specimen_continuation",
+          "text": "Adopt the generated specimen"
+        }
+      },
+      {
+        "field": "artifact_serialization_and_readback",
+        "value": [
+          "docs/samples/generated-specimen-model.json",
+          "docs/samples/generated-specimen-route-trace.json",
+          "docs/samples/generated-specimen-readback.md",
+          "docs/samples/generated-specimen-review-ja.md"
+        ]
+      }
+    ],
+    "generator_provided": {
+      "fields": [
+        "nodeIdHint",
+        "text",
+        "followUpChoice.idHint",
+        "followUpChoice.text",
+        "followUpChoice.targetId",
+        "followUpChoice.effects"
+      ],
+      "follow_up_choice": {
+        "effects": [
+          {
+            "delta": 2,
+            "key": "evidence",
+            "type": "addResource"
+          }
+        ],
+        "idHint": "connect_generated_specimen_archive",
+        "targetId": "archive",
+        "text": "Connect the generated clue to the archive"
+      },
+      "node_id_hint": "generated_specimen_continuation",
+      "text": "Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it."
+    },
+    "validation_adjusted": []
   },
   "route": {
     "choiceIds": [
@@ -548,5 +608,33 @@
       }
     ]
   },
-  "schemaVersion": 1
+  "schemaVersion": 1,
+  "structuredProposal": {
+    "followUpChoice": {
+      "effects": [
+        {
+          "delta": 2,
+          "key": "evidence",
+          "type": "addResource"
+        }
+      ],
+      "idHint": "connect_generated_specimen_archive",
+      "targetId": "archive",
+      "text": "Connect the generated clue to the archive"
+    },
+    "nodeIdHint": "generated_specimen_continuation",
+    "ownership": {
+      "builderAdded": [],
+      "generatorProvided": [
+        "nodeIdHint",
+        "text",
+        "followUpChoice.idHint",
+        "followUpChoice.text",
+        "followUpChoice.targetId",
+        "followUpChoice.effects"
+      ],
+      "validationAdjusted": []
+    },
+    "text": "Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it."
+  }
 }

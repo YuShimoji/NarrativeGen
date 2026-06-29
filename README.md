@@ -29,7 +29,7 @@ The current canonical playable artifact is:
 
 For human review of the authoring sample, open the Japanese review surface first. Use the detailed readback for exact route steps, the JSON trace for machine-readable state, and the logic audit for audit history.
 
-For review of the first generated story specimen, open the generated specimen review surface first. It shows the mock-provider output, the adopted node path, and the current pass/warn/fix/defer assessment.
+For review of the first generated story specimen, open the generated specimen review surface first. It shows the mock-provider structured proposal, the generator/builder ownership boundary, the adopted node path, and the current pass/warn/fix/defer assessment.
 
 Shortest local review:
 

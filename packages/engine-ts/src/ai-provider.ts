@@ -1,6 +1,8 @@
 // AI Provider interfaces for narrative assistance
 // Optional layer on top of core engine
 
+import type { Effect } from './types'
+
 export interface StoryContext {
   previousNodes: { id: string; text: string }[]
   currentNodeText: string
@@ -14,8 +16,27 @@ export interface ParaphraseOptions {
   emotion?: 'angry' | 'happy' | 'sad' | 'anxious' | 'neutral'
 }
 
+export interface StructuredContinuationChoiceProposal {
+  idHint: string
+  text: string
+  targetId: string
+  effects: Effect[]
+}
+
+export interface StructuredContinuationProposal {
+  nodeIdHint: string
+  text: string
+  followUpChoice: StructuredContinuationChoiceProposal
+  ownership: {
+    generatorProvided: string[]
+    builderAdded: string[]
+    validationAdjusted: string[]
+  }
+}
+
 export interface AIProvider {
   generateNextNode(context: StoryContext): Promise<string>
+  generateContinuationProposal?(context: StoryContext): Promise<StructuredContinuationProposal>
   paraphrase(text: string, options?: ParaphraseOptions): Promise<string[]>
 }
 
@@ -29,6 +50,11 @@ export interface AIConfig {
 
 export class MockAIProvider implements AIProvider {
   async generateNextNode(context: StoryContext): Promise<string> {
+    const proposal = await this.generateContinuationProposal(context)
+    return proposal.text
+  }
+
+  async generateContinuationProposal(context: StoryContext): Promise<StructuredContinuationProposal> {
     const contextText = [
       ...context.previousNodes.map((node) => node.text),
       context.currentNodeText,
@@ -36,11 +62,34 @@ export class MockAIProvider implements AIProvider {
     ].join('\n')
     const lead = extractLead(contextText)
 
-    return [
+    const text = [
       `Mock continuation: ${lead} stops being a loose note and becomes a reachable clue.`,
       'A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path.',
       'It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.',
     ].join(' ')
+
+    return {
+      nodeIdHint: 'generated_specimen_continuation',
+      text,
+      followUpChoice: {
+        idHint: 'connect_generated_specimen_archive',
+        text: 'Connect the generated clue to the archive',
+        targetId: 'archive',
+        effects: [{ type: 'addResource', key: 'evidence', delta: 2 }],
+      },
+      ownership: {
+        generatorProvided: [
+          'nodeIdHint',
+          'text',
+          'followUpChoice.idHint',
+          'followUpChoice.text',
+          'followUpChoice.targetId',
+          'followUpChoice.effects',
+        ],
+        builderAdded: [],
+        validationAdjusted: [],
+      },
+    }
   }
 
   async paraphrase(text: string, _options?: ParaphraseOptions): Promise<string[]> {

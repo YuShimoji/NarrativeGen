@@ -28,6 +28,28 @@ describe('MockAIProvider', () => {
         expect(result).toContain('archive stairs')
     })
 
+    it('generates a structured continuation proposal', async () => {
+        const provider = new MockAIProvider()
+        const context: StoryContext = {
+            previousNodes: [{ id: 'desk', text: 'Lead: the clocktower bell' }],
+            currentNodeText: 'The scene is still thin.',
+            choiceText: 'Adopt continuation'
+        }
+        const proposal = await provider.generateContinuationProposal(context)
+
+        expect(proposal.nodeIdHint).toBe('generated_specimen_continuation')
+        expect(proposal.text).toContain('the clocktower bell')
+        expect(proposal.followUpChoice).toEqual({
+            idHint: 'connect_generated_specimen_archive',
+            text: 'Connect the generated clue to the archive',
+            targetId: 'archive',
+            effects: [{ type: 'addResource', key: 'evidence', delta: 2 }]
+        })
+        expect(proposal.ownership.generatorProvided).toContain('followUpChoice.effects')
+        expect(proposal.ownership.builderAdded).toEqual([])
+        expect(proposal.ownership.validationAdjusted).toEqual([])
+    })
+
     it('generates paraphrase variants', async () => {
         const provider = new MockAIProvider()
         const text = 'これはテストです。'

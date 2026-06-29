@@ -4,19 +4,26 @@
 
 ## Story Brief
 
-元モデルは `vertical-slice.json` の短い調査物語です。プレイヤーは古いノートを開き、未完成の場面を下書きし、mock generator が作った continuation を graph に採用します。生成されたノードは、時計塔の鐘という手がかりを archive の ledger path に接続し、既存の proof ending まで到達可能にします。
+元モデルは `vertical-slice.json` の短い調査物語です。プレイヤーは古いノートを開き、未完成の場面を下書きし、mock generator が作った structured continuation proposal を graph に採用します。生成されたノードは、時計塔の鐘という手がかりを archive の ledger path に接続し、既存の proof ending まで到達可能にします。
 
 ## 生成された specimen
 
 - Active artifact: `docs/samples/generated-specimen-model.json`
 - Generated node: `generated_specimen_continuation`
-- Generator path: `MockAIProvider.generateNextNode` from `packages/engine-ts/src/ai-provider.ts`
+- Generator path: `MockAIProvider.generateContinuationProposal` from `packages/engine-ts/src/ai-provider.ts`
+- Compatibility path: `MockAIProvider.generateNextNode` still returns the generated text.
 - Source route: `open_notebook -> draft_scene`
 - Review route: `open_notebook -> draft_scene -> adopt_generated_specimen -> connect_generated_specimen_archive -> decode_ledger -> publish_with_proof`
 
 Generated text:
 
 > Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.
+
+Structured proposal:
+
+- nodeIdHint: `generated_specimen_continuation`
+- followUpChoice: `connect_generated_specimen_archive` / "Connect the generated clue to the archive" -> `archive`
+- effect: add resource evidence +2
 
 ## Route Overview / Structure Summary
 
@@ -41,13 +48,84 @@ flowchart TD
 - `draft_status`: `generated specimen adopted` に変わり、下書きが生成ノードとして graph に入ったことを示します。
 - `evidence`: generated clue を archive に接続すると `+2` され、既存の proof gate を通れる状態になります。
 
+## Generator / Builder Boundary
+
+- generator_provided: generated node id hint、node text、follow-up choice id hint、choice text、target id、effect。
+- builder_added: `drafting` から generated node へ入る source adoption choice と artifact/readback scaffolding。
+- validation_adjusted: 今回は proposal が既存 specimen IDs と schema-valid effect を返すため、追加補正なし。
+
+Boundary readback:
+
+```json
+{
+  "builder_added": [
+    {
+      "field": "source_adoption_choice",
+      "value": {
+        "effects": [
+          {
+            "key": "ai_draft_adopted",
+            "type": "setFlag",
+            "value": true
+          },
+          {
+            "key": "draft_status",
+            "type": "setVariable",
+            "value": "generated specimen adopted"
+          }
+        ],
+        "id": "adopt_generated_specimen",
+        "target": "generated_specimen_continuation",
+        "text": "Adopt the generated specimen"
+      }
+    },
+    {
+      "field": "artifact_serialization_and_readback",
+      "value": [
+        "docs/samples/generated-specimen-model.json",
+        "docs/samples/generated-specimen-route-trace.json",
+        "docs/samples/generated-specimen-readback.md",
+        "docs/samples/generated-specimen-review-ja.md"
+      ]
+    }
+  ],
+  "generator_provided": {
+    "fields": [
+      "nodeIdHint",
+      "text",
+      "followUpChoice.idHint",
+      "followUpChoice.text",
+      "followUpChoice.targetId",
+      "followUpChoice.effects"
+    ],
+    "follow_up_choice": {
+      "effects": [
+        {
+          "delta": 2,
+          "key": "evidence",
+          "type": "addResource"
+        }
+      ],
+      "idHint": "connect_generated_specimen_archive",
+      "targetId": "archive",
+      "text": "Connect the generated clue to the archive"
+    },
+    "node_id_hint": "generated_specimen_continuation",
+    "text": "Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it."
+  },
+  "validation_adjusted": []
+}
+```
+
 ## 生成品質メモ
 
 - pass: 生成例は具体的な node text として存在し、route 上で到達・通過できます。
+- pass: mock generator は本文だけでなく、follow-up choice / target / effect を structured proposal として返しています。
 - pass: 生成結果は既存モデルの proof route に接続され、ending まで読めます。
 - warn: mock prose はまだ説明的で、名作品質の本文ではありません。
-- warn: node choice/effect は generator ではなく specimen builder が補っています。
-- fix: 次の bounded slice では、generator に structured output または story packet を渡し、choice/effect 生成の責務を少しだけ増やす余地があります。
+- warn: `drafting` から generated node へ入る adoption choice は、まだ specimen builder 側の scaffolding です。
+- warn: structured proposal は mock provider の証拠であり、OpenAI/local LLM の生成品質証明ではありません。
+- fix: 次の bounded slice では、generator により明示的な story packet を渡すか、mock 以外へ structured output の責務を広げる余地があります。
 - defer: OpenAI provider、local LLM、Web Tester 大改造、新CSV schema は今回の対象外です。
 
 ## Review-Pack Pattern Note
