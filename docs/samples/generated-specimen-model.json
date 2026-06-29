@@ -332,11 +332,11 @@
     },
     "generated_specimen_continuation": {
       "id": "generated_specimen_continuation",
-      "text": "Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.",
+      "text": "Mock continuation: after open_notebook -> draft_scene, the clocktower bell stops being a loose note in drafting and becomes a reachable clue. The packet shows evidence=1 and gated choices none, so a lantern under the archive stairs turns the pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.\" into a ledger test. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.",
       "choices": [
         {
           "id": "connect_generated_specimen_archive",
-          "text": "Connect the generated clue to the archive",
+          "text": "Test the clocktower bell against the archive ledger",
           "target": "archive",
           "effects": [
             {

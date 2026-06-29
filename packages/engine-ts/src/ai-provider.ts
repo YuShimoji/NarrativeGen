@@ -1,12 +1,45 @@
 // AI Provider interfaces for narrative assistance
 // Optional layer on top of core engine
 
-import type { Effect } from './types'
+import type { Condition, Effect } from './types'
+
+export interface StoryPacketChoiceSummary {
+  id: string
+  text: string
+  target: string
+  conditions?: Condition[]
+  effects?: Effect[]
+}
+
+export interface StoryContextPacket {
+  currentNode: {
+    id: string
+    text: string
+  }
+  route: {
+    nodeIds: string[]
+    selectedChoiceIds: string[]
+  }
+  visibleChoices: StoryPacketChoiceSummary[]
+  gatedChoices: StoryPacketChoiceSummary[]
+  state: {
+    flags: Record<string, boolean>
+    resources: Record<string, number>
+    variables: Record<string, string | number>
+  }
+  storyPressure: string
+  constraints: {
+    preferredReturnTargetId?: string
+    nonGoals: string[]
+    validationRequirements: string[]
+  }
+}
 
 export interface StoryContext {
   previousNodes: { id: string; text: string }[]
   currentNodeText: string
   choiceText?: string
+  storyPacket?: StoryContextPacket
 }
 
 export interface ParaphraseOptions {
@@ -61,10 +94,19 @@ export class MockAIProvider implements AIProvider {
       context.choiceText ?? '',
     ].join('\n')
     const lead = extractLead(contextText)
+    const packet = context.storyPacket
+    const currentNodeId = packet?.currentNode.id ?? 'current scene'
+    const selectedRoute = packet?.route.selectedChoiceIds.length
+      ? packet.route.selectedChoiceIds.join(' -> ')
+      : 'unrecorded route'
+    const evidence = packet?.state.resources.evidence ?? 0
+    const gatedChoiceIds = packet?.gatedChoices.map((choice) => choice.id).join(', ') || 'none'
+    const pressure = packet?.storyPressure ?? 'turn the clue into a testable route'
+    const targetId = packet?.constraints.preferredReturnTargetId ?? 'archive'
 
     const text = [
-      `Mock continuation: ${lead} stops being a loose note and becomes a reachable clue.`,
-      'A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path.',
+      `Mock continuation: after ${selectedRoute}, ${lead} stops being a loose note in ${currentNodeId} and becomes a reachable clue.`,
+      `The packet shows evidence=${evidence} and gated choices ${gatedChoiceIds}, so a lantern under the ${targetId} stairs turns the pressure "${pressure}" into a ledger test.`,
       'It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.',
     ].join(' ')
 
@@ -73,12 +115,18 @@ export class MockAIProvider implements AIProvider {
       text,
       followUpChoice: {
         idHint: 'connect_generated_specimen_archive',
-        text: 'Connect the generated clue to the archive',
-        targetId: 'archive',
+        text: `Test ${lead} against the ${targetId} ledger`,
+        targetId,
         effects: [{ type: 'addResource', key: 'evidence', delta: 2 }],
       },
       ownership: {
         generatorProvided: [
+          'storyPacket.currentNode',
+          'storyPacket.route',
+          'storyPacket.state.resources.evidence',
+          'storyPacket.gatedChoices',
+          'storyPacket.storyPressure',
+          'storyPacket.constraints',
           'nodeIdHint',
           'text',
           'followUpChoice.idHint',

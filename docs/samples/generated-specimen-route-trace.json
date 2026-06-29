@@ -10,18 +10,20 @@
       "OpenAI provider, local LLM, schema expansion, and Web Tester redesign"
     ],
     "fix": [
-      "next bounded slice can pass a richer story packet into the generator or broaden structured output beyond the mock provider"
+      "next bounded slice can add a non-mock provider adapter, enrich the packet, or integrate this path with SP-DTYARN"
     ],
     "pass": [
+      "builder passes a bounded story packet with current node, route, choices, state, story pressure, and constraints",
+      "mock generator output reflects story packet facts in the generated text and follow-up choice wording",
       "mock generator output is structured as node text plus one follow-up choice/effect proposal",
       "structured proposal is serialized as a concrete node",
       "generated node is reachable from the existing drafting route",
       "review route reaches the existing proof ending"
     ],
     "warn": [
-      "mock prose remains formulaic",
+      "mock prose remains deterministic and formulaic",
       "source adoption choice from drafting is still builder scaffolding",
-      "structured continuation proposal is mock-only evidence, not real provider quality"
+      "story-packet-aware proposal is mock-only evidence, not real provider quality"
     ]
   },
   "generatedNode": {
@@ -36,11 +38,11 @@
         ],
         "id": "connect_generated_specimen_archive",
         "target": "archive",
-        "text": "Connect the generated clue to the archive"
+        "text": "Test the clocktower bell against the archive ledger"
       }
     ],
     "id": "generated_specimen_continuation",
-    "text": "Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it."
+    "text": "Mock continuation: after open_notebook -> draft_scene, the clocktower bell stops being a loose note in drafting and becomes a reachable clue. The packet shows evidence=1 and gated choices none, so a lantern under the archive stairs turns the pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.\" into a ledger test. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it."
   },
   "generatorPath": {
     "context": {
@@ -55,7 +57,76 @@
           "id": "notebook",
           "text": "The notebook has one usable hook: the clocktower bell. A margin note says Mira heard it first.\n\nThe story finally has a spine."
         }
-      ]
+      ],
+      "storyPacket": {
+        "constraints": {
+          "nonGoals": [
+            "Do not claim real AI quality from mock output.",
+            "Do not redesign schema, CSV, Web Tester UI, or engine transition semantics."
+          ],
+          "preferredReturnTargetId": "archive",
+          "validationRequirements": [
+            "Keep generated specimen route playable to truth_end.",
+            "Preserve generateNextNode text-only compatibility."
+          ]
+        },
+        "currentNode": {
+          "id": "drafting",
+          "text": "The scene is still thin. You can either accept a mock AI continuation into the graph or publish a fragment.\n\nDraft: unwritten\n"
+        },
+        "gatedChoices": [],
+        "route": {
+          "nodeIds": [
+            "desk",
+            "notebook",
+            "drafting"
+          ],
+          "selectedChoiceIds": [
+            "open_notebook",
+            "draft_scene"
+          ]
+        },
+        "state": {
+          "flags": {
+            "ai_draft_adopted": false,
+            "found_hook": true,
+            "trusted_mira": false
+          },
+          "resources": {
+            "evidence": 1,
+            "focus": 1
+          },
+          "variables": {
+            "draft_status": "unwritten",
+            "lead_name": "the clocktower bell"
+          }
+        },
+        "storyPressure": "Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.",
+        "visibleChoices": [
+          {
+            "effects": [
+              {
+                "key": "ai_draft_adopted",
+                "type": "setFlag",
+                "value": true
+              },
+              {
+                "key": "draft_status",
+                "type": "setVariable",
+                "value": "mock scene adopted"
+              }
+            ],
+            "id": "use_mock_ai",
+            "target": "ai_mock_scene",
+            "text": "Use the mock AI continuation"
+          },
+          {
+            "id": "cut_short",
+            "target": "rushed_end",
+            "text": "Cut the scene short"
+          }
+        ]
+      }
     },
     "entrypoint": "createAIProvider({ provider: \"mock\" }).generateContinuationProposal",
     "inputRoute": [
@@ -111,6 +182,12 @@
     ],
     "generator_provided": {
       "fields": [
+        "storyPacket.currentNode",
+        "storyPacket.route",
+        "storyPacket.state.resources.evidence",
+        "storyPacket.gatedChoices",
+        "storyPacket.storyPressure",
+        "storyPacket.constraints",
         "nodeIdHint",
         "text",
         "followUpChoice.idHint",
@@ -128,10 +205,10 @@
         ],
         "idHint": "connect_generated_specimen_archive",
         "targetId": "archive",
-        "text": "Connect the generated clue to the archive"
+        "text": "Test the clocktower bell against the archive ledger"
       },
       "node_id_hint": "generated_specimen_continuation",
-      "text": "Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it."
+      "text": "Mock continuation: after open_notebook -> draft_scene, the clocktower bell stops being a loose note in drafting and becomes a reachable clue. The packet shows evidence=1 and gated choices none, so a lantern under the archive stairs turns the pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.\" into a ledger test. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it."
     },
     "validation_adjusted": []
   },
@@ -430,10 +507,10 @@
       },
       {
         "fromNode": {
-          "displayText": "Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.",
+          "displayText": "Mock continuation: after open_notebook -> draft_scene, the clocktower bell stops being a loose note in drafting and becomes a reachable clue. The packet shows evidence=1 and gated choices none, so a lantern under the archive stairs turns the pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.\" into a ledger test. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.",
           "gatedChoices": [],
           "nodeId": "generated_specimen_continuation",
-          "rawText": "Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.",
+          "rawText": "Mock continuation: after open_notebook -> draft_scene, the clocktower bell stops being a loose note in drafting and becomes a reachable clue. The packet shows evidence=1 and gated choices none, so a lantern under the archive stairs turns the pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.\" into a ledger test. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.",
           "speaker": null,
           "visibleChoices": [
             {
@@ -446,7 +523,7 @@
               ],
               "id": "connect_generated_specimen_archive",
               "target": "archive",
-              "text": "Connect the generated clue to the archive"
+              "text": "Test the clocktower bell against the archive ledger"
             }
           ]
         },
@@ -460,7 +537,7 @@
           ],
           "id": "connect_generated_specimen_archive",
           "target": "archive",
-          "text": "Connect the generated clue to the archive"
+          "text": "Test the clocktower bell against the archive ledger"
         },
         "stateChanges": {
           "resources": {
@@ -609,6 +686,110 @@
     ]
   },
   "schemaVersion": 1,
+  "story_packet": {
+    "constraints": {
+      "nonGoals": [
+        "Do not claim real AI quality from mock output.",
+        "Do not redesign schema, CSV, Web Tester UI, or engine transition semantics."
+      ],
+      "preferredReturnTargetId": "archive",
+      "validationRequirements": [
+        "Keep generated specimen route playable to truth_end.",
+        "Preserve generateNextNode text-only compatibility."
+      ]
+    },
+    "currentNode": {
+      "id": "drafting",
+      "text": "The scene is still thin. You can either accept a mock AI continuation into the graph or publish a fragment.\n\nDraft: unwritten\n"
+    },
+    "gatedChoices": [],
+    "route": {
+      "nodeIds": [
+        "desk",
+        "notebook",
+        "drafting"
+      ],
+      "selectedChoiceIds": [
+        "open_notebook",
+        "draft_scene"
+      ]
+    },
+    "state": {
+      "flags": {
+        "ai_draft_adopted": false,
+        "found_hook": true,
+        "trusted_mira": false
+      },
+      "resources": {
+        "evidence": 1,
+        "focus": 1
+      },
+      "variables": {
+        "draft_status": "unwritten",
+        "lead_name": "the clocktower bell"
+      }
+    },
+    "storyPressure": "Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.",
+    "visibleChoices": [
+      {
+        "effects": [
+          {
+            "key": "ai_draft_adopted",
+            "type": "setFlag",
+            "value": true
+          },
+          {
+            "key": "draft_status",
+            "type": "setVariable",
+            "value": "mock scene adopted"
+          }
+        ],
+        "id": "use_mock_ai",
+        "target": "ai_mock_scene",
+        "text": "Use the mock AI continuation"
+      },
+      {
+        "id": "cut_short",
+        "target": "rushed_end",
+        "text": "Cut the scene short"
+      }
+    ]
+  },
+  "story_packet_summary": {
+    "current_node_id": "drafting",
+    "gated_choice_ids": [],
+    "non_goals": [
+      "Do not claim real AI quality from mock output.",
+      "Do not redesign schema, CSV, Web Tester UI, or engine transition semantics."
+    ],
+    "preferred_return_target_id": "archive",
+    "route_node_ids": [
+      "desk",
+      "notebook",
+      "drafting"
+    ],
+    "selected_choice_ids": [
+      "open_notebook",
+      "draft_scene"
+    ],
+    "state_resources": {
+      "evidence": 1,
+      "focus": 1
+    },
+    "state_variables": {
+      "draft_status": "unwritten",
+      "lead_name": "the clocktower bell"
+    },
+    "story_pressure": "Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.",
+    "validation_requirements": [
+      "Keep generated specimen route playable to truth_end.",
+      "Preserve generateNextNode text-only compatibility."
+    ],
+    "visible_choice_ids": [
+      "use_mock_ai",
+      "cut_short"
+    ]
+  },
   "structuredProposal": {
     "followUpChoice": {
       "effects": [
@@ -620,12 +801,18 @@
       ],
       "idHint": "connect_generated_specimen_archive",
       "targetId": "archive",
-      "text": "Connect the generated clue to the archive"
+      "text": "Test the clocktower bell against the archive ledger"
     },
     "nodeIdHint": "generated_specimen_continuation",
     "ownership": {
       "builderAdded": [],
       "generatorProvided": [
+        "storyPacket.currentNode",
+        "storyPacket.route",
+        "storyPacket.state.resources.evidence",
+        "storyPacket.gatedChoices",
+        "storyPacket.storyPressure",
+        "storyPacket.constraints",
         "nodeIdHint",
         "text",
         "followUpChoice.idHint",
@@ -635,6 +822,6 @@
       ],
       "validationAdjusted": []
     },
-    "text": "Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it."
+    "text": "Mock continuation: after open_notebook -> draft_scene, the clocktower bell stops being a loose note in drafting and becomes a reachable clue. The packet shows evidence=1 and gated choices none, so a lantern under the archive stairs turns the pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.\" into a ledger test. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it."
   }
 }

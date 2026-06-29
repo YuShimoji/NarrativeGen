@@ -156,6 +156,14 @@ function stateSnapshot(session) {
   }
 }
 
+function storyStateSnapshot(session) {
+  return {
+    flags: session.flags,
+    resources: session.resources,
+    variables: session.variables,
+  }
+}
+
 function runRoute(model, choiceIds) {
   let session = startSession(model)
   const nodeSequence = [session.nodeId]
@@ -194,18 +202,46 @@ function runRoute(model, choiceIds) {
 function buildGenerationContext(model) {
   let session = startSession(model)
   const previousNodes = [captureNode(model, session)]
+  const selectedChoiceIds = []
 
   for (const choiceId of generationRouteToSource) {
     session = applyChoice(session, model, choiceId)
+    selectedChoiceIds.push(choiceId)
     previousNodes.push(captureNode(model, session))
   }
 
   const currentNode = previousNodes.at(-1)
   const leadName = session.variables?.lead_name ?? 'the current lead'
+  const storyPacket = {
+    currentNode: {
+      id: currentNode.nodeId,
+      text: currentNode.displayText,
+    },
+    route: {
+      nodeIds: previousNodes.map((node) => node.nodeId),
+      selectedChoiceIds,
+    },
+    visibleChoices: currentNode.visibleChoices,
+    gatedChoices: currentNode.gatedChoices,
+    state: storyStateSnapshot(session),
+    storyPressure: 'Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.',
+    constraints: {
+      preferredReturnTargetId: 'archive',
+      nonGoals: [
+        'Do not claim real AI quality from mock output.',
+        'Do not redesign schema, CSV, Web Tester UI, or engine transition semantics.',
+      ],
+      validationRequirements: [
+        'Keep generated specimen route playable to truth_end.',
+        'Preserve generateNextNode text-only compatibility.',
+      ],
+    },
+  }
 
   return {
     sourceNodeId: session.nodeId,
     inputRoute: generationRouteToSource,
+    storyPacket,
     context: {
       previousNodes: previousNodes.slice(0, -1).map((node) => ({
         id: node.nodeId,
@@ -213,6 +249,7 @@ function buildGenerationContext(model) {
       })),
       currentNodeText: `${currentNode.displayText}\nLead: ${leadName}`,
       choiceText: 'Adopt continuation into the graph',
+      storyPacket,
     },
   }
 }
@@ -427,6 +464,22 @@ function stateChangeList(changes) {
   return lines.length ? lines.join('; ') : 'none'
 }
 
+function summarizeStoryPacket(packet) {
+  return {
+    current_node_id: packet.currentNode.id,
+    route_node_ids: packet.route.nodeIds,
+    selected_choice_ids: packet.route.selectedChoiceIds,
+    visible_choice_ids: packet.visibleChoices.map((choice) => choice.id),
+    gated_choice_ids: packet.gatedChoices.map((choice) => choice.id),
+    state_resources: packet.state.resources,
+    state_variables: packet.state.variables,
+    story_pressure: packet.storyPressure,
+    preferred_return_target_id: packet.constraints.preferredReturnTargetId ?? null,
+    non_goals: packet.constraints.nonGoals,
+    validation_requirements: packet.constraints.validationRequirements,
+  }
+}
+
 function quoteText(text) {
   return text
     .split('\n')
@@ -452,6 +505,16 @@ function renderReadback(trace) {
     '- Source node: `drafting` after `open_notebook -> draft_scene`',
     `- Generated node: \`${adoptionNodeId}\``,
     `- Active artifact: \`${trace.artifacts.specimenModelPath}\``,
+    '',
+    '## Story Packet Summary',
+    '',
+    `- Current node: \`${trace.story_packet_summary.current_node_id}\``,
+    `- Route so far: ${trace.story_packet_summary.selected_choice_ids.map((id) => `\`${id}\``).join(' -> ')}`,
+    `- Visible choices: ${trace.story_packet_summary.visible_choice_ids.map((id) => `\`${id}\``).join(', ') || 'none'}`,
+    `- Gated choices: ${trace.story_packet_summary.gated_choice_ids.map((id) => `\`${id}\``).join(', ') || 'none'}`,
+    `- Resources: ${stableStringify(trace.story_packet_summary.state_resources).replace(/\n/g, ' ')}`,
+    `- Story pressure: ${trace.story_packet_summary.story_pressure}`,
+    `- Non-goals: ${trace.story_packet_summary.non_goals.join(' / ')}`,
     '',
     '## Generated Text',
     '',
@@ -504,10 +567,11 @@ function renderReadback(trace) {
   lines.push(
     '## Assessment Snapshot',
     '',
-    '- pass: the generator produces a structured continuation packet with text, one follow-up choice, target, and effect.',
+    '- pass: the builder passes a bounded story packet with current node, route, choices, state, pressure, and constraints.',
+    '- pass: the generator produces a structured continuation packet that reflects packet facts in text and choice wording.',
     '- pass: the structured packet is serialized as a concrete reachable story node, not only a test assertion.',
-    '- warn: the mock prose is formulaic and the source adoption choice is still builder scaffolding.',
-    '- fix: next bounded slice can pass a richer story packet into the generator or broaden structured output beyond the mock provider.',
+    '- warn: the mock remains deterministic and the source adoption choice is still builder scaffolding.',
+    '- fix: next bounded slice can add a non-mock provider adapter, enrich the packet, or integrate this path with SP-DTYARN.',
     '- defer: OpenAI provider, local LLM, Web Tester redesign, and schema expansion are outside this specimen slice.',
     ''
   )
@@ -523,7 +587,7 @@ function renderReview(trace) {
     '',
     '## Story Brief',
     '',
-    '元モデルは `vertical-slice.json` の短い調査物語です。プレイヤーは古いノートを開き、未完成の場面を下書きし、mock generator が作った structured continuation proposal を graph に採用します。生成されたノードは、時計塔の鐘という手がかりを archive の ledger path に接続し、既存の proof ending まで到達可能にします。',
+    '元モデルは `vertical-slice.json` の短い調査物語です。プレイヤーは古いノートを開き、未完成の場面を下書きし、builder が current node / route / state / story pressure を含む story packet を mock generator に渡します。mock generator はその packet を反映した structured continuation proposal を返し、生成されたノードは時計塔の鐘という手がかりを archive の ledger path に接続して、既存の proof ending まで到達可能にします。',
     '',
     '## 生成された specimen',
     '',
@@ -533,6 +597,16 @@ function renderReview(trace) {
     '- Compatibility path: `MockAIProvider.generateNextNode` still returns the generated text.',
     '- Source route: `open_notebook -> draft_scene`',
     '- Review route: `open_notebook -> draft_scene -> adopt_generated_specimen -> connect_generated_specimen_archive -> decode_ledger -> publish_with_proof`',
+    '',
+    'Story packet summary:',
+    '',
+    `- current node: \`${trace.story_packet_summary.current_node_id}\``,
+    `- route so far: ${trace.story_packet_summary.selected_choice_ids.map((id) => `\`${id}\``).join(' -> ')}`,
+    `- visible choices: ${trace.story_packet_summary.visible_choice_ids.map((id) => `\`${id}\``).join(', ') || 'none'}`,
+    `- gated choices: ${trace.story_packet_summary.gated_choice_ids.map((id) => `\`${id}\``).join(', ') || 'none'}`,
+    `- resources: ${stableStringify(trace.story_packet_summary.state_resources).replace(/\n/g, ' ')}`,
+    `- story pressure: ${trace.story_packet_summary.story_pressure}`,
+    `- non-goals: ${trace.story_packet_summary.non_goals.join(' / ')}`,
     '',
     'Generated text:',
     '',
@@ -572,6 +646,7 @@ function renderReview(trace) {
     '- generator_provided: generated node id hint、node text、follow-up choice id hint、choice text、target id、effect。',
     '- builder_added: `drafting` から generated node へ入る source adoption choice と artifact/readback scaffolding。',
     '- validation_adjusted: 今回は proposal が既存 specimen IDs と schema-valid effect を返すため、追加補正なし。',
+    '- story_packet: current node、route history、visible/gated choices、state snapshot、story pressure、constraints を builder が provider に渡しています。',
     '',
     'Boundary readback:',
     '',
@@ -580,12 +655,13 @@ function renderReview(trace) {
     '## 生成品質メモ',
     '',
     '- pass: 生成例は具体的な node text として存在し、route 上で到達・通過できます。',
+    '- pass: builder は current node / route / choices / state / story pressure / constraints を含む story packet を provider に渡しています。',
+    '- pass: mock proposal は route、current node、evidence、gated choice、story pressure を本文または choice wording に反映しています。',
     '- pass: mock generator は本文だけでなく、follow-up choice / target / effect を structured proposal として返しています。',
     '- pass: 生成結果は既存モデルの proof route に接続され、ending まで読めます。',
-    '- warn: mock prose はまだ説明的で、名作品質の本文ではありません。',
+    '- warn: mock prose はまだ決定的で説明的であり、名作品質や real provider quality の証明ではありません。',
     '- warn: `drafting` から generated node へ入る adoption choice は、まだ specimen builder 側の scaffolding です。',
-    '- warn: structured proposal は mock provider の証拠であり、OpenAI/local LLM の生成品質証明ではありません。',
-    '- fix: 次の bounded slice では、generator により明示的な story packet を渡すか、mock 以外へ structured output の責務を広げる余地があります。',
+    '- fix: 次の bounded slice では、non-mock provider adapter、より豊かな packet、または SP-DTYARN integration を選べます。',
     '- defer: OpenAI provider、local LLM、Web Tester 大改造、新CSV schema は今回の対象外です。',
     '',
     '## Review-Pack Pattern Note',
@@ -625,6 +701,8 @@ function buildTrace(sourceModel, specimenModel, generation, structuredResult) {
       addedNodeIds: [adoptionNodeId],
       addedChoiceIds: [adoptionChoiceId, connectChoiceId],
     },
+    story_packet: generation.storyPacket,
+    story_packet_summary: summarizeStoryPacket(generation.storyPacket),
     structuredProposal: structuredResult.proposal,
     ownershipBoundary: structuredResult.ownershipBoundary,
     generatedNode: {
@@ -635,18 +713,20 @@ function buildTrace(sourceModel, specimenModel, generation, structuredResult) {
     route,
     assessment: {
       pass: [
+        'builder passes a bounded story packet with current node, route, choices, state, story pressure, and constraints',
+        'mock generator output reflects story packet facts in the generated text and follow-up choice wording',
         'mock generator output is structured as node text plus one follow-up choice/effect proposal',
         'structured proposal is serialized as a concrete node',
         'generated node is reachable from the existing drafting route',
         'review route reaches the existing proof ending',
       ],
       warn: [
-        'mock prose remains formulaic',
+        'mock prose remains deterministic and formulaic',
         'source adoption choice from drafting is still builder scaffolding',
-        'structured continuation proposal is mock-only evidence, not real provider quality',
+        'story-packet-aware proposal is mock-only evidence, not real provider quality',
       ],
       fix: [
-        'next bounded slice can pass a richer story packet into the generator or broaden structured output beyond the mock provider',
+        'next bounded slice can add a non-mock provider adapter, enrich the packet, or integrate this path with SP-DTYARN',
       ],
       defer: [
         'OpenAI provider, local LLM, schema expansion, and Web Tester redesign',

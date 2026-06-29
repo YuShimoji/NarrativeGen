@@ -41,13 +41,58 @@ describe('MockAIProvider', () => {
         expect(proposal.text).toContain('the clocktower bell')
         expect(proposal.followUpChoice).toEqual({
             idHint: 'connect_generated_specimen_archive',
-            text: 'Connect the generated clue to the archive',
+            text: 'Test the clocktower bell against the archive ledger',
             targetId: 'archive',
             effects: [{ type: 'addResource', key: 'evidence', delta: 2 }]
         })
         expect(proposal.ownership.generatorProvided).toContain('followUpChoice.effects')
         expect(proposal.ownership.builderAdded).toEqual([])
         expect(proposal.ownership.validationAdjusted).toEqual([])
+    })
+
+    it('uses a story packet when generating a structured continuation proposal', async () => {
+        const provider = new MockAIProvider()
+        const context: StoryContext = {
+            previousNodes: [{ id: 'desk', text: 'Lead: the clocktower bell' }],
+            currentNodeText: 'The scene is still thin.',
+            choiceText: 'Adopt continuation',
+            storyPacket: {
+                currentNode: {
+                    id: 'drafting',
+                    text: 'The scene is still thin.'
+                },
+                route: {
+                    nodeIds: ['desk', 'notebook', 'drafting'],
+                    selectedChoiceIds: ['open_notebook', 'draft_scene']
+                },
+                visibleChoices: [
+                    { id: 'revise_draft', text: 'Revise the draft', target: 'drafting' }
+                ],
+                gatedChoices: [
+                    { id: 'publish_with_proof', text: 'Publish with proof', target: 'truth_end' }
+                ],
+                state: {
+                    flags: { notebook_open: true },
+                    resources: { evidence: 0, focus: 1 },
+                    variables: { lead_name: 'the clocktower bell' }
+                },
+                storyPressure: 'make the draft produce proof before publication',
+                constraints: {
+                    preferredReturnTargetId: 'archive',
+                    nonGoals: ['do not claim final prose quality'],
+                    validationRequirements: ['keep route playable']
+                }
+            }
+        }
+        const proposal = await provider.generateContinuationProposal(context)
+
+        expect(proposal.text).toContain('open_notebook -> draft_scene')
+        expect(proposal.text).toContain('drafting')
+        expect(proposal.text).toContain('evidence=0')
+        expect(proposal.text).toContain('publish_with_proof')
+        expect(proposal.text).toContain('make the draft produce proof before publication')
+        expect(proposal.followUpChoice.text).toBe('Test the clocktower bell against the archive ledger')
+        expect(proposal.ownership.generatorProvided).toContain('storyPacket.storyPressure')
     })
 
     it('generates paraphrase variants', async () => {

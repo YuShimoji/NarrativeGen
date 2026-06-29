@@ -2,10 +2,10 @@
 
 ## 最終更新
 
-- **日時**: 2026-06-29
+- **日時**: 2026-06-30
 - **ブランチ**: `main`（trunk-based）
-- **HEAD**: `main` after the latest handover sync; run `git log -1 --oneline` after pull for the exact sync commit. Generated-specimen feature baseline: `4f14bfb7b12b928a354cc4a60c08b2b554d8277a` (`feat: add generator specimen review pack`).
-- **直近**: 生成本流の最小観測として `MockAIProvider.generateNextNode` から `docs/samples/generated-specimen-model.json` を生成し、`docs/samples/generated-specimen-review-ja.md` / readback / route trace で人間レビュー可能にした。
+- **HEAD**: `main` after the story-packet generator specimen slice; run `git log -1 --oneline` after pull for the exact sync commit. Structured-output baseline before this slice: `0efdf4ad78c56da69ff6c2f9df8d93f93d79f16e` (`feat: structure mock generator continuation output`).
+- **直近**: generated specimen builder が current node / route / choices / state / story pressure / constraints を含む story packet を `MockAIProvider.generateContinuationProposal` に渡し、mock proposal が packet facts を反映するようにした。
 - **repo authority 注意**: `origin/HEAD` は `origin/main`。作業正本は `main` / `origin/main`。
 - **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`
 
@@ -27,6 +27,15 @@ NarrativeGen/
 ```
 
 ## 現在の状態
+
+### 2026-06-30 Story packet generator specimen
+
+- **Work purpose**: make the generated-specimen path inspectable as input packet -> structured proposal -> model adoption, without adding OpenAI/local LLM work, CSV schema fields, Web Tester UI redesign, or core engine transition changes.
+- **Effect**: `StoryContext` now accepts an optional bounded `storyPacket` with current node, route history, visible/gated choices, flags/resources/variables, story pressure, and generation constraints. `MockAIProvider.generateContinuationProposal` deterministically reflects route, current node, evidence, gated choices, story pressure, and preferred target in its proposal text/choice wording while `generateNextNode` stays text-compatible.
+- **Builder boundary**: `apps/web-tester/scripts/build-generated-specimen.mjs` builds the packet at `drafting` after `open_notebook -> draft_scene`, passes it into the provider, and writes `story_packet`, `story_packet_summary`, `generator_provided`, `builder_added`, and `validation_adjusted` into the trace/readback/review artifacts.
+- **Active artifacts**: start from `docs/samples/generated-specimen-review-ja.md`; use `docs/samples/generated-specimen-readback.md` for detailed trace and `docs/samples/generated-specimen-route-trace.json` for machine readback. `docs/samples/generated-specimen-model.json` remains route-playable to `truth_end`.
+- **Validation for this slice**: `npm run build:engine`, `npm run test -w @narrativegen/engine-ts` (22 files / 276 tests), `npm run build:generated-specimen -w @narrativegen/web-tester`, `npm run check:generated-specimen -w @narrativegen/web-tester`, `npm run check:safety`, `npm run build:tester`, and the focused Chromium E2Es for AI adoption, authoring sample CSV roundtrip, and vertical-slice CSV roundtrip passed.
+- **Next entry points**: add a non-mock provider adapter for the packet contract, enrich the packet only where evidence needs it, or return to SP-DTYARN continuation. Keep claims bounded: this is story-packet-aware mock evidence, not real AI quality acceptance.
 
 ### 2026-06-29 Structured generator output specimen
 

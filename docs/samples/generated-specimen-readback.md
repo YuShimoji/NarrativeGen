@@ -11,9 +11,19 @@
 - Generated node: `generated_specimen_continuation`
 - Active artifact: `docs/samples/generated-specimen-model.json`
 
+## Story Packet Summary
+
+- Current node: `drafting`
+- Route so far: `open_notebook` -> `draft_scene`
+- Visible choices: `use_mock_ai`, `cut_short`
+- Gated choices: none
+- Resources: {   "evidence": 1,   "focus": 1 }
+- Story pressure: Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.
+- Non-goals: Do not claim real AI quality from mock output. / Do not redesign schema, CSV, Web Tester UI, or engine transition semantics.
+
 ## Generated Text
 
-> Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.
+> Mock continuation: after open_notebook -> draft_scene, the clocktower bell stops being a loose note in drafting and becomes a reachable clue. The packet shows evidence=1 and gated choices none, so a lantern under the archive stairs turns the pressure "Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route." into a ledger test. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.
 
 ## Structured Proposal
 
@@ -59,6 +69,12 @@ Ownership boundary:
   ],
   "generator_provided": {
     "fields": [
+      "storyPacket.currentNode",
+      "storyPacket.route",
+      "storyPacket.state.resources.evidence",
+      "storyPacket.gatedChoices",
+      "storyPacket.storyPressure",
+      "storyPacket.constraints",
       "nodeIdHint",
       "text",
       "followUpChoice.idHint",
@@ -76,10 +92,10 @@ Ownership boundary:
       ],
       "idHint": "connect_generated_specimen_archive",
       "targetId": "archive",
-      "text": "Connect the generated clue to the archive"
+      "text": "Test the clocktower bell against the archive ledger"
     },
     "node_id_hint": "generated_specimen_continuation",
-    "text": "Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it."
+    "text": "Mock continuation: after open_notebook -> draft_scene, the clocktower bell stops being a loose note in drafting and becomes a reachable clue. The packet shows evidence=1 and gated choices none, so a lantern under the archive stairs turns the pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.\" into a ledger test. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it."
   },
   "validation_adjusted": []
 }
@@ -139,11 +155,11 @@ Ending text:
 
 4. `generated_specimen_continuation` (no speaker)
 
-> Mock continuation: the clocktower bell stops being a loose note and becomes a reachable clue. A lantern under the archive stairs repeats the phrase in careful handwriting, giving the player a concrete reason to test the ledger path. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.
+> Mock continuation: after open_notebook -> draft_scene, the clocktower bell stops being a loose note in drafting and becomes a reachable clue. The packet shows evidence=1 and gated choices none, so a lantern under the archive stairs turns the pressure "Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route." into a ledger test. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.
 
-   - Visible choices: `connect_generated_specimen_archive` "Connect the generated clue to the archive" -> `archive` [effects: add resource evidence +2]
+   - Visible choices: `connect_generated_specimen_archive` "Test the clocktower bell against the archive ledger" -> `archive` [effects: add resource evidence +2]
    - Gated choices: none
-   - Selected: `connect_generated_specimen_archive` "Connect the generated clue to the archive" -> `archive` [effects: add resource evidence +2]
+   - Selected: `connect_generated_specimen_archive` "Test the clocktower bell against the archive ledger" -> `archive` [effects: add resource evidence +2]
    - State changes: resources.evidence: 1 -> 3; time: 3 -> 4
 
 5. `archive` (no speaker)
@@ -169,8 +185,9 @@ Ending text:
 
 ## Assessment Snapshot
 
-- pass: the generator produces a structured continuation packet with text, one follow-up choice, target, and effect.
+- pass: the builder passes a bounded story packet with current node, route, choices, state, pressure, and constraints.
+- pass: the generator produces a structured continuation packet that reflects packet facts in text and choice wording.
 - pass: the structured packet is serialized as a concrete reachable story node, not only a test assertion.
-- warn: the mock prose is formulaic and the source adoption choice is still builder scaffolding.
-- fix: next bounded slice can pass a richer story packet into the generator or broaden structured output beyond the mock provider.
+- warn: the mock remains deterministic and the source adoption choice is still builder scaffolding.
+- fix: next bounded slice can add a non-mock provider adapter, enrich the packet, or integrate this path with SP-DTYARN.
 - defer: OpenAI provider, local LLM, Web Tester redesign, and schema expansion are outside this specimen slice.
