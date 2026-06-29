@@ -5,7 +5,7 @@
 - **日時**: 2026-06-30
 - **ブランチ**: `main`（trunk-based）
 - **HEAD**: `main` after the story-packet generator specimen slice; run `git log -1 --oneline` after pull for the exact sync commit. Structured-output baseline before this slice: `0efdf4ad78c56da69ff6c2f9df8d93f93d79f16e` (`feat: structure mock generator continuation output`).
-- **直近**: generated specimen builder が current node / route / choices / state / story pressure / constraints を含む story packet を `MockAIProvider.generateContinuationProposal` に渡し、mock proposal が packet facts を反映するようにした。
+- **直近**: generated specimen builder が `StoryContextPacket` を `DeterministicSpdtyarnBridgeAdapter.generateContinuationProposal` に渡し、adapter proposal を既存 adoption path で playable specimen にした。
 - **repo authority 注意**: `origin/HEAD` は `origin/main`。作業正本は `main` / `origin/main`。
 - **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`
 
@@ -27,6 +27,15 @@ NarrativeGen/
 ```
 
 ## 現在の状態
+
+### 2026-06-30 Deterministic SP-DTYARN bridge adapter
+
+- **Work purpose**: close the readiness artifact's missing packet-to-proposal seam without adding OpenAI, local LLM, CSV schema fields, Web Tester UI redesign, core transition changes, or broad SP-DTYARN redesign.
+- **Effect**: `packages/engine-ts/src/spdtyarn-bridge-adapter.ts` now exposes `DeterministicSpdtyarnBridgeAdapter`, which consumes `StoryContextPacket` and emits a `StructuredContinuationProposal` with node id hint, generated text, follow-up choice id/text, target id, and `addResource evidence +2`.
+- **Builder boundary**: `apps/web-tester/scripts/build-generated-specimen.mjs` now calls the adapter directly, adopts the proposal through the existing generated specimen path, and writes `story_packet`, `adapter_generated`, `builder_added`, `validation_adjusted`, and `still_not_real_AI` into generated artifacts.
+- **Active artifacts**: start from `docs/samples/generated-specimen-review-ja.md`; use `docs/samples/generated-specimen-readback.md` and `docs/samples/generated-specimen-route-trace.json` for exact adapter/readback evidence. `docs/samples/spdtyarn-generator-bridge-readiness.md` records the seam state.
+- **Validation for this slice**: `npm run build:engine`, `npm run test -w @narrativegen/engine-ts` (23 files / 277 tests), `npm run build:generated-specimen -w @narrativegen/web-tester`, `npm run check:generated-specimen -w @narrativegen/web-tester`, `npm run check:safety`, `npm run build:tester`, `npm run test -w @narrativegen/web-tester`, and the focused Chromium E2Es for AI adoption, authoring sample CSV roundtrip, and vertical-slice CSV roundtrip passed.
+- **Next entry points**: replace or extend the deterministic adapter with a real generator provider while preserving the packet/proposal seam, or return to narrower SP-DTYARN export gaps. Keep claims bounded: deterministic adapter evidence is not real AI quality acceptance.
 
 ### 2026-06-30 SP-DTYARN generator bridge readiness
 

@@ -4,14 +4,14 @@
 
 ## Story Brief
 
-元モデルは `vertical-slice.json` の短い調査物語です。プレイヤーは古いノートを開き、未完成の場面を下書きし、builder が current node / route / state / story pressure を含む story packet を mock generator に渡します。mock generator はその packet を反映した structured continuation proposal を返し、生成されたノードは時計塔の鐘という手がかりを archive の ledger path に接続して、既存の proof ending まで到達可能にします。
+元モデルは `vertical-slice.json` の短い調査物語です。プレイヤーは古いノートを開き、未完成の場面を下書きし、builder が current node / route / state / story pressure を含む story packet を deterministic SP-DTYARN bridge adapter に渡します。adapter はその packet を反映した structured continuation proposal を返し、生成されたノードは時計塔の鐘という手がかりを archive の ledger path に接続して、既存の proof ending まで到達可能にします。
 
 ## 生成された specimen
 
 - Active artifact: `docs/samples/generated-specimen-model.json`
 - Generated node: `generated_specimen_continuation`
-- Generator path: `MockAIProvider.generateContinuationProposal` from `packages/engine-ts/src/ai-provider.ts`
-- Compatibility path: `MockAIProvider.generateNextNode` still returns the generated text.
+- Adapter path: `DeterministicSpdtyarnBridgeAdapter.generateContinuationProposal` from `packages/engine-ts/src/spdtyarn-bridge-adapter.ts`
+- Mock provider path remains separate and is not used for this specimen.
 - Source route: `open_notebook -> draft_scene`
 - Review route: `open_notebook -> draft_scene -> adopt_generated_specimen -> connect_generated_specimen_archive -> decode_ledger -> publish_with_proof`
 
@@ -23,16 +23,16 @@ Story packet summary:
 - gated choices: none
 - resources: {   "evidence": 1,   "focus": 1 }
 - story pressure: Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.
-- non-goals: Do not claim real AI quality from mock output. / Do not redesign schema, CSV, Web Tester UI, or engine transition semantics.
+- non-goals: Do not claim real AI quality from deterministic adapter output. / Do not redesign schema, CSV, Web Tester UI, or engine transition semantics.
 
 Generated text:
 
-> Mock continuation: after open_notebook -> draft_scene, the clocktower bell stops being a loose note in drafting and becomes a reachable clue. The packet shows evidence=1 and gated choices none, so a lantern under the archive stairs turns the pressure "Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route." into a ledger test. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.
+> Deterministic SP-DTYARN bridge: the clocktower bell is extended from drafting after open_notebook -> draft_scene. The adapter reads the current scene "The scene is still thin.", evidence=1, focus=1, and pressure "Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route". It proposes a proof-bearing clue that returns to archive; this is rule-based adapter output, not AI prose quality.
 
 Structured proposal:
 
 - nodeIdHint: `generated_specimen_continuation`
-- followUpChoice: `connect_generated_specimen_archive` / "Test the clocktower bell against the archive ledger" -> `archive`
+- followUpChoice: `connect_generated_specimen_archive` / "Route the clocktower bell through the archive proof check" -> `archive`
 - effect: add resource evidence +2
 
 ## Route Overview / Structure Summary
@@ -58,17 +58,54 @@ flowchart TD
 - `draft_status`: `generated specimen adopted` に変わり、下書きが生成ノードとして graph に入ったことを示します。
 - `evidence`: generated clue を archive に接続すると `+2` され、既存の proof gate を通れる状態になります。
 
-## Generator / Builder Boundary
+## Adapter / Builder Boundary
 
-- generator_provided: generated node id hint、node text、follow-up choice id hint、choice text、target id、effect。
+- adapter_generated: generated node id hint、node text、follow-up choice id hint、choice text、target id、effect。
 - builder_added: `drafting` から generated node へ入る source adoption choice と artifact/readback scaffolding。
 - validation_adjusted: 今回は proposal が既存 specimen IDs と schema-valid effect を返すため、追加補正なし。
-- story_packet: current node、route history、visible/gated choices、state snapshot、story pressure、constraints を builder が provider に渡しています。
+- story_packet: current node、route history、visible/gated choices、state snapshot、story pressure、constraints を builder が adapter に渡しています。
+- still_not_real_AI: deterministic rule-based adapter output であり、OpenAI/local LLM/最終品質の証明ではありません。
 
 Boundary readback:
 
 ```json
 {
+  "adapter_generated": {
+    "fields": [
+      "storyPacket.currentNode.id",
+      "storyPacket.currentNode.text",
+      "storyPacket.route.nodeIds",
+      "storyPacket.route.selectedChoiceIds",
+      "storyPacket.visibleChoices",
+      "storyPacket.gatedChoices",
+      "storyPacket.state.resources.evidence",
+      "storyPacket.state.resources.focus",
+      "storyPacket.state.variables.lead_name",
+      "storyPacket.storyPressure",
+      "storyPacket.constraints.preferredReturnTargetId",
+      "storyPacket.constraints.nonGoals",
+      "nodeIdHint",
+      "text",
+      "followUpChoice.idHint",
+      "followUpChoice.text",
+      "followUpChoice.targetId",
+      "followUpChoice.effects"
+    ],
+    "follow_up_choice": {
+      "effects": [
+        {
+          "delta": 2,
+          "key": "evidence",
+          "type": "addResource"
+        }
+      ],
+      "idHint": "connect_generated_specimen_archive",
+      "targetId": "archive",
+      "text": "Route the clocktower bell through the archive proof check"
+    },
+    "node_id_hint": "generated_specimen_continuation",
+    "text": "Deterministic SP-DTYARN bridge: the clocktower bell is extended from drafting after open_notebook -> draft_scene. The adapter reads the current scene \"The scene is still thin.\", evidence=1, focus=1, and pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route\". It proposes a proof-bearing clue that returns to archive; this is rule-based adapter output, not AI prose quality."
+  },
   "builder_added": [
     {
       "field": "source_adoption_choice",
@@ -100,35 +137,9 @@ Boundary readback:
       ]
     }
   ],
-  "generator_provided": {
-    "fields": [
-      "storyPacket.currentNode",
-      "storyPacket.route",
-      "storyPacket.state.resources.evidence",
-      "storyPacket.gatedChoices",
-      "storyPacket.storyPressure",
-      "storyPacket.constraints",
-      "nodeIdHint",
-      "text",
-      "followUpChoice.idHint",
-      "followUpChoice.text",
-      "followUpChoice.targetId",
-      "followUpChoice.effects"
-    ],
-    "follow_up_choice": {
-      "effects": [
-        {
-          "delta": 2,
-          "key": "evidence",
-          "type": "addResource"
-        }
-      ],
-      "idHint": "connect_generated_specimen_archive",
-      "targetId": "archive",
-      "text": "Test the clocktower bell against the archive ledger"
-    },
-    "node_id_hint": "generated_specimen_continuation",
-    "text": "Mock continuation: after open_notebook -> draft_scene, the clocktower bell stops being a loose note in drafting and becomes a reachable clue. The packet shows evidence=1 and gated choices none, so a lantern under the archive stairs turns the pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.\" into a ledger test. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it."
+  "still_not_real_AI": {
+    "reason": "This is deterministic rule-based adapter output, not OpenAI, local LLM, or final narrative quality evidence.",
+    "value": true
   },
   "validation_adjusted": []
 }
@@ -137,13 +148,13 @@ Boundary readback:
 ## 生成品質メモ
 
 - pass: 生成例は具体的な node text として存在し、route 上で到達・通過できます。
-- pass: builder は current node / route / choices / state / story pressure / constraints を含む story packet を provider に渡しています。
-- pass: mock proposal は route、current node、evidence、gated choice、story pressure を本文または choice wording に反映しています。
-- pass: mock generator は本文だけでなく、follow-up choice / target / effect を structured proposal として返しています。
+- pass: builder は current node / route / choices / state / story pressure / constraints を含む story packet を adapter に渡しています。
+- pass: deterministic adapter proposal は route、current node、evidence、focus、story pressure を本文または choice wording に反映しています。
+- pass: deterministic adapter は本文だけでなく、follow-up choice / target / effect を structured proposal として返しています。
 - pass: 生成結果は既存モデルの proof route に接続され、ending まで読めます。
-- warn: mock prose はまだ決定的で説明的であり、名作品質や real provider quality の証明ではありません。
+- warn: adapter output はまだ決定的で説明的であり、名作品質や real provider quality の証明ではありません。
 - warn: `drafting` から generated node へ入る adoption choice は、まだ specimen builder 側の scaffolding です。
-- fix: 次の bounded slice では、non-mock provider adapter、より豊かな packet、または SP-DTYARN integration を選べます。
+- fix: 次の bounded slice では、real generator provider、より豊かな packet、または SP-DTYARN integration を選べます。
 - defer: OpenAI provider、local LLM、Web Tester 大改造、新CSV schema は今回の対象外です。
 
 ## Review-Pack Pattern Note

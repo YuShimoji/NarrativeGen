@@ -30,9 +30,9 @@ The current canonical playable artifact is:
 
 For human review of the authoring sample, open the Japanese review surface first. Use the detailed readback for exact route steps, the JSON trace for machine-readable state, and the logic audit for audit history.
 
-For review of the first generated story specimen, open the generated specimen review surface first. It shows the story packet input, mock-provider structured proposal, generator/builder ownership boundary, adopted node path, and current pass/warn/fix/defer assessment.
+For review of the first generated story specimen, open the generated specimen review surface first. It shows the story packet input, deterministic SP-DTYARN bridge adapter proposal, adapter/builder ownership boundary, adopted node path, and current pass/warn/fix/defer assessment.
 
-For SP-DTYARN generator bridge work, open the bridge readiness artifact first. It records the current runnable export path, the missing packet-to-proposal seam, and why no nonmock SP-DTYARN story specimen has been produced yet.
+For SP-DTYARN generator bridge work, open the bridge readiness artifact first. It records the current runnable export path, what the deterministic adapter proves, and what remains before real AI/provider work.
 
 Shortest local review:
 

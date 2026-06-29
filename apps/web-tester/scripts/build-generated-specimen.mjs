@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import {
   applyChoice,
   clearSessionCaches,
-  createAIProvider,
+  createDeterministicSpdtyarnBridgeAdapter,
   getAvailableChoices,
   loadModel,
   resolveNarrativeDisplayText,
@@ -228,12 +228,12 @@ function buildGenerationContext(model) {
     constraints: {
       preferredReturnTargetId: 'archive',
       nonGoals: [
-        'Do not claim real AI quality from mock output.',
+        'Do not claim real AI quality from deterministic adapter output.',
         'Do not redesign schema, CSV, Web Tester UI, or engine transition semantics.',
       ],
       validationRequirements: [
         'Keep generated specimen route playable to truth_end.',
-        'Preserve generateNextNode text-only compatibility.',
+        'Keep MockAIProvider behavior separate from deterministic bridge adapter evidence.',
       ],
     },
   }
@@ -254,39 +254,6 @@ function buildGenerationContext(model) {
   }
 }
 
-function fallbackStructuredProposal(generatedText) {
-  return {
-    nodeIdHint: adoptionNodeId,
-    text: generatedText,
-    followUpChoice: {
-      idHint: connectChoiceId,
-      text: 'Connect the generated clue to the archive',
-      targetId: 'archive',
-      effects: [{ type: 'addResource', key: 'evidence', delta: 2 }],
-    },
-    ownership: {
-      generatorProvided: ['text'],
-      builderAdded: [
-        'nodeIdHint',
-        'followUpChoice.idHint',
-        'followUpChoice.text',
-        'followUpChoice.targetId',
-        'followUpChoice.effects',
-      ],
-      validationAdjusted: [],
-    },
-  }
-}
-
-async function generateStructuredProposal(provider, context) {
-  if (typeof provider.generateContinuationProposal === 'function') {
-    return provider.generateContinuationProposal(context)
-  }
-
-  const generatedText = await provider.generateNextNode(context)
-  return fallbackStructuredProposal(generatedText)
-}
-
 function adoptionChoice() {
   return {
     id: adoptionChoiceId,
@@ -302,7 +269,7 @@ function adoptionChoice() {
 function normalizeStructuredProposal(model, proposal) {
   const builderAdded = [...(proposal.ownership?.builderAdded ?? [])]
   const validationAdjusted = [...(proposal.ownership?.validationAdjusted ?? [])]
-  const generatorProvided = [...(proposal.ownership?.generatorProvided ?? [])]
+  const adapterGenerated = [...(proposal.ownership?.generatorProvided ?? [])]
 
   const followUpChoice = proposal.followUpChoice ?? {}
   let targetId = followUpChoice.targetId ?? 'archive'
@@ -338,7 +305,7 @@ function normalizeStructuredProposal(model, proposal) {
       effects,
     },
     ownership: {
-      generatorProvided,
+      generatorProvided: adapterGenerated,
       builderAdded,
       validationAdjusted,
     },
@@ -354,8 +321,8 @@ function normalizeStructuredProposal(model, proposal) {
       effects: normalizedProposal.followUpChoice.effects,
     },
     ownershipBoundary: {
-      generator_provided: {
-        fields: generatorProvided,
+      adapter_generated: {
+        fields: adapterGenerated,
         node_id_hint: normalizedProposal.nodeIdHint,
         text: normalizedProposal.text,
         follow_up_choice: normalizedProposal.followUpChoice,
@@ -377,6 +344,10 @@ function normalizeStructuredProposal(model, proposal) {
         ...builderAdded.map((field) => ({ field })),
       ],
       validation_adjusted: validationAdjusted,
+      still_not_real_AI: {
+        value: true,
+        reason: 'This is deterministic rule-based adapter output, not OpenAI, local LLM, or final narrative quality evidence.',
+      },
     },
   }
 }
@@ -497,11 +468,11 @@ function renderReadback(trace) {
     '',
     '> Role: detailed technical trace for the generated specimen. For human narrative review, start with `docs/samples/generated-specimen-review-ja.md`.',
     '',
-    '## Generator Path',
+    '## Adapter Path',
     '',
     '- Source model: `models/examples/vertical-slice.json`',
-    '- Generator: `createAIProvider({ provider: "mock" }).generateContinuationProposal(...)`',
-    '- Compatibility path: `generateNextNode(...)` still returns the proposal text only.',
+    '- Adapter: `createDeterministicSpdtyarnBridgeAdapter(...).generateContinuationProposal(storyPacket)`',
+    '- Mock provider path remains separate; this specimen uses the deterministic bridge adapter.',
     '- Source node: `drafting` after `open_notebook -> draft_scene`',
     `- Generated node: \`${adoptionNodeId}\``,
     `- Active artifact: \`${trace.artifacts.specimenModelPath}\``,
@@ -534,8 +505,8 @@ function renderReadback(trace) {
     '## Structure Summary',
     '',
     '- The generated node is adopted from `drafting` through `adopt_generated_specimen`.',
-    '- The generated node connects back to the existing `archive` route through the provider-proposed `connect_generated_specimen_archive` follow-up choice.',
-    '- The provider-proposed follow-up effect adds evidence so the existing proof gate can be tested.',
+    '- The generated node connects back to the existing `archive` route through the adapter-proposed `connect_generated_specimen_archive` follow-up choice.',
+    '- The adapter-proposed follow-up effect adds evidence so the existing proof gate can be tested.',
     '- The route then reuses existing proof logic: archive decode, reveal, and proof ending.',
     '',
     '## Detailed Route Trace',
@@ -568,10 +539,10 @@ function renderReadback(trace) {
     '## Assessment Snapshot',
     '',
     '- pass: the builder passes a bounded story packet with current node, route, choices, state, pressure, and constraints.',
-    '- pass: the generator produces a structured continuation packet that reflects packet facts in text and choice wording.',
+    '- pass: the deterministic SP-DTYARN bridge adapter produces a structured continuation packet that reflects packet facts in text and choice wording.',
     '- pass: the structured packet is serialized as a concrete reachable story node, not only a test assertion.',
-    '- warn: the mock remains deterministic and the source adoption choice is still builder scaffolding.',
-    '- fix: next bounded slice can add a non-mock provider adapter, enrich the packet, or integrate this path with SP-DTYARN.',
+    '- warn: the adapter remains deterministic and the source adoption choice is still builder scaffolding.',
+    '- fix: next bounded slice can replace or extend the deterministic adapter with a real generator provider without changing the packet/proposal seam.',
     '- defer: OpenAI provider, local LLM, Web Tester redesign, and schema expansion are outside this specimen slice.',
     ''
   )
@@ -587,14 +558,14 @@ function renderReview(trace) {
     '',
     '## Story Brief',
     '',
-    '元モデルは `vertical-slice.json` の短い調査物語です。プレイヤーは古いノートを開き、未完成の場面を下書きし、builder が current node / route / state / story pressure を含む story packet を mock generator に渡します。mock generator はその packet を反映した structured continuation proposal を返し、生成されたノードは時計塔の鐘という手がかりを archive の ledger path に接続して、既存の proof ending まで到達可能にします。',
+    '元モデルは `vertical-slice.json` の短い調査物語です。プレイヤーは古いノートを開き、未完成の場面を下書きし、builder が current node / route / state / story pressure を含む story packet を deterministic SP-DTYARN bridge adapter に渡します。adapter はその packet を反映した structured continuation proposal を返し、生成されたノードは時計塔の鐘という手がかりを archive の ledger path に接続して、既存の proof ending まで到達可能にします。',
     '',
     '## 生成された specimen',
     '',
     `- Active artifact: \`${trace.artifacts.specimenModelPath}\``,
     `- Generated node: \`${adoptionNodeId}\``,
-    '- Generator path: `MockAIProvider.generateContinuationProposal` from `packages/engine-ts/src/ai-provider.ts`',
-    '- Compatibility path: `MockAIProvider.generateNextNode` still returns the generated text.',
+    '- Adapter path: `DeterministicSpdtyarnBridgeAdapter.generateContinuationProposal` from `packages/engine-ts/src/spdtyarn-bridge-adapter.ts`',
+    '- Mock provider path remains separate and is not used for this specimen.',
     '- Source route: `open_notebook -> draft_scene`',
     '- Review route: `open_notebook -> draft_scene -> adopt_generated_specimen -> connect_generated_specimen_archive -> decode_ledger -> publish_with_proof`',
     '',
@@ -641,12 +612,13 @@ function renderReview(trace) {
     '- `draft_status`: `generated specimen adopted` に変わり、下書きが生成ノードとして graph に入ったことを示します。',
     '- `evidence`: generated clue を archive に接続すると `+2` され、既存の proof gate を通れる状態になります。',
     '',
-    '## Generator / Builder Boundary',
+    '## Adapter / Builder Boundary',
     '',
-    '- generator_provided: generated node id hint、node text、follow-up choice id hint、choice text、target id、effect。',
+    '- adapter_generated: generated node id hint、node text、follow-up choice id hint、choice text、target id、effect。',
     '- builder_added: `drafting` から generated node へ入る source adoption choice と artifact/readback scaffolding。',
     '- validation_adjusted: 今回は proposal が既存 specimen IDs と schema-valid effect を返すため、追加補正なし。',
-    '- story_packet: current node、route history、visible/gated choices、state snapshot、story pressure、constraints を builder が provider に渡しています。',
+    '- story_packet: current node、route history、visible/gated choices、state snapshot、story pressure、constraints を builder が adapter に渡しています。',
+    '- still_not_real_AI: deterministic rule-based adapter output であり、OpenAI/local LLM/最終品質の証明ではありません。',
     '',
     'Boundary readback:',
     '',
@@ -655,13 +627,13 @@ function renderReview(trace) {
     '## 生成品質メモ',
     '',
     '- pass: 生成例は具体的な node text として存在し、route 上で到達・通過できます。',
-    '- pass: builder は current node / route / choices / state / story pressure / constraints を含む story packet を provider に渡しています。',
-    '- pass: mock proposal は route、current node、evidence、gated choice、story pressure を本文または choice wording に反映しています。',
-    '- pass: mock generator は本文だけでなく、follow-up choice / target / effect を structured proposal として返しています。',
+    '- pass: builder は current node / route / choices / state / story pressure / constraints を含む story packet を adapter に渡しています。',
+    '- pass: deterministic adapter proposal は route、current node、evidence、focus、story pressure を本文または choice wording に反映しています。',
+    '- pass: deterministic adapter は本文だけでなく、follow-up choice / target / effect を structured proposal として返しています。',
     '- pass: 生成結果は既存モデルの proof route に接続され、ending まで読めます。',
-    '- warn: mock prose はまだ決定的で説明的であり、名作品質や real provider quality の証明ではありません。',
+    '- warn: adapter output はまだ決定的で説明的であり、名作品質や real provider quality の証明ではありません。',
     '- warn: `drafting` から generated node へ入る adoption choice は、まだ specimen builder 側の scaffolding です。',
-    '- fix: 次の bounded slice では、non-mock provider adapter、より豊かな packet、または SP-DTYARN integration を選べます。',
+    '- fix: 次の bounded slice では、real generator provider、より豊かな packet、または SP-DTYARN integration を選べます。',
     '- defer: OpenAI provider、local LLM、Web Tester 大改造、新CSV schema は今回の対象外です。',
     '',
     '## Review-Pack Pattern Note',
@@ -682,8 +654,9 @@ function buildTrace(sourceModel, specimenModel, generation, structuredResult) {
   return {
     schemaVersion: 1,
     generatorPath: {
-      provider: 'mock',
-      entrypoint: 'createAIProvider({ provider: "mock" }).generateContinuationProposal',
+      provider: 'deterministic-spdtyarn-bridge-adapter',
+      entrypoint: 'createDeterministicSpdtyarnBridgeAdapter(...).generateContinuationProposal(storyPacket)',
+      sourcePath: 'packages/engine-ts/src/spdtyarn-bridge-adapter.ts',
       sourceModelPath: toRepoPath(sourceModelPath),
       sourceNodeId: generation.sourceNodeId,
       inputRoute: generation.inputRoute,
@@ -714,19 +687,19 @@ function buildTrace(sourceModel, specimenModel, generation, structuredResult) {
     assessment: {
       pass: [
         'builder passes a bounded story packet with current node, route, choices, state, story pressure, and constraints',
-        'mock generator output reflects story packet facts in the generated text and follow-up choice wording',
-        'mock generator output is structured as node text plus one follow-up choice/effect proposal',
+        'deterministic SP-DTYARN bridge adapter reflects story packet facts in the generated text and follow-up choice wording',
+        'deterministic adapter output is structured as node text plus one follow-up choice/effect proposal',
         'structured proposal is serialized as a concrete node',
         'generated node is reachable from the existing drafting route',
         'review route reaches the existing proof ending',
       ],
       warn: [
-        'mock prose remains deterministic and formulaic',
+        'adapter output remains deterministic and formulaic',
         'source adoption choice from drafting is still builder scaffolding',
-        'story-packet-aware proposal is mock-only evidence, not real provider quality',
+        'story-packet-aware proposal is deterministic adapter evidence, not real provider quality',
       ],
       fix: [
-        'next bounded slice can add a non-mock provider adapter, enrich the packet, or integrate this path with SP-DTYARN',
+        'next bounded slice can replace the deterministic adapter with a real generator provider, enrich the packet, or integrate this path with broader SP-DTYARN work',
       ],
       defer: [
         'OpenAI provider, local LLM, schema expansion, and Web Tester redesign',
@@ -772,8 +745,11 @@ async function main() {
   const sourceRaw = JSON.parse(await fs.readFile(sourceModelPath, 'utf8'))
   const sourceModel = loadModel(sourceRaw)
   const generation = buildGenerationContext(sourceModel)
-  const provider = createAIProvider({ provider: 'mock' })
-  const structuredProposal = await generateStructuredProposal(provider, generation.context)
+  const adapter = createDeterministicSpdtyarnBridgeAdapter({
+    nodeIdHint: adoptionNodeId,
+    followUpChoiceIdHint: connectChoiceId,
+  })
+  const structuredProposal = adapter.generateContinuationProposal(generation.storyPacket)
   const structuredResult = adoptGeneratedProposal(sourceModel, structuredProposal)
   const specimenModel = structuredResult.model
   clearSessionCaches()

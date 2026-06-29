@@ -10,20 +10,20 @@
       "OpenAI provider, local LLM, schema expansion, and Web Tester redesign"
     ],
     "fix": [
-      "next bounded slice can add a non-mock provider adapter, enrich the packet, or integrate this path with SP-DTYARN"
+      "next bounded slice can replace the deterministic adapter with a real generator provider, enrich the packet, or integrate this path with broader SP-DTYARN work"
     ],
     "pass": [
       "builder passes a bounded story packet with current node, route, choices, state, story pressure, and constraints",
-      "mock generator output reflects story packet facts in the generated text and follow-up choice wording",
-      "mock generator output is structured as node text plus one follow-up choice/effect proposal",
+      "deterministic SP-DTYARN bridge adapter reflects story packet facts in the generated text and follow-up choice wording",
+      "deterministic adapter output is structured as node text plus one follow-up choice/effect proposal",
       "structured proposal is serialized as a concrete node",
       "generated node is reachable from the existing drafting route",
       "review route reaches the existing proof ending"
     ],
     "warn": [
-      "mock prose remains deterministic and formulaic",
+      "adapter output remains deterministic and formulaic",
       "source adoption choice from drafting is still builder scaffolding",
-      "story-packet-aware proposal is mock-only evidence, not real provider quality"
+      "story-packet-aware proposal is deterministic adapter evidence, not real provider quality"
     ]
   },
   "generatedNode": {
@@ -38,11 +38,11 @@
         ],
         "id": "connect_generated_specimen_archive",
         "target": "archive",
-        "text": "Test the clocktower bell against the archive ledger"
+        "text": "Route the clocktower bell through the archive proof check"
       }
     ],
     "id": "generated_specimen_continuation",
-    "text": "Mock continuation: after open_notebook -> draft_scene, the clocktower bell stops being a loose note in drafting and becomes a reachable clue. The packet shows evidence=1 and gated choices none, so a lantern under the archive stairs turns the pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.\" into a ledger test. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it."
+    "text": "Deterministic SP-DTYARN bridge: the clocktower bell is extended from drafting after open_notebook -> draft_scene. The adapter reads the current scene \"The scene is still thin.\", evidence=1, focus=1, and pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route\". It proposes a proof-bearing clue that returns to archive; this is rule-based adapter output, not AI prose quality."
   },
   "generatorPath": {
     "context": {
@@ -61,13 +61,13 @@
       "storyPacket": {
         "constraints": {
           "nonGoals": [
-            "Do not claim real AI quality from mock output.",
+            "Do not claim real AI quality from deterministic adapter output.",
             "Do not redesign schema, CSV, Web Tester UI, or engine transition semantics."
           ],
           "preferredReturnTargetId": "archive",
           "validationRequirements": [
             "Keep generated specimen route playable to truth_end.",
-            "Preserve generateNextNode text-only compatibility."
+            "Keep MockAIProvider behavior separate from deterministic bridge adapter evidence."
           ]
         },
         "currentNode": {
@@ -128,14 +128,15 @@
         ]
       }
     },
-    "entrypoint": "createAIProvider({ provider: \"mock\" }).generateContinuationProposal",
+    "entrypoint": "createDeterministicSpdtyarnBridgeAdapter(...).generateContinuationProposal(storyPacket)",
     "inputRoute": [
       "open_notebook",
       "draft_scene"
     ],
-    "provider": "mock",
+    "provider": "deterministic-spdtyarn-bridge-adapter",
     "sourceModelPath": "models/examples/vertical-slice.json",
-    "sourceNodeId": "drafting"
+    "sourceNodeId": "drafting",
+    "sourcePath": "packages/engine-ts/src/spdtyarn-bridge-adapter.ts"
   },
   "modelDelta": {
     "addedChoiceIds": [
@@ -149,6 +150,42 @@
     "specimenNodeCount": 13
   },
   "ownershipBoundary": {
+    "adapter_generated": {
+      "fields": [
+        "storyPacket.currentNode.id",
+        "storyPacket.currentNode.text",
+        "storyPacket.route.nodeIds",
+        "storyPacket.route.selectedChoiceIds",
+        "storyPacket.visibleChoices",
+        "storyPacket.gatedChoices",
+        "storyPacket.state.resources.evidence",
+        "storyPacket.state.resources.focus",
+        "storyPacket.state.variables.lead_name",
+        "storyPacket.storyPressure",
+        "storyPacket.constraints.preferredReturnTargetId",
+        "storyPacket.constraints.nonGoals",
+        "nodeIdHint",
+        "text",
+        "followUpChoice.idHint",
+        "followUpChoice.text",
+        "followUpChoice.targetId",
+        "followUpChoice.effects"
+      ],
+      "follow_up_choice": {
+        "effects": [
+          {
+            "delta": 2,
+            "key": "evidence",
+            "type": "addResource"
+          }
+        ],
+        "idHint": "connect_generated_specimen_archive",
+        "targetId": "archive",
+        "text": "Route the clocktower bell through the archive proof check"
+      },
+      "node_id_hint": "generated_specimen_continuation",
+      "text": "Deterministic SP-DTYARN bridge: the clocktower bell is extended from drafting after open_notebook -> draft_scene. The adapter reads the current scene \"The scene is still thin.\", evidence=1, focus=1, and pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route\". It proposes a proof-bearing clue that returns to archive; this is rule-based adapter output, not AI prose quality."
+    },
     "builder_added": [
       {
         "field": "source_adoption_choice",
@@ -180,35 +217,9 @@
         ]
       }
     ],
-    "generator_provided": {
-      "fields": [
-        "storyPacket.currentNode",
-        "storyPacket.route",
-        "storyPacket.state.resources.evidence",
-        "storyPacket.gatedChoices",
-        "storyPacket.storyPressure",
-        "storyPacket.constraints",
-        "nodeIdHint",
-        "text",
-        "followUpChoice.idHint",
-        "followUpChoice.text",
-        "followUpChoice.targetId",
-        "followUpChoice.effects"
-      ],
-      "follow_up_choice": {
-        "effects": [
-          {
-            "delta": 2,
-            "key": "evidence",
-            "type": "addResource"
-          }
-        ],
-        "idHint": "connect_generated_specimen_archive",
-        "targetId": "archive",
-        "text": "Test the clocktower bell against the archive ledger"
-      },
-      "node_id_hint": "generated_specimen_continuation",
-      "text": "Mock continuation: after open_notebook -> draft_scene, the clocktower bell stops being a loose note in drafting and becomes a reachable clue. The packet shows evidence=1 and gated choices none, so a lantern under the archive stairs turns the pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.\" into a ledger test. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it."
+    "still_not_real_AI": {
+      "reason": "This is deterministic rule-based adapter output, not OpenAI, local LLM, or final narrative quality evidence.",
+      "value": true
     },
     "validation_adjusted": []
   },
@@ -507,10 +518,10 @@
       },
       {
         "fromNode": {
-          "displayText": "Mock continuation: after open_notebook -> draft_scene, the clocktower bell stops being a loose note in drafting and becomes a reachable clue. The packet shows evidence=1 and gated choices none, so a lantern under the archive stairs turns the pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.\" into a ledger test. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.",
+          "displayText": "Deterministic SP-DTYARN bridge: the clocktower bell is extended from drafting after open_notebook -> draft_scene. The adapter reads the current scene \"The scene is still thin.\", evidence=1, focus=1, and pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route\". It proposes a proof-bearing clue that returns to archive; this is rule-based adapter output, not AI prose quality.",
           "gatedChoices": [],
           "nodeId": "generated_specimen_continuation",
-          "rawText": "Mock continuation: after open_notebook -> draft_scene, the clocktower bell stops being a loose note in drafting and becomes a reachable clue. The packet shows evidence=1 and gated choices none, so a lantern under the archive stairs turns the pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.\" into a ledger test. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.",
+          "rawText": "Deterministic SP-DTYARN bridge: the clocktower bell is extended from drafting after open_notebook -> draft_scene. The adapter reads the current scene \"The scene is still thin.\", evidence=1, focus=1, and pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route\". It proposes a proof-bearing clue that returns to archive; this is rule-based adapter output, not AI prose quality.",
           "speaker": null,
           "visibleChoices": [
             {
@@ -523,7 +534,7 @@
               ],
               "id": "connect_generated_specimen_archive",
               "target": "archive",
-              "text": "Test the clocktower bell against the archive ledger"
+              "text": "Route the clocktower bell through the archive proof check"
             }
           ]
         },
@@ -537,7 +548,7 @@
           ],
           "id": "connect_generated_specimen_archive",
           "target": "archive",
-          "text": "Test the clocktower bell against the archive ledger"
+          "text": "Route the clocktower bell through the archive proof check"
         },
         "stateChanges": {
           "resources": {
@@ -689,13 +700,13 @@
   "story_packet": {
     "constraints": {
       "nonGoals": [
-        "Do not claim real AI quality from mock output.",
+        "Do not claim real AI quality from deterministic adapter output.",
         "Do not redesign schema, CSV, Web Tester UI, or engine transition semantics."
       ],
       "preferredReturnTargetId": "archive",
       "validationRequirements": [
         "Keep generated specimen route playable to truth_end.",
-        "Preserve generateNextNode text-only compatibility."
+        "Keep MockAIProvider behavior separate from deterministic bridge adapter evidence."
       ]
     },
     "currentNode": {
@@ -759,7 +770,7 @@
     "current_node_id": "drafting",
     "gated_choice_ids": [],
     "non_goals": [
-      "Do not claim real AI quality from mock output.",
+      "Do not claim real AI quality from deterministic adapter output.",
       "Do not redesign schema, CSV, Web Tester UI, or engine transition semantics."
     ],
     "preferred_return_target_id": "archive",
@@ -783,7 +794,7 @@
     "story_pressure": "Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.",
     "validation_requirements": [
       "Keep generated specimen route playable to truth_end.",
-      "Preserve generateNextNode text-only compatibility."
+      "Keep MockAIProvider behavior separate from deterministic bridge adapter evidence."
     ],
     "visible_choice_ids": [
       "use_mock_ai",
@@ -801,18 +812,24 @@
       ],
       "idHint": "connect_generated_specimen_archive",
       "targetId": "archive",
-      "text": "Test the clocktower bell against the archive ledger"
+      "text": "Route the clocktower bell through the archive proof check"
     },
     "nodeIdHint": "generated_specimen_continuation",
     "ownership": {
       "builderAdded": [],
       "generatorProvided": [
-        "storyPacket.currentNode",
-        "storyPacket.route",
-        "storyPacket.state.resources.evidence",
+        "storyPacket.currentNode.id",
+        "storyPacket.currentNode.text",
+        "storyPacket.route.nodeIds",
+        "storyPacket.route.selectedChoiceIds",
+        "storyPacket.visibleChoices",
         "storyPacket.gatedChoices",
+        "storyPacket.state.resources.evidence",
+        "storyPacket.state.resources.focus",
+        "storyPacket.state.variables.lead_name",
         "storyPacket.storyPressure",
-        "storyPacket.constraints",
+        "storyPacket.constraints.preferredReturnTargetId",
+        "storyPacket.constraints.nonGoals",
         "nodeIdHint",
         "text",
         "followUpChoice.idHint",
@@ -822,6 +839,6 @@
       ],
       "validationAdjusted": []
     },
-    "text": "Mock continuation: after open_notebook -> draft_scene, the clocktower bell stops being a loose note in drafting and becomes a reachable clue. The packet shows evidence=1 and gated choices none, so a lantern under the archive stairs turns the pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.\" into a ledger test. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it."
+    "text": "Deterministic SP-DTYARN bridge: the clocktower bell is extended from drafting after open_notebook -> draft_scene. The adapter reads the current scene \"The scene is still thin.\", evidence=1, focus=1, and pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route\". It proposes a proof-bearing clue that returns to archive; this is rule-based adapter output, not AI prose quality."
   }
 }

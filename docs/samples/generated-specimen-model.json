@@ -332,11 +332,11 @@
     },
     "generated_specimen_continuation": {
       "id": "generated_specimen_continuation",
-      "text": "Mock continuation: after open_notebook -> draft_scene, the clocktower bell stops being a loose note in drafting and becomes a reachable clue. The packet shows evidence=1 and gated choices none, so a lantern under the archive stairs turns the pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route.\" into a ledger test. It is still marked as mock prose so the generated node can be reviewed before a writer polishes it.",
+      "text": "Deterministic SP-DTYARN bridge: the clocktower bell is extended from drafting after open_notebook -> draft_scene. The adapter reads the current scene \"The scene is still thin.\", evidence=1, focus=1, and pressure \"Turn the drafted scene into a proof-bearing clue that can reconnect to the archive route\". It proposes a proof-bearing clue that returns to archive; this is rule-based adapter output, not AI prose quality.",
       "choices": [
         {
           "id": "connect_generated_specimen_archive",
-          "text": "Test the clocktower bell against the archive ledger",
+          "text": "Route the clocktower bell through the archive proof check",
           "target": "archive",
           "effects": [
             {

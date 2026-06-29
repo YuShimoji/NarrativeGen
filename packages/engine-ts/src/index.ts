@@ -256,8 +256,17 @@ export {
   type AIProvider,
   type AIConfig,
   type StoryContext,
+  type StoryContextPacket,
+  type StoryPacketChoiceSummary,
+  type StructuredContinuationChoiceProposal,
+  type StructuredContinuationProposal,
   type ParaphraseOptions,
 } from './ai-provider.js'
+export {
+  createDeterministicSpdtyarnBridgeAdapter,
+  DeterministicSpdtyarnBridgeAdapter,
+  type DeterministicSpdtyarnBridgeAdapterOptions,
+} from './spdtyarn-bridge-adapter.js'
 export { resolveProperty, getEntityProperties, getInheritanceChain } from './entities.js'
 
 // Inference engine
