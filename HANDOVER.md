@@ -28,6 +28,15 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-30 SP-DTYARN bridge generalization probe
+
+- **Work purpose**: prove the deterministic bridge adapter is packet-sensitive and not only tuned to the current `drafting -> archive -> truth_end` generated specimen.
+- **Effect**: `packages/engine-ts/test/spdtyarn-bridge-adapter.spec.ts` now checks two distinct `StoryContextPacket` fixtures. Packet B uses `balcony`, route `enter_tower -> question_witness -> inspect_storm_glass`, lead `the storm glass fracture`, `evidence=4`, `focus=0`, and visible target fallback `observatory`.
+- **Evidence artifact**: `docs/samples/spdtyarn-bridge-generalization-probe.md` summarizes Packet A/B, proposal A/B, differences, consumed packet facts, and remaining deterministic limits.
+- **Readiness state**: `docs/samples/spdtyarn-generator-bridge-readiness.md` now classifies the seam as `deterministic_bridge_adapter_implemented_with_multi_packet_probe`.
+- **Boundary**: no OpenAI/local LLM work, CSV schema fields, Web Tester UI redesign, core transition semantics, or broad SP-DTYARN redesign were added. No stash entries were applied.
+- **Next entry points**: keep the deterministic adapter as a comparison baseline for future provider work, or return to narrower SP-DTYARN export gaps. This still does not prove real AI quality or final narrative prose quality.
+
 ### 2026-06-30 Deterministic SP-DTYARN bridge adapter
 
 - **Work purpose**: close the readiness artifact's missing packet-to-proposal seam without adding OpenAI, local LLM, CSV schema fields, Web Tester UI redesign, core transition changes, or broad SP-DTYARN redesign.
