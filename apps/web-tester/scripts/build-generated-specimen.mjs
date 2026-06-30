@@ -9,6 +9,7 @@ import {
   loadModel,
   resolveNarrativeDisplayText,
   startSession,
+  validateContinuationProposalAdoption,
 } from '@narrativegen/engine-ts'
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
@@ -266,53 +267,29 @@ function adoptionChoice() {
   }
 }
 
-function normalizeStructuredProposal(model, proposal) {
-  const builderAdded = [...(proposal.ownership?.builderAdded ?? [])]
-  const validationAdjusted = [...(proposal.ownership?.validationAdjusted ?? [])]
-  const adapterGenerated = [...(proposal.ownership?.generatorProvided ?? [])]
+function validateStructuredProposal(model, proposal) {
+  const validation = validateContinuationProposalAdoption(model, proposal, {
+    expectedGeneratedNodeId: adoptionNodeId,
+    expectedFollowUpChoiceId: connectChoiceId,
+    builderCreatedNodeIds: [adoptionNodeId],
+  })
 
-  const followUpChoice = proposal.followUpChoice ?? {}
-  let targetId = followUpChoice.targetId ?? 'archive'
-  if (!model.nodes[targetId]) {
-    validationAdjusted.push(`followUpChoice.targetId: ${targetId} -> archive`)
-    targetId = 'archive'
-  }
-
-  const effects = Array.isArray(followUpChoice.effects) && followUpChoice.effects.length
-    ? followUpChoice.effects
-    : [{ type: 'addResource', key: 'evidence', delta: 2 }]
-  if (!Array.isArray(followUpChoice.effects) || followUpChoice.effects.length === 0) {
-    builderAdded.push('followUpChoice.effects')
+  if (validation.status === 'rejected' || !validation.proposal) {
+    throw new Error(`Structured continuation proposal rejected: ${validation.reasons.join('; ')}`)
   }
 
-  if (proposal.nodeIdHint !== adoptionNodeId) {
-    validationAdjusted.push(`nodeIdHint: ${proposal.nodeIdHint ?? 'missing'} -> ${adoptionNodeId}`)
-  }
-  if (followUpChoice.idHint !== connectChoiceId) {
-    validationAdjusted.push(`followUpChoice.idHint: ${followUpChoice.idHint ?? 'missing'} -> ${connectChoiceId}`)
-  }
-  if (!followUpChoice.text) {
-    builderAdded.push('followUpChoice.text')
-  }
-
-  const normalizedProposal = {
-    nodeIdHint: proposal.nodeIdHint ?? adoptionNodeId,
-    text: proposal.text,
-    followUpChoice: {
-      idHint: followUpChoice.idHint ?? connectChoiceId,
-      text: followUpChoice.text ?? 'Connect the generated clue to the archive',
-      targetId,
-      effects,
-    },
-    ownership: {
-      generatorProvided: adapterGenerated,
-      builderAdded,
-      validationAdjusted,
-    },
+  const normalizedProposal = validation.proposal
+  const builderAdded = [...(normalizedProposal.ownership?.builderAdded ?? [])]
+  const validationAdjusted = [...(normalizedProposal.ownership?.validationAdjusted ?? [])]
+  const adapterGenerated = [...(normalizedProposal.ownership?.generatorProvided ?? [])]
+  const proposalValidation = {
+    status: validation.status,
+    reasons: validation.reasons,
   }
 
   return {
     proposal: normalizedProposal,
+    proposalValidation,
     adoptedNodeId: adoptionNodeId,
     adoptedFollowUpChoice: {
       id: connectChoiceId,
@@ -321,6 +298,7 @@ function normalizeStructuredProposal(model, proposal) {
       effects: normalizedProposal.followUpChoice.effects,
     },
     ownershipBoundary: {
+      proposal_validation: proposalValidation,
       adapter_generated: {
         fields: adapterGenerated,
         node_id_hint: normalizedProposal.nodeIdHint,
@@ -358,7 +336,7 @@ function adoptGeneratedProposal(model, rawProposal) {
   if (!sourceNode) {
     throw new Error('Expected source node `drafting` to exist in vertical-slice.json')
   }
-  const structured = normalizeStructuredProposal(specimenModel, rawProposal)
+  const structured = validateStructuredProposal(specimenModel, rawProposal)
 
   sourceNode.choices = [
     ...(sourceNode.choices ?? []),
@@ -374,6 +352,7 @@ function adoptGeneratedProposal(model, rawProposal) {
   return {
     model: loadModel(specimenModel),
     proposal: structured.proposal,
+    proposalValidation: structured.proposalValidation,
     ownershipBoundary: structured.ownershipBoundary,
   }
 }
@@ -498,6 +477,12 @@ function renderReadback(trace) {
     `- Follow-up target: \`${trace.structuredProposal.followUpChoice.targetId}\``,
     `- Follow-up effects: ${trace.structuredProposal.followUpChoice.effects.map(describeEffect).join('; ')}`,
     '',
+    '## Proposal Validation',
+    '',
+    `- Status: \`${trace.proposal_validation.status}\``,
+    '- Reasons:',
+    ...trace.proposal_validation.reasons.map((reason) => `  - ${reason}`),
+    '',
     'Ownership boundary:',
     '',
     fencedJson(trace.ownershipBoundary),
@@ -540,6 +525,7 @@ function renderReadback(trace) {
     '',
     '- pass: the builder passes a bounded story packet with current node, route, choices, state, pressure, and constraints.',
     '- pass: the deterministic SP-DTYARN bridge adapter produces a structured continuation packet that reflects packet facts in text and choice wording.',
+    '- pass: the proposal safety gate accepts the structured proposal before builder adoption.',
     '- pass: the structured packet is serialized as a concrete reachable story node, not only a test assertion.',
     '- warn: the adapter remains deterministic and the source adoption choice is still builder scaffolding.',
     '- fix: next bounded slice can replace or extend the deterministic adapter with a real generator provider without changing the packet/proposal seam.',
@@ -589,6 +575,11 @@ function renderReview(trace) {
     `- followUpChoice: \`${trace.structuredProposal.followUpChoice.idHint}\` / "${trace.structuredProposal.followUpChoice.text}" -> \`${trace.structuredProposal.followUpChoice.targetId}\``,
     `- effect: ${trace.structuredProposal.followUpChoice.effects.map(describeEffect).join('; ')}`,
     '',
+    'Proposal validation:',
+    '',
+    `- status: \`${trace.proposal_validation.status}\``,
+    ...trace.proposal_validation.reasons.map((reason) => `- ${reason}`),
+    '',
     '## Route Overview / Structure Summary',
     '',
     '```mermaid',
@@ -614,6 +605,7 @@ function renderReview(trace) {
     '',
     '## Adapter / Builder Boundary',
     '',
+    `- proposal_validation: \`${trace.proposal_validation.status}\`; ${trace.proposal_validation.reasons.join(' / ')}`,
     '- adapter_generated: generated node id hint、node text、follow-up choice id hint、choice text、target id、effect。',
     '- builder_added: `drafting` から generated node へ入る source adoption choice と artifact/readback scaffolding。',
     '- validation_adjusted: 今回は proposal が既存 specimen IDs と schema-valid effect を返すため、追加補正なし。',
@@ -677,6 +669,7 @@ function buildTrace(sourceModel, specimenModel, generation, structuredResult) {
     story_packet: generation.storyPacket,
     story_packet_summary: summarizeStoryPacket(generation.storyPacket),
     structuredProposal: structuredResult.proposal,
+    proposal_validation: structuredResult.proposalValidation,
     ownershipBoundary: structuredResult.ownershipBoundary,
     generatedNode: {
       id: adoptionNodeId,
@@ -689,6 +682,7 @@ function buildTrace(sourceModel, specimenModel, generation, structuredResult) {
         'builder passes a bounded story packet with current node, route, choices, state, story pressure, and constraints',
         'deterministic SP-DTYARN bridge adapter reflects story packet facts in the generated text and follow-up choice wording',
         'deterministic adapter output is structured as node text plus one follow-up choice/effect proposal',
+        'proposal safety gate accepts the current proposal before builder adoption',
         'structured proposal is serialized as a concrete node',
         'generated node is reachable from the existing drafting route',
         'review route reaches the existing proof ending',

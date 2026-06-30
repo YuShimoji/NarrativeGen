@@ -16,6 +16,7 @@
       "builder passes a bounded story packet with current node, route, choices, state, story pressure, and constraints",
       "deterministic SP-DTYARN bridge adapter reflects story packet facts in the generated text and follow-up choice wording",
       "deterministic adapter output is structured as node text plus one follow-up choice/effect proposal",
+      "proposal safety gate accepts the current proposal before builder adoption",
       "structured proposal is serialized as a concrete node",
       "generated node is reachable from the existing drafting route",
       "review route reaches the existing proof ending"
@@ -217,11 +218,25 @@
         ]
       }
     ],
+    "proposal_validation": {
+      "reasons": [
+        "proposal passed bounded adoption validation",
+        "followUpChoice.effects[0].key 'evidence' is declared in model.resources"
+      ],
+      "status": "accepted"
+    },
     "still_not_real_AI": {
       "reason": "This is deterministic rule-based adapter output, not OpenAI, local LLM, or final narrative quality evidence.",
       "value": true
     },
     "validation_adjusted": []
+  },
+  "proposal_validation": {
+    "reasons": [
+      "proposal passed bounded adoption validation",
+      "followUpChoice.effects[0].key 'evidence' is declared in model.resources"
+    ],
+    "status": "accepted"
   },
   "route": {
     "choiceIds": [

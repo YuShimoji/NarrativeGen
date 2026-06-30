@@ -32,6 +32,13 @@
 - Follow-up target: `archive`
 - Follow-up effects: add resource evidence +2
 
+## Proposal Validation
+
+- Status: `accepted`
+- Reasons:
+  - proposal passed bounded adoption validation
+  - followUpChoice.effects[0].key 'evidence' is declared in model.resources
+
 Ownership boundary:
 
 ```json
@@ -103,6 +110,13 @@ Ownership boundary:
       ]
     }
   ],
+  "proposal_validation": {
+    "reasons": [
+      "proposal passed bounded adoption validation",
+      "followUpChoice.effects[0].key 'evidence' is declared in model.resources"
+    ],
+    "status": "accepted"
+  },
   "still_not_real_AI": {
     "reason": "This is deterministic rule-based adapter output, not OpenAI, local LLM, or final narrative quality evidence.",
     "value": true
@@ -197,6 +211,7 @@ Ending text:
 
 - pass: the builder passes a bounded story packet with current node, route, choices, state, pressure, and constraints.
 - pass: the deterministic SP-DTYARN bridge adapter produces a structured continuation packet that reflects packet facts in text and choice wording.
+- pass: the proposal safety gate accepts the structured proposal before builder adoption.
 - pass: the structured packet is serialized as a concrete reachable story node, not only a test assertion.
 - warn: the adapter remains deterministic and the source adoption choice is still builder scaffolding.
 - fix: next bounded slice can replace or extend the deterministic adapter with a real generator provider without changing the packet/proposal seam.

@@ -35,6 +35,12 @@ Structured proposal:
 - followUpChoice: `connect_generated_specimen_archive` / "Route the clocktower bell through the archive proof check" -> `archive`
 - effect: add resource evidence +2
 
+Proposal validation:
+
+- status: `accepted`
+- proposal passed bounded adoption validation
+- followUpChoice.effects[0].key 'evidence' is declared in model.resources
+
 ## Route Overview / Structure Summary
 
 ```mermaid
@@ -60,6 +66,7 @@ flowchart TD
 
 ## Adapter / Builder Boundary
 
+- proposal_validation: `accepted`; proposal passed bounded adoption validation / followUpChoice.effects[0].key 'evidence' is declared in model.resources
 - adapter_generated: generated node id hint、node text、follow-up choice id hint、choice text、target id、effect。
 - builder_added: `drafting` から generated node へ入る source adoption choice と artifact/readback scaffolding。
 - validation_adjusted: 今回は proposal が既存 specimen IDs と schema-valid effect を返すため、追加補正なし。
@@ -137,6 +144,13 @@ Boundary readback:
       ]
     }
   ],
+  "proposal_validation": {
+    "reasons": [
+      "proposal passed bounded adoption validation",
+      "followUpChoice.effects[0].key 'evidence' is declared in model.resources"
+    ],
+    "status": "accepted"
+  },
   "still_not_real_AI": {
     "reason": "This is deterministic rule-based adapter output, not OpenAI, local LLM, or final narrative quality evidence.",
     "value": true

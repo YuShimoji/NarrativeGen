@@ -267,6 +267,12 @@ export {
   DeterministicSpdtyarnBridgeAdapter,
   type DeterministicSpdtyarnBridgeAdapterOptions,
 } from './spdtyarn-bridge-adapter.js'
+export {
+  validateContinuationProposalAdoption,
+  type ContinuationProposalValidationOptions,
+  type ContinuationProposalValidationResult,
+  type ContinuationProposalValidationStatus,
+} from './continuation-proposal-validator.js'
 export { resolveProperty, getEntityProperties, getInheritanceChain } from './entities.js'
 
 // Inference engine

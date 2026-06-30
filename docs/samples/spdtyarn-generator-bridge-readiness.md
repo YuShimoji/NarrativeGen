@@ -1,13 +1,14 @@
 # SP-DTYARN Generator Bridge Readiness
 
-> Role: readiness and seam-state artifact for `NG-spdtyarn-deterministic-bridge-adapter-001`. This is not a human narrative review card and does not claim real AI/generator quality.
+> Role: readiness and seam-state artifact for the deterministic SP-DTYARN bridge and continuation proposal adoption safety slices. This is not a human narrative review card and does not claim real AI/generator quality.
 
 ## Classification
 
-- classification: `deterministic_bridge_adapter_implemented_with_multi_packet_probe`
-- reason: SP-DTYARN still has a runnable `YarnFormatter` export path, and the repo now also has a separate deterministic bridge adapter that consumes `StoryContextPacket` and returns a packet-sensitive `StructuredContinuationProposal`.
+- classification: `deterministic_bridge_adapter_with_bounded_adoption_gate`
+- reason: SP-DTYARN still has a runnable `YarnFormatter` export path, and the repo now also has a separate deterministic bridge adapter that consumes `StoryContextPacket`, returns a packet-sensitive `StructuredContinuationProposal`, and passes that proposal through a bounded adoption safety gate before model mutation.
 - deterministic bridge specimen produced: yes, through the existing generated specimen adoption path.
 - multi-packet generalization evidence produced: yes, in `docs/samples/spdtyarn-bridge-generalization-probe.md`.
+- proposal adoption safety gate produced: yes, in `packages/engine-ts/src/continuation-proposal-validator.ts`.
 - real AI/provider specimen produced: no.
 - readiness artifact updated: yes.
 
@@ -16,7 +17,10 @@
 | path | role | runnable_status | bridge relevance |
 | --- | --- | --- | --- |
 | `packages/engine-ts/src/spdtyarn-bridge-adapter.ts` | Deterministic packet-to-proposal adapter | runnable through engine build/tests | Consumes `StoryContextPacket` facts and emits `StructuredContinuationProposal` fields. |
+| `packages/engine-ts/src/continuation-proposal-validator.ts` | Bounded proposal adoption validator | runnable through engine build/tests | Accepts, adjusts, or rejects a proposal before builder adoption. |
 | `packages/engine-ts/test/spdtyarn-bridge-adapter.spec.ts` | Focused adapter test | runnable through `npm run test -w @narrativegen/engine-ts` | Proves the adapter reads current node text/id, route, resources, variables, story pressure, and emits distinct proposals for distinct packets. |
+| `packages/engine-ts/test/continuation-proposal-validator.spec.ts` | Focused adoption safety test | runnable through `npm run test -w @narrativegen/engine-ts` | Proves valid adapter output is accepted and unsafe proposal shapes are not silently adopted. |
+| `docs/samples/continuation-proposal-adoption-safety.md` | Safety evidence note | docs/evidence artifact | Summarizes accepted, rejected, adjusted, and out-of-scope adoption behavior. |
 | `docs/samples/spdtyarn-bridge-generalization-probe.md` | Multi-packet probe artifact | docs/evidence artifact | Summarizes Packet A/B, proposal A/B, differences, and remaining deterministic limits. |
 | `apps/web-tester/scripts/build-generated-specimen.mjs` | Generated specimen builder | runnable through generated specimen build/check | Builds the story packet, calls the deterministic adapter, adopts the proposal, and writes review/readback artifacts. |
 | `docs/samples/generated-specimen-model.json` | Adopted specimen model | generated artifact | Contains the adapter-produced node connected into the existing playable route. |
@@ -31,7 +35,9 @@
 - `DeterministicSpdtyarnBridgeAdapter.generateContinuationProposal(packet)` is implemented.
 - The adapter reads packet facts directly: current node id/text, route, visible/gated choices, resources, variables, story pressure, and constraints.
 - The adapter returns a `StructuredContinuationProposal` with node id hint, node text, follow-up choice id/text, target id, and one `addResource evidence` effect.
+- `validateContinuationProposalAdoption()` checks the proposal before adoption and returns `accepted`, `validation_adjusted`, or `rejected` with reasons.
 - The focused adapter test now covers two packets and verifies different source node, route phrase, lead wording, target, and effect delta.
+- The focused adoption safety test rejects unknown targets, id collisions, unsupported effects, empty generated text, and direct mutation keys.
 - The generated specimen builder now uses the adapter instead of `MockAIProvider` for this specimen path.
 - `YarnFormatter` remains a model-to-Yarn export path only.
 
@@ -41,6 +47,7 @@
 | --- | --- | --- | --- |
 | input contract | `StoryContextPacket` is consumed by the deterministic adapter | Packet fields now drive proposal text and choice/effect shape | Enrich only when a future generator needs more evidence. |
 | output proposal shape | Adapter emits `StructuredContinuationProposal` | Existing adoption path can serialize the proposal into a model node | Preserve this contract for real provider work. |
+| adoption safety | Proposal passes `validateContinuationProposalAdoption()` before mutation | Unsafe proposal shapes are rejected or explicitly adjusted with reasons | Reuse the same gate for future real provider output. |
 | runner/script | generated specimen builder calls the adapter | Build/check regenerates a playable specimen from adapter output | Add a separate bridge command only if future SP-DTYARN work needs it. |
 | engine adoption | existing builder adoption remains in place | Adapter proposal reaches `truth_end` through existing route | Keep builder-added adoption choice explicit. |
 | tests | focused adapter test exists | Packet -> proposal behavior is covered before real provider work | Add provider-level tests only when a real provider exists. |
@@ -70,9 +77,10 @@
 
 ## Evidence Boundary
 
+- `proposal_validation`: status and reasons from the bounded adoption gate.
 - `adapter_generated`: node id hint, node text, follow-up choice id hint, choice text, target id, effect, and the packet fields read to produce them.
 - `builder_added`: source adoption choice from `drafting` and artifact/readback scaffolding.
-- `validation_adjusted`: empty when the adapter returns the expected specimen ids and schema-valid effect.
+- `validation_adjusted`: empty when the adapter returns the expected specimen ids, known target, non-empty text, and schema-valid effect.
 - `still_not_real_AI`: true. This is deterministic rule-based adapter evidence, not OpenAI, local LLM, or final narrative quality evidence.
 
 ## What Not To Fake
@@ -84,7 +92,7 @@
 
 ## Minimal Next Action
 
-The missing packet-to-proposal seam is now closed at deterministic adapter level. The next meaningful move is not more readiness work; it is either:
+The missing packet-to-proposal seam is now closed at deterministic adapter level, and the generated specimen path now has a bounded adoption gate. The next meaningful move is not more readiness work; it is either:
 
 1. replace or extend the deterministic adapter with a real generator provider while preserving the same packet/proposal contract, or
 2. keep the adapter as a stable seam and return to narrower SP-DTYARN export gaps such as nested conditions or `[entity~]`.

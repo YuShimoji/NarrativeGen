@@ -4,8 +4,8 @@
 
 - **日時**: 2026-06-30
 - **ブランチ**: `main`（trunk-based）
-- **HEAD**: `0ad7e9e` (`test: prove spdtyarn bridge generalization`) after the SP-DTYARN bridge generalization probe. Run `git log -1 --oneline` after pull for the exact current commit.
-- **直近**: `DeterministicSpdtyarnBridgeAdapter` が複数の `StoryContextPacket` に対して packet-sensitive proposal を返すことを focused test と probe artifact で証拠化した。
+- **HEAD**: after the continuation proposal adoption safety gate slice. Run `git log -1 --oneline` after pull for the exact current commit.
+- **直近**: `DeterministicSpdtyarnBridgeAdapter` returns packet-sensitive proposals, and `validateContinuationProposalAdoption()` now gates generated specimen adoption with `accepted` / `validation_adjusted` / `rejected` reasons before model mutation.
 - **repo authority 注意**: `origin/HEAD` は `origin/main`。作業正本は `main` / `origin/main`。
 - **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`
 
@@ -27,6 +27,16 @@ NarrativeGen/
 ```
 
 ## 現在の状態
+
+### 2026-06-30 Continuation proposal adoption safety gate
+
+- **Work purpose**: prevent future deterministic, SP-DTYARN, or real-provider `StructuredContinuationProposal` output from being adopted into a model without a bounded safety check.
+- **Effect**: `packages/engine-ts/src/continuation-proposal-validator.ts` now validates proposal ids, generated text, follow-up target reachability, supported effects, state-key classification, and direct-mutation boundaries. It returns `accepted`, `validation_adjusted`, or `rejected` with reasons.
+- **Builder boundary**: `apps/web-tester/scripts/build-generated-specimen.mjs` now runs the gate before model mutation. The current deterministic adapter proposal is accepted; rejected proposals stop the specimen build instead of being silently repaired.
+- **Evidence artifacts**: `docs/samples/continuation-proposal-adoption-safety.md` describes accepted/rejected/adjusted behavior. Generated specimen trace/readback/review now expose `proposal_validation.status`, `proposal_validation.reasons`, `adapter_generated`, `builder_added`, `validation_adjusted`, and `still_not_real_AI`.
+- **Validation package for this slice**: `npm run build:engine`, `npm run test -w @narrativegen/engine-ts` (24 files / 285 tests), `npm run build:generated-specimen -w @narrativegen/web-tester`, `npm run check:generated-specimen -w @narrativegen/web-tester`, `npm run check:safety`, `npm run build:tester`, `npm run test -w @narrativegen/web-tester` (64 formatter checks), focused Chromium E2Es for AI adoption (3 tests), authoring sample CSV roundtrip (1 test), and vertical-slice CSV roundtrip (1 test), plus `git diff --check`, passed.
+- **Preserved boundary**: no OpenAI/local LLM work, CSV schema fields, Web Tester UI redesign, core transition semantics, broad SP-DTYARN redesign, or stash application.
+- **Next entry points**: replace or extend the deterministic adapter with a real provider behind the same proposal gate, add provider-family fixtures only when real output exists, or return to narrower SP-DTYARN export gaps such as nested conditions and `[entity~]`.
 
 ### 2026-06-30 Terminal handoff after SP-DTYARN bridge probe
 
