@@ -4,8 +4,8 @@
 
 - **日時**: 2026-06-30
 - **ブランチ**: `main`（trunk-based）
-- **HEAD**: `main` after the story-packet generator specimen slice; run `git log -1 --oneline` after pull for the exact sync commit. Structured-output baseline before this slice: `0efdf4ad78c56da69ff6c2f9df8d93f93d79f16e` (`feat: structure mock generator continuation output`).
-- **直近**: generated specimen builder が `StoryContextPacket` を `DeterministicSpdtyarnBridgeAdapter.generateContinuationProposal` に渡し、adapter proposal を既存 adoption path で playable specimen にした。
+- **HEAD**: `0ad7e9e` (`test: prove spdtyarn bridge generalization`) after the SP-DTYARN bridge generalization probe. Run `git log -1 --oneline` after pull for the exact current commit.
+- **直近**: `DeterministicSpdtyarnBridgeAdapter` が複数の `StoryContextPacket` に対して packet-sensitive proposal を返すことを focused test と probe artifact で証拠化した。
 - **repo authority 注意**: `origin/HEAD` は `origin/main`。作業正本は `main` / `origin/main`。
 - **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`
 
@@ -27,6 +27,15 @@ NarrativeGen/
 ```
 
 ## 現在の状態
+
+### 2026-06-30 Terminal handoff after SP-DTYARN bridge probe
+
+- **Restart authority**: `main` is pushed to `origin/main` at `0ad7e9e` (`test: prove spdtyarn bridge generalization`). Fresh terminals should run `git fetch origin --prune` then `git pull --ff-only origin main`; `git rev-list --left-right --count "HEAD...origin/main"` should report `0 0`.
+- **Current shipped state**: the deterministic SP-DTYARN bridge adapter exists, generated specimen artifacts remain current/playable, and `docs/samples/spdtyarn-bridge-generalization-probe.md` proves Packet A/B produce distinct proposals.
+- **Validation package for latest slice**: `npm run build:engine`, `npm run test -w @narrativegen/engine-ts` (23 files / 278 tests), `npm run build:generated-specimen -w @narrativegen/web-tester`, `npm run check:generated-specimen -w @narrativegen/web-tester`, `npm run check:safety`, `npm run build:tester`, and focused Chromium E2Es for AI adoption, authoring sample CSV roundtrip, and vertical-slice CSV roundtrip passed.
+- **Preserved boundary**: no OpenAI/local LLM work, CSV schema fields, Web Tester UI redesign, core transition semantics, broad SP-DTYARN redesign, or stash application happened.
+- **Resume path**: inspect `docs/samples/spdtyarn-bridge-generalization-probe.md`, then `packages/engine-ts/test/spdtyarn-bridge-adapter.spec.ts`; use `docs/samples/spdtyarn-generator-bridge-readiness.md` for the current seam state.
+- **Next move**: keep the deterministic adapter as a comparison baseline for future provider work, or return to narrower SP-DTYARN export gaps such as nested conditions or `[entity~]`. Do not claim real AI or final prose quality from the deterministic probe.
 
 ### 2026-06-30 SP-DTYARN bridge generalization probe
 
