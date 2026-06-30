@@ -28,6 +28,15 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-06-30 Terminal handover sync after provider-family fixtures
+
+- **Restart authority**: `main` is the active branch and `origin/main` is the remote authority. Before this docs-only sync, `HEAD` was `2d344f5` (`test: add provider family proposal fixtures`) and `HEAD...origin/main` was `0 0`.
+- **Current shipped state**: continuation proposal adoption safety is in place, generated specimen adoption still runs through `validateContinuationProposalAdoption()`, and offline provider-like fixture coverage now classifies strict valid, safely adjusted, and rejected proposal families before real provider work.
+- **Primary resume artifacts**: start with `docs/samples/provider-family-proposal-fixtures.md`, then `packages/engine-ts/test/provider-family-proposal-fixtures.spec.ts`; use `docs/samples/continuation-proposal-adoption-safety.md` and `docs/samples/spdtyarn-generator-bridge-readiness.md` for boundary/readiness context.
+- **Last validation package**: latest implementation validation passed with `npm run build:engine`, `npm run test -w @narrativegen/engine-ts` (25 files / 296 tests), generated specimen build/check, `npm run check:safety`, `npm run build:tester`, focused Chromium E2Es for AI adoption, authoring sample CSV roundtrip, and vertical-slice CSV roundtrip, plus `git diff --check`.
+- **Preserved boundary**: this sync does not apply stash entries, does not add OpenAI/local LLM work, does not call external APIs, and does not change CSV schema, Web Tester UI, core transition semantics, generated specimen artifacts, or broad SP-DTYARN design.
+- **Next entry points**: compare a future real provider adapter against the fixture family; add a new fixture only when a new provider failure class appears; or leave generation safety stable and return to narrower SP-DTYARN export gaps such as nested conditions and `[entity~]`.
+
 ### 2026-06-30 Provider-family proposal fixture safety
 
 - **Work purpose**: classify representative provider-like `StructuredContinuationProposal` outputs before adding real provider, OpenAI, or local LLM integration.
