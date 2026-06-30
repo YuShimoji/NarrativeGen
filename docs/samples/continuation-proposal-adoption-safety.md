@@ -22,9 +22,11 @@ The generated specimen path now validates a `StructuredContinuationProposal` bef
 | Rejection class | Reason |
 | --- | --- |
 | Empty generated text | Would create an adopted node with no reviewable body |
+| Missing follow-up choice text | Would create an adopted node with no player-facing route out |
 | Missing or unknown follow-up target | Would break route playability or hide a builder repair |
 | Existing-node id collision | Would overwrite or obscure model graph ownership |
 | Unsupported effect type | Would serialize semantics the engine cannot safely apply |
+| Malformed resource or effect target fields | Would hide incomplete provider output behind builder assumptions |
 | Direct model mutation keys such as `nodes` or `mutations` | Proposal output must not patch existing graph structures directly |
 
 ## Explicitly Adjusted
@@ -32,6 +34,12 @@ The generated specimen path now validates a `StructuredContinuationProposal` bef
 The gate can normalize safe provider id hints to the builder's configured specimen ids when those ids are non-colliding. That status is recorded as `validation_adjusted`, with each adjustment repeated in `proposal_validation.reasons` and `ownershipBoundary.validation_adjusted`.
 
 The current deterministic specimen does not need adjustment; its validation status is `accepted`.
+
+## Provider-Like Fixture Coverage
+
+`docs/samples/provider-family-proposal-fixtures.md` records an offline fixture family that exercises provider-shaped outputs before real provider work. The family covers strict valid output, safe id normalization, hallucinated targets, generated node collisions, unsupported effects, empty generated text, missing follow-up choice text, direct mutation requests, malformed resource effects, and malformed effect targets.
+
+The fixture tests assert that accepted cases are accepted, adjusted cases are explicitly `validation_adjusted`, rejected cases are rejected before adoption, and every non-accepted case carries a visible reason.
 
 ## Out Of Scope
 

@@ -4,8 +4,8 @@
 
 - **日時**: 2026-06-30
 - **ブランチ**: `main`（trunk-based）
-- **HEAD**: after the continuation proposal adoption safety gate slice. Run `git log -1 --oneline` after pull for the exact current commit.
-- **直近**: `DeterministicSpdtyarnBridgeAdapter` returns packet-sensitive proposals, and `validateContinuationProposalAdoption()` now gates generated specimen adoption with `accepted` / `validation_adjusted` / `rejected` reasons before model mutation.
+- **HEAD**: after the provider-family proposal fixture safety slice. Run `git log -1 --oneline` after pull for the exact current commit.
+- **直近**: `validateContinuationProposalAdoption()` now has offline provider-like fixture coverage for strict valid, adjusted, and rejected proposal families before any real provider integration.
 - **repo authority 注意**: `origin/HEAD` は `origin/main`。作業正本は `main` / `origin/main`。
 - **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`
 
@@ -27,6 +27,16 @@ NarrativeGen/
 ```
 
 ## 現在の状態
+
+### 2026-06-30 Provider-family proposal fixture safety
+
+- **Work purpose**: classify representative provider-like `StructuredContinuationProposal` outputs before adding real provider, OpenAI, or local LLM integration.
+- **Effect**: `packages/engine-ts/test/provider-family-proposal-fixtures.spec.ts` now runs strict valid, safe id normalization, unknown target, generated node collision, unsupported effect, empty generated text, missing follow-up text, direct mutation request, malformed resource effect, and malformed effect target fixtures through `validateContinuationProposalAdoption()`.
+- **Safety result**: accepted fixtures stay accepted, safe id normalization is explicitly `validation_adjusted`, rejected fixtures are rejected before adoption, and every non-accepted fixture exposes at least one reason. No invalid fixture is silently accepted.
+- **Evidence artifacts**: `docs/samples/provider-family-proposal-fixtures.md` records the fixture table, expected outcomes, reason examples, what it protects, and what it does not prove. `docs/samples/continuation-proposal-adoption-safety.md` and `docs/samples/spdtyarn-generator-bridge-readiness.md` now point at the fixture coverage.
+- **Validation package for this slice**: baseline `npm run build:engine`, `npm run test -w @narrativegen/engine-ts` (24 files / 285 tests), `npm run build:generated-specimen -w @narrativegen/web-tester`, `npm run check:generated-specimen -w @narrativegen/web-tester`, and `npm run check:safety` passed before changes. Final validation passed with `npm run build:engine`, `npm run test -w @narrativegen/engine-ts` (25 files / 296 tests), generated specimen build/check, `npm run check:safety`, `npm run build:tester`, focused Chromium E2Es for AI adoption (3 tests), authoring sample CSV roundtrip (1 test), vertical-slice CSV roundtrip (1 test), and `git diff --check`.
+- **Preserved boundary**: no OpenAI/local LLM work, external API calls, credentials, CSV schema fields, Web Tester UI redesign, core transition semantics, broad SP-DTYARN redesign, generated specimen churn, or stash application.
+- **Next entry points**: compare a future real provider adapter against this fixture family, add provider-family fixtures only when a new provider failure class appears, or return to narrower SP-DTYARN export gaps such as nested conditions and `[entity~]`.
 
 ### 2026-06-30 Continuation proposal adoption safety gate
 
