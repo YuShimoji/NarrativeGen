@@ -2,10 +2,10 @@
 
 ## 最終更新
 
-- **日時**: 2026-06-30
+- **日時**: 2026-07-06
 - **ブランチ**: `main`（trunk-based）
-- **HEAD**: after the provider-family proposal fixture safety slice. Run `git log -1 --oneline` after pull for the exact current commit.
-- **直近**: `validateContinuationProposalAdoption()` now has offline provider-like fixture coverage for strict valid, adjusted, and rejected proposal families before any real provider integration.
+- **HEAD**: after the Web Tester Designer Dashboard v0 slice. Run `git log -1 --oneline` after pull for the exact current commit.
+- **直近**: Web Tester now has a visible read-only `設計ダッシュボード` tab for model overview, route state, validation/reachability, state keys, non-AI boundary, and designer review hints.
 - **repo authority 注意**: `origin/HEAD` は `origin/main`。作業正本は `main` / `origin/main`。
 - **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`
 
@@ -27,6 +27,15 @@ NarrativeGen/
 ```
 
 ## 現在の状態
+
+### 2026-07-06 Designer Dashboard v0
+
+- **Work purpose**: move the active Web Tester checkpoint back to a visible designer-facing GUI surface, without adding OpenAI, local LLM, external API, provider integration, CSV schema redesign, or core transition changes.
+- **Effect**: Web Tester now shows a `設計ダッシュボード` tab near Story / Graph / Debug. `apps/web-tester/src/ui/designer-dashboard.js` reads current model/session state and renders model overview, current route/play state, validation/reachability, state design keys, non-AI generation boundary, and review hints. The surface is read-only and uses existing `ModelValidator` plus engine `getAvailableChoices()` instead of duplicating broad validation logic.
+- **Review artifact**: `docs/samples/designer-dashboard-review-ja.md` gives the shortest human review path: run `npm run dev`, open the Vite URL, select `vertical-slice.json`, click `実行`, then open `設計ダッシュボード`.
+- **Validation package for this slice**: `npm run build:engine`, `npm run build:tester`, `npm run test -w @narrativegen/web-tester` (64 formatter checks), `npm run check:safety`, focused Chromium E2E `apps/web-tester/tests/e2e/designer-dashboard.spec.js`, and `git diff --check` passed.
+- **Boundary**: the dashboard does not mutate the story model, does not execute OpenAI/local LLM/API/auth/payment/publication, and does not claim AI quality, production readiness, public publishing, or final prose acceptance. Existing Advanced/provider-labeled UI remains outside this slice.
+- **Next entry points**: human can review the dashboard values while playing the vertical slice; a future slice can collect browser screenshot evidence or continue with non-AI naming/provider-boundary cleanup. Do not expand into T+2/T+4 items from this checkpoint unless explicitly promoted.
 
 ### 2026-06-30 Terminal handover sync after provider-family fixtures
 

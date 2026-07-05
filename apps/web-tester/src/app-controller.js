@@ -74,7 +74,8 @@ export function initializeApp({ appState, managers, keyBindingManager, exportMan
     dom, eventManager, storyManager, graphManager, debugManager,
     guiEditorManager, referenceManager, aiManager,
     lexiconManager, searchManager, themeManager, validationPanel,
-    lexiconUIManager, keyBindingUIManager, mermaidPreviewManager, saveManager
+    lexiconUIManager, keyBindingUIManager, mermaidPreviewManager, saveManager,
+    designerDashboardManager
   } = managers
 
   // DOM element references (centralized in ui-bindings.js)
@@ -88,8 +89,8 @@ export function initializeApp({ appState, managers, keyBindingManager, exportMan
   csvPreviewContent, confirmImportBtn, cancelPreviewBtn,
   storyPreviewModal, storyPreviewContent, closePreviewBtn,
   storyContent, toggleSidebarBtn,
-  storyTab, graphTab, debugTab, referenceTab,
-  storyPanel, graphPanel, debugPanel, referencePanel,
+  storyTab, graphTab, designerDashboardTab, debugTab, referenceTab,
+  storyPanel, graphPanel, designerDashboardPanel, designerDashboardContainer, debugPanel, referencePanel,
   graphSvg, fitGraphBtn, resetGraphBtn, showConditions,
   graphSettingsBtn, graphSettings, nodeShape, fontSize,
   saveGraphPreset, loadGraphPreset, exportBtn, exportModal,
@@ -290,6 +291,7 @@ function renderState() {
   const currentSession = getCurrentSession()
   if (!currentSession) {
     stateView.textContent = JSON.stringify({ status: 'サンプル未実行' })
+    renderDesignerDashboard()
     return
   }
 
@@ -307,6 +309,14 @@ function renderState() {
   // Update debug info if debug tab is active
   if (debugPanel.classList.contains('active')) {
     renderDebugInfo()
+  }
+
+  renderDesignerDashboard()
+}
+
+function renderDesignerDashboard() {
+  if (designerDashboardManager && typeof designerDashboardManager.render === 'function') {
+    designerDashboardManager.render()
   }
 }
 
@@ -1019,6 +1029,7 @@ function switchTab(tabName) {
   // Hide all panels
   storyPanel.classList.remove('active')
   graphPanel.classList.remove('active')
+  if (designerDashboardPanel) designerDashboardPanel.classList.remove('active')
   debugPanel.classList.remove('active')
   advancedPanel.classList.remove('active')
   if (referencePanel) referencePanel.classList.remove('active')
@@ -1026,6 +1037,7 @@ function switchTab(tabName) {
   // Remove active class from all tabs
   storyTab.classList.remove('active')
   graphTab.classList.remove('active')
+  if (designerDashboardTab) designerDashboardTab.classList.remove('active')
   debugTab.classList.remove('active')
   advancedTab.classList.remove('active')
   if (referenceTab) referenceTab.classList.remove('active')
@@ -1038,6 +1050,10 @@ function switchTab(tabName) {
     graphPanel.classList.add('active')
     graphTab.classList.add('active')
     graphManager.render()
+  } else if (tabName === 'designerDashboard') {
+    if (designerDashboardPanel) designerDashboardPanel.classList.add('active')
+    if (designerDashboardTab) designerDashboardTab.classList.add('active')
+    renderDesignerDashboard()
   } else if (tabName === 'debug') {
     debugPanel.classList.add('active')
     debugTab.classList.add('active')
@@ -1060,6 +1076,7 @@ function updateTabA11y(activeTabName) {
   const tabMap = [
     { name: 'story', el: storyTab },
     { name: 'graph', el: graphTab },
+    { name: 'designerDashboard', el: designerDashboardTab },
     { name: 'debug', el: debugTab },
     { name: 'reference', el: referenceTab },
     { name: 'advanced', el: advancedTab }
@@ -1074,11 +1091,12 @@ function updateTabA11y(activeTabName) {
 
 storyTab.addEventListener('click', () => switchTab('story'))
 graphTab.addEventListener('click', () => switchTab('graph'))
+if (designerDashboardTab) designerDashboardTab.addEventListener('click', () => switchTab('designerDashboard'))
 debugTab.addEventListener('click', () => switchTab('debug'))
 if (referenceTab) referenceTab.addEventListener('click', () => switchTab('reference'))
 advancedTab.addEventListener('click', () => switchTab('advanced'))
 
-const mainTabs = [storyTab, graphTab, debugTab, referenceTab, advancedTab].filter(Boolean)
+const mainTabs = [storyTab, graphTab, designerDashboardTab, debugTab, referenceTab, advancedTab].filter(Boolean)
 for (const tabEl of mainTabs) {
   tabEl.addEventListener('keydown', (event) => {
     if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return
@@ -1780,6 +1798,11 @@ validationPanel.initialize(
     }
   }
 )
+
+// Initialize designer dashboard
+if (designerDashboardManager) {
+  designerDashboardManager.initialize(designerDashboardContainer)
+}
 
 // Initialize Mermaid preview manager
 mermaidPreviewManager.initialize(document.querySelector('.app-container'))

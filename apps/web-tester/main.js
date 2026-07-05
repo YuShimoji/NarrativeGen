@@ -17,6 +17,7 @@ import { SearchManager } from './src/ui/SearchManager.js'
 import { KeyBindingManager } from './src/ui/keybinding-manager.js'
 import { SaveManager } from './src/features/save-manager.js'
 import { ValidationPanel } from './src/ui/validation-panel.js'
+import { DesignerDashboardManager } from './src/ui/designer-dashboard.js'
 import { LexiconUIManager } from './src/ui/lexicon-ui-manager.js'
 import { KeyBindingUIManager } from './src/ui/key-binding-ui-manager.js'
 import { ExportManager } from './src/features/export/ExportManager.js'
@@ -68,6 +69,7 @@ async function bootstrapApp() {
     keyBindingUIManager: new KeyBindingUIManager(),
     mermaidPreviewManager: new MermaidPreviewManager(),
     saveManager: new SaveManager(),
+    designerDashboardManager: new DesignerDashboardManager(appState),
   }
 
   // Initialize application (event wiring, UI setup, DevTools)

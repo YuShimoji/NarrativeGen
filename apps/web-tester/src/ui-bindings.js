@@ -58,10 +58,13 @@ export function getUIElements() {
         // Tab elements
         storyTab: document.getElementById('storyTab'),
         graphTab: document.getElementById('graphTab'),
+        designerDashboardTab: document.getElementById('designerDashboardTab'),
         debugTab: document.getElementById('debugTab'),
         referenceTab: document.getElementById('referenceTab'),
         storyPanel: document.getElementById('storyPanel'),
         graphPanel: document.getElementById('graphPanel'),
+        designerDashboardPanel: document.getElementById('designerDashboardPanel'),
+        designerDashboardContainer: document.getElementById('designerDashboardContainer'),
         debugPanel: document.getElementById('debugPanel'),
         referencePanel: document.getElementById('referencePanel'),
 
