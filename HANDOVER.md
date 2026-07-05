@@ -4,8 +4,8 @@
 
 - **日時**: 2026-07-06
 - **ブランチ**: `main`（trunk-based）
-- **HEAD**: after the Web Tester Designer Dashboard v0 slice. Run `git log -1 --oneline` after pull for the exact current commit.
-- **直近**: Web Tester now has a visible read-only `設計ダッシュボード` tab for model overview, route state, validation/reachability, state keys, non-AI boundary, and designer review hints.
+- **HEAD**: after the Web Tester Designer Dashboard v0 implementation and terminal handoff sync. Run `git log -1 --oneline` after pull for the exact current commit.
+- **直近**: Web Tester now has a visible read-only `設計ダッシュボード` tab; terminal handoff records the remote parity check and local Unity-generated residue boundary.
 - **repo authority 注意**: `origin/HEAD` は `origin/main`。作業正本は `main` / `origin/main`。
 - **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`
 
@@ -27,6 +27,18 @@ NarrativeGen/
 ```
 
 ## 現在の状態
+
+### 2026-07-06 Terminal handoff after Designer Dashboard v0 push
+
+- **Restart authority**: `main` is the active branch and `origin/main` is the remote authority. At handoff start, tracked repo state was already pushed at `e7ccfc9` (`feat: add web tester designer dashboard`) and `git rev-list --left-right --count "HEAD...origin/main"` returned `0 0`.
+- **Current shipped state**: the Designer Dashboard v0 implementation is in remote history. The tab is read-only, designer-facing, and bounded to existing model/session validation data; it does not add provider, OpenAI, local LLM, external API, auth/payment, publication, or production-approval behavior.
+- **Resume path**: in a fresh terminal run `git fetch origin --prune`, `git pull --ff-only origin main`, then `git rev-list --left-right --count "HEAD...origin/main"` and expect `0 0`. For GUI review, run `npm run dev`, open the Vite URL, select `vertical-slice.json`, click `実行`, then open `設計ダッシュボード`.
+- **Validation state**: no code changed in this handoff pass. The implementation validation package remains the one recorded in the Designer Dashboard v0 section below; this handoff pass only needs docs diff hygiene and readback.
+- **Local residue purpose**: this machine has untracked root Unity-style artifacts (`Assets/`, `ProjectSettings/`, `packages/manifest.json`, `packages/packages-lock.json`) and Unity `.meta` files under `packages/sdk-unity/`. They appear to be local Unity/package-manager project residue around the UPM SDK, not part of the validated Web Tester dashboard slice.
+- **Local residue effect**: these files make `git status` show untracked paths on this machine, but they do not affect the tracked Designer Dashboard, engine, docs, or remote branch parity. Ignored local caches such as `Library/`, `Logs/`, `UserSettings/`, `node_modules/`, and `dist/` remain local-only.
+- **Local residue requirements**: before promoting any of those Unity-root artifacts, first decide whether the repo should begin tracking a root Unity project in addition to the existing UPM package source at `packages/sdk-unity/`. Do not bulk-add them as part of Web Tester or handoff cleanup.
+- **Local residue state / owner / next move**: state is intentionally uncommitted and unpushed; owner is the human or a future Unity-scoped slice. Next move is either classify and explicitly promote the Unity project-root files, or delete/ignore them in a separate cleanup after confirming they are disposable.
+- **Next entry points**: human review of `設計ダッシュボード`; optional screenshot smoke evidence; or a narrow non-AI naming/provider-boundary cleanup. Do not expand into root Unity project tracking from this checkpoint unless explicitly promoted.
 
 ### 2026-07-06 Designer Dashboard v0
 
