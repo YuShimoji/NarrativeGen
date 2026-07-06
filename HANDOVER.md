@@ -4,8 +4,8 @@
 
 - **日時**: 2026-07-06
 - **ブランチ**: `main`（trunk-based）
-- **HEAD**: after the Web Tester Designer Dashboard v0 implementation and terminal handoff sync. Run `git log -1 --oneline` after pull for the exact current commit.
-- **直近**: Web Tester now has a visible read-only `設計ダッシュボード` tab; terminal handoff records the remote parity check and local Unity-generated residue boundary.
+- **HEAD**: after the Originality Spine Probe v0 implementation. Run `git log -1 --oneline` after pull for the exact current commit.
+- **直近**: Web Tester now includes `originality-spine-probe.json`, and the Designer Dashboard shows a read-only `NarrativeGen独自プリミティブ` card for originality readiness.
 - **repo authority 注意**: `origin/HEAD` は `origin/main`。作業正本は `main` / `origin/main`。
 - **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`
 
@@ -27,6 +27,16 @@ NarrativeGen/
 ```
 
 ## 現在の状態
+
+### 2026-07-07 Originality Spine Probe v0
+
+- **Work purpose**: answer whether NarrativeGen already has a project-specific procedural narrative system or is still only a conventional flag/resource adventure by adding one compact playable probe.
+- **Current originality state**: partially implemented. Entity-Property, Dynamic Text, Event, and ConversationTemplate can enter the playable route. Character Knowledge exists in model/API form but is not yet route-mutating.
+- **Effect**: `models/examples/originality-spine-probe.json` adds a short offline route where `receipt_fragment` carries semantic properties, Mira's action creates `event_mira_reframes_receipt`, `hasEvent` gates the semantic ending, and an event-property ConversationTemplate appends player-visible text. The model uses no `evidence` / `focus` resource counters.
+- **Dashboard/readback**: `apps/web-tester/src/ui/designer-dashboard.js` now adds `NarrativeGen独自プリミティブ`, distinguishing `live_in_route`, `present_model_only`, `unsupported`, and `unknown` for Dynamic Text, Entity-Property, Event, ConversationTemplate, and Character Knowledge. `docs/samples/originality-spine-probe-review-ja.md` and `docs/samples/originality-spine-probe-readback.json` record the review path and primitive matrix.
+- **Review path**: run `npm run dev`, open the Vite URL, select `originality-spine-probe.json`, click `実行`, play `Ask Mira to test the receipt against her archive memory` -> `Follow the semantic contradiction to the archive ledger`, then open `設計ダッシュボード`.
+- **Boundary**: no OpenAI/local LLM/provider/API/auth/payment/publication work, no broad UI modernization, no schema redesign, no root Unity project promotion/cleanup, and no final narrative-quality or production-readiness claim.
+- **Next entry points**: human visual/product review of whether the probe feels NarrativeGen-specific; or a narrow implementation slice connecting Character Knowledge `perceiveEntity()` to event creation or choice availability. Do not treat Character Knowledge as live until route behavior uses it.
 
 ### 2026-07-06 Terminal handoff after Designer Dashboard v0 push
 

@@ -1,0 +1,74 @@
+{
+  "artifact_id": "Originality Spine Probe v0",
+  "model": "models/examples/originality-spine-probe.json",
+  "review_surface": "docs/samples/originality-spine-probe-review-ja.md",
+  "critical_route": [
+    {
+      "node": "desk",
+      "choice": "ask_mira_reframe",
+      "effect": "createEvent(event_mira_reframes_receipt) + set receipt_reading"
+    },
+    {
+      "node": "memory_reframed",
+      "choice": "follow_semantic_change",
+      "condition": "hasEvent(event_mira_reframes_receipt)"
+    },
+    {
+      "node": "semantic_end",
+      "effect": "ending text explains event/property route basis"
+    }
+  ],
+  "required_product_answer": {
+    "current_original_system_state": "partially implemented",
+    "live_primitives_in_probe_route": [
+      "Entity-Property",
+      "Dynamic Text",
+      "Event",
+      "ConversationTemplate"
+    ],
+    "still_legacy_adv_residue": [
+      "The route is still node-and-choice.",
+      "Character Knowledge is stored in the model but does not mutate route state.",
+      "Property condition support is typed/schema-visible but not used as a route gate in this probe.",
+      "The Story tab still requires sample selection plus explicit run."
+    ],
+    "shortest_next_originality_axis": "Connect Character Knowledge perception to event creation or choice availability."
+  },
+  "primitive_matrix": [
+    {
+      "primitive": "Dynamic Text",
+      "state": "live_in_route",
+      "evidence": "models/examples/originality-spine-probe.json nodes.desk.text and nodes.memory_reframed.text",
+      "player_visible_effect": "Entity and event references expand into visible text during play.",
+      "next_gap": "Expose template/dynamic expansion provenance in the dashboard if needed."
+    },
+    {
+      "primitive": "Entity-Property",
+      "state": "live_in_route",
+      "evidence": "receipt_fragment properties provenance, owner, contradiction, credibility",
+      "player_visible_effect": "The receipt reads as a semantic object rather than a score item.",
+      "next_gap": "Use property comparison as a correctly evaluated route condition after engine support is verified."
+    },
+    {
+      "primitive": "Event",
+      "state": "live_in_route",
+      "evidence": "createEvent(event_mira_reframes_receipt) and hasEvent route condition",
+      "player_visible_effect": "The event unlocks the semantic ending route and appears in dynamic text.",
+      "next_gap": "Tie events to character perception instead of author-written effects only."
+    },
+    {
+      "primitive": "ConversationTemplate",
+      "state": "live_in_route",
+      "evidence": "conversationTemplates[0] matches event severity and observer",
+      "player_visible_effect": "A template response is appended after the reframe event exists.",
+      "next_gap": "Show which template matched in review/debug surfaces."
+    },
+    {
+      "primitive": "Character Knowledge",
+      "state": "present_model_only",
+      "evidence": "characters.mira.knowledgeProfiles",
+      "player_visible_effect": "No direct route mutation yet; Mira's profile is visible as model data only.",
+      "next_gap": "Call perceiveEntity() from a route-safe effect or precondition pipeline."
+    }
+  ]
+}

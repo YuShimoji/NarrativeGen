@@ -1,0 +1,198 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "desk",
+  "flags": {
+    "meaning_locked": true
+  },
+  "resources": {},
+  "variables": {
+    "receipt_reading": "unread fragment"
+  },
+  "entities": {
+    "semantic_object": {
+      "id": "semantic_object",
+      "name": "Semantic Object",
+      "description": "A story object whose meaning comes from properties, not point totals.",
+      "properties": {
+        "provenance": {
+          "key": "provenance",
+          "type": "string",
+          "defaultValue": "unknown"
+        },
+        "visible_to": {
+          "key": "visible_to",
+          "type": "string",
+          "defaultValue": "player"
+        }
+      }
+    },
+    "receipt_fragment": {
+      "id": "receipt_fragment",
+      "name": "Receipt Fragment",
+      "description": "A torn receipt that only becomes useful when Mira reinterprets who owned it.",
+      "parentEntity": "semantic_object",
+      "properties": {
+        "provenance": {
+          "key": "provenance",
+          "type": "string",
+          "defaultValue": "clocktower archive desk"
+        },
+        "owner": {
+          "key": "owner",
+          "type": "string",
+          "defaultValue": "Mira's mentor"
+        },
+        "location": {
+          "key": "location",
+          "type": "string",
+          "defaultValue": "south archive"
+        },
+        "contradiction": {
+          "key": "contradiction",
+          "type": "string",
+          "defaultValue": "signed after the bell was sealed"
+        },
+        "credibility": {
+          "key": "credibility",
+          "type": "number",
+          "defaultValue": 72,
+          "rangeMin": 0,
+          "rangeMax": 100
+        }
+      }
+    }
+  },
+  "characters": {
+    "mira": {
+      "id": "mira",
+      "name": "Mira",
+      "knowledgeProfiles": [
+        {
+          "domain": "archive_records",
+          "accuracy": 0.86,
+          "tolerance": 0.12
+        },
+        {
+          "domain": "general",
+          "accuracy": 0.55,
+          "tolerance": 0.28
+        }
+      ]
+    }
+  },
+  "conversationTemplates": [
+    {
+      "id": "mira_archive_reframe",
+      "trigger": {
+        "eventMatch": {
+          "propertyChecks": [
+            {
+              "key": "severity",
+              "op": ">=",
+              "value": 60
+            },
+            {
+              "key": "observer",
+              "op": "==",
+              "value": "mira"
+            }
+          ]
+        },
+        "sessionConditions": [
+          {
+            "type": "hasEvent",
+            "key": "event_mira_reframes_receipt",
+            "value": true
+          }
+        ]
+      },
+      "text": "Template response: Mira's archive knowledge treats [receipt_fragment] as a contradiction about [receipt_fragment.location], not as evidence points.",
+      "priority": 10
+    }
+  ],
+  "nodes": {
+    "desk": {
+      "id": "desk",
+      "speaker": "Narrator",
+      "text": "Mira sets [receipt_fragment] on the desk. It is not a key item or a score token: provenance=[receipt_fragment.provenance], owner=[receipt_fragment.owner], contradiction=[receipt_fragment.contradiction], credibility=[receipt_fragment.credibility].\n\nCurrent reading: {receipt_reading}. {?meaning_locked:Mira still reads it as a loose clue.}",
+      "choices": [
+        {
+          "id": "ask_mira_reframe",
+          "text": "Ask Mira to test the receipt against her archive memory",
+          "target": "memory_reframed",
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "event_mira_reframes_receipt",
+              "name": "Mira reframed the receipt",
+              "properties": {
+                "severity": {
+                  "defaultValue": 70
+                },
+                "observer": {
+                  "defaultValue": "mira"
+                },
+                "source_entity": {
+                  "defaultValue": "receipt_fragment"
+                },
+                "knowledge_shift": {
+                  "defaultValue": "from clue collection to ownership contradiction"
+                },
+                "semantic_change": {
+                  "defaultValue": "witnessed contradiction"
+                },
+                "location": {
+                  "defaultValue": "south archive"
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "key": "meaning_locked",
+              "value": false
+            },
+            {
+              "type": "setVariable",
+              "key": "receipt_reading",
+              "value": "witnessed contradiction"
+            }
+          ]
+        },
+        {
+          "id": "treat_as_old_clue",
+          "text": "Treat it as a conventional clue and stop",
+          "target": "old_adv_end"
+        }
+      ]
+    },
+    "memory_reframed": {
+      "id": "memory_reframed",
+      "speaker": "Mira",
+      "text": "[event_mira_reframes_receipt] changes [receipt_fragment] from a pickup into [event_mira_reframes_receipt.semantic_change]. The owner field points to [receipt_fragment.owner], while the event records Mira's knowledge shift: [event_mira_reframes_receipt.knowledge_shift].\n\nCurrent reading: {receipt_reading}.",
+      "choices": [
+        {
+          "id": "follow_semantic_change",
+          "text": "Follow the semantic contradiction to the archive ledger",
+          "target": "semantic_end",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "event_mira_reframes_receipt",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    "semantic_end": {
+      "id": "semantic_end",
+      "speaker": "Narrator",
+      "text": "The route closes because a concrete event changed what [receipt_fragment] means. The ending depends on event presence and property-bearing text, not on collecting enough evidence points."
+    },
+    "old_adv_end": {
+      "id": "old_adv_end",
+      "speaker": "Narrator",
+      "text": "This branch deliberately feels like an older adventure flow: the receipt remains a generic clue, and no NarrativeGen-specific event enters the route."
+    }
+  }
+}

@@ -39,6 +39,7 @@ export class DesignerDashboardManager {
     grid.appendChild(this.renderRouteState(snapshot))
     grid.appendChild(this.renderStructureHealth(snapshot))
     grid.appendChild(this.renderStateKeys(snapshot))
+    grid.appendChild(this.renderOriginalitySpine(snapshot))
     grid.appendChild(this.renderBoundary(snapshot))
     grid.appendChild(this.renderReviewHints(snapshot))
     dashboard.appendChild(grid)
@@ -57,6 +58,7 @@ export class DesignerDashboardManager {
     const validation = this.getValidationSnapshot(model, nodeCount)
     const stateKeys = collectStateKeys(model, session)
     const auxiliaryCounts = getAuxiliaryCounts(model)
+    const originality = collectOriginalityPrimitives(model, session)
 
     return {
       model,
@@ -73,6 +75,7 @@ export class DesignerDashboardManager {
       validation,
       stateKeys,
       auxiliaryCounts,
+      originality,
     }
   }
 
@@ -161,6 +164,17 @@ export class DesignerDashboardManager {
       row('Variables', formatKeySet(keys.variables), 'variable-keys'),
       row('Entities', formatNullableNumber(aux.entities), 'entity-count'),
       row('Templates / Lexicon', `${formatNullableNumber(aux.templates)} / ${formatNullableNumber(aux.lexicon)}`, 'template-lexicon-count'),
+    ])
+  }
+
+  renderOriginalitySpine(snapshot) {
+    const p = snapshot.originality
+    return this.renderPanel('NarrativeGen独自プリミティブ', [
+      row('Dynamic Text', formatPrimitive(p.dynamicText), 'originality-dynamic-text-state'),
+      row('Entity-Property', formatPrimitive(p.entityProperty), 'originality-entity-property-state'),
+      row('Event', formatPrimitive(p.event), 'originality-event-state'),
+      row('ConversationTemplate', formatPrimitive(p.conversationTemplate), 'originality-conversation-template-state'),
+      row('Character Knowledge', formatPrimitive(p.characterKnowledge), 'originality-character-knowledge-state'),
     ])
   }
 
@@ -300,11 +314,12 @@ function formatKeySet(keys) {
 
 function getAuxiliaryCounts(model) {
   if (!model) {
-    return { entities: null, templates: null, lexicon: null }
+    return { entities: null, templates: null, lexicon: null, characters: null }
   }
 
   return {
     entities: countObject(model.entities),
+    characters: countObject(model.characters),
     templates: Array.isArray(model.conversationTemplates)
       ? model.conversationTemplates.length
       : countObject(model.conversationTemplates),
@@ -315,6 +330,133 @@ function getAuxiliaryCounts(model) {
 function countObject(value) {
   if (!value || typeof value !== 'object') return 0
   return Object.keys(value).length
+}
+
+function formatPrimitive(primitive) {
+  if (!primitive) return UNKNOWN
+  return `${primitive.state}: ${primitive.detail}`
+}
+
+function collectOriginalityPrimitives(model, session) {
+  if (!model) {
+    const unknown = { state: 'unknown', detail: NOT_AVAILABLE }
+    return {
+      dynamicText: unknown,
+      entityProperty: unknown,
+      event: unknown,
+      conversationTemplate: unknown,
+      characterKnowledge: unknown,
+    }
+  }
+
+  const texts = collectTextSurfaces(model)
+  const currentText = session?.nodeId ? model.nodes?.[session.nodeId]?.text ?? '' : ''
+  const entityCount = countObject(model.entities)
+  const entityPropertyCount = countEntityProperties(model.entities)
+  const characterCount = countObject(model.characters)
+  const templateCount = Array.isArray(model.conversationTemplates)
+    ? model.conversationTemplates.length
+    : countObject(model.conversationTemplates)
+  const eventCount = countObject(session?.events)
+  const createEventCount = countEffects(model, 'createEvent')
+  const hasEventCount = countConditions(model, 'hasEvent')
+
+  const dynamicTextPresent = texts.some(hasDynamicTextSyntax)
+  const dynamicTextCurrent = hasDynamicTextSyntax(currentText)
+  const entityPropertyPresent = entityPropertyCount > 0
+  const entityPropertyCurrent = hasEntityPropertyReference(currentText)
+
+  return {
+    dynamicText: {
+      state: dynamicTextCurrent ? 'live_in_route' : dynamicTextPresent ? 'present_model_only' : 'unsupported',
+      detail: dynamicTextPresent ? `${countDynamicTextSurfaces(texts)} text surfaces` : '0 syntax surfaces',
+    },
+    entityProperty: {
+      state: entityPropertyCurrent ? 'live_in_route' : entityPropertyPresent ? 'present_model_only' : 'unsupported',
+      detail: entityPropertyPresent ? `${entityCount} entities / ${entityPropertyCount} properties` : '0 properties',
+    },
+    event: {
+      state: eventCount > 0 ? 'live_in_route' : (createEventCount + hasEventCount) > 0 ? 'present_model_only' : 'unsupported',
+      detail: `${eventCount} live / ${createEventCount} createEvent / ${hasEventCount} hasEvent`,
+    },
+    conversationTemplate: {
+      state: eventCount > 0 && templateCount > 0 ? 'live_in_route' : templateCount > 0 ? 'present_model_only' : 'unsupported',
+      detail: `${templateCount} templates`,
+    },
+    characterKnowledge: {
+      state: characterCount > 0 ? 'present_model_only' : 'unsupported',
+      detail: characterCount > 0 ? `${characterCount} characters; no route mutation` : '0 characters',
+    },
+  }
+}
+
+function collectTextSurfaces(model) {
+  const texts = []
+  for (const [, node] of getModelNodes(model)) {
+    if (typeof node?.text === 'string') texts.push(node.text)
+    for (const choice of getChoices(node)) {
+      if (typeof choice?.text === 'string') texts.push(choice.text)
+    }
+  }
+  if (Array.isArray(model?.conversationTemplates)) {
+    for (const template of model.conversationTemplates) {
+      if (typeof template?.text === 'string') texts.push(template.text)
+    }
+  }
+  return texts
+}
+
+function hasDynamicTextSyntax(text) {
+  return /\[[^\]]+\]|\{\??!?[A-Za-z0-9_]+(?:[><=!]=?|contains|!contains)?[^}]*\}/.test(text)
+}
+
+function hasEntityPropertyReference(text) {
+  return /\[[A-Za-z0-9_-]+\.[^\]]+\]/.test(text)
+}
+
+function countDynamicTextSurfaces(texts) {
+  return texts.filter(hasDynamicTextSyntax).length
+}
+
+function countEntityProperties(entities) {
+  if (!entities || typeof entities !== 'object') return 0
+  return Object.values(entities).reduce((sum, entity) => {
+    return sum + countObject(entity?.properties)
+  }, 0)
+}
+
+function countEffects(model, type) {
+  let count = 0
+  for (const [, node] of getModelNodes(model)) {
+    for (const choice of getChoices(node)) {
+      for (const effect of choice?.effects ?? []) {
+        if (effect?.type === type) count += 1
+      }
+    }
+  }
+  return count
+}
+
+function countConditions(model, type) {
+  let count = 0
+  for (const [, node] of getModelNodes(model)) {
+    for (const choice of getChoices(node)) {
+      count += countConditionList(choice?.conditions, type)
+    }
+  }
+  return count
+}
+
+function countConditionList(conditions, type) {
+  if (!Array.isArray(conditions)) return 0
+  let count = 0
+  for (const condition of conditions) {
+    if (!condition || typeof condition !== 'object') continue
+    if (condition.type === type) count += 1
+    count += countConditionList(condition.conditions, type)
+    if (condition.condition) count += countConditionList([condition.condition], type)
+  }
+  return count
 }
 
 function collectStateKeys(model, session) {
