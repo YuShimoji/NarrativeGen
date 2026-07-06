@@ -359,7 +359,9 @@ function collectOriginalityPrimitives(model, session) {
     : countObject(model.conversationTemplates)
   const eventCount = countObject(session?.events)
   const createEventCount = countEffects(model, 'createEvent')
+  const perceiveEntityCount = countEffects(model, 'perceiveEntity')
   const hasEventCount = countConditions(model, 'hasEvent')
+  const knowledgeEventCount = countKnowledgeEvents(session?.events)
 
   const dynamicTextPresent = texts.some(hasDynamicTextSyntax)
   const dynamicTextCurrent = hasDynamicTextSyntax(currentText)
@@ -384,8 +386,8 @@ function collectOriginalityPrimitives(model, session) {
       detail: `${templateCount} templates`,
     },
     characterKnowledge: {
-      state: characterCount > 0 ? 'present_model_only' : 'unsupported',
-      detail: characterCount > 0 ? `${characterCount} characters; no route mutation` : '0 characters',
+      state: knowledgeEventCount > 0 ? 'live_in_route' : (characterCount + perceiveEntityCount) > 0 ? 'present_model_only' : 'unsupported',
+      detail: `${knowledgeEventCount} live / ${characterCount} characters / ${perceiveEntityCount} perceiveEntity`,
     },
   }
 }
@@ -423,6 +425,19 @@ function countEntityProperties(entities) {
   return Object.values(entities).reduce((sum, entity) => {
     return sum + countObject(entity?.properties)
   }, 0)
+}
+
+function countKnowledgeEvents(events) {
+  if (!events || typeof events !== 'object') return 0
+  return Object.values(events).filter((event) => {
+    const props = event?.properties
+    if (!props || typeof props !== 'object') return false
+    return Boolean(
+      props.knowledge_source?.defaultValue === 'perceiveEntity' ||
+      props.perception_noticed?.defaultValue !== undefined ||
+      String(event?.id ?? '').includes('_perceives_'),
+    )
+  }).length
 }
 
 function countEffects(model, type) {

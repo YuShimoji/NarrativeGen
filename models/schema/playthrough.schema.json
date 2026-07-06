@@ -268,6 +268,24 @@
                           }
                         },
                         "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "required": ["type", "character", "entity", "domain", "expectations"],
+                        "properties": {
+                          "type": { "const": "perceiveEntity" },
+                          "character": { "type": "string" },
+                          "entity": { "type": "string" },
+                          "domain": { "type": "string" },
+                          "expectations": {
+                            "type": "object",
+                            "additionalProperties": { "type": "number" }
+                          },
+                          "eventId": { "type": "string" },
+                          "eventName": { "type": "string" },
+                          "onlyIfNoticed": { "type": "boolean" }
+                        },
+                        "additionalProperties": false
                       }
                     ]
                   }

@@ -14,7 +14,8 @@ Vite が表示した URL を開く。通常は `http://localhost:5173/`。
 2. `実行` を押す。
 3. 最初の画面で `Receipt Fragment` の `provenance` / `owner` / `contradiction` / `credibility` が本文に展開されることを見る。
 4. `Ask Mira to test the receipt against her archive memory` を選ぶ。
-5. `設計ダッシュボード` を開き、`NarrativeGen独自プリミティブ` を見る。
+5. 本文に `runs through Mira's perceiveEntity profile` と `noticed=true` が出ることを見る。
+6. `設計ダッシュボード` を開き、`NarrativeGen独自プリミティブ` を見る。
 
 ## 重要ルート
 
@@ -29,16 +30,16 @@ semantic_end
 ## 見る点
 
 - `Receipt Fragment` が evidence point ではなく、`provenance`、`owner`、`contradiction`、`credibility` を持つ story object として読めるか。
-- Mira の行動で `event_mira_reframes_receipt` が作られ、その event が次の choice の条件と本文表示に入っているか。
+- Mira の行動で `event_mira_perceives_receipt_contradiction` が作られ、その event が次の choice の条件と本文表示に入っているか。
+- `event_mira_perceives_receipt_contradiction.knowledge_source` が `perceiveEntity` として展開され、Mira の `knowledgeProfiles` が route state に入ったことが読めるか。
 - `Template response:` が event property に反応して出ており、固定本文ではなく ConversationTemplate 由来に見えるか。
-- `設計ダッシュボード` の `NarrativeGen独自プリミティブ` で、最初は Event が `present_model_only`、選択後は `live_in_route` に変わるか。
-- `Character Knowledge` は JSON 内の Mira profile として見えるが、まだ route mutation には入っていない。これは独自性の未完了部分として扱う。
+- `設計ダッシュボード` の `NarrativeGen独自プリミティブ` で、最初は Character Knowledge が `present_model_only`、選択後は `live_in_route` に変わるか。
 
 ## 判定メモ
 
 - 設計盤らしい: object property、event trace、template response が同じ route で意味を作っている。
-- まだ旧来ADV的: branching 自体は node-and-choice、Character Knowledge は保存されているだけ、property condition はこの probe の route gate に使っていない。
-- 次の最短軸: Character Knowledge の `perceiveEntity()` 結果を event 生成または choice availability に接続する。
+- まだ旧来ADV的: branching 自体は node-and-choice、`perceiveEntity()` effect は author-written choice effect として起動している、property condition はこの probe の route gate に使っていない。
+- 次の最短軸: Character Knowledge の perception result を author-written effect ではなく、choice availability や event generation policy に接続する。
 
 ## 境界
 

@@ -45,6 +45,16 @@ export type Effect =
   | { type: 'removeItem'; key: string }
   | { type: 'goto'; target: string }
   | { type: 'createEvent'; id: string; name: string; properties?: Record<string, { defaultValue: string | number | boolean }> }
+  | {
+      type: 'perceiveEntity'
+      character: string
+      entity: string
+      domain: string
+      expectations: Record<string, number>
+      eventId?: string
+      eventName?: string
+      onlyIfNoticed?: boolean
+    }
 
 export interface ChoiceOutcome {
   type: string

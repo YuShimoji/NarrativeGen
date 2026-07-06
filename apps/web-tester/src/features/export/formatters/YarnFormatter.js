@@ -144,6 +144,8 @@ export class YarnFormatter {
             case 'createEvent':
                 // Events are runtime-only; emit flag marker + comment
                 return `<<set $event_${this._varSegment(effect.id)} to true>> // createEvent: ${effect.name || effect.id}`
+            case 'perceiveEntity':
+                return `<<set $event_${this._varSegment(this._perceptionEventId(effect))} to true>> // perceiveEntity: ${effect.character} -> ${effect.entity}`
             default:
                 return null
         }
@@ -293,11 +295,17 @@ export class YarnFormatter {
                 for (const effect of choice.effects || []) {
                     if (effect.type === 'createEvent' && effect.id) {
                         ids.add(effect.id)
+                    } else if (effect.type === 'perceiveEntity') {
+                        ids.add(this._perceptionEventId(effect))
                     }
                 }
             }
         }
         return [...ids]
+    }
+
+    _perceptionEventId(effect) {
+        return effect.eventId || `event_${effect.character}_perceives_${effect.entity}`
     }
 
     // --- Utilities ---

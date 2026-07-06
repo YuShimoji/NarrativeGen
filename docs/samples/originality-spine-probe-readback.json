@@ -20,19 +20,30 @@
   ],
   "required_product_answer": {
     "current_original_system_state": "partially implemented",
+    "character_knowledge_state_before_after": "present_model_only -> live_in_route",
     "live_primitives_in_probe_route": [
       "Entity-Property",
       "Dynamic Text",
       "Event",
-      "ConversationTemplate"
+      "ConversationTemplate",
+      "Character Knowledge"
     ],
     "still_legacy_adv_residue": [
       "The route is still node-and-choice.",
-      "Character Knowledge is stored in the model but does not mutate route state.",
+      "The perceiveEntity hook is still launched by an author-written choice effect.",
       "Property condition support is typed/schema-visible but not used as a route gate in this probe.",
       "The Story tab still requires sample selection plus explicit run."
     ],
-    "shortest_next_originality_axis": "Connect Character Knowledge perception to event creation or choice availability."
+    "shortest_next_originality_axis": "Move perception from author-triggered effect into choice availability or event generation policy."
+  },
+  "character_knowledge_route": {
+    "character": "mira",
+    "knowledge_source": "characters.mira.knowledgeProfiles[domain=archive_records]",
+    "route_hook": "perceiveEntity effect on ask_mira_reframe",
+    "resulting_event": "event_mira_perceives_receipt_contradiction",
+    "choice_signal": "follow_semantic_change requires hasEvent(event_mira_perceives_receipt_contradiction)",
+    "text_signal": "memory_reframed displays knowledge_source=perceiveEntity and noticed=true",
+    "dashboard_signal": "Character Knowledge changes to live_in_route after the event exists"
   },
   "primitive_matrix": [
     {
@@ -65,10 +76,10 @@
     },
     {
       "primitive": "Character Knowledge",
-      "state": "present_model_only",
-      "evidence": "characters.mira.knowledgeProfiles",
-      "player_visible_effect": "No direct route mutation yet; Mira's profile is visible as model data only.",
-      "next_gap": "Call perceiveEntity() from a route-safe effect or precondition pipeline."
+      "state": "live_in_route",
+      "evidence": "perceiveEntity effect creates event_mira_perceives_receipt_contradiction",
+      "player_visible_effect": "Mira's knowledge profile creates a perception event that gates the semantic ending route and changes dashboard state.",
+      "next_gap": "Move perception from author-written choice effect into route policy or precondition inference."
     }
   ]
 }

@@ -122,6 +122,18 @@
           "target": "memory_reframed",
           "effects": [
             {
+              "type": "perceiveEntity",
+              "character": "mira",
+              "entity": "receipt_fragment",
+              "domain": "archive_records",
+              "expectations": {
+                "credibility": 50
+              },
+              "eventId": "event_mira_perceives_receipt_contradiction",
+              "eventName": "Mira perceived the receipt contradiction",
+              "onlyIfNoticed": true
+            },
+            {
               "type": "createEvent",
               "id": "event_mira_reframes_receipt",
               "name": "Mira reframed the receipt",
@@ -168,7 +180,7 @@
     "memory_reframed": {
       "id": "memory_reframed",
       "speaker": "Mira",
-      "text": "[event_mira_reframes_receipt] changes [receipt_fragment] from a pickup into [event_mira_reframes_receipt.semantic_change]. The owner field points to [receipt_fragment.owner], while the event records Mira's knowledge shift: [event_mira_reframes_receipt.knowledge_shift].\n\nCurrent reading: {receipt_reading}.",
+      "text": "[event_mira_perceives_receipt_contradiction] runs through Mira's [event_mira_perceives_receipt_contradiction.knowledge_source] profile. noticed=[event_mira_perceives_receipt_contradiction.perception_noticed], property=[event_mira_perceives_receipt_contradiction.primary_property], expected=[event_mira_perceives_receipt_contradiction.expected_value], actual=[event_mira_perceives_receipt_contradiction.actual_value].\n\n[event_mira_reframes_receipt] changes [receipt_fragment] from a pickup into [event_mira_reframes_receipt.semantic_change]. The owner field points to [receipt_fragment.owner], while the route records Mira's knowledge shift: [event_mira_reframes_receipt.knowledge_shift].\n\nCurrent reading: {receipt_reading}.",
       "choices": [
         {
           "id": "follow_semantic_change",
@@ -177,7 +189,7 @@
           "conditions": [
             {
               "type": "hasEvent",
-              "key": "event_mira_reframes_receipt",
+              "key": "event_mira_perceives_receipt_contradiction",
               "value": true
             }
           ]
@@ -187,7 +199,7 @@
     "semantic_end": {
       "id": "semantic_end",
       "speaker": "Narrator",
-      "text": "The route closes because a concrete event changed what [receipt_fragment] means. The ending depends on event presence and property-bearing text, not on collecting enough evidence points."
+      "text": "The route closes because Mira's knowledge profile perceived a mismatch in [receipt_fragment.credibility], created a concrete perception event, and changed what [receipt_fragment] means. The ending depends on character perception plus event presence, not on collecting enough evidence points."
     },
     "old_adv_end": {
       "id": "old_adv_end",

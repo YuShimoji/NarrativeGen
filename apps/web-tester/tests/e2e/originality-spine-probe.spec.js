@@ -49,11 +49,14 @@ test.describe('Originality Spine Probe', () => {
     );
 
     await expect(page.locator('#storyView')).toContainText('Mira reframed the receipt');
+    await expect(page.locator('#storyView')).toContainText('runs through Mira');
+    await expect(page.locator('#storyView')).toContainText('noticed=true');
     await expect(page.locator('#storyView')).toContainText('Template response:');
     await expect(page.locator('#storyView')).toContainText('not as evidence points');
 
     await page.locator('#designerDashboardTab').click();
     await expect(page.locator('[data-dashboard-field="originality-event-state"]')).toContainText('live_in_route');
     await expect(page.locator('[data-dashboard-field="originality-conversation-template-state"]')).toContainText('live_in_route');
+    await expect(page.locator('[data-dashboard-field="originality-character-knowledge-state"]')).toContainText('live_in_route');
   });
 });

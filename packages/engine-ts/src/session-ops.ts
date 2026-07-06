@@ -119,7 +119,7 @@ export function applyChoice(session: SessionState, model: Model, choiceId: strin
   let next = { ...session }
   for (const eff of choice.effects ?? []) {
     try {
-      next = applyEffect(eff, next)
+      next = applyEffect(eff, next, model)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
       throw new Error(`Failed to apply effect ${JSON.stringify(eff)}: ${errorMessage}`)

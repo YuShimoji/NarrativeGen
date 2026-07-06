@@ -71,7 +71,7 @@ export function applyChoice(session: SessionState, model: Model, choiceId: strin
 
   let next = { ...session }
   for (const eff of choice.effects ?? []) {
-    next = applyEffect(eff, next)
+    next = applyEffect(eff, next, model)
   }
   // default transition if no goto effect
   if (!choice.effects?.some((e) => e.type === 'goto')) {

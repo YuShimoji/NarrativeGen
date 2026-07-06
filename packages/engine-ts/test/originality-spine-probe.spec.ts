@@ -42,7 +42,7 @@ describe('originality-spine-probe.json', () => {
     expect(text).toContain('Mira still reads it as a loose clue.')
   })
 
-  it('creates an event, gates the next route, and appends a conversation template', () => {
+  it('runs Character Knowledge perception, gates the next route, and appends a conversation template', () => {
     let session = startSession(model)
     expect(ids(getAvailableChoices(session, model))).toEqual([
       'ask_mira_reframe',
@@ -53,11 +53,19 @@ describe('originality-spine-probe.json', () => {
     expect(session.nodeId).toBe('memory_reframed')
     expect(session.flags.meaning_locked).toBe(false)
     expect(session.variables.receipt_reading).toBe('witnessed contradiction')
+    expect(session.events.event_mira_perceives_receipt_contradiction.properties?.knowledge_source.defaultValue)
+      .toBe('perceiveEntity')
+    expect(session.events.event_mira_perceives_receipt_contradiction.properties?.perception_noticed.defaultValue)
+      .toBe(true)
+    expect(session.events.event_mira_perceives_receipt_contradiction.properties?.primary_property.defaultValue)
+      .toBe('credibility')
     expect(session.events.event_mira_reframes_receipt.properties?.semantic_change.defaultValue)
       .toBe('witnessed contradiction')
     expect(ids(getAvailableChoices(session, model))).toEqual(['follow_semantic_change'])
 
     const text = resolveNarrativeDisplayText(model.nodes.memory_reframed.text!, model, session)
+    expect(text).toContain("runs through Mira's perceiveEntity profile")
+    expect(text).toContain('noticed=true')
     expect(text).toContain('Mira reframed the receipt changes Receipt Fragment')
     expect(text).toContain('Template response:')
     expect(text).toContain('not as evidence points')

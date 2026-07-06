@@ -4,8 +4,8 @@
 
 - **日時**: 2026-07-06
 - **ブランチ**: `main`（trunk-based）
-- **HEAD**: after the Originality Spine Probe v0 implementation. Run `git log -1 --oneline` after pull for the exact current commit.
-- **直近**: Web Tester now includes `originality-spine-probe.json`, and the Designer Dashboard shows a read-only `NarrativeGen独自プリミティブ` card for originality readiness.
+- **HEAD**: after the Character Knowledge Live Route v0 implementation. Run `git log -1 --oneline` after pull for the exact current commit.
+- **直近**: `originality-spine-probe.json` now uses Mira's `perceiveEntity` knowledge profile to create a live perception event, gate the semantic route, and flip Dashboard Character Knowledge to `live_in_route`.
 - **repo authority 注意**: `origin/HEAD` は `origin/main`。作業正本は `main` / `origin/main`。
 - **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`
 
@@ -27,6 +27,15 @@ NarrativeGen/
 ```
 
 ## 現在の状態
+
+### 2026-07-07 Character Knowledge Live Route v0
+
+- **Work purpose**: move Character Knowledge in the Originality Spine Probe from model-stored evidence to route-visible behavior.
+- **Effect**: `perceiveEntity` is now a narrow deterministic effect type. In `originality-spine-probe.json`, `ask_mira_reframe` runs Mira's `archive_records` knowledge profile against `receipt_fragment.credibility`, creates `event_mira_perceives_receipt_contradiction` when she notices the mismatch, and the critical ending route now requires that perception event.
+- **Player-visible signal**: `memory_reframed` displays `knowledge_source=perceiveEntity`, `noticed=true`, and the perceived property/expected/actual values before the semantic reframe text. The ending states that Mira's perception, not evidence points, unlocked the route.
+- **Dashboard/readback**: `NarrativeGen独自プリミティブ` now marks Character Knowledge as `present_model_only` before the perception event and `live_in_route` after it exists. `docs/samples/originality-spine-probe-review-ja.md` and `docs/samples/originality-spine-probe-readback.json` describe the updated review path and route matrix.
+- **Boundary**: no OpenAI/local LLM/provider/API/auth/payment/publication work, no broad UI modernization, no root Unity project promotion/cleanup, and no final narrative-quality or production-readiness claim.
+- **Next entry points**: review whether `perceiveEntity` as an author-triggered effect is strong enough for the product direction, or move perception into choice availability / event generation policy so knowledge can drive routes without manual effect placement.
 
 ### 2026-07-07 Originality Spine Probe v0
 
