@@ -6,11 +6,11 @@
     {
       "node": "desk",
       "choice": "ask_mira_reframe",
-      "effect": "perceiveEntity(mira, receipt_fragment) creates event_mira_perceives_receipt_contradiction + createEvent(event_mira_reframes_receipt) + set receipt_reading"
+      "effect": "createEvent(event_mira_reframes_receipt) + set receipt_reading; no direct perceiveEntity effect remains on this choice"
     },
     {
       "node": "memory_reframed",
-      "choice": "follow_semantic_change",
+      "policy": "perceptionPolicies[0] triggers on node=memory_reframed and creates event_mira_perceives_receipt_contradiction",
       "condition": "hasEvent(event_mira_perceives_receipt_contradiction)"
     },
     {
@@ -30,20 +30,20 @@
     ],
     "still_legacy_adv_residue": [
       "The route is still node-and-choice.",
-      "The perceiveEntity hook is still launched by an author-written choice effect.",
+      "The perception policy is still authored in the model and triggered by a specific node.",
       "Property condition support is typed/schema-visible but not used as a route gate in this probe.",
       "The Story tab still requires sample selection plus explicit run."
     ],
-    "shortest_next_originality_axis": "Move perception from author-triggered effect into choice availability or event generation policy."
+    "shortest_next_originality_axis": "Move perception policy from node-triggered event derivation into broader choice availability or event generation policy."
   },
   "character_knowledge_route": {
     "character": "mira",
     "knowledge_source": "characters.mira.knowledgeProfiles[domain=archive_records]",
-    "route_hook": "perceiveEntity effect on ask_mira_reframe",
+    "route_hook": "perceptionPolicies[0] node trigger on memory_reframed",
     "resulting_event": "event_mira_perceives_receipt_contradiction",
     "choice_signal": "follow_semantic_change requires hasEvent(event_mira_perceives_receipt_contradiction)",
-    "text_signal": "memory_reframed displays knowledge_source=perceiveEntity and noticed=true",
-    "dashboard_signal": "Character Knowledge changes to live_in_route after the event exists"
+    "text_signal": "memory_reframed displays policy_source=perceptionPolicy:mira_receipt_contradiction_policy, knowledge_source=perceiveEntity, and noticed=true",
+    "dashboard_signal": "Character Knowledge detail distinguishes 1 policy / 0 direct perceiveEntity before play, then 1 live policy after the event exists"
   },
   "primitive_matrix": [
     {
@@ -63,9 +63,9 @@
     {
       "primitive": "Event",
       "state": "live_in_route",
-      "evidence": "perceiveEntity creates event_mira_perceives_receipt_contradiction; createEvent adds event_mira_reframes_receipt; hasEvent gates the semantic route",
+      "evidence": "perceptionPolicies[0] creates event_mira_perceives_receipt_contradiction; createEvent adds event_mira_reframes_receipt; hasEvent gates the semantic route",
       "player_visible_effect": "The perception event unlocks the semantic ending route, and both route events appear in dynamic text.",
-      "next_gap": "Move the perception trigger out of an author-written choice effect and into route policy or precondition inference."
+      "next_gap": "Move policy beyond a node trigger into broader choice availability or event generation rules."
     },
     {
       "primitive": "ConversationTemplate",
@@ -77,9 +77,9 @@
     {
       "primitive": "Character Knowledge",
       "state": "live_in_route",
-      "evidence": "perceiveEntity effect creates event_mira_perceives_receipt_contradiction",
-      "player_visible_effect": "Mira's knowledge profile creates a perception event that gates the semantic ending route and changes dashboard state.",
-      "next_gap": "Move perception from author-written choice effect into route policy or precondition inference."
+      "evidence": "perception policy creates event_mira_perceives_receipt_contradiction without a direct perceiveEntity choice effect",
+      "player_visible_effect": "Mira's knowledge profile creates a policy-sourced perception event that gates the semantic ending route and changes dashboard state.",
+      "next_gap": "Use the policy to influence choice availability before node entry, not only after node entry."
     }
   ]
 }

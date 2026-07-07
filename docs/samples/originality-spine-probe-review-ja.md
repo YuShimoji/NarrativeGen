@@ -1,5 +1,15 @@
 # Originality Spine Probe v0 review
 
+## Perception Policy v0 review note
+
+After selecting `Ask Mira to test the receipt against her archive memory`, the
+route should show `perceptionPolicy:mira_receipt_contradiction_policy`,
+`runs through Mira's perceiveEntity profile`, `trigger=memory_reframed`, and
+`noticed=true`. In the Designer Dashboard, Character Knowledge should start as
+`present_model_only` with `1 policies` and `0 direct perceiveEntity`, then
+change to `live_in_route` with `1 live (1 policy)` after the route reaches
+`memory_reframed`.
+
 目的: NarrativeGen が旧来の flag/resource ADV に留まっているか、Entity-Property / Event / Dynamic Text / ConversationTemplate の独自プリミティブが実際の play route に入っているかを確認する。
 
 ## 開き方

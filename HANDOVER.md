@@ -28,6 +28,16 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-07-07 Perception Policy v0
+
+- **Work purpose**: reduce old-ADV-style manual wiring by moving Mira's Character Knowledge perception out of a direct choice effect and into a small route-safe policy.
+- **Effect**: `Model.perceptionPolicies` is now a narrow optional array. The v0 trigger is `{ node: string }`; when a session reaches the trigger node, `applyPerceptionPolicies()` derives the same `perceiveEntity` event shape, adds `policy_source` and `policy_trigger_node`, and skips duplicate event creation.
+- **Probe route state**: `originality-spine-probe.json` no longer places `perceiveEntity` directly on `ask_mira_reframe`. That choice still creates `event_mira_reframes_receipt` and changes the reading, then arrival at `memory_reframed` triggers `mira_receipt_contradiction_policy`, which creates `event_mira_perceives_receipt_contradiction`; `follow_semantic_change` remains gated by that policy-created event.
+- **Player/dashboard signal**: `memory_reframed` shows `perceptionPolicy:mira_receipt_contradiction_policy`, `trigger=memory_reframed`, `runs through Mira's perceiveEntity profile`, and `noticed=true`. The Designer Dashboard Character Knowledge detail distinguishes configured policy from direct effect: before play it reports `1 policies / 0 direct perceiveEntity`; after play it reports `1 live (1 policy)`.
+- **Validation package for this slice**: `npm run build:engine`, focused engine tests for Character Knowledge and the probe (2 files / 11 tests), `npm run build:tester`, `npm run test -w @narrativegen/web-tester` (68 formatter checks across 17 models x 4 formatters), `npm run validate` (17 models), and focused Chromium E2Es for `originality-spine-probe` and `designer-dashboard` (2 tests) passed before handover final hygiene.
+- **Boundary**: no OpenAI/local LLM/provider/API/auth/payment/publication work, no broad UI modernization, no Unity root project promotion/cleanup, and no final narrative-quality or production-readiness claim.
+- **Next entry points**: move policy influence earlier into choice availability; add a broader event-generation policy pass that is not tied to one node; or collect screenshot smoke evidence for the dashboard transition.
+
 ### 2026-07-07 Local remote sync and Character Knowledge readback verification
 
 - **Restart authority**: `main` is the active branch and `origin/main` is the remote authority. This pass fast-forwarded from `115abf8` to `72c1fb3` with `git fetch origin --prune` and `git pull --ff-only origin main`; `git rev-list --left-right --count "HEAD...origin/main"` returned `0 0` after sync.

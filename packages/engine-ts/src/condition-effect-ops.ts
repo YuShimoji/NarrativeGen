@@ -14,7 +14,7 @@ import type {
 } from './types'
 import { createEventEntity } from './event-entity.js'
 import type { CreateEventEffect } from './event-entity.js'
-import { perceiveEntity } from './character-knowledge.js'
+import { createPerceptionEvent } from './perception-policy.js'
 
 export function cmp(op: '>=' | '<=' | '>' | '<' | '==', a: number, b: number): boolean {
   switch (op) {
@@ -152,48 +152,5 @@ function applyPerceiveEntityEffect(
   session: SessionState,
   model?: Model
 ): SessionState {
-  const character = model?.characters?.[effect.character]
-  const entity = model?.entities?.[effect.entity]
-  if (!character || !entity || !model?.entities) return session
-
-  const perception = perceiveEntity(
-    character,
-    effect.entity,
-    effect.expectations,
-    effect.domain,
-    model.entities,
-  )
-
-  if (effect.onlyIfNoticed && !perception.noticed) return session
-
-  const primary = perception.anomalies.find((anomaly) => anomaly.anomalous)
-    ?? perception.anomalies[0]
-  const eventId = effect.eventId ?? `event_${effect.character}_perceives_${effect.entity}`
-  const eventName = effect.eventName ?? `${character.name} perceived ${entity.name}`
-
-  return createEventEntity({
-    type: 'createEvent',
-    id: eventId,
-    name: eventName,
-    properties: {
-      knowledge_source: { defaultValue: 'perceiveEntity' },
-      observer: { defaultValue: character.id },
-      character_id: { defaultValue: character.id },
-      character_name: { defaultValue: character.name },
-      source_entity: { defaultValue: effect.entity },
-      domain: { defaultValue: effect.domain },
-      perception_noticed: { defaultValue: perception.noticed },
-      anomaly_count: { defaultValue: perception.anomalies.length },
-      total_deviation: { defaultValue: finiteNumber(perception.totalDeviation) },
-      severity: { defaultValue: Math.min(100, Math.round(finiteNumber(perception.totalDeviation) * 20)) },
-      primary_property: { defaultValue: primary?.propertyKey ?? 'none' },
-      expected_value: { defaultValue: finiteNumber(primary?.expectedValue) },
-      actual_value: { defaultValue: finiteNumber(primary?.actualValue) },
-      primary_deviation: { defaultValue: finiteNumber(primary?.deviation) },
-    },
-  }, session)
-}
-
-function finiteNumber(value: unknown): number {
-  return typeof value === 'number' && Number.isFinite(value) ? value : 0
+  return createPerceptionEvent(effect, session, model)
 }

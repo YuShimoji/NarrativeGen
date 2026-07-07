@@ -354,6 +354,7 @@ function collectOriginalityPrimitives(model, session) {
   const entityCount = countObject(model.entities)
   const entityPropertyCount = countEntityProperties(model.entities)
   const characterCount = countObject(model.characters)
+  const perceptionPolicyCount = countPerceptionPolicies(model)
   const templateCount = Array.isArray(model.conversationTemplates)
     ? model.conversationTemplates.length
     : countObject(model.conversationTemplates)
@@ -362,6 +363,7 @@ function collectOriginalityPrimitives(model, session) {
   const perceiveEntityCount = countEffects(model, 'perceiveEntity')
   const hasEventCount = countConditions(model, 'hasEvent')
   const knowledgeEventCount = countKnowledgeEvents(session?.events)
+  const knowledgePolicyEventCount = countPolicyKnowledgeEvents(session?.events)
 
   const dynamicTextPresent = texts.some(hasDynamicTextSyntax)
   const dynamicTextCurrent = hasDynamicTextSyntax(currentText)
@@ -386,8 +388,8 @@ function collectOriginalityPrimitives(model, session) {
       detail: `${templateCount} templates`,
     },
     characterKnowledge: {
-      state: knowledgeEventCount > 0 ? 'live_in_route' : (characterCount + perceiveEntityCount) > 0 ? 'present_model_only' : 'unsupported',
-      detail: `${knowledgeEventCount} live / ${characterCount} characters / ${perceiveEntityCount} perceiveEntity`,
+      state: knowledgeEventCount > 0 ? 'live_in_route' : (characterCount + perceiveEntityCount + perceptionPolicyCount) > 0 ? 'present_model_only' : 'unsupported',
+      detail: `${knowledgeEventCount} live (${knowledgePolicyEventCount} policy) / ${perceptionPolicyCount} policies / ${characterCount} characters / ${perceiveEntityCount} direct perceiveEntity`,
     },
   }
 }
@@ -427,6 +429,10 @@ function countEntityProperties(entities) {
   }, 0)
 }
 
+function countPerceptionPolicies(model) {
+  return Array.isArray(model?.perceptionPolicies) ? model.perceptionPolicies.length : 0
+}
+
 function countKnowledgeEvents(events) {
   if (!events || typeof events !== 'object') return 0
   return Object.values(events).filter((event) => {
@@ -437,6 +443,14 @@ function countKnowledgeEvents(events) {
       props.perception_noticed?.defaultValue !== undefined ||
       String(event?.id ?? '').includes('_perceives_'),
     )
+  }).length
+}
+
+function countPolicyKnowledgeEvents(events) {
+  if (!events || typeof events !== 'object') return 0
+  return Object.values(events).filter((event) => {
+    const source = event?.properties?.policy_source?.defaultValue
+    return typeof source === 'string' && source.startsWith('perceptionPolicy:')
   }).length
 }
 

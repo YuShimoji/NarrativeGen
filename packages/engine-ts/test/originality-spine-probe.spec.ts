@@ -29,6 +29,8 @@ describe('originality-spine-probe.json', () => {
     expect(model.entities?.receipt_fragment?.properties?.contradiction?.defaultValue)
       .toBe('signed after the bell was sealed')
     expect(model.characters?.mira?.knowledgeProfiles[0].domain).toBe('archive_records')
+    expect(model.perceptionPolicies?.[0].id).toBe('mira_receipt_contradiction_policy')
+    expect(model.perceptionPolicies?.[0].trigger.node).toBe('memory_reframed')
     expect(model.conversationTemplates?.[0].id).toBe('mira_archive_reframe')
   })
 
@@ -44,6 +46,9 @@ describe('originality-spine-probe.json', () => {
 
   it('runs Character Knowledge perception, gates the next route, and appends a conversation template', () => {
     let session = startSession(model)
+    const askMira = model.nodes.desk.choices?.find((choice) => choice.id === 'ask_mira_reframe')
+    expect(askMira?.effects?.some((effect) => effect.type === 'perceiveEntity')).toBe(false)
+    expect(session.events.event_mira_perceives_receipt_contradiction).toBeUndefined()
     expect(ids(getAvailableChoices(session, model))).toEqual([
       'ask_mira_reframe',
       'treat_as_old_clue',
@@ -55,6 +60,10 @@ describe('originality-spine-probe.json', () => {
     expect(session.variables.receipt_reading).toBe('witnessed contradiction')
     expect(session.events.event_mira_perceives_receipt_contradiction.properties?.knowledge_source.defaultValue)
       .toBe('perceiveEntity')
+    expect(session.events.event_mira_perceives_receipt_contradiction.properties?.policy_source.defaultValue)
+      .toBe('perceptionPolicy:mira_receipt_contradiction_policy')
+    expect(session.events.event_mira_perceives_receipt_contradiction.properties?.policy_trigger_node.defaultValue)
+      .toBe('memory_reframed')
     expect(session.events.event_mira_perceives_receipt_contradiction.properties?.perception_noticed.defaultValue)
       .toBe(true)
     expect(session.events.event_mira_perceives_receipt_contradiction.properties?.primary_property.defaultValue)
@@ -64,8 +73,10 @@ describe('originality-spine-probe.json', () => {
     expect(ids(getAvailableChoices(session, model))).toEqual(['follow_semantic_change'])
 
     const text = resolveNarrativeDisplayText(model.nodes.memory_reframed.text!, model, session)
+    expect(text).toContain('comes from perceptionPolicy:mira_receipt_contradiction_policy')
     expect(text).toContain("runs through Mira's perceiveEntity profile")
     expect(text).toContain('noticed=true')
+    expect(text).toContain('trigger=memory_reframed')
     expect(text).toContain('Mira reframed the receipt changes Receipt Fragment')
     expect(text).toContain('Template response:')
     expect(text).toContain('not as evidence points')

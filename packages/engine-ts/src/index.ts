@@ -230,7 +230,7 @@ export function deserialize(payload: string): SessionState {
   return session
 }
 
-export type { Choice, Condition, Effect, EntityDef, FlagState, Model, NodeDef, PropertyDef, ResourceState, SessionState, VariableState } from './types'
+export type { Choice, Condition, Effect, EntityDef, FlagState, Model, NodeDef, PerceptionPolicy, PropertyDef, ResourceState, SessionState, VariableState } from './types'
 
 // Paraphrase system
 export {
@@ -300,6 +300,8 @@ export { detectAnomaly, detectAllAnomalies } from './anomaly-detector.js'
 export type { KnowledgeProfile, AnomalyResult } from './anomaly-detector.js'
 export { findKnowledgeProfile, perceiveEntity } from './character-knowledge.js'
 export type { CharacterDef, PerceptionResult } from './character-knowledge.js'
+export { applyPerceptionPolicies, createPerceptionEvent } from './perception-policy.js'
+export type { PerceptionEventRequest } from './perception-policy.js'
 export { createEventEntity, hasEvent, createEventFromAnomaly } from './event-entity.js'
 export type { CreateEventEffect } from './event-entity.js'
 export { markDescribed, isDescribed, getUndescribedKeys, getDescriptionCount, resetDescriptions } from './description-tracker.js'

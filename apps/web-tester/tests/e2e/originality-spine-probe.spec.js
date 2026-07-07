@@ -39,6 +39,8 @@ test.describe('Originality Spine Probe', () => {
     await expect(page.locator('[data-dashboard-field="originality-entity-property-state"]')).toContainText('live_in_route');
     await expect(page.locator('[data-dashboard-field="originality-event-state"]')).toContainText('present_model_only');
     await expect(page.locator('[data-dashboard-field="originality-character-knowledge-state"]')).toContainText('present_model_only');
+    await expect(page.locator('[data-dashboard-field="originality-character-knowledge-state"]')).toContainText('1 policies');
+    await expect(page.locator('[data-dashboard-field="originality-character-knowledge-state"]')).toContainText('0 direct perceiveEntity');
 
     await page.locator('#storyTab').click();
     await page.locator('.play-choice-btn:has-text("Ask Mira to test the receipt")').click();
@@ -49,8 +51,10 @@ test.describe('Originality Spine Probe', () => {
     );
 
     await expect(page.locator('#storyView')).toContainText('Mira reframed the receipt');
+    await expect(page.locator('#storyView')).toContainText('perceptionPolicy:mira_receipt_contradiction_policy');
     await expect(page.locator('#storyView')).toContainText('runs through Mira');
     await expect(page.locator('#storyView')).toContainText('noticed=true');
+    await expect(page.locator('#storyView')).toContainText('trigger=memory_reframed');
     await expect(page.locator('#storyView')).toContainText('Template response:');
     await expect(page.locator('#storyView')).toContainText('not as evidence points');
 
@@ -58,5 +62,6 @@ test.describe('Originality Spine Probe', () => {
     await expect(page.locator('[data-dashboard-field="originality-event-state"]')).toContainText('live_in_route');
     await expect(page.locator('[data-dashboard-field="originality-conversation-template-state"]')).toContainText('live_in_route');
     await expect(page.locator('[data-dashboard-field="originality-character-knowledge-state"]')).toContainText('live_in_route');
+    await expect(page.locator('[data-dashboard-field="originality-character-knowledge-state"]')).toContainText('1 live (1 policy)');
   });
 });

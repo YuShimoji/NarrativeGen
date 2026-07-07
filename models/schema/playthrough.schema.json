@@ -364,6 +364,35 @@
         "additionalProperties": false
       }
     },
+    "perceptionPolicies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "trigger", "character", "entity", "domain", "expectations"],
+        "properties": {
+          "id": { "type": "string" },
+          "trigger": {
+            "type": "object",
+            "required": ["node"],
+            "properties": {
+              "node": { "type": "string" }
+            },
+            "additionalProperties": false
+          },
+          "character": { "type": "string" },
+          "entity": { "type": "string" },
+          "domain": { "type": "string" },
+          "expectations": {
+            "type": "object",
+            "additionalProperties": { "type": "number" }
+          },
+          "eventId": { "type": "string" },
+          "eventName": { "type": "string" },
+          "onlyIfNoticed": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
     "paraphraseLexicon": {
       "type": "object",
       "additionalProperties": {

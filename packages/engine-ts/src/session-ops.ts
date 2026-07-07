@@ -3,6 +3,7 @@ import {
   evalCondition as evalConditionCore,
   applyEffect,
 } from './condition-effect-ops.js'
+import { applyPerceptionPolicies } from './perception-policy.js'
 
 // Performance optimization: Memoization cache
 const conditionCache = new Map<string, boolean>()
@@ -49,7 +50,7 @@ function evalCondition(
 }
 
 export function startSession(model: Model, initial?: Partial<SessionState>): SessionState {
-  return {
+  const session = {
     nodeId: initial?.nodeId ?? model.startNode,
     flags: { ...(model.flags ?? {}), ...(initial?.flags ?? {}) },
     resources: { ...(model.resources ?? {}), ...(initial?.resources ?? {}) },
@@ -58,6 +59,7 @@ export function startSession(model: Model, initial?: Partial<SessionState>): Ses
     time: initial?.time ?? 0,
     events: initial?.events ?? {},
   }
+  return applyPerceptionPolicies(session, model)
 }
 
 export function getAvailableChoices(session: SessionState, model: Model): Choice[] {
@@ -135,6 +137,7 @@ export function applyChoice(session: SessionState, model: Model, choiceId: strin
     throw new Error(`Target node not found: ${next.nodeId}. Available nodes: ${Object.keys(model.nodes).join(', ')}`)
   }
 
+  next = applyPerceptionPolicies(next, model)
   next.time = next.time + 1
   return next
 }

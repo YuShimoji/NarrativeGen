@@ -168,7 +168,7 @@
     "pct": 100,
     "cat": "data",
     "file": "docs/specs/model-schema.md",
-    "summary": "Playthrough model JSON Schema. Strict oneOf + additionalProperties:false for all condition/effect types. EntityDef + PropertyDef + EventEntity schema. CharacterDef (KnowledgeProfile[]) + PropertyAwareLexicon (paraphraseLexicon) added. and/or/not composite conditions via $ref recursive definition. Structure + integrity validation (Ajv + assertModelIntegrity). 14 example models validated."
+    "summary": "Playthrough model JSON Schema. Strict oneOf + additionalProperties:false for all condition/effect types. EntityDef + PropertyDef + EventEntity schema. CharacterDef (KnowledgeProfile[]) + PerceptionPolicy[] + PropertyAwareLexicon (paraphraseLexicon) added. and/or/not composite conditions via $ref recursive definition. Structure + integrity validation (Ajv + assertModelIntegrity). 14 example models validated."
   },
   {
     "id": "SP-API-001",
@@ -267,7 +267,7 @@
     "pct": 100,
     "cat": "core",
     "file": "docs/specs/character-knowledge.md",
-    "summary": "Character knowledge profiles for perception simulation. CharacterDef with KnowledgeProfile[], findKnowledgeProfile (domain fallback), perceiveEntity (anomaly detection bridge). 7 tests."
+    "summary": "Character knowledge profiles for perception simulation. CharacterDef with KnowledgeProfile[], findKnowledgeProfile (domain fallback), perceiveEntity (anomaly detection bridge), and node-triggered PerceptionPolicy event derivation."
   },
   {
     "id": "SP-DESC-001",

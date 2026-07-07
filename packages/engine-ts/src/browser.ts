@@ -12,6 +12,7 @@ import {
   evalCondition,
   applyEffect,
 } from './condition-effect-ops.js'
+import { applyPerceptionPolicies } from './perception-policy.js'
 
 export {
   chooseParaphrase,
@@ -38,7 +39,7 @@ export {
 } from './ai-provider.js'
 
 export function startSession(model: Model, initial?: Partial<SessionState>): SessionState {
-  return {
+  const session = {
     nodeId: initial?.nodeId ?? model.startNode,
     flags: { ...(model.flags ?? {}), ...(initial?.flags ?? {}) },
     resources: { ...(model.resources ?? {}), ...(initial?.resources ?? {}) },
@@ -47,6 +48,7 @@ export function startSession(model: Model, initial?: Partial<SessionState>): Ses
     time: initial?.time ?? 0,
     events: initial?.events ?? {},
   }
+  return applyPerceptionPolicies(session, model)
 }
 
 export function getAvailableChoices(session: SessionState, model: Model): Choice[] {
@@ -77,12 +79,13 @@ export function applyChoice(session: SessionState, model: Model, choiceId: strin
   if (!choice.effects?.some((e) => e.type === 'goto')) {
     next = { ...next, nodeId: choice.target }
   }
+  next = applyPerceptionPolicies(next, model)
   // simple time progression
   next.time = next.time + 1
   return next
 }
 
-export type { Choice, Condition, Effect, EntityDef, FlagState, Model, NodeDef, PropertyDef, ResourceState, SessionState, VariableState } from './types'
+export type { Choice, Condition, Effect, EntityDef, FlagState, Model, NodeDef, PerceptionPolicy, PropertyDef, ResourceState, SessionState, VariableState } from './types'
 
 // Entity-Property system
 export { resolveProperty, getEntityProperties, getInheritanceChain } from './entities.js'
@@ -105,6 +108,8 @@ export type {
 // Character knowledge model
 export { findKnowledgeProfile, perceiveEntity } from './character-knowledge.js'
 export type { CharacterDef, PerceptionResult } from './character-knowledge.js'
+export { applyPerceptionPolicies, createPerceptionEvent } from './perception-policy.js'
+export type { PerceptionEventRequest } from './perception-policy.js'
 
 // Description tracker
 export { markDescribed, isDescribed, getUndescribedKeys, getDescriptionCount, resetDescriptions } from './description-tracker.js'

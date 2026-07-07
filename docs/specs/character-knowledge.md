@@ -30,11 +30,38 @@ interface PerceptionResult {
 }
 ```
 
+### PerceptionPolicy
+
+`PerceptionPolicy` is a narrow model-level hook for route-safe perception. It
+does not replace `perceiveEntity`; it declares when route context should run a
+character's knowledge profile and materialize the resulting perception event.
+The v0 trigger shape is intentionally small:
+
+```typescript
+interface PerceptionPolicy {
+  id: string
+  trigger: { node: string }
+  character: string
+  entity: string
+  domain: string
+  expectations: Record<string, number>
+  eventId?: string
+  eventName?: string
+  onlyIfNoticed?: boolean
+}
+```
+
+Runtime behavior: when the session reaches `trigger.node`,
+`applyPerceptionPolicies()` derives the same perception event shape as
+`perceiveEntity`, adds `policy_source` / `policy_trigger_node`, and skips
+duplicate event creation if the policy event already exists.
+
 ## API
 
 ```typescript
 findKnowledgeProfile(character, domain): KnowledgeProfile | undefined
 perceiveEntity(character, entityId, expectations, domain, entities): PerceptionResult
+applyPerceptionPolicies(session, model): SessionState
 ```
 
 ### findKnowledgeProfile

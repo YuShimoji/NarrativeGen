@@ -56,6 +56,20 @@ export type Effect =
       onlyIfNoticed?: boolean
     }
 
+export interface PerceptionPolicy {
+  id: string
+  trigger: {
+    node: string
+  }
+  character: string
+  entity: string
+  domain: string
+  expectations: Record<string, number>
+  eventId?: string
+  eventName?: string
+  onlyIfNoticed?: boolean
+}
+
 export interface ChoiceOutcome {
   type: string
   value?: string
@@ -101,6 +115,7 @@ export interface Model {
   variables?: VariableState
   entities?: Record<string, EntityDef>
   characters?: Record<string, CharacterDef>
+  perceptionPolicies?: PerceptionPolicy[]
   paraphraseLexicon?: PropertyAwareLexicon
   nodes: Record<string, NodeDef>
   conversationTemplates?: ConversationTemplate[]

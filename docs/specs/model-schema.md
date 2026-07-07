@@ -25,6 +25,15 @@ NarrativeGen のプレイスルーモデルの JSON Schema 仕様。`models/sche
 | `variables` | `Record<string, string\|number>` | 初期変数値 (startSession でマージ) |
 | `entities` | `Record<string, EntityDef>` | エンティティ定義 (id, name, description, cost) |
 
+### PerceptionPolicy
+
+`perceptionPolicies` is an optional top-level array. Each policy has
+`id`, `trigger: { node: string }`, `character`, `entity`, `domain`,
+`expectations`, and optional event naming / `onlyIfNoticed`. Runtime applies
+matching policies when a session reaches the trigger node and materializes a
+Character Knowledge perception event with `policy_source` and
+`policy_trigger_node`.
+
 ### NodeDef
 
 | フィールド | 必須 | 型 | 説明 |
