@@ -28,6 +28,16 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-07-08 Probe Reviewability Recovery v0
+
+- **Work purpose**: recover the Perception Policy v0 GUI review by preventing cross-sample play state from leaking when a user plays `vertical-slice.json`, then switches to `originality-spine-probe.json`.
+- **Root cause / fix**: Web Tester had several model-start paths that started a new engine session without resetting `sessionHistory` and old PlayRenderer DOM. `PlayRenderer.dispose()` now marks the renderer disposed, clears pending render requests, removes old play DOM, and stops audio. Sample/file/new-model/CSV commit paths now share a clean session boundary that resets current session, model name, undo history, description tracking, story log, and the renderer surface before first render.
+- **Probe presentation**: `originality-spine-probe.json` keeps the same Perception Policy event mechanism, but player-facing Story text is Japanese-first and no longer prints raw tokens such as `perceptionPolicy:mira_receipt_contradiction_policy`, `trigger=memory_reframed`, `noticed=true`, or `Template response:`. Those diagnostics remain in readback/dashboard-oriented surfaces.
+- **Regression coverage**: `apps/web-tester/tests/e2e/originality-spine-probe.spec.js` now reproduces the reported sequence: play one `vertical-slice` step, switch to `originality-spine-probe`, assert the probe starts only at `desk`, take the lower old-ADV branch, then restart the probe and verify the upper Perception Policy route reaches `semantic_end` with Dashboard Character Knowledge at `1 live (1 policy)`.
+- **Validation package**: JSON parse check for probe/readback, focused engine `test/originality-spine-probe.spec.ts` (3 tests), focused Chromium `originality-spine-probe.spec.js` (2 tests), focused Chromium `designer-dashboard.spec.js` (1 test), `npm run build:tester`, `npm run validate` (17 models), Web Tester formatter smoke (68 checks), `npm run check:safety`, and `git diff --check` passed.
+- **Boundary**: no Choice Availability Policy implementation, no UI modernization, no dependency upgrade/audit fix, no Unity residue cleanup, no OpenAI/local LLM/provider/API/auth/payment/publication work, and no production/narrative-quality claim.
+- **Next entry points**: human can re-run the probe GUI review; future implementation work should stay separate, especially choice-availability policy or broader event-generation policy.
+
 ### 2026-07-07 Terminal handoff after Perception Policy v0 push
 
 - **Restart authority**: `main` is the active branch and `origin/main` is the remote authority. Latest pushed commit is `4539d90` (`feat: add perception policy route hook`); `git rev-list --left-right --count "HEAD...origin/main"` returned `0 0` before this handoff note.

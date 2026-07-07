@@ -42,7 +42,8 @@
     "route_hook": "perceptionPolicies[0] node trigger on memory_reframed",
     "resulting_event": "event_mira_perceives_receipt_contradiction",
     "choice_signal": "follow_semantic_change requires hasEvent(event_mira_perceives_receipt_contradiction)",
-    "text_signal": "memory_reframed displays policy_source=perceptionPolicy:mira_receipt_contradiction_policy, knowledge_source=perceiveEntity, and noticed=true",
+    "text_signal": "memory_reframed now explains Mira's archive-knowledge reframe in Japanese-first player copy without raw policy/debug tokens",
+    "diagnostic_signal": "policy_source=perceptionPolicy:mira_receipt_contradiction_policy, knowledge_source=perceiveEntity, trigger=memory_reframed, and noticed=true remain available in this readback and engine event properties",
     "dashboard_signal": "Character Knowledge detail distinguishes 1 policy / 0 direct perceiveEntity before play, then 1 live policy after the event exists"
   },
   "primitive_matrix": [
@@ -64,14 +65,14 @@
       "primitive": "Event",
       "state": "live_in_route",
       "evidence": "perceptionPolicies[0] creates event_mira_perceives_receipt_contradiction; createEvent adds event_mira_reframes_receipt; hasEvent gates the semantic route",
-      "player_visible_effect": "The perception event unlocks the semantic ending route, and both route events appear in dynamic text.",
+      "player_visible_effect": "The perception event unlocks the semantic ending route; player copy describes the meaning shift while diagnostics stay in readback/dashboard surfaces.",
       "next_gap": "Move policy beyond a node trigger into broader choice availability or event generation rules."
     },
     {
       "primitive": "ConversationTemplate",
       "state": "live_in_route",
       "evidence": "conversationTemplates[0] matches event severity and observer",
-      "player_visible_effect": "A template response is appended after the reframe event exists.",
+      "player_visible_effect": "A natural Japanese-first template note is appended after the reframe event exists.",
       "next_gap": "Show which template matched in review/debug surfaces."
     },
     {

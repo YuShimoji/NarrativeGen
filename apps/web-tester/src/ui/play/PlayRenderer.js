@@ -26,6 +26,8 @@ export class PlayRenderer {
   #audioManager
   /** @type {string|null} */
   #defaultBgm = null
+  /** @type {boolean} */
+  #disposed = false
 
   /**
    * @param {HTMLElement} storyView - The story view container
@@ -118,6 +120,7 @@ export class PlayRenderer {
    * @param {boolean} [options.canUndo] - Whether undo is available
    */
   async renderNode(nodeText, choices, options = {}) {
+    if (this.#disposed) return
     if (this.#transitioning) {
       // Queue this render — latest request wins, previous ones are dropped
       this.#pendingRender = { nodeText, choices, options }
@@ -133,6 +136,7 @@ export class PlayRenderer {
       // For crossfade: exit existing, then enter new
       // For append-scroll: no exit, just append
       await strategy.exit(this.#storyView, { duration: this.transitionDuration })
+      if (this.#disposed) return
 
       // Build content
       const content = this.#buildContent(nodeText, choices, options)
@@ -141,6 +145,7 @@ export class PlayRenderer {
         duration: this.transitionDuration,
         choiceText: options.choiceText
       })
+      if (this.#disposed) return
 
       // BGM handling (independent layer)
       if (options.bgm !== undefined) {
@@ -155,7 +160,7 @@ export class PlayRenderer {
       this.#transitioning = false
 
       // Process queued render if any
-      if (this.#pendingRender) {
+      if (!this.#disposed && this.#pendingRender) {
         const { nodeText: t, choices: c, options: o } = this.#pendingRender
         this.#pendingRender = null
         this.renderNode(t, c, o)
@@ -167,6 +172,7 @@ export class PlayRenderer {
    * Clear all play content from the story view and stop BGM.
    */
   clear() {
+    this.#pendingRender = null
     this.#storyView.querySelectorAll('.play-content, .play-choice-quote, .play-separator').forEach(el => el.remove())
     this.#audioManager.stop()
   }
@@ -176,6 +182,8 @@ export class PlayRenderer {
    * Call before discarding this instance.
    */
   dispose() {
+    this.#disposed = true
+    this.clear()
     this.#audioManager.dispose()
   }
 

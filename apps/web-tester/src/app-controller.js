@@ -136,6 +136,7 @@ function initPlayRenderer() {
   if (playRenderer) {
     playRenderer.dispose()
   }
+  clearStorySurfaceForNewSession()
   playRenderer = new PlayRenderer(storyView)
   // Apply model-level presentation settings if available
   const presentation = appState.model?.settings?.presentation
@@ -150,6 +151,26 @@ function initPlayRenderer() {
     window.__narrativeGenE2E = window.__narrativeGenE2E ?? {}
     window.__narrativeGenE2E.getPlayRenderer = () => playRenderer
   }
+}
+
+function clearStorySurfaceForNewSession() {
+  if (!storyView) return
+  storyView
+    .querySelectorAll('.play-content, .play-choice-quote, .play-separator, .story-entry, .virtualization-indicator')
+    .forEach((el) => el.remove())
+}
+
+function startCleanModelSession(model, modelName, statusMessage) {
+  applyModelParaphraseLexicon(model)
+  appState.model = model
+  startNewSession(appState.model)
+  setCurrentModelName(modelName)
+  appState.sessionHistory = createSessionHistory()
+  appState.clearDescriptionStateHistory()
+  appState.storyLog = []
+  setStatus(statusMessage, 'success')
+  initPlayRenderer()
+  initStory()
 }
 
 function insertModeToggle() {
@@ -571,14 +592,7 @@ function renderChoices() {
 // Apply error boundaries to critical operations
 const safeStartSession = ErrorBoundary.wrap(async (modelName) => {
   const model = await loadModel(modelName)
-  applyModelParaphraseLexicon(model)
-  appState.model = model
-  startNewSession(appState.model)
-  setCurrentModelName(modelName)
-  appState.sessionHistory = createSessionHistory()
-  appState.clearDescriptionStateHistory()
-  initPlayRenderer()
-  initStory()
+  startCleanModelSession(model, modelName, `サンプル ${modelName} を実行中`)
   renderState()
   renderChoices()
   renderStory()
@@ -759,13 +773,7 @@ function validateLoadedModel(model) {
 }
 
 function commitLoadedModel(model, modelName, statusMessage) {
-  applyModelParaphraseLexicon(model)
-  appState.model = model
-  startNewSession(appState.model)
-  setCurrentModelName(modelName)
-  setStatus(statusMessage, 'success')
-  initPlayRenderer()
-  initStory()
+  startCleanModelSession(model, modelName, statusMessage)
   startAutoSave()
 }
 
@@ -844,13 +852,7 @@ startBtn.addEventListener('click', async () => {
       loadEntitiesCatalog(),
     ])
 
-    applyModelParaphraseLexicon(model)
-    appState.model = model
-    startNewSession(appState.model)
-    setCurrentModelName(sampleId)
-    setStatus(`サンプル ${sampleId} を実行中`, 'success')
-    initPlayRenderer()
-    initStory()
+    startCleanModelSession(model, sampleId, `サンプル ${sampleId} を実行中`)
     startAutoSave() // Start auto-save when session begins
   } catch (err) {
     console.error(err)
@@ -883,13 +885,7 @@ fileInput.addEventListener('change', async (e) => {
     ])
 
     validateLoadedModel(model)
-    applyModelParaphraseLexicon(model)
-    appState.model = model
-    startNewSession(appState.model)
-    setCurrentModelName(file.name)
-    setStatus(`ファイル ${file.name} を実行中`, 'success')
-    initPlayRenderer()
-    initStory()
+    startCleanModelSession(model, file.name, `ファイル ${file.name} を実行中`)
     startAutoSave() // Start auto-save when session begins
   } catch (err) {
     console.error(err)
@@ -923,13 +919,7 @@ newModelBtn.addEventListener('click', () => {
     }
   }
 
-  applyModelParaphraseLexicon(emptyModel)
-  appState.model = emptyModel
-  startNewSession(appState.model)
-  setCurrentModelName('新規モデル')
-  setStatus('新しいモデルを作成しました — 編集モードで内容を追加してください', 'success')
-  initPlayRenderer()
-  initStory()
+  startCleanModelSession(emptyModel, '新規モデル', '新しいモデルを作成しました — 編集モードで内容を追加してください')
   startAutoSave()
   renderState()
   renderChoices()
@@ -968,13 +958,7 @@ dropZone.addEventListener('drop', async (e) => {
     }
 
     hideErrors()
-    applyModelParaphraseLexicon(model)
-    appState.model = model
-    startNewSession(appState.model)
-    setCurrentModelName(file.name)
-    setStatus(`ファイル ${file.name} を実行中`, 'success')
-    initPlayRenderer()
-    initStory()
+    startCleanModelSession(model, file.name, `ファイル ${file.name} を実行中`)
     startAutoSave() // Start auto-save when session begins
   } catch (err) {
     console.error(err)
@@ -1527,14 +1511,10 @@ saveGuiBtn.addEventListener('click', () => {
 
     hideErrors()
     // Restart session with current model
-    startNewSession(appState.model)
-    setCurrentModelName('gui-edited')
+    startCleanModelSession(appState.model, 'gui-edited', 'GUI編集を保存しました')
     exitGuiEditMode()
 
-    setStatus('GUI編集を保存しました', 'success')
     setControlsEnabled(true)
-    initPlayRenderer()
-    initStory()
     renderState()
     renderChoices()
     renderStory()

@@ -6,13 +6,13 @@
   },
   "resources": {},
   "variables": {
-    "receipt_reading": "unread fragment"
+    "receipt_reading": "未読の断片"
   },
   "entities": {
     "semantic_object": {
       "id": "semantic_object",
-      "name": "Semantic Object",
-      "description": "A story object whose meaning comes from properties, not point totals.",
+      "name": "意味を持つ物証",
+      "description": "点数ではなく、性質と文脈で意味が変わる物証。",
       "properties": {
         "provenance": {
           "key": "provenance",
@@ -28,8 +28,8 @@
     },
     "receipt_fragment": {
       "id": "receipt_fragment",
-      "name": "Receipt Fragment",
-      "description": "A torn receipt that only becomes useful when Mira reinterprets who owned it.",
+      "name": "レシート片",
+      "description": "誰が持っていたかをミラが読み替えたとき、初めて意味を持つ破れたレシート。",
       "parentEntity": "semantic_object",
       "properties": {
         "provenance": {
@@ -93,7 +93,7 @@
         "credibility": 50
       },
       "eventId": "event_mira_perceives_receipt_contradiction",
-      "eventName": "Mira perceived the receipt contradiction",
+      "eventName": "ミラはレシートの矛盾に気づいた",
       "onlyIfNoticed": true
     }
   ],
@@ -123,7 +123,7 @@
           }
         ]
       },
-      "text": "Template response: Mira's archive knowledge treats [receipt_fragment] as a contradiction about [receipt_fragment.location], not as evidence points.",
+      "text": "ミラの補足: 書庫の記録知識は、[receipt_fragment]を証拠点ではなく、[receipt_fragment.location]に関わる矛盾として扱っている。",
       "priority": 10
     }
   ],
@@ -131,7 +131,7 @@
     "desk": {
       "id": "desk",
       "speaker": "Narrator",
-      "text": "Mira sets [receipt_fragment] on the desk. It is not a key item or a score token: provenance=[receipt_fragment.provenance], owner=[receipt_fragment.owner], contradiction=[receipt_fragment.contradiction], credibility=[receipt_fragment.credibility].\n\nCurrent reading: {receipt_reading}. {?meaning_locked:Mira still reads it as a loose clue.}",
+      "text": "ミラは[receipt_fragment]を机に置く。これは鍵アイテムでも点数トークンでもない。出所は[receipt_fragment.provenance]、持ち主は[receipt_fragment.owner]、問題は「[receipt_fragment.contradiction]」という記録上の矛盾だ。\n\n記録上の信用度は[receipt_fragment.credibility]と高い。現在の読み: {receipt_reading}. {?meaning_locked:まだミラには、ばらばらの手掛かりに見えている。}",
       "choices": [
         {
           "id": "ask_mira_reframe",
@@ -141,7 +141,7 @@
             {
               "type": "createEvent",
               "id": "event_mira_reframes_receipt",
-              "name": "Mira reframed the receipt",
+              "name": "ミラはレシートを読み替えた",
               "properties": {
                 "severity": {
                   "defaultValue": 70
@@ -153,10 +153,10 @@
                   "defaultValue": "receipt_fragment"
                 },
                 "knowledge_shift": {
-                  "defaultValue": "from clue collection to ownership contradiction"
+                  "defaultValue": "手掛かり集めから持ち主の矛盾へ"
                 },
                 "semantic_change": {
-                  "defaultValue": "witnessed contradiction"
+                  "defaultValue": "目撃された矛盾"
                 },
                 "location": {
                   "defaultValue": "south archive"
@@ -171,7 +171,7 @@
             {
               "type": "setVariable",
               "key": "receipt_reading",
-              "value": "witnessed contradiction"
+              "value": "目撃された矛盾"
             }
           ]
         },
@@ -185,7 +185,7 @@
     "memory_reframed": {
       "id": "memory_reframed",
       "speaker": "Mira",
-      "text": "[event_mira_perceives_receipt_contradiction] comes from [event_mira_perceives_receipt_contradiction.policy_source] and runs through Mira's [event_mira_perceives_receipt_contradiction.knowledge_source] profile. noticed=[event_mira_perceives_receipt_contradiction.perception_noticed], trigger=[event_mira_perceives_receipt_contradiction.policy_trigger_node], property=[event_mira_perceives_receipt_contradiction.primary_property], expected=[event_mira_perceives_receipt_contradiction.expected_value], actual=[event_mira_perceives_receipt_contradiction.actual_value].\n\n[event_mira_reframes_receipt] changes [receipt_fragment] from a pickup into [event_mira_reframes_receipt.semantic_change]. The owner field points to [receipt_fragment.owner], while the route records Mira's knowledge shift: [event_mira_reframes_receipt.knowledge_shift].\n\nCurrent reading: {receipt_reading}.",
+      "text": "ミラは南書庫の記録と照合し、[receipt_fragment]をただの拾得物ではなく、[event_mira_reframes_receipt.semantic_change]として読み替える。持ち主の欄は[receipt_fragment.owner]を指し、封印後の署名という矛盾が、彼女の記憶と結びついた。\n\nこの分岐は証拠点の合計ではなく、ミラの知識がレシートの意味を変えたことで開く。現在の読み: {receipt_reading}.",
       "choices": [
         {
           "id": "follow_semantic_change",
@@ -204,12 +204,12 @@
     "semantic_end": {
       "id": "semantic_end",
       "speaker": "Narrator",
-      "text": "The route closes because a perception policy let Mira's knowledge profile notice a mismatch in [receipt_fragment.credibility], create a concrete perception event, and change what [receipt_fragment] means. The ending depends on character perception plus event presence, not on collecting enough evidence points."
+      "text": "結末は、ミラの書庫知識が[receipt_fragment]の信用度と記録の食い違いに気づいたことで閉じる。必要だったのは証拠点を集めることではなく、人物の知識が物証の意味を変え、その気づきがルート上の出来事として残ることだった。"
     },
     "old_adv_end": {
       "id": "old_adv_end",
       "speaker": "Narrator",
-      "text": "This branch deliberately feels like an older adventure flow: the receipt remains a generic clue, and no NarrativeGen-specific event enters the route."
+      "text": "この分岐では、レシートは昔ながらの汎用的な手掛かりのまま止まる。ミラの知識は物証の意味を変えず、NarrativeGen 独自のイベントもルートには入らない。"
     }
   }
 }
