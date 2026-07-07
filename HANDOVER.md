@@ -28,6 +28,16 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-07-07 Terminal handoff after Perception Policy v0 push
+
+- **Restart authority**: `main` is the active branch and `origin/main` is the remote authority. Latest pushed commit is `4539d90` (`feat: add perception policy route hook`); `git rev-list --left-right --count "HEAD...origin/main"` returned `0 0` before this handoff note.
+- **Current shipped state**: Perception Policy v0 is in remote history. `originality-spine-probe.json` now uses `perceptionPolicies[0]` (`mira_receipt_contradiction_policy`) instead of a direct `perceiveEntity` choice effect; arriving at `memory_reframed` creates `event_mira_perceives_receipt_contradiction`, and `follow_semantic_change` is gated by that policy-created event.
+- **Resume path**: in a fresh terminal run `git fetch --prune origin`, `git pull --ff-only origin main`, then `git rev-list --left-right --count "HEAD...origin/main"` and expect `0 0`. For GUI review, run `npm run dev`, open the Vite URL, select `originality-spine-probe.json`, click `螳溯｡形, choose `Ask Mira to test the receipt against her archive memory`, then inspect Story text and Designer Dashboard.
+- **Review signal**: Story text should show `perceptionPolicy:mira_receipt_contradiction_policy`, `trigger=memory_reframed`, `runs through Mira's perceiveEntity profile`, and `noticed=true`. Designer Dashboard Character Knowledge should show `1 policies / 0 direct perceiveEntity` before the route step and `1 live (1 policy)` after it.
+- **Validation package for shipped slice**: `npm run build:engine`, focused engine tests for Character Knowledge and the probe (2 files / 11 tests), `npm run build:tester`, `npm run test -w @narrativegen/web-tester` (68 formatter checks across 17 models x 4 formatters), `npm run validate` (17 models), focused Chromium E2Es for `originality-spine-probe` and `designer-dashboard` (2 tests), `npm run check:safety`, and `git diff --check` passed.
+- **Boundary**: no OpenAI/local LLM/provider/API/auth/payment/publication work, no broad UI modernization, no Unity root project promotion/cleanup, and no final narrative-quality or production-readiness claim.
+- **Next entry points**: move policy influence earlier into choice availability; add a broader event-generation policy pass that is not tied to one node; or collect screenshot smoke evidence for the dashboard transition.
+
 ### 2026-07-07 Perception Policy v0
 
 - **Work purpose**: reduce old-ADV-style manual wiring by moving Mira's Character Knowledge perception out of a direct choice effect and into a small route-safe policy.
