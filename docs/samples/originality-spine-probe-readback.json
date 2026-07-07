@@ -6,12 +6,12 @@
     {
       "node": "desk",
       "choice": "ask_mira_reframe",
-      "effect": "createEvent(event_mira_reframes_receipt) + set receipt_reading"
+      "effect": "perceiveEntity(mira, receipt_fragment) creates event_mira_perceives_receipt_contradiction + createEvent(event_mira_reframes_receipt) + set receipt_reading"
     },
     {
       "node": "memory_reframed",
       "choice": "follow_semantic_change",
-      "condition": "hasEvent(event_mira_reframes_receipt)"
+      "condition": "hasEvent(event_mira_perceives_receipt_contradiction)"
     },
     {
       "node": "semantic_end",
@@ -19,7 +19,7 @@
     }
   ],
   "required_product_answer": {
-    "current_original_system_state": "partially implemented",
+    "current_original_system_state": "partially implemented, with Character Knowledge now live in the originality probe route",
     "character_knowledge_state_before_after": "present_model_only -> live_in_route",
     "live_primitives_in_probe_route": [
       "Entity-Property",
@@ -63,9 +63,9 @@
     {
       "primitive": "Event",
       "state": "live_in_route",
-      "evidence": "createEvent(event_mira_reframes_receipt) and hasEvent route condition",
-      "player_visible_effect": "The event unlocks the semantic ending route and appears in dynamic text.",
-      "next_gap": "Tie events to character perception instead of author-written effects only."
+      "evidence": "perceiveEntity creates event_mira_perceives_receipt_contradiction; createEvent adds event_mira_reframes_receipt; hasEvent gates the semantic route",
+      "player_visible_effect": "The perception event unlocks the semantic ending route, and both route events appear in dynamic text.",
+      "next_gap": "Move the perception trigger out of an author-written choice effect and into route policy or precondition inference."
     },
     {
       "primitive": "ConversationTemplate",

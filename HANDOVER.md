@@ -28,6 +28,15 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-07-07 Local remote sync and Character Knowledge readback verification
+
+- **Restart authority**: `main` is the active branch and `origin/main` is the remote authority. This pass fast-forwarded from `115abf8` to `72c1fb3` with `git fetch origin --prune` and `git pull --ff-only origin main`; `git rev-list --left-right --count "HEAD...origin/main"` returned `0 0` after sync.
+- **Current shipped state**: the pushed Character Knowledge Live Route implementation remains the active product state. Mira's `perceiveEntity` route hook creates `event_mira_perceives_receipt_contradiction`; the semantic route is gated by that perception event; the Designer Dashboard flips Character Knowledge from `present_model_only` to `live_in_route` after play.
+- **Local correction in this pass**: `docs/samples/originality-spine-probe-readback.json` now names the actual `perceiveEntity(mira, receipt_fragment)` effect and `hasEvent(event_mira_perceives_receipt_contradiction)` gate in the critical route, and clarifies that the broader originality system is still partial while Character Knowledge is live in this probe.
+- **Validation package run in this pass**: readback JSON parse check, `npm run build:engine`, focused engine tests for Character Knowledge and the probe (2 files / 11 tests), `npm run build:tester`, `npm run test -w @narrativegen/web-tester` (68 formatter checks across 17 models x 4 formatters), focused Chromium E2Es for `originality-spine-probe` and `designer-dashboard` (2 tests), `npm run validate` (17 models), `npm run check:safety`, and `git diff --check` all passed.
+- **Boundary**: no executable route behavior changed in this pass, no OpenAI/local LLM/provider/API/auth/payment/publication work was added, and no root Unity project promotion/cleanup happened.
+- **Next entry points**: human GUI review of the probe route; optional screenshot smoke capture for the `present_model_only` -> `live_in_route` dashboard transition; or a narrow implementation slice moving perception from author-written choice effects into choice availability / event generation policy.
+
 ### 2026-07-07 Terminal handoff after Character Knowledge route push
 
 - **Restart authority**: `main` is the active branch and `origin/main` is the remote authority. This handoff began from `aff5b2b` (`feat: make character knowledge live in probe`); `git fetch --prune origin`, `git pull --ff-only origin main`, and `git rev-list --left-right --count "HEAD...origin/main"` confirmed the tracked branch was already in parity before this docs-only handoff update.
