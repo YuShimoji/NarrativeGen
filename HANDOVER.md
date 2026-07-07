@@ -2,10 +2,10 @@
 
 ## 最終更新
 
-- **日時**: 2026-07-06
+- **日時**: 2026-07-07
 - **ブランチ**: `main`（trunk-based）
-- **HEAD**: after the Character Knowledge Live Route v0 implementation. Run `git log -1 --oneline` after pull for the exact current commit.
-- **直近**: `originality-spine-probe.json` now uses Mira's `perceiveEntity` knowledge profile to create a live perception event, gate the semantic route, and flip Dashboard Character Knowledge to `live_in_route`.
+- **HEAD**: after the terminal handoff sync for Character Knowledge Live Route v0. Run `git log -1 --oneline` after pull for the exact current handoff commit.
+- **直近**: Character Knowledge Live Route v0 is pushed; this handoff records the remote-synced restart path, validation package, and intentionally untracked Unity-local residue.
 - **repo authority 注意**: `origin/HEAD` は `origin/main`。作業正本は `main` / `origin/main`。
 - **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`
 
@@ -28,6 +28,18 @@ NarrativeGen/
 
 ## 現在の状態
 
+### 2026-07-07 Terminal handoff after Character Knowledge route push
+
+- **Restart authority**: `main` is the active branch and `origin/main` is the remote authority. This handoff began from `aff5b2b` (`feat: make character knowledge live in probe`); `git fetch --prune origin`, `git pull --ff-only origin main`, and `git rev-list --left-right --count "HEAD...origin/main"` confirmed the tracked branch was already in parity before this docs-only handoff update.
+- **Current shipped state**: Character Knowledge Live Route v0 is in remote history. `originality-spine-probe.json` uses Mira's `perceiveEntity` profile to create `event_mira_perceives_receipt_contradiction`, gate the semantic route, and flip Designer Dashboard Character Knowledge from `present_model_only` to `live_in_route`.
+- **Resume path**: in a fresh terminal run `git fetch --prune origin`, `git pull --ff-only origin main`, then `git rev-list --left-right --count "HEAD...origin/main"` and expect `0 0`. For GUI review, run `npm run dev`, open the Vite URL, select `originality-spine-probe.json`, click `実行`, play `Ask Mira to test the receipt against her archive memory` -> `Follow the semantic contradiction to the archive ledger`, then open `設計ダッシュボード`.
+- **Validation state**: no executable code changed in this handoff pass. The latest implementation validation package for the shipped Character Knowledge slice passed with `npm run build:engine`, focused engine tests for Character Knowledge and the probe, `npm run build:tester`, `npm run test -w @narrativegen/web-tester`, focused Chromium E2Es for the probe and Designer Dashboard, `npm run validate`, `npm run check:safety`, and `git diff --check`.
+- **Local residue purpose**: this machine still has untracked root Unity-style artifacts (`Assets/`, `ProjectSettings/`, `packages/manifest.json`, `packages/packages-lock.json`) and Unity `.meta` files under `packages/sdk-unity/`. They appear to be local Unity/package-manager residue around the UPM SDK, not part of the validated Web Tester / Character Knowledge route work.
+- **Local residue effect**: these files make `git status` show untracked paths on this machine, but they do not affect tracked repo parity, the pushed Character Knowledge implementation, Web Tester behavior, or engine validation.
+- **Local residue requirements**: before adding any of them, first decide whether NarrativeGen should track a root Unity project in addition to the existing UPM package source at `packages/sdk-unity/`. Do not bulk-add them as part of Web Tester, dashboard, or handoff cleanup.
+- **Local residue state / owner / next move**: state is intentionally uncommitted and unpushed; owner is the human or a future Unity-scoped slice. Next move is either classify and explicitly promote the Unity project-root files, or delete/ignore them in a separate cleanup after confirming they are disposable.
+- **Next entry points**: human visual/product review of the `originality-spine-probe.json` dashboard route; optional screenshot smoke evidence; or a narrow implementation slice moving perception from author-triggered effect placement into choice availability / event generation policy.
+
 ### 2026-07-07 Character Knowledge Live Route v0
 
 - **Work purpose**: move Character Knowledge in the Originality Spine Probe from model-stored evidence to route-visible behavior.
@@ -40,12 +52,12 @@ NarrativeGen/
 ### 2026-07-07 Originality Spine Probe v0
 
 - **Work purpose**: answer whether NarrativeGen already has a project-specific procedural narrative system or is still only a conventional flag/resource adventure by adding one compact playable probe.
-- **Current originality state**: partially implemented. Entity-Property, Dynamic Text, Event, and ConversationTemplate can enter the playable route. Character Knowledge exists in model/API form but is not yet route-mutating.
+- **Current originality state at this checkpoint**: partially implemented. Entity-Property, Dynamic Text, Event, and ConversationTemplate can enter the playable route. Character Knowledge exists in model/API form but is not yet route-mutating; this limitation is superseded by the Character Knowledge Live Route v0 section above.
 - **Effect**: `models/examples/originality-spine-probe.json` adds a short offline route where `receipt_fragment` carries semantic properties, Mira's action creates `event_mira_reframes_receipt`, `hasEvent` gates the semantic ending, and an event-property ConversationTemplate appends player-visible text. The model uses no `evidence` / `focus` resource counters.
 - **Dashboard/readback**: `apps/web-tester/src/ui/designer-dashboard.js` now adds `NarrativeGen独自プリミティブ`, distinguishing `live_in_route`, `present_model_only`, `unsupported`, and `unknown` for Dynamic Text, Entity-Property, Event, ConversationTemplate, and Character Knowledge. `docs/samples/originality-spine-probe-review-ja.md` and `docs/samples/originality-spine-probe-readback.json` record the review path and primitive matrix.
 - **Review path**: run `npm run dev`, open the Vite URL, select `originality-spine-probe.json`, click `実行`, play `Ask Mira to test the receipt against her archive memory` -> `Follow the semantic contradiction to the archive ledger`, then open `設計ダッシュボード`.
 - **Boundary**: no OpenAI/local LLM/provider/API/auth/payment/publication work, no broad UI modernization, no schema redesign, no root Unity project promotion/cleanup, and no final narrative-quality or production-readiness claim.
-- **Next entry points**: human visual/product review of whether the probe feels NarrativeGen-specific; or a narrow implementation slice connecting Character Knowledge `perceiveEntity()` to event creation or choice availability. Do not treat Character Knowledge as live until route behavior uses it.
+- **Next entry points at this checkpoint**: human visual/product review of whether the probe feels NarrativeGen-specific; or a narrow implementation slice connecting Character Knowledge `perceiveEntity()` to event creation or choice availability. Use the newer Character Knowledge Live Route v0 section for current route state.
 
 ### 2026-07-06 Terminal handoff after Designer Dashboard v0 push
 
