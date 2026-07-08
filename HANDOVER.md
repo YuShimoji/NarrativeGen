@@ -2,10 +2,10 @@
 
 ## 最終更新
 
-- **日時**: 2026-07-07
+- **日時**: 2026-07-08
 - **ブランチ**: `main`（trunk-based）
-- **HEAD**: after the terminal handoff sync for Character Knowledge Live Route v0. Run `git log -1 --oneline` after pull for the exact current handoff commit.
-- **直近**: Character Knowledge Live Route v0 is pushed; this handoff records the remote-synced restart path, validation package, and intentionally untracked Unity-local residue.
+- **HEAD**: `aced75a` (`fix: recover originality probe review flow`) before this docs-only handoff refresh.
+- **直近**: Probe Reviewability Recovery v0 is pushed; this handoff records remote parity, restart commands, validation evidence, review path, and intentionally untracked Unity-local residue.
 - **repo authority 注意**: `origin/HEAD` は `origin/main`。作業正本は `main` / `origin/main`。
 - **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`
 
@@ -27,6 +27,20 @@ NarrativeGen/
 ```
 
 ## 現在の状態
+
+### 2026-07-08 Terminal handoff after Probe Reviewability Recovery v0 push
+
+- **Restart authority**: `main` is the active branch and `origin/main` is the remote authority. This pass ran `git fetch --prune origin`; `git rev-list --left-right --count "HEAD...@{u}"` returned `0 0` before this handoff refresh. Latest implementation commit before this docs-only handoff is `aced75a` (`fix: recover originality probe review flow`).
+- **Current shipped state**: Probe Reviewability Recovery v0 is in remote history. Web Tester now resets model-start/session/render state cleanly when switching samples, and `originality-spine-probe.json` uses Japanese-first player copy while retaining Perception Policy diagnostics in dashboard/readback surfaces.
+- **Resume path**: in a fresh terminal run `git fetch --prune origin`, `git pull --ff-only origin main`, then `git rev-list --left-right --count "HEAD...@{u}"` and expect `0 0`. Run `npm run dev`, open the Vite URL, select `originality-spine-probe.json`, click `実行`, then review both first choices.
+- **Review signal**: after playing `vertical-slice.json` one step and switching to `originality-spine-probe.json`, the probe must start at `desk` only. The lower first choice reaches `old_adv_end`; the upper route reaches `memory_reframed` -> `semantic_end`; Designer Dashboard Character Knowledge becomes `1 live (1 policy)`.
+- **Access note**: no Web Tester dev server was listening on port 5173 during this handoff refresh. Start it explicitly with `npm run dev` in the next terminal.
+- **Validation state**: latest implementation validation remains the package recorded in the `Probe Reviewability Recovery v0` section below. This docs-only handoff refresh needs `git diff --check`, targeted readback, commit, push, and final remote parity confirmation.
+- **Local residue purpose**: this machine still has untracked root Unity-style artifacts (`Assets/`, `ProjectSettings/`, `packages/manifest.json`, `packages/packages-lock.json`) and Unity `.meta` files under `packages/sdk-unity/`. They are not part of the Web Tester probe recovery slice.
+- **Local residue effect**: these files make `git status` show untracked paths locally, but tracked repo parity and pushed Web Tester behavior are clean.
+- **Local residue requirements**: do not bulk-add them during Web Tester/probe work. First decide whether NarrativeGen should track a root Unity project in addition to the existing UPM package source at `packages/sdk-unity/`.
+- **Local residue state / owner / next move**: intentionally uncommitted and unpushed; owner is human or a future Unity-scoped slice. Next move is classify/promote the Unity project-root files, or delete/ignore them only after confirming they are disposable.
+- **Next entry points**: human GUI review of the recovered probe; optional screenshot smoke evidence; or a separate choice-availability / broader event-generation policy slice. Do not reopen dependency audit, Unity cleanup, provider/API, or UI modernization from this handoff.
 
 ### 2026-07-08 Probe Reviewability Recovery v0
 
