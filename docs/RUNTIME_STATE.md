@@ -15,7 +15,7 @@ PROJECT_CAPSULE=v1
 
 ## Last commit
 
-`49b1250 docs: refresh probe recovery handoff`
+Current hash should be read with `git log -1 --oneline`. The checkpoint before this re-kickstart capsule update was `49b1250 docs: refresh probe recovery handoff`.
 
 ## Last known good state
 
