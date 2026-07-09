@@ -2,10 +2,10 @@
 
 ## 最終更新
 
-- **日時**: 2026-07-10
+- **日時**: 2026-07-08
 - **ブランチ**: `main`（trunk-based）
-- **HEAD**: `49b1250` (`docs: refresh probe recovery handoff`) before this re-kickstart capsule/evidence update.
-- **直近**: Re-kickstart Project Capsule is initialized from `CODEX_REKICKSTART_KIT=2026-07-09.v1`; tracked repo parity was confirmed and focused engine build evidence was produced.
+- **HEAD**: `aced75a` (`fix: recover originality probe review flow`) before this docs-only handoff refresh.
+- **直近**: Probe Reviewability Recovery v0 is pushed; this handoff records remote parity, restart commands, validation evidence, review path, and intentionally untracked Unity-local residue.
 - **repo authority 注意**: `origin/HEAD` は `origin/main`。作業正本は `main` / `origin/main`。
 - **ロードマップの正**: `docs/plans/DEVELOPMENT_PLAN.md`
 
@@ -27,14 +27,6 @@ NarrativeGen/
 ```
 
 ## 現在の状態
-
-### 2026-07-10 Re-kickstart Project Capsule BUILD
-
-- **Work purpose**: install the kit's `PROJECT_REPO_TEMPLATE` content into this repo without overwriting NarrativeGen's existing authority docs, replace restart placeholders with real repo evidence, and leave at least one material validation artifact.
-- **Effect**: added Project Capsule docs (`docs/PROJECT_BRIEF.md`, `docs/RUNTIME_STATE.md`, `docs/VALIDATION.md`, `docs/ROADMAP.md`, `docs/ARTIFACT_INDEX.md`, `docs/DECISION_LOG.md`, `docs/UI_RUBRIC.md`, `docs/RESEARCH_NOTES.md`, `docs/RESEARCH_TODO.md`) plus `artifacts/review/` and `screenshots/` placeholders. Existing `AGENTS.md`, `HANDOVER.md`, `README.md`, `docs/plans/DEVELOPMENT_PLAN.md`, and `docs/governance/decision-log.md` remain the repo-local authority chain.
-- **Requirements**: do not delete or bulk-replace existing docs; do not promote local Unity residue; keep Project Capsule files as evidence/restart aids unless the user explicitly changes the authority chain.
-- **State**: `git fetch --prune origin` ran; `git rev-list --left-right --count "HEAD...@{u}"` returned `0 0`; `npm run build:engine` passed with evidence in `artifacts/review/re-kickstart-build-engine-2026-07-10.md`; `npm run check:safety` passed with spec-index 36 entries, encoding scan 327 text files, and 18 synced model files.
-- **Owner / next move**: capsule initialization and validation evidence are assistant-owned. Next BUILD should pick one of: capture current Web Tester review evidence, continue SP-DTYARN-001 with a focused formatter contract/test slice, or perform one SP-009 UI quality expansion with screenshot evidence.
 
 ### 2026-07-08 Terminal handoff after Probe Reviewability Recovery v0 push
 
