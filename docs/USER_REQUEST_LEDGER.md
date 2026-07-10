@@ -12,6 +12,7 @@
 - 高主観な UI・言語・コンテンツ・色・フォント・アニメーション変更では、実装前に異質な方向案と比較材料を出し、人間の高位判断後は一まとまりで実装・レビューする
 - 進捗と次作業は `HANDOVER.md` の current snapshot に集約し、GitHub 上から同じ内容を確認可能にする。手動更新の Wiki や status 文書を第二正本にしない
 - 今後、外部 status 面を設ける場合は正本から自動投影する。GitHub Pages / Wiki 初期化のような外部公開は人間の承認後に行う
+- material slice の CLOSE では、検証鮮度、未決事項、触らない範囲、次回確認ファイル、remote parity を current snapshot に残して push し、別端末が会話ログなしで再開できる状態にする
 
 ## 未反映の是正要求
 

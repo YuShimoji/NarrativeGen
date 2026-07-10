@@ -2,11 +2,23 @@
 
 ## 現在地 — 2026-07-10
 
-`main` / `origin/main` が開発正本。今回の開始時にリモートを取得し、`374aef0` から `0b87c46` へ fast-forward した。以後の正確な HEAD と同期状態は `git log -1 --oneline` と `git rev-list --left-right --count HEAD...origin/main` で確認し、この文書に自己陳腐化する commit hash は固定しない。
+`main` / `origin/main` が開発正本。2026-07-10 の workflow reset はリモートを `374aef0` から `0b87c46` へ fast-forward して開始し、material change `083e681` (`chore: streamline ai development workflow`) を push、GitHub CI success、`HEAD...origin/main = 0 0` まで確認した。以後の正確な HEAD と同期状態は `git log -1 --oneline` と `git rev-list --left-right --count HEAD...origin/main` で確認し、最新 HEAD の自己参照値をこの文書へ固定しない。
 
 プロダクトの survival check は `models/examples/vertical-slice.json`、現在の独自性レビュー対象は `models/examples/originality-spine-probe.json`。後者は Character Knowledge を node-triggered Perception Policy に接続し、旧式の choice effect 直書きより少ない authoring wiring でルート差を作る。直近の実装修正で、別サンプルから切り替えた際の session/DOM 漏れを解消し、プレイヤー表示を日本語中心へ戻した。
 
 今回の主作業はコード機能追加ではなく、監修 AI → Prompt → 開発 AI の反復を止めずに回すための workflow 再設計。過去の再始動キットが増やした重複 status/roadmap/runtime 文書はリモート最新で撤去済みであり、今回も新しい状態正本は作らない。
+
+## 直近の配送と再開境界
+
+| 再開時に必要な観点 | 保持した状態 |
+|---|---|
+| 位相 / 主レーン / スライス | `CLOSE` / AI-assisted development workflow / workflow v21 と status-authority reset は完了 |
+| 変更した正本 | 自律実行と停止条件、監修→開発 mission packet、interaction failure、operator loop、継続要求、roadmap、current snapshot |
+| 自動防止策 | `check:docs-authority` と 3 fixtures を `check:safety` / GitHub CI に統合。重複 capsule、必須正本欠落、主要リンク切れを検出 |
+| 配送状態 | material commit `083e681` は `origin/main` に存在し、[CI run 29084291407](https://github.com/YuShimoji/NarrativeGen/actions/runs/29084291407) は success |
+| 次端末が最初に読むもの | `AGENTS.md` → `docs/REPO_LOCAL_RULES.md` → この文書。方向を選ぶ場合だけ `docs/plans/DEVELOPMENT_PLAN.md` の Proposed Experience Routes を追加確認 |
+| 未確定論点 | probe の human 目視、policy frontier、experience route、外部 Project Cockpit。すべて proposed または human decision 待ち |
+| 触らない範囲 | WritingPage gate、Unity/publication、provider/API/auth/payment、依存一括更新。明示した別 slice なしに再開しない |
 
 ## 開発可能性
 
