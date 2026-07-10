@@ -1,5 +1,5 @@
 # CORE_RULESET.md
-Ruleset-Version: v20
+Ruleset-Version: v21
 Status: canonical
 Audience: Claude Code, Codex, and any adapter that reads project-local AI rules.
 

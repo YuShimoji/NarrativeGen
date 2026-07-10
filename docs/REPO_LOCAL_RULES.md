@@ -29,6 +29,7 @@ NarrativeGen の通常再開で読む短い front-door。ここには毎回効�
 - Repo-local authority comes first. Global Codex files and prompt helpers are fallback only.
 - `AGENTS.md` is an entry pointer. Do not add procedures, status, roadmaps, report formats, option menus, or history there.
 - Current state and next work belong in `HANDOVER.md`. Do not create session-state, runtime-state, restart-roadmap, output-style, or context-cache files.
+- Rewrite `HANDOVER.md` as one current snapshot after a material slice. Do not append dated work history; Git already owns that history.
 - For development slices, default to Playable first, then green. Tests, lint, schema, CI, doctor, and refactors are guards for the story-making/playback experience, not the primary progress signal.
 - If a referenced file is missing, treat that reference as stale, not as a blocker.
 - Stay inside this repo unless the user explicitly names a cross-project scope. If cross-project scope is explicit, touch only that scope.
@@ -36,6 +37,15 @@ NarrativeGen の通常再開で読む短い front-door。ここには毎回効�
 - Human-owned creative/manual work does not become assistant-owned by default.
 - Read-only phases are read-only only when the user explicitly declares that phase in the current block. If the user asks for mutation in the same block, mutate only within that requested scope.
 - Do not ask broad questions when repo evidence can decide the next move. If a question is necessary, ask only the decision that changes the bottleneck.
+
+## Development Autonomy
+
+- Treat a development prompt as an outcome contract, not as a sequence of permissions. When outcome, boundaries, and success signals are available from the prompt or canonical docs, continue through remote sync, inspection, implementation, related fixes, proportionate validation, canonical-doc updates, and git follow-through.
+- Make reversible, in-scope implementation choices without stopping. Record non-obvious assumptions in the resulting artifact or closeout, and revise them when evidence disproves them.
+- Stop only when proceeding would require a destructive operation, a new dependency or material dependency upgrade, a DB/auth/public API contract change, a conflict with a spec or invariant, external publication, or an unresolved product direction whose alternatives would produce materially different user experiences.
+- Batch related blockers into one decision request. Do not ask for permission to continue, run routine checks, fix directly related regressions, update the owning canonical doc, commit, or push a validated in-scope slice.
+- If multiple small prompts clearly describe one outcome, reconstruct and execute one coherent slice. Ask only when combining them would change scope or erase a real product decision.
+- For subjective UI, visual, language, motion, or content direction that is not already approved, present 2-4 materially different directions before large implementation. A selection authorizes implementation only when the current `IMPLEMENT` packet explicitly says that this choice is its final direction gate; otherwise freeze the selected direction in a spec or prototype and request one high-level `IMPLEMENT` approval. After approval, deliver one reviewable slice instead of reopening micro-decisions after every small change.
 
 ## Git And Tests
 

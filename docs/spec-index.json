@@ -186,7 +186,7 @@
     "pct": 100,
     "cat": "system",
     "file": "docs/specs/unity-sdk.md",
-    "summary": "Unity C# SDK: Session.events, hasEvent/createEvent applicator, TemplateUsageState/maxUses, ResolveNarrativeDisplayTextTracked の TS パリティ。expandTemplate 主要エッジ回帰とローカル NuGet pack 準備済み。UPM-first、NuGet 公開はスコープ外。"
+    "summary": "Unity C# SDK の定義済み runtime scope は完了: Session.events, hasEvent/createEvent applicator, TemplateUsageState/maxUses, ResolveNarrativeDisplayTextTracked の TS パリティ。Anomaly Detection / Character Knowledge / Perception Policy の helper API は別 parity slice。UPM-first、NuGet 公開はスコープ外。"
   },
   {
     "id": "SP-PARA-001",

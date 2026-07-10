@@ -18,6 +18,8 @@ jobs:
         run: npm ci
       - name: Check spec index
         run: npm run check:spec-index
+      - name: Check documentation authority
+        run: npm run check:docs-authority
       - name: Check models sync
         run: npm run check:models-sync
       - name: Check encoding safety

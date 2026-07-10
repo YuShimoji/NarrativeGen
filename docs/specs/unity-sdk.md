@@ -100,6 +100,10 @@ Unity C# SDK (`packages/sdk-unity`)。UPM パッケージとして Unity プロ�
 | `expandTemplate` / `expandTemplateWithTracking` | `template.ts` | `NarrativeText.cs` | 対応（主要エッジケース回帰追加済み。将来追加時は四半期監査で追随） |
 | `resolveNarrativeDisplayTextTracked` | `narrative-display-text.ts`（`findMatchingTemplates` に **usage を渡さない**） | `NarrativeDisplayText.cs`（同様） | **対応**。`maxUses` / `TemplateUsageState` は `ConversationTemplateMatcher.FindMatchingTemplates(..., usageState)` で評価可能。表示解決 API 単体では TS/C# とも **usage を渡さない**（`NarrativeTextTests.ResolveNarrativeDisplayTextTracked_DoesNotPassTemplateUsage_engineTsParity`） |
 
+### Authoring / analysis helper の境界
+
+SP-UNITY-001 の 100% は上表までの runtime scope を指し、engine-ts の全 helper API の一対一移植を意味しない。`detectAnomaly` / `detectAllAnomalies` と `findKnowledgeProfile` / `perceiveEntity` / `applyPerceptionPolicies` に相当する C# API は現時点で存在しない。Character Knowledge や Perception Policy を Unity runtime 内で直接評価する要求が生じた場合は、別 parity slice として model shape、event derivation、TS/C# fixtures を定義してから追加する。
+
 ## 継続運用
 
 - **パリティ監査**: 四半期ごと、または `packages/engine-ts/test/template.spec.ts` に大きな追加があったタイミングで `NarrativeTextTests` を照合し、表「TS パリティ状況」を更新する。

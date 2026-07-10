@@ -842,7 +842,7 @@ NarrativeGen の独自機能 (Dynamic Text、Entity-Property、ConversationTempl
 
 詳細は `docs/specs/unity-sdk.md` (SP-UNITY-001) を参照。
 
-**注意**: Unity SDK は現在 TypeScript 版の一部機能 (Entity-Property、Dynamic Text、Anomaly Detection、Character Knowledge、Event、Description Tracker、ConversationTemplate) が未移植 (85%)。基本的なノード遷移・条件・効果は動作する。
+**互換境界**: SP-UNITY-001 で定義した SDK runtime scope は完了している。条件/効果、session serialization、Entity の継承プロパティ、Dynamic Text の主要展開と追跡、Event、ConversationTemplate は C# 経路を持つ。一方、TypeScript の authoring/analysis helper である Anomaly Detection と Character Knowledge / Perception Policy は同等の C# API をまだ持たないため、それらを Unity runtime 内で直接評価するモデルは別の parity slice が必要。旧来の一括「85%」表記は使用しない。正確な対応表は `docs/specs/unity-sdk.md` を参照する。
 
 ### 他のランタイム
 
@@ -864,7 +864,7 @@ NarrativeGen の独自機能 (Dynamic Text、Entity-Property、ConversationTempl
 
 ### リファレンス
 
-- `docs/NarrativeGen_Reference_Wiki.md` -- 全機能のリファレンス
+- `docs/spec-index.json` / `docs/spec-viewer.html` -- 現行仕様の一覧とライフサイクル状態
 - `docs/spreadsheet-format.md` -- CSV フォーマット仕様
 - `docs/specs/` -- 各機能の詳細仕様書
 

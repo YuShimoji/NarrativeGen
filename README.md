@@ -6,6 +6,8 @@ NarrativeGen is an interactive narrative engine for node-and-choice stories. It 
 
 For AI agents, start with [`AGENTS.md`](AGENTS.md), then [`docs/REPO_LOCAL_RULES.md`](docs/REPO_LOCAL_RULES.md), then [`HANDOVER.md`](HANDOVER.md). For human resume, [`HANDOVER.md`](HANDOVER.md) remains the current-state entrypoint with recommended next work, validation commands, and links to supporting docs.
 
+The same current snapshot is available without a local clone at [NarrativeGen current status on GitHub](https://github.com/YuShimoji/NarrativeGen/blob/main/HANDOVER.md). Do not maintain a second manual status page or Wiki copy; any future external cockpit should be generated from the canonical files below.
+
 - Authoring workflow: [`docs/AUTHORING_GUIDE.md`](docs/AUTHORING_GUIDE.md)
 - Roadmap: [`docs/plans/DEVELOPMENT_PLAN.md`](docs/plans/DEVELOPMENT_PLAN.md)
 - Spec index: [`docs/spec-index.json`](docs/spec-index.json) / [`docs/spec-viewer.html`](docs/spec-viewer.html)

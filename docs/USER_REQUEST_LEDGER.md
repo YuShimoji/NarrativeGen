@@ -7,10 +7,15 @@
 - WritingPage 連携 (双方向テキスト受け渡し) -- 延期中。WritingPage のフォーマット安定後に着手
 - Pipeline 定義の完了と AUTHORING_GUIDE.md の全5ステージ拡張 (Decision #5)
 - 意思決定・手動確認地点で区切りを設け、プランを提示する
+- 監修 AI は実装手順を細切れにせず、1 bottleneck を閉じる成果契約として Prompt を渡す
+- 開発 AI はスコープ内の可逆な判断、関連修正、ローカル検証、正本同期、git follow-through を連続して行い、routine な継続許可を求めない
+- 高主観な UI・言語・コンテンツ・色・フォント・アニメーション変更では、実装前に異質な方向案と比較材料を出し、人間の高位判断後は一まとまりで実装・レビューする
+- 進捗と次作業は `HANDOVER.md` の current snapshot に集約し、GitHub 上から同じ内容を確認可能にする。手動更新の Wiki や status 文書を第二正本にしない
+- 今後、外部 status 面を設ける場合は正本から自動投影する。GitHub Pages / Wiki 初期化のような外部公開は人間の承認後に行う
 
 ## 未反映の是正要求
 
-- (なし)
+- GitHub Pages または Wiki による外部 Project Cockpit は未実装。内部正本の整理と再発防止を先に完了し、公開方式と公開範囲を決めてから着手する
 
 ## Backlog Delta
 

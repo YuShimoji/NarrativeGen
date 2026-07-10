@@ -1,5 +1,5 @@
 # DECISION_GATES.md
-Ruleset-Version: v20
+Ruleset-Version: v21
 Status: canonical
 
 ## Active Artifact and Change Relation
@@ -10,6 +10,12 @@ Each block must know:
 - change relation: `direct`, `unblocker`, `cleanup`, or `evidence-only`
 
 If change relation is repeatedly `cleanup` or `evidence-only`, do not use pendulum logic. Identify the actual bottleneck.
+
+## In-slice autonomy gate
+
+When a mission packet is in `IMPLEMENT` mode and the change remains `direct` or a necessary `unblocker`, continue through reversible implementation choices, directly related regression fixes, proportionate validation, owning-doc synchronization, and git follow-through. These are not new frontiers and do not require separate approval.
+
+Re-open a decision gate only when the work crosses the packet boundary, changes a protected contract, becomes destructive or externally published, or discovers an unresolved high-subjectivity direction. Batch all such conflicts into the smallest high-level decision; do not convert routine uncertainty into repeated continuation asks.
 
 ## Success Transition Gate
 After a success definition is reached, do not invent a new frontier just to keep moving. Move only to:

@@ -143,8 +143,8 @@ WritingPage で執筆したテキストを NarrativeGen のノードに流し込
 | セーブ/ロード統合 | SDK serialize/deserialize | 半自動 |
 
 **制限事項**:
-- Unity SDK は TS 側の原初ビジョン7機能が未移植 (SP-UNITY-001 85%)
-- Entity-Property / Dynamic Text / Anomaly Detection / Character Knowledge / Event / Description Tracker / ConversationTemplate の C# 実装が必要
+- SP-UNITY-001 で定義した runtime scope は完了。Entity 継承プロパティ、Dynamic Text 主要展開/追跡、Event、Description Tracker、ConversationTemplate は C# 経路を持つ
+- TypeScript の authoring/analysis helper である Anomaly Detection と Character Knowledge / Perception Policy は同等の C# API をまだ持たない。Unity runtime 内で直接評価する場合は別 parity slice が必要
 
 ---
 
@@ -156,7 +156,7 @@ WritingPage で執筆したテキストを NarrativeGen のノードに流し込
 | Stage 2: 制作 | 80% | CSV インポート、テンプレートGUI、自動保存 | 実装済み |
 | Stage 3: 検証 | 30% | スキーマ/構造/到達/パス/影響 全自動 | 実装済み |
 | Stage 4: エクスポート | 10% | 形式選択のみ手動 | 実装済み (DT 変換除く) |
-| Stage 5: 統合 | 60% | SDK 基盤は提供、UI 接続は手動 | 部分実装 |
+| Stage 5: 統合 | 60% | SDK 基盤は提供、UI 接続は手動 | SDK core 完了 / project UI 接続は手動 |
 
 ---
 

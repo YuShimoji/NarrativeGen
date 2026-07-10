@@ -1,97 +1,19 @@
-# NarrativeGen プロジェクト全体ステータス
+# NarrativeGen current-status portal
 
-**再開・次アクションの正**: ルート [`HANDOVER.md`](../HANDOVER.md)。**仕様の正**: [`spec-index.json`](spec-index.json) と [`spec-viewer.html`](spec-viewer.html)。テスト件数などの数値は都度 `npm run test:engine` / `npm run test:e2e` / `dotnet test` で確認すること。
+This page intentionally does not copy branch state, test counts, completed work, or next tasks. Those values became stale when they were maintained in more than one place.
 
-**調査日**: 2026-04-30
-**ブランチ**: `main`（trunk-based）  
-**ざっくり**: engine-ts Vitest 全緑（260件台）、E2E Playwright、モデル検証 16 通過、`npm run check:spec-index` OK。`main` は `origin/main` と同期済み（運用では都度 push を前提）。
+Use the following canonical views:
 
----
+- [Current state and next entry points](../HANDOVER.md)
+- [Roadmap and priority order](plans/DEVELOPMENT_PLAN.md)
+- [Specification lifecycle index](spec-index.json)
+- [Durable product decisions](governance/decision-log.md)
+- [Operator workflow and collaboration pain](OPERATOR_WORKFLOW.md)
 
-## 1. 実装スコープ（詳細は各 SP-*）
+Without a local clone, use the [GitHub-rendered current status](https://github.com/YuShimoji/NarrativeGen/blob/main/HANDOVER.md). The repository README links to the same source.
 
-- **エンジン（TypeScript）**: モデル読込・セッション・条件/効果・推論・Entity-Property・Dynamic Text・イベント・在庫・変数・エンコード安全・モデル同期など。入口は `packages/engine-ts`。
-- **Web Tester**: 編集 GUI・グラフ・プレイ没入・推論 UI・5形式エクスポート・検証パネルなど。入口は `apps/web-tester`。
-- **Unity SDK**: `packages/sdk-unity`。**SP-UNITY-001 done**（[`specs/unity-sdk.md`](specs/unity-sdk.md)）。UPM-first、ローカル NuGet pack 準備済み。
-- **レガシー参照用仕様**（参照専用・現行の正ではない）: [`specs/legacy/OpenSpec-WebTester.md`](specs/legacy/OpenSpec-WebTester.md)、[`specs/legacy/PHASE2_GRAPH_EDITOR_DESIGN.md`](specs/legacy/PHASE2_GRAPH_EDITOR_DESIGN.md)。
+## Publication policy
 
----
+`HANDOVER.md` is rewritten as a current snapshot after every material implementation or workflow slice; history stays in Git. This portal remains a stable pointer and therefore requires no copied status update.
 
-## 2. 手動確認・未確認が残るもの
-
-| ID | 内容 | 確認のしかた | 優先度 |
-|----|------|-------------|--------|
-| U01 | Play Immersion（画像/BGM の操作感・聴感） | `play-media-bgm-ac.spec.js` + `play-immersion.md` で機械判定済み。耳視聴・フェード体感は任意 | 低 |
-| U02 | REST API 全経路 | `npm run dev:api` → curl 等 | 低 |
-| U03 | Undo/Redo（GUI 体感） | エディタで Ctrl+Z/Y（E2E は一部 skip） | 中 |
-| U04 | グラフエディタ全体の操作感 | 手動で D&D・ズーム等 | 中 |
-| U05 | Web Tester 全体の導線・見た目 | 画面走査ツール等で任意 | 中 |
-
----
-
-## 3. 未実装・ギャップ
-
-| ID | 内容 | 仕様・備考 |
-|----|------|------------|
-| N03 | WritingPage 連携 | 外部フォーマット安定後。`pipeline-workflow.md` で延期。準備: `specs/writingpage-io-contract.md` |
-| N04 | Dynamic Text の Yarn ネイティブ変換 | SP-DTYARN-001: `[entity]`/`[entity.prop]`・数値比較 `{?key op val:…}` まで（2026-04-09）。ネスト and/or・`[entity~]` 等は [dynamic-text-yarn-export.md](specs/dynamic-text-yarn-export.md) |
-| N05 | spec 保守の運用具体化（レビュー例など） | SP-009 系。CI `governance` は済 |
-| N06 | a11y（ARIA 等） | SP-009 部分前進（tab セマンティクス + キーボード移動）。残あり |
-| N07 | モバイル/タブレット最適化 | SP-009 1スライス完了（story/toolbar）。残あり |
-
-**仕様エントリなし項目**: なし（Session History は `docs/specs/session-history.md` と `spec-index.json` に反映済み）。
-
----
-
-## 4. 懸念（オープンなもの）
-
-| # | 内容 | 備考 |
-|---|------|------|
-| C01 | E2E の間欠失敗 | `play-immersion` 等。待機・workers 設定で緩和済み |
-| C02 | パス表記 | リポジトリ内の正は `packages/`（小文字） |
-| C03 | Undo/Redo E2E の防御的 skip | グラフ表示依存 |
-| C06 | `resolver.ts` が公開 export されていない | 内部専用なら問題なし |
-| C07 | 体系的な Visual Audit が未実施 | 任意だが有益 |
-| C09 | Backend の `/models/*` と `/api/models/*` の重複 | 既知 |
-| C11 | 長期間ドキュメントのみの変更が続く場合 | `HANDOVER.md` の推奨作業で user-visible 変更を挟む |
-| C12 | flaky 調査の属人化 | `docs/tasks/FLAKY_ISSUES_TRACKER.md` で候補管理し issue 化基準を固定 |
-
----
-
-## 5. テスト（一行ずつ）
-
-- **engine-ts**: `npm run test:engine`（Vitest）
-- **web-tester E2E**: `npm run test:e2e`
-- **C#**: `dotnet test packages/tests/NarrativeGen.Tests`
-- **仕様パス**: `npm run check:spec-index`
-
----
-
-## 6. ロードマップ運用（2026 Q2-Q4）
-
-- 実行ドキュメント: `docs/plans/DEVELOPMENT_PLAN.md`
-- **短期（0〜4週間）**
-  - ~~U01（AC-9〜12）~~ → `play-media-bgm-ac.spec.js` と検証表で完了（耳視聴は任意）
-  - ~~N01 の Unity パリティ残差~~ → `createEvent` runtime、`expandTemplate` 主要エッジ、ローカル NuGet pack 準備まで完了（公開は human-owned）
-  - C01（E2E 間欠失敗）→ GitHub [#81](https://github.com/YuShimoji/NarrativeGen/issues/81)〜[#83](https://github.com/YuShimoji/NarrativeGen/issues/83) で追跡・恒久修正
-- **中期（1〜3か月）**
-  - N06/N07（a11y/モバイル）を主要画面で解消
-  - U03/U04 の手動回帰観点を固定し E2E と分担
-  - N04（Dynamic Text の Yarn 変換）方針を決定
-- **長期（3〜6か月）**
-  - N03（WritingPage 連携）を外部仕様安定後に着手
-  - Unity 配布導線改善（UPM 維持 + 追加チャネル検討）
-
-## 7. 中期実装フェーズ反映（2026-04）
-
-- a11y 基盤:
-  - `apps/web-tester/src/bootstrap.js` で landmarks / tabs / modal の a11y 初期化を追加
-  - Modal の Escape / focus trap / aria-hidden 同期を導入
-- レスポンシブ基盤:
-  - `apps/web-tester/src/styles/main.css` と `apps/web-tester/src/ui/play/play.css` にモバイル/タブレット向け基準を追加
-- 回帰運用:
-  - `docs/operations/E2E_FLAKE_RUNBOOK.md` に自動化/手動の責務境界と flaky 運用基準を明文化
-- Dynamic Text 方針:
-  - `docs/specs/dynamic-text-engine.md` と `docs/specs/yarn-spinner-export.md` に変換対象/非対応/フォールバックを確定反映
-- WritingPage 準備:
-  - `docs/specs/writingpage-io-contract.md` に最小 I/O 契約・versioning・着手ゲートを定義（2026-04-09 時点 **No-Go**。外部安定後に再判定）
+A GitHub Pages or Wiki Project Cockpit may later project the canonical files into a more visual external view. It must be generated from the canonical files, not maintained as a second manual status source. Enabling that external publication remains a human decision.

@@ -1,11 +1,11 @@
 # STATUS_AND_HANDOFF.md
-Ruleset-Version: v20
+Ruleset-Version: v21
 Status: canonical
 
 ## Scope and usage
 This file is a **supplementary rubric** for AI-oriented handoff quality checks.
 Use it when updating `docs/ai/*` canonical docs or when reviewing handoff/report quality.
-For normal development resume, prioritize `docs/REPO_LOCAL_RULES.md`, `HANDOVER.md`, and `docs/spec-index.json`. Use `docs/project-status.md` as a supporting status reference, not the restart authority.
+For normal development resume, prioritize `docs/REPO_LOCAL_RULES.md`, `HANDOVER.md`, and `docs/spec-index.json`. `docs/project-status.md` is only a stable portal to canonical views; it must not copy live status.
 
 ## Feature status semantics
 Keep priority separate from status.
@@ -45,6 +45,8 @@ For each feature candidate that is tracked in a surviving doc, keep at least:
 If an unauthorized item appears in a proposal batch, quarantine the whole batch by default until individually re-reviewed.
 
 ## Canonical context fields to surface in reports
+The following are internal coverage checks, not required headings or fixed output labels. Express only the relevant items in natural language.
+
 Use these report fields whenever relevant:
 - Non-Negotiables
 - Reused Canonical Context
