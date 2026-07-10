@@ -33,6 +33,7 @@ Remaining tasks:
 - [x] Add environment troubleshooting notes for permission/sandbox differences（同上）。
 - [ ] Resolve the 2026-07-10 audit baseline in a dedicated security slice: 43 total findings, including 13 production findings. Re-run current advisory data before choosing upgrades.
 - [ ] Pin or otherwise enforce the supported Node 20+ and .NET 9 toolchain; current local versions pass, but `.node-version` / `engines` / `global.json` are absent.
+- [ ] Upgrade GitHub Actions that still target the deprecated Node 20 action runtime. CI run `29088984035` succeeded but reported that `actions/checkout@v4`, `actions/setup-node@v4`, and `actions/setup-dotnet@v4` were forced onto Node 24.
 
 ### 3. Encoding safety operation
 Status: in progress
@@ -88,6 +89,7 @@ Remaining tasks:
 - [ ] Negative-path checks for model import/export.
 - [ ] Add backend build to the standard root/CI verification path; the backend builds when invoked directly but `build:all` and CI currently omit it.
 - [ ] Replace the Web Tester lint placeholder with an actual lint contract or explicitly remove lint from its claimed verification surface.
+- [ ] Resolve or intentionally baseline the nullable warnings in `packages/sdk-unity/Runtime/NarrativeModel.cs`; SDK build/tests pass, but repeated warnings reduce the signal quality of CI annotations.
 - [x] E2E 間欠失敗の記録運用テンプレート追加 (`docs/operations/E2E_FLAKE_RUNBOOK.md`)
 - [x] 自動化/手動責務境界と flaky 運用基準を runbook に反映
 - [x] flaky 候補のトラッカー追加 (`docs/tasks/FLAKY_ISSUES_TRACKER.md`)

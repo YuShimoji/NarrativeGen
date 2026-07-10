@@ -31,7 +31,7 @@
 | Browser | Chromium の originality probe 2 scenarios | 直近の sample-switch / policy route 回帰は機械確認済み |
 | Unity SDK core | .NET 32 tests | 定義済み runtime scope は検証済み。Character Knowledge / Perception Policy の直接評価と Unity Editor 統合目視は別工程 |
 
-非ブロッカーの負債として、Web Tester lint は未設定、標準 `build:all` / CI は backend build を含まない、Vite は Mermaid の大きい chunk と browser 向け `fs` externalize を警告する。`npm audit` は全依存 43 件、production 対象 13 件を報告しているため、外部公開前に依存更新を独立した security slice として扱う。今回の workflow slice では依存契約を変更していない。
+非ブロッカーの負債として、Web Tester lint は未設定、標準 `build:all` / CI は backend build を含まない、Vite は Mermaid の大きい chunk と browser 向け `fs` externalize を警告する。`npm audit` は全依存 43 件、production 対象 13 件を報告している。CI は GitHub Actions v4 の Node 20 runtime deprecation と Unity `NarrativeModel.cs` の nullable warning も表示するが、全 job は成功している。依存・action upgrade と nullable cleanup は独立した quality/security slice として扱い、今回の workflow sliceでは契約を変更していない。
 
 ## 今回固定した協働契約
 
