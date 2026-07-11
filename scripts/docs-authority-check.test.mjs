@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
 import test from 'node:test'
 
-import { extractLocalLinks, findCapsuleViolation } from './docs-authority-check.mjs'
+import { collectMarkdownFiles, extractLocalLinks, findCapsuleViolation } from './docs-authority-check.mjs'
 
 test('rejects common aliases for duplicate authority capsules', () => {
   const rejected = [
@@ -38,6 +40,25 @@ test('allows canonical owners and unrelated durable documents', () => {
 
   for (const path of allowed) {
     assert.equal(findCapsuleViolation(path), null, `${path} should be allowed`)
+  }
+})
+
+test('skips ignored tool-local directories when collecting Markdown files', () => {
+  const root = mkdtempSync(resolve(tmpdir(), 'narrativegen-docs-authority-'))
+
+  try {
+    mkdirSync(resolve(root, 'docs'), { recursive: true })
+    mkdirSync(resolve(root, '.codex', 'notes'), { recursive: true })
+    mkdirSync(resolve(root, '.serena', 'memories'), { recursive: true })
+    writeFileSync(resolve(root, 'docs', 'guide.md'), '# Guide\n')
+    writeFileSync(resolve(root, '.codex', 'notes', 'project-overview.md'), '# Local tool note\n')
+    writeFileSync(resolve(root, '.serena', 'memories', 'project-overview.md'), '# Local tool note\n')
+
+    const files = collectMarkdownFiles(root).map((path) => path.replaceAll('\\', '/'))
+    assert.equal(files.length, 1)
+    assert.ok(files[0].endsWith('/docs/guide.md'))
+  } finally {
+    rmSync(root, { recursive: true, force: true })
   }
 })
 

@@ -1,7 +1,7 @@
 # Development Plan
 
 Status: roadmap source of truth
-Last updated: 2026-07-10
+Last updated: 2026-07-11
 
 This file is the single roadmap document. Agent operating rules live in `docs/REPO_LOCAL_RULES.md`; current state and next resume steps live in the root `HANDOVER.md`; feature/spec status lives in `docs/spec-index.json`; durable decisions live in `docs/governance/decision-log.md`.
 
@@ -14,6 +14,7 @@ This file is the single roadmap document. Agent operating rules live in `docs/RE
 
 2. **Procedural-narrative policy frontier**
    - Decide whether the next approved slice should move Character Knowledge into choice availability or into a broader event-generation pass.
+   - Evaluate choice availability first: it has the smaller state/authoring surface and the clearest player-visible signal. Keep broader event generation as the comparison route, not as an implied implementation target.
    - Selection means specification/evaluation first; implementation is not approved until the value path, player-visible signal, and authoring-cost reduction are explicit.
 
 3. **SP-DTYARN-001 continuation**
@@ -25,12 +26,32 @@ This file is the single roadmap document. Agent operating rules live in `docs/RE
    - Produce low-cost review evidence first. Human direction selection advances the spec/prototype; implementation still requires an explicit `IMPLEMENT` packet unless that packet already names the choice as its final gate. Do not enter a micro-polish loop without a chosen direction and fixed acceptance axes.
 
 5. **SP-009 UI quality expansion**
-   - Continue a11y/responsive work from the completed baseline into graph, debug, and remaining modal surfaces.
-   - Track screen-level checks in `docs/checklists/A11Y_RESPONSIVE_CHECKLIST.md`.
+   - The primary Story / Graph / Play / Modal checklist is marked complete, while technical debt still names debug and secondary modal surfaces. Reconcile that coverage and name the exact remaining screens before another implementation slice.
+   - Track any newly confirmed screen-level gaps in `docs/checklists/A11Y_RESPONSIVE_CHECKLIST.md`; do not use a generic Phase 8 label as proof of unfinished behavior.
 
 6. **E2E and regression stability**
-   - Continue issue-backed flaky follow-up for GitHub #81-#83 and `docs/tasks/FLAKY_ISSUES_TRACKER.md`.
+   - GitHub #81-#83 are closed in `docs/tasks/FLAKY_ISSUES_TRACKER.md`. Do not treat them as active work unless the runbook threshold is met by a reproduced recurrence.
    - Add or formalize negative-path import/export checks where they remove manual uncertainty.
+
+## Proposed North Star And Forward Target Ladder
+
+The proposed long-range product image is: a single author defines world objects, character knowledge, and narrative intent once; the deterministic runtime derives meaningful choice availability, events, and text without duplicating route wiring; the author can inspect why a route changed; the same full-fidelity JSON behaves consistently in Web Tester and Unity; and the author can complete author -> validate -> play -> export -> integrate without an improvised transfer step.
+
+This is a dependency-ordered proposal, not an approved implementation queue. A later goal becomes implementation-ready only after its stated gate passes and an `IMPLEMENT` packet approves that slice.
+
+| Gate / target | Purpose and what becomes possible | Completion signal | Requirements / main risk | State, owner, next move |
+|---|---|---|---|---|
+| **G0 — Lock the current originality baseline** | Separate machine correctness from whether the probe actually communicates a meaningful story difference | Human reviews both probe branches and Designer Dashboard together; findings are recorded as pass or concrete defects | Requires subjective GUI/story judgment; automation cannot approve it | `pending verification`; user owns judgment; this may run in parallel if G1 exploration is selected |
+| **G1 — Choose the policy contract** | Decide how Character Knowledge acts before node arrival and prevent the engine from growing two competing policy models | Choice-availability and broader event-generation designs are compared on model shape, deterministic timing, idempotency, player signal, and authoring-wiring reduction; one recommendation is frozen in a spec/probe | Must preserve JSON-first, TS-as-source, deterministic/offline behavior; avoid invisible background complexity | `proposed`; assistant prepares an `EXPLORE` packet, user approves only the product direction |
+| **G2 — Ship one procedural-choice vertical slice** | Make knowledge-derived state change a choice before the author manually wires an equivalent event/flag chain | One fixed scenario shows a choice becoming available or unavailable from Character Knowledge, with engine tests, schema validation, dashboard evidence, and no raw diagnostics in player copy | Requires G1 contract and explicit `IMPLEMENT`; schema/API changes reopen the gate | `proposed`; assistant-owned implementation after approval; start with choice availability unless G1 evidence rejects it |
+| **G3 — Explain consequences from engine facts** | Turn inference and policy power into an author-usable reason surface instead of hidden diagnostics | A read-only Choice Consequence Lens explains why a choice is available, what state changes, and what opens, with every statement traceable to deterministic facts | Policy semantics must be stable; inferred or speculative prose is prohibited | `proposed`; assistant prototypes three same-content directions, user selects the macro direction |
+| **G4 — Prove the one-person authoring workflow** | Demonstrate that the primitives reduce work in a real story shape rather than only in a technical probe | One eight-node evidence-mystery starter pack completes author -> validate -> play -> save/reload -> export, with wiring count and manual exceptions recorded | Human owns creative acceptance; do not mass-produce templates before one workflow proof | `proposed`; shared ownership; assistant scaffolds and measures, user judges story usefulness |
+| **G5 — Restore cross-runtime semantic parity** | Let the approved policy behavior survive Unity integration instead of becoming Web-only originality | C# model shape, event derivation, TS/C# fixtures, serialization, and one Unity integration sample agree on the G2 contract | Requires stable TS semantics; Unity must not independently evolve; Editor visual acceptance is separate | `hold pending G2`; assistant owns parity implementation, user owns any public distribution decision |
+| **G6 — Mature the authoring experience around proven work** | Reorganize the tool around the real Writer / TechDesigner / Integrator loop and reduce language/visual friction | Stage-based cockpit direction, two-layer UI localization, and narrative visual grammar are each selected through low-cost evidence and delivered as bounded slices | Do not redesign around an unproven workflow; high-subjectivity direction needs human selection | `proposed`; shared direction, assistant implementation after explicit packets; start only after G4 reveals the actual friction |
+| **G7 — Establish release readiness** | Make a reproducible build trustworthy enough for versioned consumption | Supported toolchains are pinned; production audit findings have an approved resolution/baseline; backend build and real Web Tester lint are in the standard gate; negative import/export and recurring parity checks are enforced | Dependency upgrades require approval and may change behavior; quality work must protect the playable path | `proposed support track`; shared approval/assistant execution; schedule as a dedicated security/toolchain slice before release claims |
+| **G8 — Open conditional ecosystem paths** | Connect external writing, distribution, and status surfaces without creating a second source of truth | WritingPage gates pass before integration; public Unity/package publication is explicitly human-approved; any Project Cockpit is generated from canonical docs | External format stability, publication scope, credentials, and maintenance ownership are outside current authority | `hold (conditional)`; user unlocks each path; assistant implements only the approved bounded adapter or generated projection |
+
+Parallel compatibility work remains available but is not the core originality sequence: SP-DTYARN-001 should proceed spec-first, and regression/a11y work should begin from a reproduced or precisely named gap rather than a generic maintenance label.
 
 ## Proposed Experience Routes
 

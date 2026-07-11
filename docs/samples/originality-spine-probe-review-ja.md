@@ -50,7 +50,7 @@ semantic_end
 ## 判定メモ
 
 - 設計盤らしい: object property、event trace、template response が同じ route で意味を作りつつ、Story 本文は人間向けに読める。
-- まだ旧来ADV的: branching 自体は node-and-choice、`perceiveEntity()` effect は author-written choice effect として起動している、property condition はこの probe の route gate に使っていない。
+- まだ旧来ADV的: branching 自体は node-and-choice、Perception Policy は author-written の特定 node trigger に留まり、property condition はこの probe の route gate に使っていない。
 - 次の最短軸: Character Knowledge の perception result を author-written effect ではなく、choice availability や event generation policy に接続する。
 
 ## 境界

@@ -1,6 +1,6 @@
 # SP-TGEN-001: Narrative Text Generation Pipeline（文章生成の単一設計）
 
-**Status**: partial | **Pct**: 85 | **Cat**: core
+**Status**: partial | **Pct**: 94 | **Cat**: core
 
 ## 1. 目的
 

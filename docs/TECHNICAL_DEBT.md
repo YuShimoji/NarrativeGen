@@ -1,6 +1,6 @@
 # Technical Debt and Improvement Tasks
 
-Last updated: 2026-07-10
+Last updated: 2026-07-11
 
 ## Overview
 This document tracks technical debt and improvement work items.
@@ -21,6 +21,7 @@ Remaining tasks:
 - [x] Require root `npm ci` + `check:spec-index` / `check:models-sync` / `check:encoding-safety` in CI (`governance` job).
 - [x] Add change-review examples for spec maintenance（[docs/operations/SPEC_INDEX_REVIEW_EXAMPLES.md](operations/SPEC_INDEX_REVIEW_EXAMPLES.md) および `docs/governance/spec-change-review-examples.md`）。
 - [x] Add `check:docs-authority` to reject missing canonical owners, duplicate status/runtime/roadmap/decision capsules, and broken links in major entrypoints.
+- [x] Exclude ignored tool-local `.serena/` / `.codex/` Markdown from `check:docs-authority`, so local agent memory cannot make a tracked-clean checkout fail the repository safety gate.
 
 ### 2. Dependency health recheck
 Status: in progress
@@ -31,8 +32,8 @@ Status: in progress
 Remaining tasks:
 - [ ] Monitor `npm ls --depth=0` for `extraneous/invalid` recurrence（手順: [docs/operations/DEPENDENCY_ENCODING_OPS.md](operations/DEPENDENCY_ENCODING_OPS.md)）。
 - [x] Add environment troubleshooting notes for permission/sandbox differences（同上）。
-- [ ] Resolve the 2026-07-10 audit baseline in a dedicated security slice: 43 total findings, including 13 production findings. Re-run current advisory data before choosing upgrades.
-- [ ] Pin or otherwise enforce the supported Node 20+ and .NET 9 toolchain; current local versions pass, but `.node-version` / `engines` / `global.json` are absent.
+- [ ] Resolve the 2026-07-11 audit baseline in a dedicated security slice: 43 total findings (1 low / 28 moderate / 10 high / 4 critical), including 13 production findings (11 moderate / 2 high / 0 critical). Re-run current advisory data before choosing upgrades.
+- [ ] Pin or otherwise enforce the supported Node 20+ and .NET 9 toolchain; Node 24.13.0 / npm 11.6.2 / .NET SDK 10.0.204 pass locally, but `.node-version` / `engines` / `global.json` are absent.
 - [ ] Upgrade GitHub Actions that still target the deprecated Node 20 action runtime. CI run `29088984035` succeeded but reported that `actions/checkout@v4`, `actions/setup-node@v4`, and `actions/setup-dotnet@v4` were forced onto Node 24.
 
 ### 3. Encoding safety operation

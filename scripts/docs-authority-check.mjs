@@ -69,6 +69,8 @@ const CAPSULE_NAME_RULES = [
 
 const SKIPPED_DIRECTORIES = new Set([
   '.git',
+  '.codex',
+  '.serena',
   'node_modules',
   'dist',
   'coverage',
@@ -348,4 +350,4 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(SCRIPT_PATH)) {
   if (!runAuthorityCheck()) process.exitCode = 1
 }
 
-export { extractLocalLinks, findCapsuleViolation, inspectRepository, maskNonLinkMarkdown, normalizeLinkTarget }
+export { collectMarkdownFiles, extractLocalLinks, findCapsuleViolation, inspectRepository, maskNonLinkMarkdown, normalizeLinkTarget }
