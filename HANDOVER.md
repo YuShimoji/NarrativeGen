@@ -2,7 +2,7 @@
 
 ## 現在地 — 2026-07-13
 
-`main` / `origin/main` が開発正本。G2 closeout 監査の開始時は `31b108b`、`HEAD...origin/main = 0 0`。`git fetch --prune origin` は成功したが、`character-knowledge.ts` と `types.ts` に同じ G2 の partial tracked diff が既にあったため pull は行わず、その差分を保全・監査して完成させた。既知の untracked Unity harness (`Assets/`, `ProjectSettings/`, `packages/manifest.json`, `packages/packages-lock.json`, generated `.meta`) は変更・stage・削除せず保全している。
+`main` / `origin/main` が開発正本。G2 開始時は `31b108b`、`HEAD...origin/main = 0 0`、tracked tree は clean。`git fetch --prune origin` と `git pull --ff-only origin main` は成功し、remote は既に最新だった。既知の untracked Unity harness (`Assets/`, `ProjectSettings/`, `packages/manifest.json`, `packages/packages-lock.json`, generated `.meta`) は変更・stage・削除せず保全している。
 
 User は 2026-07-12 に G1 Contract A と public / diagnostic / fixture / spec defaults を承認した。G2 `SP-KNOW-002: Knowledge-Derived Choice Availability` は 2026-07-13 に完了。別 fixture `procedural-choice-spine-probe.json` で reusable pure rule が `follow_semantic_change` を直接開き、availability 中に SessionState を変更せず、knowledge-derived `event_mira_perceives_receipt_contradiction` を作らない。現行 `originality-spine-probe.json` は SP-KNOW-001 の node-triggered persistent-event baseline として挙動を変えずに保持した。
 
@@ -32,8 +32,10 @@ Schema、engine、inference、model-aware cache、fixture、既存 Designer Dash
 - Canonical model validation: 18 JSON models passed, including the new probe.
 - Web formatter smoke: 72 checks across 18 models x 4 formatters passed.
 - Playwright: current originality + procedural-choice specs, Chromium / Firefox / WebKit, final exact rerun 12/12 passed。最初の run が発見した disposed crossfade の旧 DOM 再追加 race は PlayRenderer の transition cancellation で修復した。
-- Engine build、TypeScript no-emit check、engine lint、Web Tester build passed。Web build retained known `fs` externalization / large-chunk warnings only。
+- Transition repair の widened check は、明示的に保持した Vite server に対する Chromium Play Immersion 8/8 が passed。process-managed の全ブラウザ run は assertion failure ではなく、途中で Vite server が終了して connection refused になったため、E2E server lifecycle / runbook debt として残す。
+- Engine build、engine lint、Web Tester build passed。Web build retained known `fs` externalization / large-chunk warnings only。
 - `check:safety`: 37 spec entries、docs authority 4/4、92 Markdown filenames、328 text files、19 synced model files passed。
+- Spec lifecycle after G2 closeout: 37 total / 33 done / 4 partial。
 
 These counts are this slice's command output, not evergreen project totals。再開時の最新 Git parity は Git から読み、G2 implementation CI evidence は上記 immutable commit/run を参照する。
 

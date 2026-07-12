@@ -227,7 +227,8 @@ Required evidence:
 - Japanese-first Dashboard facts と raw diagnostic-free Story copy
 - schema/model validation、focused browser evidence、build、safety、Git/CI follow-through
 
-全 acceptance evidence と implementation commit に紐づく CI の成功を
+全 acceptance evidence と implementation commit `a32d024` に紐づく
+CI run `29204576238`（governance / web-tester / engine-ts / sdk-unity）の成功を
 2026-07-13 closeout で確認したため、lifecycle は `done / 100`。以後この
 contract を変更する場合は同じ purity、cache、old/new probe regression、CI gateを再確認する。
 
