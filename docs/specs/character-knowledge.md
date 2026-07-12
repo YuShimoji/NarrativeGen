@@ -56,6 +56,14 @@ Runtime behavior: when the session reaches `trigger.node`,
 `perceiveEntity`, adds `policy_source` / `policy_trigger_node`, and skips
 duplicate event creation if the policy event already exists.
 
+### G1 comparison evidence
+
+The implemented node-triggered v0 contract above remains the shipped `done`
+scope. The non-normative [G1 policy-contract comparison](../samples/originality-spine-policy-contract-comparison.md)
+recommends reusable, pure knowledge-derived choice availability as a
+`proposed` next contract. It grants no implementation authority and does not
+change the current schema, API, model, or Unity runtime.
+
 ## API
 
 ```typescript

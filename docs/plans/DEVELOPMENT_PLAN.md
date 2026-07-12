@@ -1,7 +1,7 @@
 # Development Plan
 
 Status: roadmap source of truth
-Last updated: 2026-07-11
+Last updated: 2026-07-12
 
 This file is the single roadmap document. Agent operating rules live in `docs/REPO_LOCAL_RULES.md`; current state and next resume steps live in the root `HANDOVER.md`; feature/spec status lives in `docs/spec-index.json`; durable decisions live in `docs/governance/decision-log.md`.
 
@@ -13,9 +13,9 @@ This file is the single roadmap document. Agent operating rules live in `docs/RE
    - The cross-sample state leak and Japanese-first probe presentation are repaired. Do not reopen them without a reproduced defect or review finding.
 
 2. **Procedural-narrative policy frontier**
-   - Decide whether the next approved slice should move Character Knowledge into choice availability or into a broader event-generation pass.
-   - Evaluate choice availability first: it has the smaller state/authoring surface and the clearest player-visible signal. Keep broader event generation as the comparison route, not as an implied implementation target.
-   - Selection means specification/evaluation first; implementation is not approved until the value path, player-visible signal, and authoring-cost reduction are explicit.
+   - The non-normative [G1 policy-contract comparison](../samples/originality-spine-policy-contract-comparison.md) compares exactly two same-scenario contracts and recommends reusable pure choice availability.
+   - The recommendation remains `proposed`: user direction review is pending, implementation authority is none, and broader deterministic event generation retains its durable historical-fact advantage.
+   - G2 remains blocked on three decisions: direction accept/reject, one combined public/diagnostic API surface, and fixture/spec identity; an explicit `IMPLEMENT` packet is still required afterward.
 
 3. **SP-DTYARN-001 continuation**
    - Extend Dynamic Text to Yarn conversion beyond the implemented `[entity]`, `[entity.prop]`, and numeric comparison support.
@@ -41,9 +41,9 @@ This is a dependency-ordered proposal, not an approved implementation queue. A l
 
 | Gate / target | Purpose and what becomes possible | Completion signal | Requirements / main risk | State, owner, next move |
 |---|---|---|---|---|
-| **G0 — Lock the current originality baseline** | Separate machine correctness from whether the probe actually communicates a meaningful story difference | Human reviews both probe branches and Designer Dashboard together; findings are recorded as pass or concrete defects | Requires subjective GUI/story judgment; automation cannot approve it | `pending verification`; user owns judgment; this may run in parallel if G1 exploration is selected |
-| **G1 — Choose the policy contract** | Decide how Character Knowledge acts before node arrival and prevent the engine from growing two competing policy models | Choice-availability and broader event-generation designs are compared on model shape, deterministic timing, idempotency, player signal, and authoring-wiring reduction; one recommendation is frozen in a spec/probe | Must preserve JSON-first, TS-as-source, deterministic/offline behavior; avoid invisible background complexity | `proposed`; assistant prepares an `EXPLORE` packet, user approves only the product direction |
-| **G2 — Ship one procedural-choice vertical slice** | Make knowledge-derived state change a choice before the author manually wires an equivalent event/flag chain | One fixed scenario shows a choice becoming available or unavailable from Character Knowledge, with engine tests, schema validation, dashboard evidence, and no raw diagnostics in player copy | Requires G1 contract and explicit `IMPLEMENT`; schema/API changes reopen the gate | `proposed`; assistant-owned implementation after approval; start with choice availability unless G1 evidence rejects it |
+| **G0 — Lock the current originality baseline** | Separate machine correctness from whether the probe actually communicates a meaningful story difference | Human reviews both probe branches and Designer Dashboard together; findings are recorded as pass or concrete defects | Requires subjective GUI/story judgment; automation cannot approve it | `pending verification`; user owns judgment; this remains separate and may run while H1 direction review is pending |
+| **G1 — Choose the policy contract** | Decide how Character Knowledge acts at choice evaluation and prevent the engine from growing two competing policy models | [Comparison evidence](../samples/originality-spine-policy-contract-comparison.md) records exactly two contracts and recommends reusable pure choice availability without adopting it | Must preserve JSON-first, TS-as-source, deterministic/offline behavior; avoid invisible background complexity | `proposed`; H0 evidence complete; user direction review pending; G2 has no implementation authority |
+| **G2 — Ship one procedural-choice vertical slice** | Make knowledge-derived state change a choice before the author manually wires an equivalent event/flag chain | One fixed scenario shows a choice becoming available or unavailable from Character Knowledge, with engine tests, schema validation, dashboard evidence, and no raw diagnostics in player copy | Requires H1 acceptance of the recommended contract and explicit `IMPLEMENT`; schema/API changes reopen the gate | `proposed`; Contract A is recommended but unapproved; implementation remains blocked |
 | **G3 — Explain consequences from engine facts** | Turn inference and policy power into an author-usable reason surface instead of hidden diagnostics | A read-only Choice Consequence Lens explains why a choice is available, what state changes, and what opens, with every statement traceable to deterministic facts | Policy semantics must be stable; inferred or speculative prose is prohibited | `proposed`; assistant prototypes three same-content directions, user selects the macro direction |
 | **G4 — Prove the one-person authoring workflow** | Demonstrate that the primitives reduce work in a real story shape rather than only in a technical probe | One eight-node evidence-mystery starter pack completes author -> validate -> play -> save/reload -> export, with wiring count and manual exceptions recorded | Human owns creative acceptance; do not mass-produce templates before one workflow proof | `proposed`; shared ownership; assistant scaffolds and measures, user judges story usefulness |
 | **G5 — Restore cross-runtime semantic parity** | Let the approved policy behavior survive Unity integration instead of becoming Web-only originality | C# model shape, event derivation, TS/C# fixtures, serialization, and one Unity integration sample agree on the G2 contract | Requires stable TS semantics; Unity must not independently evolve; Editor visual acceptance is separate | `hold pending G2`; assistant owns parity implementation, user owns any public distribution decision |

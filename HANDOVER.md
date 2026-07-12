@@ -1,23 +1,23 @@
 # 作業申し送り
 
-## 現在地 — 2026-07-11
+## 現在地 — 2026-07-12
 
-`main` / `origin/main` が開発正本。今回の再開では作業ツリーを先に保全確認し、リモートの 3 commits を `0b87c46` から `be5e874` へ fast-forward した。受信内容は workflow v21、cross-terminal handoff、handoff warning の正本化で、latest incoming head の [CI run 29089068765](https://github.com/YuShimoji/NarrativeGen/actions/runs/29089068765) は success。以後の正確な HEAD と同期状態は `git log -1 --oneline` と `git rev-list --left-right --count HEAD...origin/main` で確認し、最新 HEAD の自己参照値をこの文書へ固定しない。
+`main` / `origin/main` が開発正本。今回の H0 開始時は readiness baseline `69e02d1`、`HEAD...origin/main = 0 0`、tracked modifications なしを確認し、`git pull --ff-only origin main` は already up to date だった。既知の untracked Unity harness は保全している。以後の正確な HEAD と同期状態は `git log -1 --oneline` と `git rev-list --left-right --count HEAD...origin/main` で確認し、最新 HEAD の自己参照値をこの文書へ固定しない。
 
 プロダクトの survival check は `models/examples/vertical-slice.json`、現在の独自性レビュー対象は `models/examples/originality-spine-probe.json`。後者は Character Knowledge を node-triggered Perception Policy に接続し、旧式の choice effect 直書きより少ない authoring wiring でルート差を作る。機械検証では Dynamic Text / Entity-Property / Event / ConversationTemplate / Character Knowledge が同じ route で動くが、human の物語体験・GUI 感性確認は未完了。
 
-今回の slice は新機能を増やすことではなく、最新状態を実機で再検証し、監修 AI が次の開発契約を作れる current snapshot と長期目標を固定する作業。検証中、新しい `check:docs-authority` が Git ignored の `.serena/` ローカルメモを repo authority と誤認して `check:safety` を落とす不具合を発見した。ローカルメモは削除せず、`.serena/` / `.codex/` を tool-local として除外する回帰テスト付き修正を入れた。
+今回の slice は G1 / H0 の docs-only comparison evidence。新しい [policy-contract comparison](docs/samples/originality-spine-policy-contract-comparison.md) は、同じ Mira / `receipt_fragment` scenario で exactly two contracts を比較し、reusable pure choice availability を未承認の `proposed` recommendation とした。現行 v0、schema、model、product source、tests、Unity は変更していない。次の gate は H1 user direction review であり、G2 implementation authority はまだない。
 
 ## 直近の配送と再開境界
 
 | 再開時に必要な観点 | 保持した状態 |
 |---|---|
-| 位相 / 主レーン / スライス | `CLOSE` / repo sync + development readiness + supervising-AI handoff |
-| 配送した効果 | ignored tool memory が safety gate を壊さない状態、stale な probe/spec/flake 説明の整合、proposed North Star と G0-G8 target ladder |
-| 自動防止策 | `check:docs-authority` は repo 本体の正本・主要リンク・Markdown 名を検査しつつ `.serena/` / `.codex/` を除外。fixture は 3 件から 4 件へ増加 |
-| remote baseline | incoming `be5e874` の CI は success。この slice の live validation は下表を正とし、最終 remote parity は closeout 時のコマンド出力で確認する |
-| 次端末が最初に読むもの | `AGENTS.md` → `docs/REPO_LOCAL_RULES.md` → この文書。長期分岐を作るときだけ `docs/plans/DEVELOPMENT_PLAN.md` の target ladder を追加確認 |
-| 未確定論点 | probe の human 目視、choice availability と broader event generation の policy contract、Consequence Lens の macro direction。いずれも未承認の `proposed` |
+| 位相 / 主レーン / スライス | `CLOSE` / ORIGINALITY_POLICY / G1 policy-contract comparison H0 |
+| 配送した効果 | pure choice availability と broader deterministic event generation を同一 scenario / 同一配線単位で比較し、A を proposed recommendation として記録 |
+| primary artifact | `docs/samples/originality-spine-policy-contract-comparison.md`; status `proposed`; normative `no`; implementation authority `none` |
+| evidence boundary | current v0 runtime facts、A=SessionState-pure、B=bounded snapshot/commit。比較軸・配線数・tradeoff の詳細は primary artifact のみを正とする |
+| 次端末が最初に読むもの | `AGENTS.md` → `docs/REPO_LOCAL_RULES.md` → この文書。H1 判断時だけ comparison artifact と `docs/plans/DEVELOPMENT_PLAN.md` G1/G2 を追加確認 |
+| 未確定論点 | 3件: A recommendation の accept/reject、public/diagnostic API surface、G2 fixture/spec identity。G0 human review と Consequence Lens direction は別 debt |
 | 触らない範囲 | WritingPage gate、Unity/publication、provider/API/auth/payment、依存一括更新、外部 Project Cockpit。明示した別 slice なしに再開しない |
 
 ## 開発可能性
@@ -41,7 +41,7 @@ spec lifecycle は 36 件中 `done` 32、`partial` 4。これは仕様台帳の�
 残作業の実行契約は次のとおり。
 
 - **Originality baseline 目視**: 目的は機械成功と実体験の差を閉じ、次の policy 比較に使う基準を固定すること。必要物は既存 review surface とローカル Web Tester、状態は未実施、judgment owner は user。`npm run dev` で両 route と Designer Dashboard を一括確認し、pass または具体的 defect を返す。
-- **Policy frontier**: 目的は Character Knowledge を node 到着後だけでなく choice availability か broader event generation へ接続し、重複 wiring を減らすこと。状態は `proposed`、assistant が比較 evidence を作り user が高位方向を決める。次は実装ではなく G1 `EXPLORE` packet で model shape、timing、idempotency、player signal、authoring delta を比較する。
+- **Policy frontier**: 目的は Character Knowledge を choice availability へ直接接続し、重複 wiring を減らすこと。比較 evidence は完了し、A を `proposed` recommendation とした。状態は H1 user direction review 待ち、owner は user。残る3判断は direction、public/diagnostic API surface、fixture/spec identity。これらを固定した G2 `IMPLEMENT` packet を別途承認するまで実装しない。
 - **Security / release readiness**: 目的は「ローカルで動く」から再現可能な versioned consumption へ進むこと。audit 方針、dependency upgrade、toolchain pin は未承認、owner は shared。次は production findings と supported toolchain を一つの専用 slice として再評価し、backend build / real Web lint / negative import-export を標準 gate へ入れる契約を作る。
 - **外部 path**: WritingPage、public Unity/package、Pages/Wiki cockpit はそれぞれ外部 format、公開、maintenance ownership を必要とする。状態は `hold (conditional)`、owner は user。gate が開くまでは通常の次候補へ戻さない。
 
@@ -67,11 +67,11 @@ GitHub Wiki 機能は有効だが Wiki repository は未初期化、GitHub Pages
 | 入口 | 解く摩擦 | 完了すると可能になること | 必要条件 / 現在状態 | 次の動き |
 |---|---|---|---|---|
 | **Verify — probe 目視** | 機械検証と実際の物語体験の差 | 現在の originality route を基準として固定できる | assistant の3ブラウザ検証は済み、human の GUI / story judgment は未 | `npm run dev` → `originality-spine-probe.json` の両 route と Designer Dashboard を一括確認 |
-| **Advance — policy contract** | Character Knowledge が node 到着後にしか効かない | knowledge-derived choice を manual event/flag chain より少ない wiring で作れる | 方向は `proposed`。choice availability first を event generation と比較する必要がある | G1 `EXPLORE` packet で2案を比較し、一つの spec/probe recommendation だけを返す |
+| **Decide — G1 direction** | comparison evidence はあるが product direction は未承認 | competing policy systems を作らず、一つの bounded G2 contractへ進める | A を推奨、B の durable historical-fact advantage も比較文書に保持。G2 authority は none | comparison artifact を読み、A を accept/reject。accept 時だけ別 `IMPLEMENT` packet を承認 |
 | **Prototype — Choice Consequence Lens** | 強い推論機能が技術情報として隠れる | 「なぜ選べる / 何が変わる / 何が開く」を deterministic facts から説明できる | policy semantics の安定後。人間の macro direction 選択が必要 | 同一内容の3方向 → one-screen contract → G2 固定シナリオで検証 |
 | **Harden — release readiness** | 現行 gate が toolchain/security/backend/Web lint を完全には固定しない | versioned consumption と回帰判定の信頼性を上げられる | dependency upgrade は human approval が必要。playable progress を置換しない | audit/toolchain 専用 packet を作り、承認範囲だけを一括実装・検証する |
 
-推奨順序は、human の G0 目視を G1 policy exploration と並行し、G1 の高位判断後に G2 procedural-choice vertical slice、次に G3 Consequence Lens、G4 one-person workflow proof、G5 Unity parity、G6 authoring experience、G7 release readinessへ進むこと。WritingPage / public distribution / external cockpit は G8 conditional paths のまま。詳細な目的・完了シグナル・owner・risk は `docs/plans/DEVELOPMENT_PLAN.md` の target ladder を正とする。
+推奨順序は、human の G0 目視を H1 direction review と分離し、A が明示承認された場合だけ G2 procedural-choice vertical sliceへ進むこと。その後は G3 Consequence Lens、G4 one-person workflow proof、G5 Unity parity、G6 authoring experience、G7 release readiness。WritingPage / public distribution / external cockpit は G8 conditional paths のまま。詳細な contract evidence は comparison artifact、目標順は `docs/plans/DEVELOPMENT_PLAN.md` を正とする。
 
 ## 再開
 
