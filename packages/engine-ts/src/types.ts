@@ -1,4 +1,4 @@
-import type { CharacterDef } from './character-knowledge.js'
+import type { CharacterDef, KnowledgeRule } from './character-knowledge.js'
 import type { ConversationTemplate } from './conversation-templates.js'
 import type { PropertyAwareLexicon } from './paraphrase.js'
 
@@ -31,6 +31,7 @@ export type Condition =
   | { type: 'hasItem'; key: string; value: boolean }
   | { type: 'property'; entity: string; key: string; op: '>=' | '<=' | '>' | '<' | '==' | '!='; value: string | number | boolean }
   | { type: 'hasEvent'; key: string; value: boolean }
+  | { type: 'knowledgeRule'; rule: string; result: 'noticed' }
   | { type: 'timeWindow'; start: number; end: number }
   | { type: 'and'; conditions: Condition[] }
   | { type: 'or'; conditions: Condition[] }
@@ -115,6 +116,7 @@ export interface Model {
   variables?: VariableState
   entities?: Record<string, EntityDef>
   characters?: Record<string, CharacterDef>
+  knowledgeRules?: Record<string, KnowledgeRule>
   perceptionPolicies?: PerceptionPolicy[]
   paraphraseLexicon?: PropertyAwareLexicon
   nodes: Record<string, NodeDef>

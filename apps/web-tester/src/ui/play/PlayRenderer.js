@@ -143,7 +143,8 @@ export class PlayRenderer {
 
       await strategy.enter(this.#storyView, content, {
         duration: this.transitionDuration,
-        choiceText: options.choiceText
+        choiceText: options.choiceText,
+        isCancelled: () => this.#disposed
       })
       if (this.#disposed) return
 

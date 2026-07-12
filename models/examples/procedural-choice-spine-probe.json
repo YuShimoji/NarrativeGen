@@ -1,0 +1,208 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "desk",
+  "flags": {
+    "meaning_locked": true
+  },
+  "resources": {},
+  "variables": {
+    "receipt_reading": "未読の断片"
+  },
+  "entities": {
+    "semantic_object": {
+      "id": "semantic_object",
+      "name": "意味を持つ物証",
+      "description": "点数ではなく、性質と文脈で意味が変わる物証。",
+      "properties": {
+        "provenance": {
+          "key": "provenance",
+          "type": "string",
+          "defaultValue": "unknown"
+        },
+        "visible_to": {
+          "key": "visible_to",
+          "type": "string",
+          "defaultValue": "player"
+        }
+      }
+    },
+    "receipt_fragment": {
+      "id": "receipt_fragment",
+      "name": "レシート片",
+      "description": "誰が持っていたかをミラが読み替えたとき、初めて意味を持つ破れたレシート。",
+      "parentEntity": "semantic_object",
+      "properties": {
+        "provenance": {
+          "key": "provenance",
+          "type": "string",
+          "defaultValue": "clocktower archive desk"
+        },
+        "owner": {
+          "key": "owner",
+          "type": "string",
+          "defaultValue": "Mira's mentor"
+        },
+        "location": {
+          "key": "location",
+          "type": "string",
+          "defaultValue": "south archive"
+        },
+        "contradiction": {
+          "key": "contradiction",
+          "type": "string",
+          "defaultValue": "signed after the bell was sealed"
+        },
+        "credibility": {
+          "key": "credibility",
+          "type": "number",
+          "defaultValue": 72,
+          "rangeMin": 0,
+          "rangeMax": 100
+        }
+      }
+    }
+  },
+  "characters": {
+    "mira": {
+      "id": "mira",
+      "name": "Mira",
+      "knowledgeProfiles": [
+        {
+          "domain": "archive_records",
+          "accuracy": 0.86,
+          "tolerance": 0.12
+        },
+        {
+          "domain": "general",
+          "accuracy": 0.55,
+          "tolerance": 0.28
+        }
+      ]
+    }
+  },
+  "knowledgeRules": {
+    "mira_receipt_contradiction": {
+      "character": "mira",
+      "entity": "receipt_fragment",
+      "domain": "archive_records",
+      "expectations": {
+        "credibility": 50
+      }
+    }
+  },
+  "conversationTemplates": [
+    {
+      "id": "mira_archive_reframe",
+      "trigger": {
+        "eventMatch": {
+          "propertyChecks": [
+            {
+              "key": "severity",
+              "op": ">=",
+              "value": 60
+            },
+            {
+              "key": "observer",
+              "op": "==",
+              "value": "mira"
+            }
+          ]
+        },
+        "sessionConditions": [
+          {
+            "type": "hasEvent",
+            "key": "event_mira_reframes_receipt",
+            "value": true
+          }
+        ]
+      },
+      "text": "ミラの補足: 書庫の記録知識は、[receipt_fragment]を証拠点ではなく、[receipt_fragment.location]に関わる矛盾として扱っている。",
+      "priority": 10
+    }
+  ],
+  "nodes": {
+    "desk": {
+      "id": "desk",
+      "speaker": "Narrator",
+      "text": "ミラは[receipt_fragment]を机に置く。これは鍵アイテムでも点数トークンでもない。出所は[receipt_fragment.provenance]、持ち主は[receipt_fragment.owner]、問題は「[receipt_fragment.contradiction]」という記録上の矛盾だ。\n\n記録上の信用度は[receipt_fragment.credibility]と高い。現在の読み: {receipt_reading}. {?meaning_locked:まだミラには、ばらばらの手掛かりに見えている。}",
+      "choices": [
+        {
+          "id": "ask_mira_reframe",
+          "text": "Ask Mira to test the receipt against her archive memory",
+          "target": "memory_reframed",
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "event_mira_reframes_receipt",
+              "name": "ミラはレシートを読み替えた",
+              "properties": {
+                "severity": {
+                  "defaultValue": 70
+                },
+                "observer": {
+                  "defaultValue": "mira"
+                },
+                "source_entity": {
+                  "defaultValue": "receipt_fragment"
+                },
+                "knowledge_shift": {
+                  "defaultValue": "手掛かり集めから持ち主の矛盾へ"
+                },
+                "semantic_change": {
+                  "defaultValue": "目撃された矛盾"
+                },
+                "location": {
+                  "defaultValue": "south archive"
+                }
+              }
+            },
+            {
+              "type": "setFlag",
+              "key": "meaning_locked",
+              "value": false
+            },
+            {
+              "type": "setVariable",
+              "key": "receipt_reading",
+              "value": "目撃された矛盾"
+            }
+          ]
+        },
+        {
+          "id": "treat_as_old_clue",
+          "text": "Treat it as a conventional clue and stop",
+          "target": "old_adv_end"
+        }
+      ]
+    },
+    "memory_reframed": {
+      "id": "memory_reframed",
+      "speaker": "Mira",
+      "text": "ミラは南書庫の記録と照合し、[receipt_fragment]をただの拾得物ではなく、[event_mira_reframes_receipt.semantic_change]として読み替える。持ち主の欄は[receipt_fragment.owner]を指し、封印後の署名という矛盾が、彼女の記憶と結びついた。\n\nこの分岐は証拠点の合計ではなく、ミラの知識がレシートの意味を変えたことで開く。現在の読み: {receipt_reading}.",
+      "choices": [
+        {
+          "id": "follow_semantic_change",
+          "text": "Follow the semantic contradiction to the archive ledger",
+          "target": "semantic_end",
+          "conditions": [
+            {
+              "type": "knowledgeRule",
+              "rule": "mira_receipt_contradiction",
+              "result": "noticed"
+            }
+          ]
+        }
+      ]
+    },
+    "semantic_end": {
+      "id": "semantic_end",
+      "speaker": "Narrator",
+      "text": "結末は、ミラの書庫知識が[receipt_fragment]の信用度と記録の食い違いに気づいたことで閉じる。必要だったのは証拠点を集めることではなく、人物の知識が物証の意味を変え、その評価が選択肢を直接開くことだった。"
+    },
+    "old_adv_end": {
+      "id": "old_adv_end",
+      "speaker": "Narrator",
+      "text": "この分岐では、レシートは昔ながらの汎用的な手掛かりのまま止まる。ミラの知識は物証の意味を変えず、NarrativeGen 独自のイベントもルートには入らない。"
+    }
+  }
+}

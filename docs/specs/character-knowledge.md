@@ -56,13 +56,19 @@ Runtime behavior: when the session reaches `trigger.node`,
 `perceiveEntity`, adds `policy_source` / `policy_trigger_node`, and skips
 duplicate event creation if the policy event already exists.
 
-### G1 comparison evidence
+### Relationship to SP-KNOW-002
 
-The implemented node-triggered v0 contract above remains the shipped `done`
-scope. The non-normative [G1 policy-contract comparison](../samples/originality-spine-policy-contract-comparison.md)
-recommends reusable, pure knowledge-derived choice availability as a
-`proposed` next contract. It grants no implementation authority and does not
-change the current schema, API, model, or Unity runtime.
+The implemented node-triggered v0 contract above remains this spec's shipped
+`done` scope. On 2026-07-12 the user accepted Contract A from the non-normative
+[G1 policy comparison](../samples/originality-spine-policy-contract-comparison.md).
+The resulting reusable, SessionState-pure choice-availability contract is
+owned separately by [SP-KNOW-002](knowledge-derived-choice-availability.md).
+
+SP-KNOW-002 does not reinterpret this `PerceptionPolicy`, does not generate a
+knowledge-derived perception event during choice enumeration, and does not
+complete Unity parity. Future Contract B event materialization remains a third,
+deferred lifecycle concern rather than an extension silently folded into
+SP-KNOW-001 or SP-KNOW-002.
 
 ## API
 
@@ -105,3 +111,4 @@ const result = perceiveEntity(detective, 'cheeseburger',
 
 - SP-ANOMALY-001: detectAllAnomalies, KnowledgeProfile
 - SP-PROP-001: resolveProperty (via anomaly-detector)
+- SP-KNOW-002: reusable pure knowledge rule and choice availability (separate contract)

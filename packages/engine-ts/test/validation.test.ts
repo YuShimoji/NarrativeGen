@@ -1,6 +1,56 @@
 import { describe, it, expect } from 'vitest'
 import { loadModel } from '../src/index.js'
 
+function createValidKnowledgeModel(): Record<string, any> {
+  return {
+    modelType: 'adventure-playthrough',
+    startNode: 'start',
+    entities: {
+      receipt_fragment: {
+        id: 'receipt_fragment',
+        name: 'Receipt fragment',
+        properties: {
+          credibility: { key: 'credibility', type: 'number', defaultValue: 72 },
+        },
+      },
+    },
+    characters: {
+      mira: {
+        id: 'mira',
+        name: 'Mira',
+        knowledgeProfiles: [
+          { domain: 'archive_records', accuracy: 0.9, tolerance: 0.1 },
+        ],
+      },
+    },
+    knowledgeRules: {
+      receipt_rule: {
+        character: 'mira',
+        entity: 'receipt_fragment',
+        domain: 'archive_records',
+        expectations: { credibility: 50 },
+      },
+    },
+    nodes: {
+      start: {
+        id: 'start',
+        text: 'Start',
+        choices: [
+          {
+            id: 'follow',
+            text: 'Follow',
+            target: 'end',
+            conditions: [
+              { type: 'knowledgeRule', rule: 'receipt_rule', result: 'noticed' },
+            ],
+          },
+        ],
+      },
+      end: { id: 'end', text: 'End', choices: [] },
+    },
+  }
+}
+
 describe('Model Validation Enhancement', () => {
   describe('Duplicate ID Detection', () => {
     it('should detect duplicate node IDs', () => {
@@ -382,6 +432,129 @@ describe('Model Validation Enhancement', () => {
         expect(message).toContain('missing1')
         expect(message).toContain('missing2')
       }
+    })
+  })
+
+  describe('Knowledge Rule Schema and Integrity', () => {
+    it('accepts the approved reusable rule and condition shape', () => {
+      expect(() => loadModel(createValidKnowledgeModel())).not.toThrow()
+    })
+
+    it('rejects a malformed knowledgeRule condition shape', () => {
+      const model = createValidKnowledgeModel()
+      model.nodes.start.choices[0].conditions[0].result = 'ignored'
+
+      expect(() => loadModel(model)).toThrow(/Model validation failed/)
+    })
+
+    it('rejects a knowledge rule with empty expectations', () => {
+      const model = createValidKnowledgeModel()
+      model.knowledgeRules.receipt_rule.expectations = {}
+
+      expect(() => loadModel(model)).toThrow(/Model validation failed/)
+    })
+
+    it('rejects a condition that references a missing knowledge rule', () => {
+      const model = createValidKnowledgeModel()
+      model.nodes.start.choices[0].conditions[0].rule = 'missing_rule'
+
+      expect(() => loadModel(model)).toThrow(
+        /MISSING_REFERENCE: knowledgeRule condition.*choice 'follow'.*missing_rule/,
+      )
+    })
+
+    it('does not accept an inherited object key as a knowledge rule reference', () => {
+      const model = createValidKnowledgeModel()
+      model.nodes.start.choices[0].conditions[0].rule = 'toString'
+
+      expect(() => loadModel(model)).toThrow(
+        /MISSING_REFERENCE: knowledgeRule condition.*choice 'follow'.*toString/,
+      )
+    })
+
+    it('rejects a knowledge rule that references a missing character', () => {
+      const model = createValidKnowledgeModel()
+      model.knowledgeRules.receipt_rule.character = 'missing_character'
+
+      expect(() => loadModel(model)).toThrow(
+        /MISSING_REFERENCE: knowledge rule 'receipt_rule'.*character 'missing_character'/,
+      )
+    })
+
+    it('rejects a knowledge rule that references a missing entity', () => {
+      const model = createValidKnowledgeModel()
+      model.knowledgeRules.receipt_rule.entity = 'missing_entity'
+
+      expect(() => loadModel(model)).toThrow(
+        /MISSING_REFERENCE: knowledge rule 'receipt_rule'.*entity 'missing_entity'/,
+      )
+    })
+
+    it('does not accept inherited object keys as character or entity references', () => {
+      const model = createValidKnowledgeModel()
+      model.knowledgeRules.receipt_rule.character = 'constructor'
+      model.knowledgeRules.receipt_rule.entity = 'toString'
+
+      expect(() => loadModel(model)).toThrow(
+        /MISSING_REFERENCE: knowledge rule 'receipt_rule'.*character 'constructor'[\s\S]*entity 'toString'/,
+      )
+    })
+
+    it('finds a missing rule inside nested not/or/and conditions', () => {
+      const model = createValidKnowledgeModel()
+      model.nodes.start.choices[0].conditions = [
+        {
+          type: 'not',
+          condition: {
+            type: 'or',
+            conditions: [
+              { type: 'flag', key: 'skip', value: true },
+              {
+                type: 'and',
+                conditions: [
+                  {
+                    type: 'knowledgeRule',
+                    rule: 'deep_missing_rule',
+                    result: 'noticed',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ]
+
+      expect(() => loadModel(model)).toThrow(
+        /MISSING_REFERENCE: knowledgeRule condition.*choice 'follow'.*deep_missing_rule/,
+      )
+    })
+
+    it('validates nested knowledge-rule references in conversation templates', () => {
+      const model = createValidKnowledgeModel()
+      model.conversationTemplates = [
+        {
+          id: 'knowledge_template',
+          trigger: {
+            sessionConditions: [
+              {
+                type: 'and',
+                conditions: [
+                  {
+                    type: 'knowledgeRule',
+                    rule: 'template_missing_rule',
+                    result: 'noticed',
+                  },
+                ],
+              },
+            ],
+          },
+          text: 'Template',
+        },
+      ]
+
+      expect(() => loadModel(model)).toThrow(
+        /MISSING_REFERENCE: knowledgeRule condition.*conversation template 'knowledge_template'.*template_missing_rule/,
+      )
     })
   })
 

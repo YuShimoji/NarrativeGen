@@ -44,12 +44,14 @@ export const CrossfadeTransition = {
    * @param {object} [options]
    * @param {number} [options.duration] - ms (default 300)
    * @param {number} [options.gap] - ms gap after exit before enter (default 100)
+   * @param {() => boolean} [options.isCancelled] - true when the owning renderer was disposed
    */
   async enter(container, content, options = {}) {
     const gap = options.gap ?? 100
     if (gap > 0) {
       await new Promise((r) => setTimeout(r, gap))
     }
+    if (options.isCancelled?.()) return
     content.classList.add('play-enter')
     const duration = options.duration ?? 300
     content.style.animationDuration = `${duration}ms`

@@ -1,10 +1,13 @@
-import type { FlagState, ResourceState, VariableState, SessionState } from '../types.js'
+import type { FlagState, Model, ResourceState, VariableState, SessionState } from '../types.js'
 
 export interface EvaluationContext {
   flags: FlagState
   resources: ResourceState
   variables: VariableState
   time: number
+  /** Optional model/session context for pure model-aware conditions. */
+  model?: Model
+  session?: SessionState
 }
 
 export interface DependencyInfo {

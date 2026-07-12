@@ -1,0 +1,85 @@
+{
+  "artifact_id": "Procedural Choice Spine Probe G2",
+  "status": "implemented",
+  "spec": "docs/specs/knowledge-derived-choice-availability.md",
+  "model": "models/examples/procedural-choice-spine-probe.json",
+  "review_surface": "docs/samples/procedural-choice-spine-probe-review-ja.md",
+  "contract": {
+    "rule_id": "mira_receipt_contradiction",
+    "condition": {
+      "type": "knowledgeRule",
+      "rule": "mira_receipt_contradiction",
+      "result": "noticed"
+    },
+    "evaluator": "evaluateKnowledgeRule(session, model, ruleId)",
+    "session_mutation_during_availability": "none",
+    "knowledge_derived_event_creation": "none"
+  },
+  "before_consuming_node": {
+    "node": "desk",
+    "ordered_choices": [
+      "ask_mira_reframe",
+      "treat_as_old_clue"
+    ],
+    "knowledge_rules": 1,
+    "current_rule_uses": 0,
+    "direct_perceive_entity_effects": 0,
+    "policy_derived_perception_events": 0,
+    "events": []
+  },
+  "at_consuming_node": {
+    "node": "memory_reframed",
+    "ordered_choices_first_evaluation": [
+      "follow_semantic_change"
+    ],
+    "ordered_choices_second_evaluation": [
+      "follow_semantic_change"
+    ],
+    "evaluation_fact": {
+      "ruleId": "mira_receipt_contradiction",
+      "characterId": "mira",
+      "entityId": "receipt_fragment",
+      "requestedDomain": "archive_records",
+      "matchedDomain": "archive_records",
+      "profileMatch": "exact",
+      "noticed": true,
+      "anomalies": [
+        {
+          "entityId": "receipt_fragment",
+          "propertyKey": "credibility",
+          "expectedValue": 50,
+          "actualValue": 72,
+          "toleranceRange": [
+            44,
+            56
+          ],
+          "deviation": 3.6666666666666665,
+          "anomalous": true
+        }
+      ],
+      "totalDeviation": 3.6666666666666665
+    },
+    "choice_attribution": "follow_semantic_change <- mira_receipt_contradiction: available",
+    "events": [
+      "event_mira_reframes_receipt"
+    ],
+    "event_mira_perceives_receipt_contradiction_present": false,
+    "serialized_session_unchanged_by_fact_and_choice_evaluation": true
+  },
+  "player_diagnostic_boundary": {
+    "story_contains_raw_rule_id": false,
+    "story_contains_requested_domain_token": false,
+    "story_contains_profile_match_token": false,
+    "story_contains_missing_reason_token": false,
+    "story_contains_noticed_token": false,
+    "dashboard_exposes_deterministic_fact": true
+  },
+  "regression_boundary": {
+    "originality_spine_probe_preserved": true,
+    "old_probe_contract": "SP-KNOW-001 node-triggered persistent perception event",
+    "new_probe_contract": "SP-KNOW-002 pure knowledge-derived choice availability",
+    "sample_switch_isolation": "verified old -> new -> old -> new",
+    "contract_b_event_generation": "not implemented",
+    "unity_parity": "deferred"
+  }
+}

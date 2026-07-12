@@ -15,6 +15,7 @@ import type {
 import { createEventEntity } from './event-entity.js'
 import type { CreateEventEffect } from './event-entity.js'
 import { createPerceptionEvent } from './perception-policy.js'
+import { evaluateKnowledgeRule } from './character-knowledge.js'
 
 export function cmp(op: '>=' | '<=' | '>' | '<' | '==', a: number, b: number): boolean {
   switch (op) {
@@ -39,6 +40,8 @@ export function evalCondition(
   time: number,
   inventory: string[] = [],
   events: Record<string, EntityDef> = {},
+  model?: Model,
+  session?: SessionState,
 ): boolean {
   if (cond.type === 'hasEvent') {
     const has = cond.key in events
@@ -84,14 +87,19 @@ export function evalCondition(
   if (cond.type === 'timeWindow') {
     return time >= cond.start && time <= cond.end
   }
+  if (cond.type === 'knowledgeRule') {
+    if (cond.result !== 'noticed' || !model || !session) return false
+    const fact = evaluateKnowledgeRule(session, model, cond.rule)
+    return fact.missingReason === undefined && fact.noticed
+  }
   if (cond.type === 'and') {
-    return cond.conditions.every(c => evalCondition(c, flags, resources, variables, time, inventory, events))
+    return cond.conditions.every(c => evalCondition(c, flags, resources, variables, time, inventory, events, model, session))
   }
   if (cond.type === 'or') {
-    return cond.conditions.some(c => evalCondition(c, flags, resources, variables, time, inventory, events))
+    return cond.conditions.some(c => evalCondition(c, flags, resources, variables, time, inventory, events, model, session))
   }
   if (cond.type === 'not') {
-    return !evalCondition(cond.condition, flags, resources, variables, time, inventory, events)
+    return !evalCondition(cond.condition, flags, resources, variables, time, inventory, events, model, session)
   }
   return true
 }

@@ -1,4 +1,7 @@
-import { getAvailableChoices } from '../../../../packages/engine-ts/dist/browser.js'
+import {
+  evaluateKnowledgeRule,
+  getAvailableChoices,
+} from '../../../../packages/engine-ts/dist/browser.js'
 import { getCurrentModelName, getCurrentSession } from '../core/session.js'
 import {
   ModelValidator,
@@ -58,7 +61,8 @@ export class DesignerDashboardManager {
     const validation = this.getValidationSnapshot(model, nodeCount)
     const stateKeys = collectStateKeys(model, session)
     const auxiliaryCounts = getAuxiliaryCounts(model)
-    const originality = collectOriginalityPrimitives(model, session)
+    const knowledgeRule = collectKnowledgeRuleDiagnostics(model, session)
+    const originality = collectOriginalityPrimitives(model, session, knowledgeRule)
 
     return {
       model,
@@ -76,6 +80,7 @@ export class DesignerDashboardManager {
       stateKeys,
       auxiliaryCounts,
       originality,
+      knowledgeRule,
     }
   }
 
@@ -169,12 +174,21 @@ export class DesignerDashboardManager {
 
   renderOriginalitySpine(snapshot) {
     const p = snapshot.originality
+    const k = snapshot.knowledgeRule
     return this.renderPanel('NarrativeGen独自プリミティブ', [
       row('Dynamic Text', formatPrimitive(p.dynamicText), 'originality-dynamic-text-state'),
       row('Entity-Property', formatPrimitive(p.entityProperty), 'originality-entity-property-state'),
       row('Event', formatPrimitive(p.event), 'originality-event-state'),
       row('ConversationTemplate', formatPrimitive(p.conversationTemplate), 'originality-conversation-template-state'),
       row('Character Knowledge', formatPrimitive(p.characterKnowledge), 'originality-character-knowledge-state'),
+      row('Knowledge Rule 定義', formatKnowledgeRuleCount(k), 'knowledge-rule-count'),
+      row('現在のルール使用', formatKnowledgeRuleUse(k), 'knowledge-rule-current-use'),
+      row('評価結果', formatKnowledgeRuleResult(k), 'knowledge-rule-result'),
+      row('要求 / 一致ドメイン', formatKnowledgeRuleDomain(k), 'knowledge-rule-domain'),
+      row('プロファイル一致', formatKnowledgeRuleProfileMatch(k), 'knowledge-rule-profile-match'),
+      row('欠損理由', formatKnowledgeRuleMissingReason(k), 'knowledge-rule-missing-reason'),
+      row('選択肢への帰属', formatKnowledgeRuleChoiceAttribution(k), 'knowledge-rule-choice-attribution'),
+      row('知識由来イベント', formatKnowledgeRuleEventEvidence(k), 'knowledge-rule-perception-event'),
     ])
   }
 
@@ -337,7 +351,7 @@ function formatPrimitive(primitive) {
   return `${primitive.state}: ${primitive.detail}`
 }
 
-function collectOriginalityPrimitives(model, session) {
+function collectOriginalityPrimitives(model, session, knowledgeRule) {
   if (!model) {
     const unknown = { state: 'unknown', detail: NOT_AVAILABLE }
     return {
@@ -364,6 +378,8 @@ function collectOriginalityPrimitives(model, session) {
   const hasEventCount = countConditions(model, 'hasEvent')
   const knowledgeEventCount = countKnowledgeEvents(session?.events)
   const knowledgePolicyEventCount = countPolicyKnowledgeEvents(session?.events)
+  const knowledgeRuleCount = knowledgeRule?.ruleCount ?? 0
+  const currentKnowledgeRuleUseCount = knowledgeRule?.currentUseCount ?? 0
 
   const dynamicTextPresent = texts.some(hasDynamicTextSyntax)
   const dynamicTextCurrent = hasDynamicTextSyntax(currentText)
@@ -388,10 +404,126 @@ function collectOriginalityPrimitives(model, session) {
       detail: `${templateCount} templates`,
     },
     characterKnowledge: {
-      state: knowledgeEventCount > 0 ? 'live_in_route' : (characterCount + perceiveEntityCount + perceptionPolicyCount) > 0 ? 'present_model_only' : 'unsupported',
-      detail: `${knowledgeEventCount} live (${knowledgePolicyEventCount} policy) / ${perceptionPolicyCount} policies / ${characterCount} characters / ${perceiveEntityCount} direct perceiveEntity`,
+      state: knowledgeEventCount > 0 || currentKnowledgeRuleUseCount > 0
+        ? 'live_in_route'
+        : (characterCount + perceiveEntityCount + perceptionPolicyCount + knowledgeRuleCount) > 0
+          ? 'present_model_only'
+          : 'unsupported',
+      detail: `${knowledgeEventCount} live (${knowledgePolicyEventCount} policy) / ${perceptionPolicyCount} policies / ${knowledgeRuleCount} rules (${currentKnowledgeRuleUseCount} current) / ${characterCount} characters / ${perceiveEntityCount} direct perceiveEntity`,
     },
   }
+}
+
+function collectKnowledgeRuleDiagnostics(model, session) {
+  const rules = model?.knowledgeRules
+  const ruleCount = rules && typeof rules === 'object' ? Object.keys(rules).length : 0
+  const currentNode = session?.nodeId ? model?.nodes?.[session.nodeId] : null
+  const uses = collectKnowledgeRuleUses(currentNode)
+  const currentRuleIds = [...new Set(uses.map((use) => use.ruleId))]
+  const availableChoiceIds = new Set(getAvailableChoicesSafely(session, model).map((choice) => choice.id))
+  const facts = currentRuleIds.map((ruleId) => evaluateKnowledgeRuleSafely(session, model, ruleId))
+  const primaryFact = facts[0] ?? null
+  const choiceAttribution = uses.map((use) => ({
+    ...use,
+    available: availableChoiceIds.has(use.choiceId),
+  }))
+  return {
+    ruleCount,
+    currentUseCount: uses.length,
+    currentRuleIds,
+    primaryFact,
+    choiceAttribution,
+    policyEventCount: countPolicyKnowledgeEvents(session?.events),
+  }
+}
+
+function collectKnowledgeRuleUses(node) {
+  const uses = []
+  for (const choice of getChoices(node)) {
+    for (const condition of choice?.conditions ?? []) {
+      collectKnowledgeRuleUsesFromCondition(condition, choice.id, uses)
+    }
+  }
+  return uses
+}
+
+function collectKnowledgeRuleUsesFromCondition(condition, choiceId, uses) {
+  if (!condition || typeof condition !== 'object') return
+  if (condition.type === 'knowledgeRule' && typeof condition.rule === 'string') {
+    uses.push({ choiceId, ruleId: condition.rule })
+  }
+  if (Array.isArray(condition.conditions)) {
+    for (const child of condition.conditions) {
+      collectKnowledgeRuleUsesFromCondition(child, choiceId, uses)
+    }
+  }
+  if (condition.condition) {
+    collectKnowledgeRuleUsesFromCondition(condition.condition, choiceId, uses)
+  }
+}
+
+function getAvailableChoicesSafely(session, model) {
+  if (!session || !model) return []
+  try {
+    return getAvailableChoices(session, model)
+  } catch {
+    return []
+  }
+}
+
+function evaluateKnowledgeRuleSafely(session, model, ruleId) {
+  if (!session || !model) return null
+  try {
+    return evaluateKnowledgeRule(session, model, ruleId)
+  } catch {
+    return null
+  }
+}
+
+function formatKnowledgeRuleCount(diagnostic) {
+  return `${diagnostic?.ruleCount ?? 0} rules`
+}
+
+function formatKnowledgeRuleUse(diagnostic) {
+  const count = diagnostic?.currentUseCount ?? 0
+  if (count === 0) return '0 uses（現在ノードでは未使用）'
+  return `${count} uses: ${diagnostic.currentRuleIds.join(', ')}`
+}
+
+function formatKnowledgeRuleResult(diagnostic) {
+  const fact = diagnostic?.primaryFact
+  if (!fact) return '現在ノードでは未評価'
+  const result = fact.noticed ? '気づいた (noticed)' : '気づかなかった (not noticed)'
+  return `${fact.ruleId}: ${result}`
+}
+
+function formatKnowledgeRuleDomain(diagnostic) {
+  const fact = diagnostic?.primaryFact
+  if (!fact) return '現在ノードでは未評価'
+  return `${fact.requestedDomain ?? 'なし'} → ${fact.matchedDomain ?? 'なし'}`
+}
+
+function formatKnowledgeRuleProfileMatch(diagnostic) {
+  return diagnostic?.primaryFact?.profileMatch ?? '現在ノードでは未評価'
+}
+
+function formatKnowledgeRuleMissingReason(diagnostic) {
+  const fact = diagnostic?.primaryFact
+  if (!fact) return '現在ノードでは未評価'
+  return fact.missingReason ?? 'なし'
+}
+
+function formatKnowledgeRuleChoiceAttribution(diagnostic) {
+  const attributions = diagnostic?.choiceAttribution ?? []
+  if (attributions.length === 0) return '0（現在ノードでは該当なし）'
+  return attributions
+    .map(({ choiceId, ruleId, available }) => `${choiceId} ← ${ruleId}: ${available ? '利用可能' : '利用不可'}`)
+    .join(' / ')
+}
+
+function formatKnowledgeRuleEventEvidence(diagnostic) {
+  const policyEventCount = diagnostic?.policyEventCount ?? 0
+  return `${policyEventCount} policy-derived`
 }
 
 function collectTextSurfaces(model) {

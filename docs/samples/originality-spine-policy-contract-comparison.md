@@ -1,23 +1,23 @@
 # Originality Spine Policy Contract Comparison
 
-Status: `proposed`
+Status: `resolved comparison evidence`
 
 Normative: `no` — non-normative comparison evidence
 
-Implementation authority: `none`
+Implementation authority: `none` — authority came from the separate G2 packet
 
-Horizon: G1 / H0 decision evidence only
-Updated: 2026-07-12
+Horizon: G1 decision evidence; H1 resolved
+Updated: 2026-07-13
 
 ## 結論
 
-同じ Mira / `receipt_fragment` / `archive_records` シナリオで exactly two contracts を比較した結果、**Contract A — reusable pure knowledge rule による choice availability** を、未承認の `proposed` recommendation とする。
+同じ Mira / `receipt_fragment` / `archive_records` シナリオで exactly two contracts を比較し、**Contract A — reusable pure knowledge rule による choice availability** を recommendation とした。user は 2026-07-12 に Contract A と JSON / TypeScript / diagnostic / fixture defaults を承認した。normative implementation contract は [SP-KNOW-002](../specs/knowledge-derived-choice-availability.md) が所有する。
 
 A は `getAvailableChoices()` の列挙中に `SessionState` を変更せず、知識由来の player-visible route 差を即時に作る。現行 baseline から authored wiring を 8 から 5 単位へ減らし、G2 の TypeScript / Web / schema / inference / Unity parity surface も B より小さい。
 
 今回 G2 に推奨しない Contract B の最も強い利点は、知覚を「その checkpoint で起きた」永続・直列化可能な event として一度確定し、choice、template、text、Dashboard、readback、将来の別 consumer から共有できることにある。A の transient fact は現在の availability を説明できるが、明示的な後段 materialization なしには知覚履歴を表せない。この利点は将来要件として保持するが、現在の G2 は route availability が bottleneck であり、B の hidden mutation、lifecycle、cascade、duplicate、undo/save、cross-runtime 契約を先に導入する根拠にはしない。
 
-この recommendation は G1 の比較証拠であり、採用決定でも実装承認でもない。H1 で user が方向を判断し、別の明示的 `IMPLEMENT` packet が出るまで G2 は開始しない。
+この文書は採用後も非規範の比較証拠であり、実装 authority や第二の仕様にはならない。採用決定と G2 authority は別の user decision / IMPLEMENT packet から来た。
 
 ## Evidence standard
 
@@ -43,7 +43,7 @@ A と B は次の入力と player-visible result を変えない。
 
 固定値は [originality-spine-probe.json](../../models/examples/originality-spine-probe.json) の entity / character / policy (`lines 29-98`) と route (`lines 130-213`) で verified。現在の route 説明は [originality-spine-probe-readback.json](originality-spine-probe-readback.json) (`lines 5-47`) でも observed である。
 
-## 現行 baseline
+## G1 baseline at `31b108b`
 
 ```text
 desk
@@ -64,7 +64,10 @@ semantic_end
 - Contract A の `KnowledgeEvaluationFact` は transient read-only fact であり、Session event ではない。
 - Contract B の perception event は deterministic lifecycle pass が commit する persistent fact。
 
-## Inspected runtime facts
+## Inspected runtime facts — historical G1 baseline at `31b108b`
+
+以下は比較を行った時点の historical facts であり、SP-KNOW-002 実装後の
+runtime authority ではない。現行契約は owning spec と source/tests を参照する。
 
 | Fact | Grade | Evidence / implication |
 |---|---|---|
@@ -84,14 +87,14 @@ semantic_end
 
 ## Contract A — Choice Availability First
 
-Status: `proposed`
+Status: `accepted for SP-KNOW-002`
 
 Mutation class: read-only / SessionState-pure
-Recommended as proposed evidence: yes, pending H1 user direction
+Recommendation outcome: accepted by user on 2026-07-12; normative details live in SP-KNOW-002
 
 ### Representative model shape
 
-以下は contract を比較するための illustrative shape であり、現行 schema では無効。public JSON / API 名は G2 前の unresolved decision とする。
+以下は比較時の illustrative shape である。採用後の exact public JSON / API contract は [SP-KNOW-002](../specs/knowledge-derived-choice-availability.md) を正とし、この節を normative schema として複製利用しない。
 
 ```json
 {
@@ -148,13 +151,13 @@ Illustrative transient fact:
   "character": "mira",
   "entity": "receipt_fragment",
   "anomalies": [{ "property": "credibility", "expected": 50, "actual": 72 }],
-  "missing_reason": null,
-  "model_revision": "<fingerprint>",
-  "cache": "hit|miss|bypass"
+  "missing_reason": null
 }
 ```
 
 この fact は return/readback data であり、SessionState や player copy に格納しない。
+比較時に検討した `model_revision` / `cache=hit|miss|bypass` は採用済み public fact
+には含めず、cache correctness は内部 key と invalidation tests で証明する。
 
 ### Missing data and fallback
 
@@ -187,18 +190,18 @@ Runtime は fail-closed とし、choice を unavailable にして次の diagnost
 - knowledge evaluation は現行 `conditionCache` をそのまま使わない。
 - outer availability cache を使う場合、key は SessionState に加えて model identity/revision と knowledge rule fingerprint を含める。
 - model switch、draft edit、rule edit は cache clear または revision change を必須とする。
-- diagnostic は `model_revision` / `rule_id` / `cache=hit|miss|bypass` を readback に出せる。
+- cache implementation detail は public fact / readback に出さず、rule ID と評価結果だけを diagnostic surface に出す。
 
 ### Inference / diagnostics / Unity impact
 
 - `getAvailableChoices()` は current inference registry を通らないため、G2 は `Condition` / schema / direct evaluator を追加するだけでなく、What-if / impact analysis 用 registry evaluator も同じ pure helper に接続する。
 - registry `EvaluationContext` には現在 model/entities/characters がないため、read-only knowledge context を型付きで拡張する必要がある。
-- Dashboard/readback fact は `rule_id`、requested / matched domain、exact/general/none、noticed、anomaly/property facts、missing reason、model/rule cache factsを持つ。
+- Dashboard/readback fact は `rule_id`、requested / matched domain、exact/general/none、noticed、anomaly/property facts、missing reasonを持つ。
 - C# は同じ reusable rule、fail-closed semantics、fallback diagnostic、choice condition を実装する。persistent event lifecycle の移植は G2 A には不要。
 
 ## Contract B — Broader Deterministic Event Generation
 
-Status: `proposed`
+Status: `deferred`
 
 Mutation class: explicit lifecycle commit
 Recommended: no for G2; strongest benefit retained
@@ -278,7 +281,7 @@ fixpoint は行わず、same-pass cascade は禁止。1 checkpoint = 1 bounded p
 | Surface | Allowed | Prohibited |
 |---|---|---|
 | Player story / choice | 自然な Story text と choice text、物語上必要な結果 | rule/policy ID、cache hit、fallback enum、trigger/checkpoint token、raw anomaly score |
-| Dashboard / readback | rule/policy ID、requested/matched domain、exact/general/none、noticed/anomaly facts、missing reason、trigger/checkpoint、duplicate disposition、model/rule cache fact | player-facing proseであるという扱い |
+| Dashboard / readback | rule/policy ID、requested/matched domain、exact/general/none、noticed/anomaly facts、missing reason、trigger/checkpoint、duplicate disposition | player-facing proseであるという扱い |
 
 現行 review も raw `perceptionPolicy` / trigger / noticed tokens を player copy から分離している ([originality-spine-probe-review-ja.md](originality-spine-probe-review-ja.md) `lines 3-13, 42-48`)。A/B ともこの境界を維持する。
 
@@ -301,7 +304,7 @@ ConversationTemplate の session condition は event cross-reference として�
 
 | Shape | knowledge objects | node/lifecycle refs | event declarations | event cross-refs | choice conditions | duplicated selector fields | Total | Delta vs current |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Current implemented v0 | 1 | 1 | 2 | 3 | 1 | 0 | **8** | — |
+| G1 baseline v0 | 1 | 1 | 2 | 3 | 1 | 0 | **8** | — |
 | Contract A reusable rule | 1 | 0 | 1 | 2 | 1 | 0 | **5** | **-3 / -37.5%** |
 | Contract B engine-owned checkpoints | 1 | 0 | 2 | 4 | 1 | 0 | **8** | **0** |
 
@@ -353,17 +356,19 @@ Inline A は単一 choice なら一見さらに少ないが、consumer choice �
 - commit 後の availability は UI call order に依存しない。
 - undo/replay、engine serialize/reload、Web slot save/reloadで event presence が定義どおり一致する。
 
-## Remaining G2 direction decisions
+## H1 outcome — 2026-07-12
 
-G2 前に決める項目は次の 3 件に限定する。
+User accepted the three previously open decisions together:
 
-1. **Direction**: Contract A recommendation を accept するか、reject して G1 を再探索するか。reject は Contract B の自動採用を意味しない。
-2. **Public / diagnostic surface**: reusable rule、choice condition、explanation API の public JSON・TypeScript 名と、current `getAvailableChoices(): Choice[]` を保つ diagnostic delivery（sibling API または Dashboard deterministic recomputation）を一つのAPI surface判断として固定する。
-3. **Fixture / spec identity**: G0 の未完了 v0 human baseline を保護するため、G2 が current originality probe を進化させるか別 fixture を追加するかを決め、新 spec ID の要否も同じ判断に含める。
+1. **Direction**: Contract A。choice enumeration は perception event を生成しない。
+2. **Public / diagnostic surface**: optional `knowledgeRules`、exact `knowledgeRule / noticed` condition、public `evaluateKnowledgeRule(...): KnowledgeEvaluationFact`、unchanged `getAvailableChoices(): Choice[]`、Dashboard は同じ evaluator を再利用する。
+3. **Fixture / spec identity**: existing originality probe を G0 / SP-KNOW-001 baseline として保ち、separate `procedural-choice-spine-probe.json` と normative `SP-KNOW-002` を追加する。
 
-## Proposed G2 IMPLEMENT packet outline — data only
+Contract B、Unity parity、G3 explanation UI はこの H1 decision に含まれない。
 
-Implementation authority: `none`
+## Approved G2 implementation trace — historical data only
+
+Implementation authority: separate G2 IMPLEMENT packet
 
 - **Outcome**: same Mira scenario で reusable knowledge rule が `follow_semantic_change` の availability を SessionState mutation なしに決め、player copy と explanation fact が分離される。
 - **Why now**: H0 比較では A が current/B より authored wiring と lifecycle surface を減らし、現在の route bottleneck を直接閉じる。
@@ -372,13 +377,13 @@ Implementation authority: `none`
 - **Non-goals**: persistent perception event materialization、B lifecycle service、Story prose rewrite、broad UI redesign、Unity implementation/publication、WritingPage、provider/API/auth/payment、dependencies/security/toolchain work。
 - **Success signals**: A invariants pass; wiring count stays at 5 primary units (or documented equivalent); missing/fallback diagnostics are stable; player copy has no raw diagnostics; model switch cannot return stale choice; G0 review debt remains separate。
 - **Validation budget**: schema/model integrity; focused engine condition/cache tests; current originality route regression; focused Web/Dashboard E2E; model sync; relevant build; C# parity is a separately approved later slice。
-- **Hard stops**: invariant conflict、irreversible public schema/API decision without H1 direction、TS/C# semantic divergence、new dependency、human creative choice entering technical contract。
+- **Hard stops**: invariant conflict、approved public schema/API を越える判断、TS/C# semantic divergence、new dependency、human creative choice entering technical contract。
 - **Closeout**: owning spec/index if lifecycle changes、roadmap/HANDOVER、review/readback、focused evidence、explicit-path commit/push、remote parity。
 
 ## Authority boundary
 
 - SP-KNOW-001 の node-triggered v0 `done` scope は変わらない。
-- A/B は現行 schema、runtime、canonical model に未実装。
-- G1 status は `proposed`、implementation authority は `none`。
+- Contract A の normative TS/Web contract は SP-KNOW-002 が所有する。この比較資料は schema/runtime authority ではない。
+- Contract B event generation、Unity parity、G3 consequence explanation は deferred。
 - G0 human review は docs validation や automation で完了扱いにしない。
-- decision log、spec-index、product source、schema、model、test、Unity、dependency はこの H0 で変更しない。
+- この文書の resolved status は、G0 human review、Unity acceptance、G3 direction selection を承認しない。

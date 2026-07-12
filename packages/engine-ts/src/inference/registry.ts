@@ -8,6 +8,7 @@ import {
   timeWindowEvaluator,
   propertyEvaluator,
   hasEventEvaluator,
+  knowledgeRuleEvaluator,
   andEvaluator,
   orEvaluator,
   notEvaluator,
@@ -80,6 +81,7 @@ export function registerBuiltins(): void {
   registry.registerCondition(timeWindowEvaluator)
   registry.registerCondition(propertyEvaluator)
   registry.registerCondition(hasEventEvaluator)
+  registry.registerCondition(knowledgeRuleEvaluator)
   registry.registerCondition(andEvaluator)
   registry.registerCondition(orEvaluator)
   registry.registerCondition(notEvaluator)

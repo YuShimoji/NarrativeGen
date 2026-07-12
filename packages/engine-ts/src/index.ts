@@ -6,6 +6,7 @@ import Ajv from 'ajv'
 import type { AnySchema } from 'ajv'
 
 import type {
+  Condition,
   FlagState,
   Model,
   ResourceState,
@@ -60,6 +61,18 @@ interface ValidationOptions {
 interface ValidationError extends Error {
   code: string
   details?: string
+}
+
+function visitCondition(
+  condition: Condition,
+  visitor: (condition: Condition) => void,
+): void {
+  visitor(condition)
+  if (condition.type === 'and' || condition.type === 'or') {
+    for (const child of condition.conditions) visitCondition(child, visitor)
+  } else if (condition.type === 'not') {
+    visitCondition(condition.condition, visitor)
+  }
 }
 
 function detectCircularReferencesWithPaths(model: Model): string[] {
@@ -123,6 +136,9 @@ function detectCircularReferencesWithPaths(model: Model): string[] {
 function assertModelIntegrity(model: Model, options: ValidationOptions = {}): void {
   const errors: string[] = []
   const seenNodeIds = new Set<string>()
+  const hasOwn = (record: object | undefined, key: string): boolean => (
+    Boolean(record) && Object.prototype.hasOwnProperty.call(record, key)
+  )
 
   for (const [nodeKey, node] of Object.entries(model.nodes)) {
     if (seenNodeIds.has(node.id)) {
@@ -147,6 +163,28 @@ function assertModelIntegrity(model: Model, options: ValidationOptions = {}): vo
     errors.push(`MISSING_REFERENCE: startNode '${model.startNode}' does not exist in nodes`)
   }
 
+  for (const [ruleId, rule] of Object.entries(model.knowledgeRules ?? {})) {
+    if (!hasOwn(model.characters, rule.character)) {
+      errors.push(
+        `MISSING_REFERENCE: knowledge rule '${ruleId}' references non-existent character '${rule.character}'`,
+      )
+    }
+    if (!hasOwn(model.entities, rule.entity)) {
+      errors.push(
+        `MISSING_REFERENCE: knowledge rule '${ruleId}' references non-existent entity '${rule.entity}'`,
+      )
+    }
+  }
+
+  const validateKnowledgeRuleReference = (condition: Condition, location: string): void => {
+    if (condition.type !== 'knowledgeRule') return
+    if (!hasOwn(model.knowledgeRules, condition.rule)) {
+      errors.push(
+        `MISSING_REFERENCE: knowledgeRule condition ${location} references non-existent rule '${condition.rule}'`,
+      )
+    }
+  }
+
   for (const [nodeKey, node] of Object.entries(model.nodes)) {
     for (const choice of node.choices ?? []) {
       if (!choice.target || choice.target === '') {
@@ -162,6 +200,15 @@ function assertModelIntegrity(model: Model, options: ValidationOptions = {}): vo
         )
       }
 
+      for (const condition of choice.conditions ?? []) {
+        visitCondition(condition, (nested) => {
+          validateKnowledgeRuleReference(
+            nested,
+            `in choice '${choice.id}' of node '${nodeKey}'`,
+          )
+        })
+      }
+
       for (const effect of choice.effects ?? []) {
         if (effect.type === 'goto') {
           if (!model.nodes[effect.target]) {
@@ -171,6 +218,17 @@ function assertModelIntegrity(model: Model, options: ValidationOptions = {}): vo
           }
         }
       }
+    }
+  }
+
+  for (const template of model.conversationTemplates ?? []) {
+    for (const condition of template.trigger.sessionConditions ?? []) {
+      visitCondition(condition, (nested) => {
+        validateKnowledgeRuleReference(
+          nested,
+          `in conversation template '${template.id}'`,
+        )
+      })
     }
   }
 
@@ -298,8 +356,15 @@ export type {
 } from './narrative-display-text.js'
 export { detectAnomaly, detectAllAnomalies } from './anomaly-detector.js'
 export type { KnowledgeProfile, AnomalyResult } from './anomaly-detector.js'
-export { findKnowledgeProfile, perceiveEntity } from './character-knowledge.js'
-export type { CharacterDef, PerceptionResult } from './character-knowledge.js'
+export { evaluateKnowledgeRule, findKnowledgeProfile, perceiveEntity } from './character-knowledge.js'
+export type {
+  CharacterDef,
+  KnowledgeEvaluationFact,
+  KnowledgeProfileMatch,
+  KnowledgeRule,
+  KnowledgeRuleMissingReason,
+  PerceptionResult,
+} from './character-knowledge.js'
 export { applyPerceptionPolicies, createPerceptionEvent } from './perception-policy.js'
 export type { PerceptionEventRequest } from './perception-policy.js'
 export { createEventEntity, hasEvent, createEventFromAnomaly } from './event-entity.js'

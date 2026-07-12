@@ -57,7 +57,7 @@ export function getAvailableChoices(session: SessionState, model: Model): Choice
   const choices = node.choices ?? []
   return choices.filter((c) =>
     (c.conditions ?? []).every((cond) =>
-      evalCondition(cond, session.flags, session.resources, session.variables, session.time, session.inventory, session.events ?? {}),
+      evalCondition(cond, session.flags, session.resources, session.variables, session.time, session.inventory, session.events ?? {}, model, session),
     ),
   )
 }
@@ -106,8 +106,15 @@ export type {
 } from './narrative-display-text.js'
 
 // Character knowledge model
-export { findKnowledgeProfile, perceiveEntity } from './character-knowledge.js'
-export type { CharacterDef, PerceptionResult } from './character-knowledge.js'
+export { evaluateKnowledgeRule, findKnowledgeProfile, perceiveEntity } from './character-knowledge.js'
+export type {
+  CharacterDef,
+  KnowledgeEvaluationFact,
+  KnowledgeProfileMatch,
+  KnowledgeRule,
+  KnowledgeRuleMissingReason,
+  PerceptionResult,
+} from './character-knowledge.js'
 export { applyPerceptionPolicies, createPerceptionEvent } from './perception-policy.js'
 export type { PerceptionEventRequest } from './perception-policy.js'
 

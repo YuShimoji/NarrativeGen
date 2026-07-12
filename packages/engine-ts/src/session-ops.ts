@@ -1,4 +1,4 @@
-import type { Choice, Condition, EntityDef, Model, SessionState } from './types.js'
+import type { Choice, Condition, Model, SessionState } from './types.js'
 import {
   evalCondition as evalConditionCore,
   applyEffect,
@@ -8,11 +8,32 @@ import { applyPerceptionPolicies } from './perception-policy.js'
 // Performance optimization: Memoization cache
 const conditionCache = new Map<string, boolean>()
 const choicesCache = new Map<string, Choice[]>()
+let modelCacheIds = new WeakMap<Model, number>()
+let nextModelCacheId = 1
 
 /** Clear all memoization caches. Call when switching models in the same process. */
 export function clearSessionCaches(): void {
   conditionCache.clear()
   choicesCache.clear()
+  modelCacheIds = new WeakMap<Model, number>()
+  nextModelCacheId = 1
+}
+
+function getModelCacheId(model: Model): number {
+  const existing = modelCacheIds.get(model)
+  if (existing !== undefined) return existing
+  const id = nextModelCacheId++
+  modelCacheIds.set(model, id)
+  return id
+}
+
+function getModelEvaluationKey(model: Model, nodeId?: string): string {
+  return `${getModelCacheId(model)}:${JSON.stringify({
+    knowledgeRules: model.knowledgeRules ?? {},
+    characters: model.characters ?? {},
+    entities: model.entities ?? {},
+    node: nodeId ? model.nodes[nodeId] ?? null : null,
+  })}`
 }
 
 // Cache key generation for session state
@@ -20,25 +41,31 @@ function getSessionKey(session: SessionState): string {
   return `${session.nodeId}:${session.time}:${JSON.stringify(session.flags)}:${JSON.stringify(session.resources)}:${JSON.stringify(session.variables)}:${JSON.stringify(session.inventory)}:${JSON.stringify(session.events ?? {})}`
 }
 
-function getConditionKey(cond: Condition, flags: Record<string, boolean>, resources: Record<string, number>, variables: Record<string, string | number>, time: number, inventory: string[], events: Record<string, EntityDef>): string {
-  return `${JSON.stringify(cond)}:${JSON.stringify(flags)}:${JSON.stringify(resources)}:${JSON.stringify(variables)}:${time}:${JSON.stringify(inventory)}:${JSON.stringify(events)}`
+function getConditionKey(cond: Condition, session: SessionState, model: Model): string {
+  return `${JSON.stringify(cond)}:${getSessionKey(session)}:${getModelEvaluationKey(model)}`
 }
 
 function evalCondition(
   cond: Condition,
-  flags: Record<string, boolean>,
-  resources: Record<string, number>,
-  variables: Record<string, string | number>,
-  time: number,
-  inventory: string[] = [],
-  events: Record<string, EntityDef> = {},
+  session: SessionState,
+  model: Model,
 ): boolean {
-  const key = getConditionKey(cond, flags, resources, variables, time, inventory, events)
+  const key = getConditionKey(cond, session, model)
   if (conditionCache.has(key)) {
     return conditionCache.get(key)!
   }
 
-  const result = evalConditionCore(cond, flags, resources, variables, time, inventory, events)
+  const result = evalConditionCore(
+    cond,
+    session.flags,
+    session.resources,
+    session.variables,
+    session.time,
+    session.inventory,
+    session.events ?? {},
+    model,
+    session,
+  )
 
   // Cache result (limit cache size to prevent memory leaks)
   if (conditionCache.size > 10000) {
@@ -64,7 +91,7 @@ export function startSession(model: Model, initial?: Partial<SessionState>): Ses
 
 export function getAvailableChoices(session: SessionState, model: Model): Choice[] {
   const sessionKey = getSessionKey(session)
-  const cacheKey = `${sessionKey}:${session.nodeId}`
+  const cacheKey = `${sessionKey}:${getModelEvaluationKey(model, session.nodeId)}`
 
   if (choicesCache.has(cacheKey)) {
     return choicesCache.get(cacheKey)!
@@ -76,7 +103,7 @@ export function getAvailableChoices(session: SessionState, model: Model): Choice
   const choices = node.choices ?? []
   const available = choices.filter((c) =>
     (c.conditions ?? []).every((cond) =>
-      evalCondition(cond, session.flags, session.resources, session.variables, session.time, session.inventory, session.events ?? {}),
+      evalCondition(cond, session, model),
     ),
   )
 

@@ -1,4 +1,4 @@
-# SP-001: Engine Core API
+# SP-ENGINE-001: Engine Core API
 
 **Status**: done | **Pct**: 100 | **Cat**: core
 
@@ -20,19 +20,22 @@ loadModel(modelData: unknown, options?: ValidationOptions): Model
 startSession(model: Model, initial?: Partial<SessionState>): SessionState
 getAvailableChoices(session: SessionState, model: Model): Choice[]
 applyChoice(session: SessionState, model: Model, choiceId: string): SessionState
+evaluateKnowledgeRule(session: SessionState, model: Model, ruleId: string): KnowledgeEvaluationFact
 serialize(session: SessionState): string
 deserialize(payload: string): SessionState
 ```
 
 - `loadModel`: Ajv で `playthrough.schema.json` に対してバリデーション + 整合性チェック (重複ID、参照整合性、循環参照)
 - `startSession`: モデルの `startNode` からセッションを開始。初期 flags/resources はモデルのデフォルト + 引数で上書き
-- `getAvailableChoices`: 現在ノードの選択肢のうち、条件を満たすもののみ返す (メモ化キャッシュ付き)
+- `getAvailableChoices`: 現在ノードの選択肢のうち、条件を満たすもののみ返す (model-aware メモ化キャッシュ付き)
 - `applyChoice`: 選択肢のエフェクトを適用し、ターゲットノードへ遷移。time +1
+- `evaluateKnowledgeRule`: Character Knowledge rule を SessionState-pure に評価し typed diagnostic fact を返す
 - `serialize` / `deserialize`: SessionState の JSON シリアライズ
 
 ### Browser エントリ (`browser.ts`)
 
-Node.js エントリと同等の `startSession`, `getAvailableChoices`, `applyChoice` を提供。
+Node.js エントリと同等の `startSession`, `getAvailableChoices`, `applyChoice`,
+`evaluateKnowledgeRule` を提供。
 schema バリデーション (`loadModel`) は含まない。
 
 追加エクスポート:
@@ -49,7 +52,10 @@ interface Model {
   startNode: string
   flags?: FlagState       // Record<string, boolean>
   resources?: ResourceState // Record<string, number>
+  variables?: VariableState  // Record<string, string | number>
   entities?: Record<string, EntityDef>  // アイテム/アクター定義
+  characters?: Record<string, CharacterDef>
+  knowledgeRules?: Record<string, KnowledgeRule>
   nodes: Record<string, NodeDef>
 }
 ```
@@ -87,6 +93,7 @@ interface SessionState {
   variables: VariableState  // Record<string, string | number>
   inventory: string[]       // 所持アイテムIDリスト (ユニーク)
   time: number
+  events: Record<string, EntityDef>
 }
 ```
 
@@ -98,6 +105,9 @@ interface SessionState {
 | `resource` | `key`, `op`, `value: number` | `resources[key] op value` |
 | `variable` | `key`, `op`, `value` | 文字列: `==`, `!=`, `contains`, `!contains` / 数値: `>=`, `<=`, `>`, `<` |
 | `hasItem` | `key`, `value: boolean` | `inventory` にアイテムが存在するか (case-insensitive) |
+| `property` | `entity`, `key`, `op`, `value` | Entity property を比較 |
+| `hasEvent` | `key`, `value: boolean` | session event の存在を判定 |
+| `knowledgeRule` | `rule`, `result: 'noticed'` | SP-KNOW-002 evaluator が missing なしかつ noticed のとき真 |
 | `timeWindow` | `start`, `end` | `time >= start && time <= end` |
 | `and` | `conditions: Condition[]` | 全条件が真 |
 | `or` | `conditions: Condition[]` | いずれかの条件が真 |
@@ -118,14 +128,19 @@ interface SessionState {
 ## バリデーション (`assertModelIntegrity`)
 
 1. **DUPLICATE_ID**: ノードID / 選択肢IDの重複
-2. **MISSING_REFERENCE**: startNode不在 / 選択肢targetの参照先不在 / gotoエフェクトの参照先不在
+2. **MISSING_REFERENCE**: startNode / 選択肢target / goto、不在KnowledgeRule、不在character/entity参照。recursive condition tree と ConversationTemplate sessionConditions も検査
 3. **CIRCULAR_REFERENCE**: `allowCircularReferences: false` の場合のみ検出 (DFS)
 
 ## メモ化キャッシュ (`session-ops.ts`)
 
 - `conditionCache`: 条件評価結果をキャッシュ (上限 10,000 エントリ → 超過時クリア)
 - `choicesCache`: 選択肢評価結果をキャッシュ (上限 1,000 エントリ → 超過時クリア)
-- キーは SessionState + Condition の JSON.stringify
+- condition key は Condition + full SessionState + model evaluation semantics
+- choices key は full SessionState + model identity + current node / knowledgeRules / characters / entities semantics
+- model switch と relevant in-place edit は stale knowledge-derived availability を再利用しない
+
+KnowledgeRule の purity、missing diagnostic、cache contract は
+[SP-KNOW-002](knowledge-derived-choice-availability.md) を正とする。
 
 ## ノードID解決 (`resolver.ts`)
 

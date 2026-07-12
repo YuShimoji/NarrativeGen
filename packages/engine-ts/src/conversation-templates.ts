@@ -90,11 +90,12 @@ function matchesEventTrigger(
  */
 function matchesSessionConditions(
   trigger: TemplateTrigger,
-  session: SessionState
+  session: SessionState,
+  model: Model,
 ): boolean {
   if (!trigger.sessionConditions || trigger.sessionConditions.length === 0) return true
   return trigger.sessionConditions.every(cond =>
-    evalCondition(cond, session.flags, session.resources, session.variables, session.time, session.inventory, session.events ?? {})
+    evalCondition(cond, session.flags, session.resources, session.variables, session.time, session.inventory, session.events ?? {}, model, session)
   )
 }
 
@@ -128,7 +129,7 @@ export function findMatchingTemplates(
     if (!matchesEventTrigger(template.trigger, events)) continue
 
     // Check session conditions (flags, resources, variables, etc.)
-    if (!matchesSessionConditions(template.trigger, session)) continue
+    if (!matchesSessionConditions(template.trigger, session, model)) continue
 
     // Expand template text
     const expandedText = expandTemplate(template.text, model, session)

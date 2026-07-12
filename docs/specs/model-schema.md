@@ -24,6 +24,20 @@ NarrativeGen のプレイスルーモデルの JSON Schema 仕様。`models/sche
 | `resources` | `Record<string, number>` | 初期リソース値 |
 | `variables` | `Record<string, string\|number>` | 初期変数値 (startSession でマージ) |
 | `entities` | `Record<string, EntityDef>` | エンティティ定義 (id, name, description, cost) |
+| `characters` | `Record<string, CharacterDef>` | knowledge profile を持つキャラクター定義 |
+| `knowledgeRules` | `Record<string, KnowledgeRule>` | pure knowledge evaluation rule。dictionary key が canonical rule ID |
+| `perceptionPolicies` | `PerceptionPolicy[]` | node-triggered persistent perception event policy |
+
+### KnowledgeRule
+
+`knowledgeRules` is an optional top-level dictionary. Each value requires
+`character`, `entity`, `domain`, and a non-empty numeric `expectations` object;
+unknown fields are rejected. A rule is consumed by the exact condition shape
+`{ "type": "knowledgeRule", "rule": "<rule-id>", "result": "noticed" }`.
+
+The rule evaluates Character Knowledge without changing SessionState or
+creating an event. Full runtime and diagnostic semantics are owned by
+[SP-KNOW-002](knowledge-derived-choice-availability.md).
 
 ### PerceptionPolicy
 
@@ -53,7 +67,7 @@ Character Knowledge perception event with `policy_source` and
 | `effects` | いいえ | `Effect[]` | 効果配列 |
 | `outcome` | いいえ | `Outcome` | 選択結果 (type, value) |
 
-### Condition 型 (10種、全て additionalProperties: false、$ref 再帰定義)
+### Condition 型 (11種、全て additionalProperties: false、$ref 再帰定義)
 
 | type | 必須フィールド | 説明 |
 |------|--------------|------|
@@ -64,6 +78,7 @@ Character Knowledge perception event with `policy_source` and
 | `hasItem` | `key: string, value: boolean` | インベントリ所持判定 |
 | `property` | `entity: string, key: string, op: enum, value: string\|number\|boolean` | エンティティプロパティ比較 |
 | `hasEvent` | `key: string, value: boolean` | イベント存在判定 |
+| `knowledgeRule` | `rule: string, result: "noticed"` | SP-KNOW-002 の pure evaluator が missing なしかつ noticed のとき真 |
 | `and` | `conditions: Condition[]` | 全条件を満たす (論理AND) |
 | `or` | `conditions: Condition[]` | いずれかの条件を満たす (論理OR) |
 | `not` | `condition: Condition` | 条件の否定 (論理NOT) |
@@ -108,9 +123,11 @@ JSON Schema 通過後に実行されるロジカルバリデーション:
 - startNode の参照先存在
 - 選択肢 target の参照先存在
 - goto エフェクトの参照先存在
+- KnowledgeRule の character / entity 参照先存在
+- choice と ConversationTemplate の recursive and/or/not 内を含む knowledgeRule 参照先存在
 - 循環参照検出 (オプション)
 
-## 例モデル (13件、全て検証合格)
+## 主要例モデル
 
 | ファイル | ノード数 | 特徴 |
 |---------|---------|------|
@@ -127,6 +144,8 @@ JSON Schema 通過後に実行されるロジカルバリデーション:
 | `inventory_test.json` | - | addItem/removeItem + hasItem |
 | `integration_test.json` | - | Entity + Dynamic Text + ConversationTemplate + Event + Inventory |
 | `full_integration.json` | 14 | 全機能横断: Entity継承 + Dynamic Text + ConversationTemplate + Event + Inventory + Variables + and条件 |
+| `originality-spine-probe.json` | 4 | SP-KNOW-001 node-triggered PerceptionPolicy baseline |
+| `procedural-choice-spine-probe.json` | 4 | SP-KNOW-002 pure knowledgeRule choice availability |
 
 ## スコープ外
 

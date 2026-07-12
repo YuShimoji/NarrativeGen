@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest'
-import { registerBuiltins } from '../src/inference/registry.js'
+import { evaluateKnowledgeRule } from '../src/character-knowledge.js'
+import { registerBuiltins, registry } from '../src/inference/registry.js'
 import {
   buildDependencyGraph,
   getAffectedChoices,
@@ -295,7 +296,8 @@ describe('Capabilities', () => {
     expect(conditions).toContain('not')
     expect(conditions).toContain('property')
     expect(conditions).toContain('hasEvent')
-    expect(conditions.length).toBe(10)
+    expect(conditions).toContain('knowledgeRule')
+    expect(conditions.length).toBe(11)
   })
 
   it('should list all registered effect types', () => {
@@ -309,5 +311,83 @@ describe('Capabilities', () => {
     expect(effects).toContain('goto')
     expect(effects).toContain('createEvent')
     expect(effects.length).toBe(8)
+  })
+})
+
+describe('Knowledge Rule Inference Parity', () => {
+  const knowledgeModel: Model = {
+    modelType: 'adventure-playthrough',
+    startNode: 'start',
+    entities: {
+      receipt: {
+        id: 'receipt',
+        name: 'Receipt',
+        properties: {
+          credibility: { key: 'credibility', type: 'number', defaultValue: 72 },
+        },
+      },
+    },
+    characters: {
+      mira: {
+        id: 'mira',
+        name: 'Mira',
+        knowledgeProfiles: [
+          { domain: 'archive_records', accuracy: 0.9, tolerance: 0.1 },
+        ],
+      },
+    },
+    knowledgeRules: {
+      receipt_rule: {
+        character: 'mira',
+        entity: 'receipt',
+        domain: 'archive_records',
+        expectations: { credibility: 50 },
+      },
+    },
+    nodes: {
+      start: { id: 'start', choices: [] },
+    },
+  }
+
+  const condition = {
+    type: 'knowledgeRule',
+    rule: 'receipt_rule',
+    result: 'noticed',
+  } as const
+
+  it('fails closed when model/session context is absent', () => {
+    const result = registry.evaluateCondition(condition, {
+      flags: {},
+      resources: {},
+      variables: {},
+      time: 0,
+    })
+
+    expect(result).toBe(false)
+  })
+
+  it('matches the public pure evaluator for noticed and not-noticed facts', () => {
+    const session = startSession(knowledgeModel)
+    const context = {
+      flags: session.flags,
+      resources: session.resources,
+      variables: session.variables,
+      time: session.time,
+      model: knowledgeModel,
+      session,
+    }
+
+    const direct = evaluateKnowledgeRule(session, knowledgeModel, 'receipt_rule')
+    expect(registry.evaluateCondition(condition, context)).toBe(
+      direct.missingReason === undefined && direct.noticed,
+    )
+
+    knowledgeModel.knowledgeRules!.receipt_rule.expectations.credibility = 72
+    const notNoticed = evaluateKnowledgeRule(session, knowledgeModel, 'receipt_rule')
+    expect(notNoticed.noticed).toBe(false)
+    expect(registry.evaluateCondition(condition, context)).toBe(
+      notNoticed.missingReason === undefined && notNoticed.noticed,
+    )
+    knowledgeModel.knowledgeRules!.receipt_rule.expectations.credibility = 50
   })
 })

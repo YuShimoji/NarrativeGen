@@ -17,9 +17,18 @@ done (実装完了)
 ### プラグインレジストリパターン
 
 ```typescript
+interface EvaluationContext {
+  flags: FlagState
+  resources: ResourceState
+  variables: VariableState
+  time: number
+  model?: Model
+  session?: SessionState
+}
+
 interface ConditionEvaluator<T> {
   type: string
-  evaluate(condition: T, state: PlaythroughState): boolean
+  evaluate(condition: T, context: EvaluationContext): boolean
 }
 
 interface EffectApplicator<T> {
@@ -37,8 +46,25 @@ interface EffectApplicator<T> {
 - `flag`: フラグの有無確認
 - `resource`: リソースの閾値比較
 - `variable`: 変数の比較（文字列・数値対応）
+- `hasItem`: inventory の所持判定
+- `property`: Entity property の比較
+- `hasEvent`: session event の存在判定
 - `timeWindow`: 時間範囲内の条件
+- `knowledgeRule`: SP-KNOW-002 pure evaluator による noticed 判定
 - `and`, `or`, `not`: 論理演算
+
+### KnowledgeRule evaluator boundary
+
+`knowledgeRule` evaluator は direct choice path と同じ
+`evaluateKnowledgeRule(session, model, ruleId)` を呼ぶ。`EvaluationContext` に
+`model` または `session` がない場合は fail closed で false を返し、anomaly、
+domain fallback、missing-reason logic を registry 側へ複製しない。
+
+現在の dependency graph は flag/resource/variable など session key の依存を表す。
+KnowledgeRule evaluator は model-only dependency を空集合として返すため、
+character/entity/rule provenance や richer What-if dependency graph を実装済みとは
+扱わない。詳細は
+[SP-KNOW-002](knowledge-derived-choice-availability.md) を正とする。
 
 ### 組込効果適用器
 
@@ -72,23 +98,26 @@ interface EffectApplicator<T> {
 ## Capability Discovery
 
 ```typescript
-InferenceEngine.getSupportedConditions(): string[]
-InferenceEngine.getSupportedEffects(): string[]
+getSupportedConditions(): string[]
+getSupportedEffects(): string[]
 ```
 
-登録済みの条件・効果の型一覧を取得。動的なUI生成や検証に使用。
+登録済みの条件・効果の型一覧を取得。`knowledgeRule` を含め、動的なUI生成や
+検証に使用する。
 
 ## 実装ファイル
 
-- `packages/engine-ts/src/inference/InferenceEngine.ts` -- メインエンジン
-- `packages/engine-ts/src/inference/ConditionEvaluatorRegistry.ts` -- 条件評価器レジストリ
-- `packages/engine-ts/src/inference/EffectApplicatorRegistry.ts` -- 効果適用器レジストリ
-- `packages/engine-ts/src/inference/evaluators/*.ts` -- 組込条件評価器（7ファイル）
-- `packages/engine-ts/src/inference/applicators/*.ts` -- 組込効果適用器（4ファイル）
+- `packages/engine-ts/src/inference/registry.ts` -- 条件評価器 / 効果適用器レジストリ
+- `packages/engine-ts/src/inference/types.ts` -- EvaluationContext と evaluator/applicator contract
+- `packages/engine-ts/src/inference/capabilities.ts` -- capability discovery
+- `packages/engine-ts/src/inference/conditions/*.ts` -- 組込条件評価器
+- `packages/engine-ts/src/inference/effects/*.ts` -- 組込効果適用器
+- `packages/engine-ts/src/inference/forward-chaining.ts` / `backward-chaining.ts` -- 推論アルゴリズム
 
 ## テスト
 
-- `packages/engine-ts/test/inference.test.ts` -- 30以上のテストケース
+- `packages/engine-ts/test/inference.test.ts` -- registry / chaining / capability tests
+- `packages/engine-ts/test/character-knowledge.spec.ts` -- shared knowledge evaluator parity tests
 - Forward/Backward Chaining、依存グラフ構築、capability discoveryを網羅
 
 ## 拡張
@@ -98,8 +127,8 @@ InferenceEngine.getSupportedEffects(): string[]
 ```typescript
 const customEvaluator: ConditionEvaluator<MyCondition> = {
   type: 'myCondition',
-  evaluate: (cond, state) => { /* ... */ }
+  evaluate: (cond, context) => { /* ... */ }
 }
 
-InferenceEngine.registerConditionEvaluator(customEvaluator)
+registry.registerCondition(customEvaluator)
 ```

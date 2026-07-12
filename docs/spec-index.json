@@ -159,7 +159,7 @@
     "pct": 100,
     "cat": "core",
     "file": "docs/specs/engine-core.md",
-    "summary": "Core engine API: model loading, session management, condition evaluation (8 types), effect application (7 types), inventory, validation"
+    "summary": "Core engine API: model loading, session management, model-aware condition evaluation including pure knowledgeRule availability, effect application, inventory, validation"
   },
   {
     "id": "SP-SCHEMA-001",
@@ -168,7 +168,7 @@
     "pct": 100,
     "cat": "data",
     "file": "docs/specs/model-schema.md",
-    "summary": "Playthrough model JSON Schema. Strict oneOf + additionalProperties:false for all condition/effect types. EntityDef + PropertyDef + EventEntity schema. CharacterDef (KnowledgeProfile[]) + PerceptionPolicy[] + PropertyAwareLexicon (paraphraseLexicon) added. and/or/not composite conditions via $ref recursive definition. Structure + integrity validation (Ajv + assertModelIntegrity). 14 example models validated."
+    "summary": "Playthrough model JSON Schema. Strict condition/effect unions, Entity/Character/PerceptionPolicy/KnowledgeRule definitions, recursive and/or/not conditions, and Ajv plus reference-integrity validation."
   },
   {
     "id": "SP-API-001",
@@ -268,6 +268,15 @@
     "cat": "core",
     "file": "docs/specs/character-knowledge.md",
     "summary": "Character knowledge profiles for perception simulation. CharacterDef with KnowledgeProfile[], findKnowledgeProfile (domain fallback), perceiveEntity (anomaly detection bridge), and node-triggered PerceptionPolicy event derivation."
+  },
+  {
+    "id": "SP-KNOW-002",
+    "title": "Knowledge-Derived Choice Availability",
+    "status": "partial",
+    "pct": 95,
+    "cat": "core",
+    "file": "docs/specs/knowledge-derived-choice-availability.md",
+    "summary": "Reusable pure knowledgeRules, knowledgeRule choice conditions, typed evaluation diagnostics, model-aware cache isolation, inference parity, and the procedural-choice probe. Awaiting commit-associated CI closeout."
   },
   {
     "id": "SP-DESC-001",

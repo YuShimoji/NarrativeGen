@@ -83,6 +83,16 @@
         },
         {
           "type": "object",
+          "required": ["type", "rule", "result"],
+          "properties": {
+            "type": { "const": "knowledgeRule" },
+            "rule": { "type": "string" },
+            "result": { "const": "noticed" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
           "required": ["type", "conditions"],
           "properties": {
             "type": { "const": "and" },
@@ -359,6 +369,24 @@
               },
               "additionalProperties": false
             }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "knowledgeRules": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["character", "entity", "domain", "expectations"],
+        "properties": {
+          "character": { "type": "string" },
+          "entity": { "type": "string" },
+          "domain": { "type": "string" },
+          "expectations": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": { "type": "number" }
           }
         },
         "additionalProperties": false

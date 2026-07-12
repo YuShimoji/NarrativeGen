@@ -22,6 +22,7 @@ export const AppendScrollTransition = {
    * @param {string} [options.choiceText] - The choice the player selected (shown as quote)
    */
   async enter(container, content, options = {}) {
+    if (options.isCancelled?.()) return
     // If there is already content, insert the player's choice as a quote + separator
     const hasExisting = container.querySelector('.play-content')
     if (hasExisting && options.choiceText) {
