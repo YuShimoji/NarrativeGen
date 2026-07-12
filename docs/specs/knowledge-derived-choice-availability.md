@@ -1,6 +1,6 @@
 # SP-KNOW-002: Knowledge-Derived Choice Availability
 
-**Status**: partial | **Pct**: 95 | **Cat**: core
+**Status**: done | **Pct**: 100 | **Cat**: core
 
 Normative for: G2 TypeScript / Web knowledge-derived choice availability
 
@@ -227,8 +227,9 @@ Required evidence:
 - Japanese-first Dashboard facts と raw diagnostic-free Story copy
 - schema/model validation、focused browser evidence、build、safety、Git/CI follow-through
 
-Lifecycle state は、これらがすべて確認されるまでは `partial`。全 acceptance と
-commit-associated CI が pass した closeout でのみ `done / 100` にする。
+全 acceptance evidence と implementation commit に紐づく CI の成功を
+2026-07-13 closeout で確認したため、lifecycle は `done / 100`。以後この
+contract を変更する場合は同じ purity、cache、old/new probe regression、CI gateを再確認する。
 
 ## Deferred Boundaries
 

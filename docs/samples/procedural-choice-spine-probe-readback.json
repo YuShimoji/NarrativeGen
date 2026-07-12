@@ -1,6 +1,6 @@
 {
   "artifact_id": "Procedural Choice Spine Probe G2",
-  "status": "implemented",
+  "status": "verified",
   "spec": "docs/specs/knowledge-derived-choice-availability.md",
   "model": "models/examples/procedural-choice-spine-probe.json",
   "review_surface": "docs/samples/procedural-choice-spine-probe-review-ja.md",
