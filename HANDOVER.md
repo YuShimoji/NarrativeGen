@@ -2,7 +2,7 @@
 
 ## 現在地 — 2026-07-13
 
-`main` / `origin/main` が開発正本。2026-07-13 の再開整備で `git fetch --prune origin` と `git pull --ff-only origin main` を実行し、ローカルを `be5e874` から `6cce1ac` (`chore: preserve Unity restart context`) へ fast-forward した。同期後の `HEAD...origin/main = 0 0` を確認済み。従来ローカルだけにあった Unity harness (`Assets/`, `ProjectSettings/`, `packages/manifest.json`, `packages/packages-lock.json`, generated `.meta`) は、別端末で同じ Unity project を復元できるよう tracked context に移った。Unity cache (`Library/`, `Logs/`, `UserSettings/` など) は引き続き除外する。この harness の履歴化は G5 Unity parity の実装開始を意味しない。
+`main` / `origin/main` が開発正本。2026-07-13 の本端末再開では `git fetch --prune origin` で remote の追加 1 commit を検出し、`git pull --ff-only origin main` により `6cce1ac` から `927c193` (`docs: refresh supervisor restart status`) へ fast-forward した。取得直後の `HEAD...origin/main = 0 0` と clean worktree を確認した。従来ローカルだけにあった Unity harness (`Assets/`, `ProjectSettings/`, `packages/manifest.json`, `packages/packages-lock.json`, generated `.meta`) は、別端末で同じ Unity project を復元できる tracked context になっている。Unity cache (`Library/`, `Logs/`, `UserSettings/` など) は引き続き除外する。この harness の履歴化と今回の再開検証は G5 Unity parity の実装開始を意味しない。
 
 User は 2026-07-12 に G1 Contract A と public / diagnostic / fixture / spec defaults を承認した。G2 `SP-KNOW-002: Knowledge-Derived Choice Availability` は 2026-07-13 に完了。別 fixture `procedural-choice-spine-probe.json` で reusable pure rule が `follow_semantic_change` を直接開き、availability 中に SessionState を変更せず、knowledge-derived `event_mira_perceives_receipt_contradiction` を作らない。現行 `originality-spine-probe.json` は SP-KNOW-001 の node-triggered persistent-event baseline として挙動を変えずに保持した。
 
@@ -10,12 +10,12 @@ Schema、engine、inference、model-aware cache、fixture、既存 Designer Dash
 
 ## 監修AIへの現状報告
 
-現在のローカルは、リモート正本の取得、lockfile 準拠の依存復元、構造診断、安全検査、TypeScript/Web の回帰検証とビルド、Unity SDK の .NET テストまで完了しており、次の承認済み slice を開始できる。今回の作業は環境再開と現状確認であり、G3 の方向決定、G5 の実装、依存更新のいずれも新たに承認されたとは扱わない。
+現在のローカルは、リモート正本の取得、lockfile 準拠の依存復元、構造診断、安全検査、TypeScript/Web の回帰検証とビルド、Unity SDK の .NET テスト、Web Tester の HTTP 起動スモークまで完了しており、次の承認済み slice を開始できる。今回の作業は環境再開と現状確認であり、G3 の方向決定、G5 の実装、依存更新のいずれも新たに承認されたとは扱わない。
 
 | 監修時の判断対象 | 現在確認できていること | workflow 上の意味 |
 |---|---|---|
-| 正本との一致 | `6cce1ac` まで fast-forward、`HEAD...origin/main = 0 0` | 古い前提や未取得差分を抱えず次の packet を評価できる |
-| 開発再開性 | `npm ci` 成功、doctor 25/25、Node 22.19.0 / npm 10.9.3 / .NET SDK 9.0.304 | 現行 README 要件を満たし、ローカルで編集・検証を継続できる |
+| 正本との一致 | remote 追加分 `927c193` まで fast-forward、取得直後の `HEAD...origin/main = 0 0` | 古い前提や未取得差分を抱えず次の packet を評価できる |
+| 開発再開性 | `npm ci` 成功、doctor 25/25、Node 24.13.0 / npm 11.6.2 / .NET SDK 10.0.204、`npm run dev` は HTTP 200 | 現行 README の Node 20+ / .NET 9 要件を満たし、ローカルで編集・実行・検証を継続できる |
 | 実行契約 | `npm run check` 成功、engine 335 tests、formatter 72 checks、18 models、両 build、Unity 32 tests が成功 | SP-KNOW-002 完了状態を壊さず、後続 slice の基準点にできる |
 | 未解消の品質債務 | Web Tester lint は未設定、Vite の `fs` externalization / large chunk、C# nullable/XML doc 警告、`npm ci` は 43 vulnerabilities を報告 | 開発停止要因ではないが、release/toolchain 専用 slice で扱う。自動 upgrade は行わない |
 | 次工程の権限 | G0 は user review、G3 は EXPLORE、G5 と dependency/toolchain は未承認 | 監修AIは異なる bottleneck を一つ選び、目的の異なる作業を混在させない |
@@ -39,14 +39,21 @@ Schema、engine、inference、model-aware cache、fixture、既存 Designer Dash
 
 ## Local evidence
 
+### Current terminal restart verification
+
+- `npm ci`: 850 packages restored from the lockfile. Audit reported 43 findings (1 low / 28 moderate / 10 high / 4 critical); no automatic upgrade or `npm audit fix` was performed because dependency/toolchain changes require a dedicated approved slice.
+- `npm run doctor`: 25/25 checks passed, with zero doctor warnings.
+- `npm run check:safety`: 37 spec entries, docs authority tests 4/4, 92 Markdown filenames, 328 text files, and 19 synced model files passed.
+- `npm run check`: engine lint passed; Web Tester lint explicitly reported `not configured (skipped)`; 27 files / 335 engine tests, 72 formatter checks, 18 canonical model validations, engine build, and Web Tester build passed.
+- `dotnet test .\packages\tests\NarrativeGen.Tests\NarrativeGen.Tests.csproj --nologo`: 32/32 passed. Existing nullable and XML-documentation warnings remain non-blocking release/toolchain debt.
+- `npm run dev`: Vite started at `http://localhost:5173/`; an HTTP request returned 200 with title `NarrativeGen Web Tester`. The smoke process was then stopped intentionally.
+- This restart reran the standard contract but not the full Playwright matrix because the fetched remote delta was docs-only. The immutable G2 implementation/browser evidence remains below.
+
+### G2 implementation evidence
+
 - Focused engine: 5 files / 83 tests passed (evaluator, malformed/prototype guards, recursive not, nested integrity, inference parity, cache invalidation, both probes).
-- Full engine regression: 27 files / 335 tests passed。
-- Canonical model validation: 18 JSON models passed, including the new probe.
-- Web formatter smoke: 72 checks across 18 models x 4 formatters passed.
 - Playwright: current originality + procedural-choice specs, Chromium / Firefox / WebKit, final exact rerun 12/12 passed。最初の run が発見した disposed crossfade の旧 DOM 再追加 race は PlayRenderer の transition cancellation で修復した。
 - Transition repair の widened check は、明示的に保持した Vite server に対する Chromium Play Immersion 8/8 が passed。process-managed の全ブラウザ run は assertion failure ではなく、途中で Vite server が終了して connection refused になったため、E2E server lifecycle / runbook debt として残す。
-- Engine build、engine lint、Web Tester build passed。Web build retained known `fs` externalization / large-chunk warnings only。
-- `check:safety`: 37 spec entries、docs authority 4/4、92 Markdown filenames、328 text files、19 synced model files passed。
 - Spec lifecycle after G2 closeout: 37 total / 33 done / 4 partial。
 
 These counts are this slice's command output, not evergreen project totals。再開時の最新 Git parity は Git から読み、G2 implementation CI evidence は上記 immutable commit/run を参照する。
@@ -75,6 +82,8 @@ These counts are this slice's command output, not evergreen project totals。再
 | **Explore — G3 Choice Consequence Lens** | proposed / unlocked、未開始 | same deterministic factsを使う3方向のread-only evidenceだけを比較し、userがmacro directionを選ぶ |
 | **Implement — G5 Unity parity** | hold、authorityなし | separate packetなしに開始しない |
 | **Audit — release/toolchain** | non-blocking debt、authorityなし | Actions runtime、nullable、toolchain、lintを専用sliceで扱い、G2へ混ぜない |
+
+監修AIへの推奨 next mission は **G3 の EXPLORE packet 1本**。目的は同一の deterministic facts を使う Choice Consequence Lens の異質な3方向を read-only evidence として比較可能にすることで、実装承認や broad UI redesign には進まない。G0 の human review は user-owned の独立確認として並行可能だが、同じ packet に混ぜない。G3 以降の G4〜G8 dependency ladder と完了条件は `docs/plans/DEVELOPMENT_PLAN.md` を正本とする。
 
 ## 再開
 
