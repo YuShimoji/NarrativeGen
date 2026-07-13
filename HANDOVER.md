@@ -2,7 +2,7 @@
 
 ## 現在地 — 2026-07-13
 
-`main` / `origin/main` が開発正本。G2 開始時は `31b108b`、`HEAD...origin/main = 0 0`、tracked tree は clean。`git fetch --prune origin` と `git pull --ff-only origin main` は成功し、remote は既に最新だった。既知の untracked Unity harness (`Assets/`, `ProjectSettings/`, `packages/manifest.json`, `packages/packages-lock.json`, generated `.meta`) は変更・stage・削除せず保全している。
+`main` / `origin/main` が開発正本。2026-07-13 の引き継ぎ更新開始時点で `HEAD...origin/main = 0 0`、`git fetch --prune origin` と `git pull --ff-only origin main` は成功し、remote は既に最新だった。従来ローカルだけにあった Unity harness (`Assets/`, `ProjectSettings/`, `packages/manifest.json`, `packages/packages-lock.json`, generated `.meta`) は、別端末で同じ Unity project を復元できるよう tracked context に移した。Unity cache (`Library/`, `Logs/`, `UserSettings/` など) は引き続き除外する。この harness の履歴化は G5 Unity parity の実装開始を意味しない。
 
 User は 2026-07-12 に G1 Contract A と public / diagnostic / fixture / spec defaults を承認した。G2 `SP-KNOW-002: Knowledge-Derived Choice Availability` は 2026-07-13 に完了。別 fixture `procedural-choice-spine-probe.json` で reusable pure rule が `follow_semantic_change` を直接開き、availability 中に SessionState を変更せず、knowledge-derived `event_mira_perceives_receipt_contradiction` を作らない。現行 `originality-spine-probe.json` は SP-KNOW-001 の node-triggered persistent-event baseline として挙動を変えずに保持した。
 
@@ -52,7 +52,7 @@ These counts are this slice's command output, not evergreen project totals。再
 
 - **G0 human originality review**: purpose is to separate machine correctness from story/Japanese/GUI usefulness. Effect is a human pass or concrete defects for both SP-KNOW-001 routes and the Dashboard. Requirement is local Web Tester review; state is pending; owner is user. Next move is the existing v0 review flow, independent of G2 CI.
 - **G3 direction evidence**: purpose is to make deterministic engine facts understandable as “why available / what changes / what opens.” Effect is one selected read-only Choice Consequence Lens macro direction. Requirements are stable SP-KNOW-002 facts and three materially different same-content directions; state is proposed/unlocked but not authorized for implementation; owner is shared with user direction. Next move is a separate EXPLORE packet.
-- **G5 Unity parity**: purpose is cross-runtime semantics. Effect is equivalent C# model/evaluator/condition behavior without persistent-event drift. Requirement is separate Unity `IMPLEMENT` authority and later Editor review; state is hold; owner is shared. Do not start from this handoff.
+- **G5 Unity parity**: purpose is cross-runtime semantics. Effect is equivalent C# model/evaluator/condition behavior without persistent-event drift. Requirements are separate Unity `IMPLEMENT` authority, tracked Unity 6000.3.6f1 harness, and later Editor review; state is hold with the restartable harness present but semantic parity unimplemented; owner is shared. Next move is to wait for a separate G5 packet rather than treating project restoration as implementation approval.
 - **Release/security debt**: purpose is reproducible supported consumption. Effect is pinned toolchain, approved audit treatment, backend/Web lint gates. Requirements include human-approved dependency/toolchain scope; state is unchanged non-blocking debt; owner is shared. Do not mix it into G2.
 
 ## 次の異なる入口
@@ -76,3 +76,5 @@ npm run check:safety
 ```
 
 Safe next command は `git status --short --branch`。G0 review、G3 EXPLORE、G5 IMPLEMENT、release/toolchain は目的と authority が異なるため、一つの次sliceへ混ぜない。
+
+別端末で Unity harness を開く場合は Unity `6000.3.6f1` を使う。初回 open で再生成される `Library/`、`Logs/`、`UserSettings/` はローカル状態であり、Git に追加しない。
