@@ -2,11 +2,23 @@
 
 ## 現在地 — 2026-07-13
 
-`main` / `origin/main` が開発正本。2026-07-13 の引き継ぎ更新開始時点で `HEAD...origin/main = 0 0`、`git fetch --prune origin` と `git pull --ff-only origin main` は成功し、remote は既に最新だった。従来ローカルだけにあった Unity harness (`Assets/`, `ProjectSettings/`, `packages/manifest.json`, `packages/packages-lock.json`, generated `.meta`) は、別端末で同じ Unity project を復元できるよう tracked context に移した。Unity cache (`Library/`, `Logs/`, `UserSettings/` など) は引き続き除外する。この harness の履歴化は G5 Unity parity の実装開始を意味しない。
+`main` / `origin/main` が開発正本。2026-07-13 の再開整備で `git fetch --prune origin` と `git pull --ff-only origin main` を実行し、ローカルを `be5e874` から `6cce1ac` (`chore: preserve Unity restart context`) へ fast-forward した。同期後の `HEAD...origin/main = 0 0` を確認済み。従来ローカルだけにあった Unity harness (`Assets/`, `ProjectSettings/`, `packages/manifest.json`, `packages/packages-lock.json`, generated `.meta`) は、別端末で同じ Unity project を復元できるよう tracked context に移った。Unity cache (`Library/`, `Logs/`, `UserSettings/` など) は引き続き除外する。この harness の履歴化は G5 Unity parity の実装開始を意味しない。
 
 User は 2026-07-12 に G1 Contract A と public / diagnostic / fixture / spec defaults を承認した。G2 `SP-KNOW-002: Knowledge-Derived Choice Availability` は 2026-07-13 に完了。別 fixture `procedural-choice-spine-probe.json` で reusable pure rule が `follow_semantic_change` を直接開き、availability 中に SessionState を変更せず、knowledge-derived `event_mira_perceives_receipt_contradiction` を作らない。現行 `originality-spine-probe.json` は SP-KNOW-001 の node-triggered persistent-event baseline として挙動を変えずに保持した。
 
 Schema、engine、inference、model-aware cache、fixture、既存 Designer Dashboard 内の日本語優先診断、Story boundary、tests、readback、canonical docs は local acceptance を通過した。implementation commit `a32d024` に紐づく CI run `29204576238` も governance / web-tester / engine-ts / sdk-unity の4 jobすべて成功し、SP-KNOW-002 は `done / 100`。
+
+## 監修AIへの現状報告
+
+現在のローカルは、リモート正本の取得、lockfile 準拠の依存復元、構造診断、安全検査、TypeScript/Web の回帰検証とビルド、Unity SDK の .NET テストまで完了しており、次の承認済み slice を開始できる。今回の作業は環境再開と現状確認であり、G3 の方向決定、G5 の実装、依存更新のいずれも新たに承認されたとは扱わない。
+
+| 監修時の判断対象 | 現在確認できていること | workflow 上の意味 |
+|---|---|---|
+| 正本との一致 | `6cce1ac` まで fast-forward、`HEAD...origin/main = 0 0` | 古い前提や未取得差分を抱えず次の packet を評価できる |
+| 開発再開性 | `npm ci` 成功、doctor 25/25、Node 22.19.0 / npm 10.9.3 / .NET SDK 9.0.304 | 現行 README 要件を満たし、ローカルで編集・検証を継続できる |
+| 実行契約 | `npm run check` 成功、engine 335 tests、formatter 72 checks、18 models、両 build、Unity 32 tests が成功 | SP-KNOW-002 完了状態を壊さず、後続 slice の基準点にできる |
+| 未解消の品質債務 | Web Tester lint は未設定、Vite の `fs` externalization / large chunk、C# nullable/XML doc 警告、`npm ci` は 43 vulnerabilities を報告 | 開発停止要因ではないが、release/toolchain 専用 slice で扱う。自動 upgrade は行わない |
+| 次工程の権限 | G0 は user review、G3 は EXPLORE、G5 と dependency/toolchain は未承認 | 監修AIは異なる bottleneck を一つ選び、目的の異なる作業を混在させない |
 
 ## G2 delivery snapshot
 
