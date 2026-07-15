@@ -1,8 +1,8 @@
 # 作業申し送り
 
-## 現在地 — 2026-07-13
+## 現在地 — 2026-07-15
 
-`main` / `origin/main` が開発正本。2026-07-13 の本端末再開では `git fetch --prune origin` で remote の追加 1 commit を検出し、`git pull --ff-only origin main` により `6cce1ac` から `927c193` (`docs: refresh supervisor restart status`) へ fast-forward した。取得直後の `HEAD...origin/main = 0 0` と clean worktree を確認した。従来ローカルだけにあった Unity harness (`Assets/`, `ProjectSettings/`, `packages/manifest.json`, `packages/packages-lock.json`, generated `.meta`) は、別端末で同じ Unity project を復元できる tracked context になっている。Unity cache (`Library/`, `Logs/`, `UserSettings/` など) は引き続き除外する。この harness の履歴化と今回の再開検証は G5 Unity parity の実装開始を意味しない。
+`main` / `origin/main` が開発正本。2026-07-15 の本端末再開では clean worktree を確認してから `git fetch --prune origin` を実行し、remote の追加 1 commit を検出した。`git pull --ff-only origin main` により `927c193` から `33a561f` (`docs: record validated restart state`) へ fast-forward し、取り込み直後の `HEAD...origin/main = 0 0` を確認した。取得差分は `HANDOVER.md` のみで executable contract の変更はない。Unity harness (`Assets/`, `ProjectSettings/`, `packages/manifest.json`, `packages/packages-lock.json`, generated `.meta`) は、別端末で同じ Unity project を復元できる tracked context になっている。Unity cache (`Library/`, `Logs/`, `UserSettings/` など) は引き続き除外する。この harness の履歴化と今回の再開検証は G5 Unity parity の実装開始を意味しない。
 
 User は 2026-07-12 に G1 Contract A と public / diagnostic / fixture / spec defaults を承認した。G2 `SP-KNOW-002: Knowledge-Derived Choice Availability` は 2026-07-13 に完了。別 fixture `procedural-choice-spine-probe.json` で reusable pure rule が `follow_semantic_change` を直接開き、availability 中に SessionState を変更せず、knowledge-derived `event_mira_perceives_receipt_contradiction` を作らない。現行 `originality-spine-probe.json` は SP-KNOW-001 の node-triggered persistent-event baseline として挙動を変えずに保持した。
 
@@ -14,8 +14,8 @@ Schema、engine、inference、model-aware cache、fixture、既存 Designer Dash
 
 | 監修時の判断対象 | 現在確認できていること | workflow 上の意味 |
 |---|---|---|
-| 正本との一致 | remote 追加分 `927c193` まで fast-forward、取得直後の `HEAD...origin/main = 0 0` | 古い前提や未取得差分を抱えず次の packet を評価できる |
-| 開発再開性 | `npm ci` 成功、doctor 25/25、Node 24.13.0 / npm 11.6.2 / .NET SDK 10.0.204、`npm run dev` は HTTP 200 | 現行 README の Node 20+ / .NET 9 要件を満たし、ローカルで編集・実行・検証を継続できる |
+| 正本との一致 | remote 追加分 `33a561f` まで fast-forward。本報告の反映後も `HEAD...origin/main = 0 0` | 古い前提や未取得差分を抱えず次の packet を評価できる |
+| 開発再開性 | `npm ci` 成功、doctor 25/25、Node 22.19.0 / npm 10.9.3 / .NET SDK 9.0.304、`npm run dev` は HTTP 200 | 現行 README の Node 20+ / .NET 9 要件を満たし、ローカルで編集・実行・検証を継続できる |
 | 実行契約 | `npm run check` 成功、engine 335 tests、formatter 72 checks、18 models、両 build、Unity 32 tests が成功 | SP-KNOW-002 完了状態を壊さず、後続 slice の基準点にできる |
 | 未解消の品質債務 | Web Tester lint は未設定、Vite の `fs` externalization / large chunk、C# nullable/XML doc 警告、`npm ci` は 43 vulnerabilities を報告 | 開発停止要因ではないが、release/toolchain 専用 slice で扱う。自動 upgrade は行わない |
 | 次工程の権限 | G0 は user review、G3 は EXPLORE、G5 と dependency/toolchain は未承認 | 監修AIは異なる bottleneck を一つ選び、目的の異なる作業を混在させない |
@@ -41,13 +41,14 @@ Schema、engine、inference、model-aware cache、fixture、既存 Designer Dash
 
 ### Current terminal restart verification
 
+- Runtime versions: Node 22.19.0 / npm 10.9.3 / .NET SDK 9.0.304. README の Node 20+ / .NET 9 要件を満たす。
 - `npm ci`: 850 packages restored from the lockfile. Audit reported 43 findings (1 low / 28 moderate / 10 high / 4 critical); no automatic upgrade or `npm audit fix` was performed because dependency/toolchain changes require a dedicated approved slice.
 - `npm run doctor`: 25/25 checks passed, with zero doctor warnings.
 - `npm run check:safety`: 37 spec entries, docs authority tests 4/4, 92 Markdown filenames, 328 text files, and 19 synced model files passed.
 - `npm run check`: engine lint passed; Web Tester lint explicitly reported `not configured (skipped)`; 27 files / 335 engine tests, 72 formatter checks, 18 canonical model validations, engine build, and Web Tester build passed.
 - `dotnet test .\packages\tests\NarrativeGen.Tests\NarrativeGen.Tests.csproj --nologo`: 32/32 passed. Existing nullable and XML-documentation warnings remain non-blocking release/toolchain debt.
 - `npm run dev`: Vite started at `http://localhost:5173/`; an HTTP request returned 200 with title `NarrativeGen Web Tester`. The smoke process was then stopped intentionally.
-- This restart reran the standard contract but not the full Playwright matrix because the fetched remote delta was docs-only. The immutable G2 implementation/browser evidence remains below.
+- This restart reran the standard contract but not the full Playwright matrix because the fetched remote delta was docs-only. The immutable G2 implementation/browser evidence remains below; G0 の人手による story / 日本語 / GUI review は引き続き automated evidence で代替しない。
 
 ### G2 implementation evidence
 
