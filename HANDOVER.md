@@ -1,8 +1,8 @@
 # 作業申し送り
 
-## 現在地 — 2026-07-15
+## 現在地 — 2026-07-17
 
-`main` / `origin/main` が開発正本。2026-07-15 の本端末再開では clean worktree を確認してから `git fetch --prune origin` を実行し、remote の追加 1 commit を検出した。`git pull --ff-only origin main` により `33a561f` から `0b2b65a` (`docs: refresh supervisor restart verification`) へ fast-forward し、取り込み直後の `HEAD...origin/main = 0 0` を確認した。取得差分は `HANDOVER.md` のみで executable contract の変更はない。Unity harness (`Assets/`, `ProjectSettings/`, `packages/manifest.json`, `packages/packages-lock.json`, generated `.meta`) は、別端末で同じ Unity project を復元できる tracked context になっている。Unity cache (`Library/`, `Logs/`, `UserSettings/` など) は引き続き除外する。この harness の履歴化と今回の再開検証は G5 Unity parity の実装開始を意味しない。
+GitHub `YuShimoji/NarrativeGen` の default branch `main` / `origin/main` が開発正本。2026-07-17 の引き継ぎ整備では clean worktree を確認して `git fetch --prune origin` を実行し、remote の追加 1 commit を検出した。`git pull --ff-only origin main` により `0b2b65a` から `217a556` (`docs: refresh supervisor restart status`) へ fast-forward し、取り込み直後の `HEAD...origin/main = 0 0` を確認した。取得差分は `HANDOVER.md` のみで executable contract の変更はない。今回の docs-only handoff は `agent/context-handoff-20260717` に分離して remote へ公開し、main の製品状態と未成熟 WIP を混ぜない。Unity harness (`Assets/`, `ProjectSettings/`, `packages/manifest.json`, `packages/packages-lock.json`, generated `.meta`) は、別端末で同じ Unity project を復元できる tracked context になっている。Unity cache (`Library/`, `Logs/`, `UserSettings/` など) は引き続き除外する。この harness の履歴化と今回の再開検証は G5 Unity parity の実装開始を意味しない。
 
 User は 2026-07-12 に G1 Contract A と public / diagnostic / fixture / spec defaults を承認した。G2 `SP-KNOW-002: Knowledge-Derived Choice Availability` は 2026-07-13 に完了。別 fixture `procedural-choice-spine-probe.json` で reusable pure rule が `follow_semantic_change` を直接開き、availability 中に SessionState を変更せず、knowledge-derived `event_mira_perceives_receipt_contradiction` を作らない。現行 `originality-spine-probe.json` は SP-KNOW-001 の node-triggered persistent-event baseline として挙動を変えずに保持した。
 
@@ -14,11 +14,23 @@ Schema、engine、inference、model-aware cache、fixture、既存 Designer Dash
 
 | 監修時の判断対象 | 現在確認できていること | workflow 上の意味 |
 |---|---|---|
-| 正本との一致 | remote 追加分 `0b2b65a` まで fast-forward。本報告の反映後も `HEAD...origin/main = 0 0` | 古い前提や未取得差分を抱えず次の packet を評価できる |
-| 開発再開性 | lockfile から依存を再展開し、`npm ls --depth=0` と doctor 25/25 が成功。Node 24.13.0 / npm 11.6.2 / .NET SDK 10.0.204、`npm run dev` は HTTP 200 | 現行 README の Node 20+ / .NET 9 要件を満たし、ローカルで編集・実行・検証を継続できる |
+| 正本との一致 | `main` / `origin/main` は `217a556` で一致。handoff とローカル stash 2件も独立 branch として remote 化 | 古い前提、未取得差分、端末固有 stash を単一端末に残さず次の packet を評価できる |
+| 開発再開性 | 依存ツリー検査と doctor 25/25 が成功。Node 22.19.0 / npm 10.9.3 / .NET SDK 9.0.304、直近の executable baseline では `npm run dev` が HTTP 200 | 現行 README の Node 20+ / .NET 9 要件を満たし、別 clone では `npm ci` 後に編集・実行・検証を継続できる |
 | 実行契約 | `npm run check` 成功、engine 335 tests、formatter 72 checks、18 models、両 build、Unity 32 tests が成功 | SP-KNOW-002 完了状態を壊さず、後続 slice の基準点にできる |
 | 未解消の品質債務 | Web Tester lint は未設定、Vite の `fs` externalization / large chunk、C# nullable/XML doc 警告、`npm audit --json` は 43 vulnerabilities を報告 | 開発停止要因ではないが、release/toolchain 専用 slice で扱う。自動 upgrade は行わない |
 | 次工程の権限 | G0 は user review、G3 は EXPLORE、G5 と dependency/toolchain は未承認 | 監修AIは異なる bottleneck を一つ選び、目的の異なる作業を混在させない |
+
+## 別端末へ渡したリモート文脈
+
+| 文脈 | remote 上の正本 | 扱い方 | 再開時の入口 |
+|---|---|---|---|
+| 現行製品と G2 完了状態 | `origin/main` at `217a556` | 実装の基準。G3/G5/依存更新の新規承認は含まない | `git switch main` → `git pull --ff-only origin main` |
+| この引き継ぎ | `origin/agent/context-handoff-20260717` | docs-only。別端末で最初にこの文書を読むための branch | `git switch --track origin/agent/context-handoff-20260717` |
+| AI mock adoption 前の文書 WIP | `origin/agent/archive-ai-mock-presync-20260622` at `bcc4dbb` | 旧 base 上の raw stash snapshot。文書削除を含むため一括 merge しない | 必要時だけ detached checkout か `git diff` で救出候補を評価する |
+| WritingPage ZWP integration WIP | `origin/agent/archive-writingpage-zwp-wip` at `cd24507` | format 安定前の raw stash snapshot。6 files / 371 additions の未検証案で、実装承認ではない | WritingPage contract を再開する時だけ個別に比較・移植する |
+| 再生成可能な端末状態 | `node_modules/`, `dist/`, `bin/`, `obj/`, Playwright reports、Unity cache は remote 対象外 | 成果物・cache・test report であり、引き継ぐべき正本ではない | `npm ci`、build/test、Unity open で再生成する |
+
+元の stash 2件はこの端末から削除していない。remote archive branch が完全な tree を保持するため別端末から内容を回収できるが、どちらも current main へ merge する候補とは扱わない。local branches `feat/vite-upgrade` と `master` も各 origin tracking branch と対応しており、未追跡ファイルや追加 worktree はない。
 
 ## G2 delivery snapshot
 
@@ -39,16 +51,15 @@ Schema、engine、inference、model-aware cache、fixture、既存 Designer Dash
 
 ## Local evidence
 
-### Current terminal restart verification
+### 2026-07-17 handoff verification
 
-- Runtime versions: Node 24.13.0 / npm 11.6.2 / .NET SDK 10.0.204. README の Node 20+ / .NET 9 要件を満たす。
-- `npm ci` は lockfile から依存を再展開したが、npm child 終了後も本実行ラッパーが最終 exit code を返さなかったため、command success とは断定しない。再展開後の `npm ls --depth=0`、doctor、標準回帰、両 build はすべて exit 0 であり、開発に必要な依存ツリーは利用可能。分離実行した `npm audit --json` は 43 findings (1 low / 28 moderate / 10 high / 4 critical) を報告した。dependency/toolchain 専用 slice の承認がないため、自動 upgrade や `npm audit fix` は行っていない。
+- Runtime versions: Node 22.19.0 / npm 10.9.3 / .NET SDK 9.0.304. README の Node 20+ / .NET 9 要件を満たす。
+- Existing dependency tree: `npm ls --depth=0` passed. 別端末の clean clone には依存物を持ち運ばず、lockfile から `npm ci` で復元する。
 - `npm run doctor`: 25/25 checks passed, with zero doctor warnings.
-- `npm run check:safety`: 37 spec entries, docs authority tests 4/4, 92 Markdown filenames, 328 text files, and 19 synced model files passed.
-- `npm run check`: engine lint passed; Web Tester lint explicitly reported `not configured (skipped)`; 27 files / 335 engine tests, 72 formatter checks, 18 canonical model validations, engine build, and Web Tester build passed.
-- `dotnet test .\packages\tests\NarrativeGen.Tests\NarrativeGen.Tests.csproj --nologo`: 32/32 passed. Existing nullable and XML-documentation warnings remain non-blocking release/toolchain debt.
-- `npm run dev`: Vite started at `http://localhost:5173/`; an HTTP request returned 200 with title `NarrativeGen Web Tester`. The smoke process was then stopped intentionally.
-- This restart reran the standard contract but not the full Playwright matrix because the fetched remote delta was docs-only. The immutable G2 implementation/browser evidence remains below; G0 の人手による story / 日本語 / GUI review は引き続き automated evidence で代替しない。
+- `npm run check:safety`: 37 spec entries、docs authority tests 4/4、92 Markdown filenames、328 text files、19 synced model files passed.
+- Git inventory: main、`feat/vite-upgrade`、`master`、2 archive branches は remote tracking 済み。この handoff branch も公開対象。2 local stash は exact commit tree を archive branch に push 済み。未追跡ファイル、追加 worktree、submodule はない。
+- 今回の remote delta と handoff 編集は docs-only のため、`npm run check`、.NET tests、Playwright matrix、HTTP smoke は再実行しない。直近の executable baseline は engine 335 tests、formatter 72 checks、18 models、両 build、Unity 32 tests、Web Tester HTTP 200 が成功している。G0 の人手による story / 日本語 / GUI review は automated evidence で代替しない。
+- 分離実行済みの `npm audit --json` は 43 findings (1 low / 28 moderate / 10 high / 4 critical) を報告している。dependency/toolchain 専用 slice の承認がないため、自動 upgrade や `npm audit fix` は行っていない。
 
 ### G2 implementation evidence
 
@@ -88,15 +99,19 @@ These counts are this slice's command output, not evergreen project totals。再
 
 ## 再開
 
-通常は `AGENTS.md` → `docs/REPO_LOCAL_RULES.md` → この文書を読む。G3 または G5 を扱う時だけ SP-KNOW-002 と readback を追加確認する。
+別端末で最短再開する場合は handoff branch を直接 clone し、`AGENTS.md` → `docs/REPO_LOCAL_RULES.md` → この文書の順に読む。G3 または G5 を扱う時だけ SP-KNOW-002 と readback を追加確認する。
 
 ```powershell
+git clone --branch agent/context-handoff-20260717 https://github.com/YuShimoji/NarrativeGen.git
+Set-Location NarrativeGen
 git fetch --prune origin
 git status --short --branch
-git rev-list --left-right --count HEAD...origin/main
+git rev-list --left-right --count HEAD...origin/agent/context-handoff-20260717
+npm ci
+npm run doctor
 npm run check:safety
 ```
 
-Safe next command は `git status --short --branch`。G0 review、G3 EXPLORE、G5 IMPLEMENT、release/toolchain は目的と authority が異なるため、一つの次sliceへ混ぜない。
+既存 clone では `git fetch --prune origin` 後に `git switch --track origin/agent/context-handoff-20260717` を使う。Safe next command は `git status --short --branch`。G0 review、G3 EXPLORE、G5 IMPLEMENT、release/toolchain は目的と authority が異なるため、一つの次sliceへ混ぜない。archive branch を確認する場合も current worktree へ一括 merge せず、別 worktree または detached checkout で読む。
 
 別端末で Unity harness を開く場合は Unity `6000.3.6f1` を使う。初回 open で再生成される `Library/`、`Logs/`、`UserSettings/` はローカル状態であり、Git に追加しない。
