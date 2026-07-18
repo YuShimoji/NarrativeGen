@@ -1,0 +1,21 @@
+{
+  "name": "@narrativegen/public-studio",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5174",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4174",
+    "test": "node --test ./tests/public-studio.contract.test.mjs",
+    "test:e2e": "playwright test --config ./playwright.config.js",
+    "scan:dist": "node ./scripts/check-public-build.mjs"
+  },
+  "dependencies": {
+    "@narrativegen/engine-ts": "file:../../packages/engine-ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "vite": "8.0.7"
+  }
+}
