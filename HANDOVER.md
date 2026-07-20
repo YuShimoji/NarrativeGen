@@ -3,7 +3,8 @@
 ## 現在地 — 2026-07-21
 
 `main` / `origin/main` が開発正本。`S1A_MINIMAL_SITES_SOURCE_ADAPTER` は
-clean・remote parity `0 0` の `c37e793` から開始した。現在のHEADとparityは
+`e6acbee` で実装・文書化され、2026-07-21のhandoff refresh開始時にGitHub上の
+`origin/main` と同一SHA、remote parity `0 0` を確認した。現在のHEADとparityは
 再開時にGitから読み直すこと。
 
 現在の優先laneは `IMPLEMENT / SITES_SOURCE_ADAPTER / adapter_candidate`。
@@ -25,7 +26,7 @@ URL、共有・domain・analytics設定は一切実行していない。判定�
 
 | 判断対象 | 確認済み状態 | 境界 |
 |---|---|---|
-| Git baseline | 開始時 `c37e793`、`HEAD...origin/main = 0 0` | 最終HEAD/parityはGitから再確認する |
+| Git artifact | adapter実装 `e6acbee` がGitHub `main` に存在し、handoff refresh開始時 `HEAD...origin/main = 0 0` | この文書のcommit後の最終HEAD/parityはGitから再確認する |
 | canonical build | `npm run build:public` 成功。HTML 1 / JS 1 / CSS 1、48,467 bytes | 既知のengine `fs` browser-externalize warningは残る |
 | payload identity | canonical、committed embedded、built clientの全3ファイルでSHA-256一致 | source import後のHosted bytesは未確認 |
 | adapter build | vinext 0.0.50 / Vite 8.0.13でbuild成功。`dist/server/index.js`、client assets、hosting manifestを生成 | Sites build/saveの証明ではない |
@@ -34,6 +35,17 @@ URL、共有・domain・analytics設定は一切実行していない。判定�
 | responsive / visual | desktopと390 x 844をfull-page captureし目視。adapter wrapperやoverflowなし | human product acceptanceではない |
 | public boundary | 3 files / 48,467 bytes、禁止パターン9分類、form/remote script/style/visible commercial linkなし | hosted dispatch headers/accessは未確認 |
 | hosting manifest | `.openai/hosting.json` は `d1: null`, `r2: null` のみ | `project_id`をfabricateしていない |
+
+2026-07-21のremote-ready再確認では、Node `v24.13.0` / npm `11.6.2` で
+payload identity、bounded scan、vinext build、Chromium E2E、repo safety gateを
+順番に再実行した。これはローカルadapterの再現性確認であり、Sites上のbuild/save、
+deployment、access policy、public releaseの証明ではない。
+
+同じ確認で `npm ci --foreground-scripts` はexit 0（995 packages）、続く
+`npm ls --depth=0` もexit 0だった。fresh install後もnpm 11は
+`@napi-rs/wasm-runtime` と `@tybys/wasm-util` を `extraneous`、Windowsでは不要な
+`@rollup/rollup-linux-x64-gnu` をunmet optionalとして表示する。これは現在の
+lock/installから再現する非阻害のtoolchain表示であり、adapter failureではない。
 
 `vinext start` のNode production serverはbuilt `public/studio` を404にしたため、
 production-like local commandはSites buildのWorkerとasset bindingを直接動かす
@@ -94,6 +106,7 @@ adapter laneでは続けて `docs/sites/SITES_SOURCE_ADAPTER.md` と
 
 ```powershell
 git fetch --prune origin
+git pull --ff-only origin main
 git status --short --branch
 git rev-list --left-right --count HEAD...origin/main
 npm ls --depth=0
@@ -103,6 +116,9 @@ npm run build:sites-adapter
 npm run test:e2e:sites-adapter
 npm run check:safety
 ```
+
+別端末のfresh cloneで依存関係がまだない場合だけ、上記 `npm ls` の前に
+`npm ci` を一度完了させる。installを並行実行しない。
 
 Local production-like review URLは `http://127.0.0.1:4184/`
 （`npm run preview:sites-adapter`）。
