@@ -1,13 +1,13 @@
 # Public Studio Sites Readiness
 
-Status: `local_candidate`
-Last verified: 2026-07-19
-Lane: `SITES_PUBLIC_STUDIO`
-Artifact owner: `apps/public-studio/`
+Status: `adapter_candidate`
+Last verified: 2026-07-21
+Lane: `SITES_SOURCE_ADAPTER`
+Artifact owners: `apps/public-studio/` and `apps/sites-public-studio-adapter/`
 
 ## Verdict
 
-`apps/public-studio/dist/` is a self-contained, static, Japanese-first local candidate for a private Sites compatibility check. It is not deployed, published, connected to analytics, or proven compatible with a saved Sites project. The next gate is a human-owned **private import and save only**; public visibility must remain disabled.
+Raw static intake requires a source-project adapter. `apps/sites-public-studio-adapter/` is now a locally verified vinext source candidate that serves the exact three-file Japanese-first Public Studio payload. It has not been imported, saved, deployed, published, connected to analytics, or proven compatible with Sites. The next gate is a human-owned **source import and version save only**; every deployment remains disabled.
 
 ## What Is Ready
 
@@ -27,7 +27,20 @@ Artifact owner: `apps/public-studio/`
 - Generated asset paths are relative (`./assets/...`). The output contains one HTML file, one CSS asset, and one JavaScript asset.
 - The application makes no network request for normal demo, editing, validation, persistence, import, or export behavior.
 - Commercial information is copy-only. `VITE_PUBLIC_STUDIO_CONTACT_URL` is optional, accepts HTTPS only, and leaves the link hidden when blank or invalid. Any approved URL remains a human configuration decision.
-- There is no hosting configuration in this lane. Publication, custom domain, analytics, credentials, and monetization are explicitly outside this candidate.
+- The separate adapter has the minimum local hosting manifest (`d1: null`, `r2: null`) and no `project_id`. Publication, deployment, custom domain, analytics, credentials, authentication, persistence, and monetization are explicitly outside this candidate.
+
+## Source Adapter
+
+Give Sites exactly this folder in the later human gate:
+
+```text
+C:\Users\thank\Storage\Game Projects\NarrativeGen\apps\sites-public-studio-adapter\
+```
+
+The adapter redirects `/` to `/studio/` and serves the embedded
+`studio/index.html` plus its relative assets without changing payload bytes.
+Its architecture, hashes, commands, and manifest boundary are owned by
+`docs/sites/SITES_SOURCE_ADAPTER.md`.
 
 ## Local Build And Review
 
@@ -51,16 +64,16 @@ C:\Users\thank\Storage\Game Projects\NarrativeGen\apps\public-studio\dist\
 
 The 2026-07-19 local output was 3 files / 48,467 bytes. Build emitted a Vite warning that `fs` from the shared engine entity module was browser-externalized; demo, edit, persistence, export/import, and browser tests still passed. Treat removal of that warning as engine packaging debt, not as proof that private Sites save will work.
 
-## Exact Human-Owned Private Sites Gate
+## Exact Human-Owned Sites Source Gate
 
 Required action:
 
-1. Start from a private, unpublished Sites project or private import workspace.
-2. Import the contents of `apps/public-studio/dist/` using the supported static-site intake. If Sites accepts source rather than built output, stop and report `needs_adapter`; do not improvise a second runtime.
+1. Start from a private, unpublished Sites project or source-import workspace.
+2. Import `apps/sites-public-studio-adapter/` as the source project. Do not import only `dist/` and do not rewrite the Studio into another runtime.
 3. Keep all publication, sharing, analytics, form, domain, and commerce controls disabled.
-4. Save privately.
-5. In the private preview, confirm root render, CSS/JavaScript loading, automatic sample start, one choice transition, one node-text edit, reload persistence, JSON export, and absence of account/payment/internal-development surfaces.
-6. Do not publish even if all checks pass.
+4. Save a version only if Sites accepts and builds the source without requiring a deployment.
+5. Do not deploy. If Sites requires any production deployment to render a URL, report that requirement and stop.
+6. If a non-deployed review surface exists, confirm root render, CSS/JavaScript loading, automatic sample start, one choice transition, one node-text edit, reload persistence, JSON export, and absence of account/payment/internal-development surfaces.
 
 Return exactly these findings to the supervising AI:
 
@@ -75,7 +88,7 @@ Return exactly these findings to the supervising AI:
   "local_draft_survived_reload": false,
   "json_export_worked": false,
   "forbidden_surface_found": false,
-  "sites_intake_mode": "built_output_or_source_only_or_unknown",
+  "sites_intake_mode": "source_adapter_or_unknown",
   "runtime_notes": []
 }
 ```
@@ -84,8 +97,8 @@ Success signal: every functional boolean except `forbidden_surface_found` is `tr
 
 ## Post-Gate Classification
 
-- Keep `local_candidate` when local evidence is green but the private Sites gate has not run.
-- Use `needs_adapter` when Sites cannot ingest the static output or changes its relative asset/runtime behavior, but a bounded adapter is plausible.
+- Keep `adapter_candidate` while local adapter evidence is green but Sites source import/version save has not run.
+- Use `adapter_partial` when Sites accepts the source shape but changes relative asset/runtime behavior or cannot save the version without a bounded repair.
 - Use `blocked` when private import/save cannot be attempted or would require publication, credentials, data collection, a second runtime, or another out-of-scope capability.
 
 After a successful private gate, select one concrete friction finding for the next bounded editing slice. Do not add analytics or public distribution until an explicit public-release decision exists.

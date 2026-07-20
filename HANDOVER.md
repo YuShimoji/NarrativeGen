@@ -1,86 +1,108 @@
 # 作業申し送り
 
-## 現在地 — 2026-07-19
+## 現在地 — 2026-07-21
 
-`main` / `origin/main` が開発正本。今回の `SITES_PUBLIC_STUDIO` 実装は、clean かつ remote parity `0 0` の `47bfc90` から開始し、`git fetch --prune origin` と `git pull --ff-only origin main` で追加差分がないことを確認した。現在の Git hash と parity は再開時に Git から読み直すこと。
+`main` / `origin/main` が開発正本。`S1A_MINIMAL_SITES_SOURCE_ADAPTER` は
+clean・remote parity `0 0` の `c37e793` から開始した。現在のHEADとparityは
+再開時にGitから読み直すこと。
 
-現在の優先 lane は `IMPLEMENT / SITES_PUBLIC_STUDIO / S0 local candidate`。`apps/public-studio/` に、公開向けの日本語優先デモ兼ローカル編集sandboxが独立 workspace として存在する。これは `packages/engine-ts` と canonical `models/examples/procedural-choice-spine-probe.json` を build-time に再利用する静的 projection であり、Web Tester、engine semantics、G2 contract、Unity、provider/API、WritingPage を変更していない。
+現在の優先laneは `IMPLEMENT / SITES_SOURCE_ADAPTER / adapter_candidate`。
+`apps/sites-public-studio-adapter/` に、Sites公式starter形状へ合わせた最小
+vinext/Cloudflare Worker source adapterがある。これはhosting boundaryだけで、
+`apps/public-studio/`、`packages/engine-ts`、canonical model、Web Tester、Unity、
+WritingPage、G3 Lensを変更していない。
 
-S0 はローカル受入れ済み。Sites への取り込み、private save、公開、analytics、商用リンクの有効化は実行していない。Sites verdict は **`local_candidate`** であり、次は human-owned の private import/save gate だけを行う。
+Public StudioのHTML / JavaScript / CSSはadapter内へbyte-for-byteで埋め込み、
+SHA-256 manifestと同期・drift checkを持つ。rootは `/studio/` へ遷移し、
+その後は既存Studioだけが表示される。iframe、別editor、別story runtime、
+外部API、auth、analytics、form、storage binding、commerceは追加していない。
 
-## 監修AIへの実行可能な現状報告
+Sites source import、project作成、project ID、credential、version save、deployment、
+URL、共有・domain・analytics設定は一切実行していない。判定は
+**`adapter_candidate + Sites source-import unverified`**。
 
-| 判断対象 | 確認済みの現在状態 | 意味 / 境界 |
+## 現在の受入れ根拠
+
+| 判断対象 | 確認済み状態 | 境界 |
 |---|---|---|
-| リモート正本 | slice 開始時 `47bfc90`、`main...origin/main = 0 0`、pull済み | 未取得差分を抱えず実装した。最終 parity は現在の Git で再確認する |
-| 開発再開性 | Node 24.13.0 / npm 11.6.2。固定 lock から `npm ci --ignore-scripts --no-audit --prefer-offline` が 852 packages を再展開し、`npm ls --depth=0` 成功 | workspace link、Vite 8.0.7、Playwright 1.58.2、shared engine dependency が充足している |
-| 公開候補 | `apps/public-studio/dist/` は HTML 1 / CSS 1 / JS 1、計 48,467 bytes。JS/CSS参照は `./assets/...` | 静的・relative-path candidate。Sites private save compatibility や public hosting の証明ではない |
-| 体験 | サンプルは開始操作なしで表示され、shared browser engine の choice transition を実行する | 独自 runtime や copied evaluator を持たない |
-| 編集 | node本文、choice表示文、choice遷移先、selected-node preview、簡易validation | v0 は existing node/choice 編集のみ。node作成・削除・graph authoringは未実装 |
-| 下書き / transfer | versioned localStorage、reload復元、reset、JSON export/import。E2E export は full Node `loadModel` を通過 | browser/profile local。account、server save、cross-device sync、personal data はない |
-| responsive | Chromium desktop と 390 x 844 を操作し、narrow horizontal overflow 0、両 screenshot を目視確認 | physical device、Safari/Firefox、assistive tech、production acceptance は未確認 |
-| 公開面境界 | generated text assets 9分類 scan pass。DOMに form / remote script/styleなし。商用linkは未設定時hidden | AI/API-key/internal debug、auth、personal data、payment/checkout/card/subscription/Stripe、analyticsを追加していない |
-| 商用情報 | 情報セクションのみ。optional `VITE_PUBLIC_STUDIO_CONTACT_URL` は HTTPS限定で、既定は空・非表示 | URL承認はhuman gate。取引、契約、決済、問い合わせ送信はStudio内で完結しない |
+| Git baseline | 開始時 `c37e793`、`HEAD...origin/main = 0 0` | 最終HEAD/parityはGitから再確認する |
+| canonical build | `npm run build:public` 成功。HTML 1 / JS 1 / CSS 1、48,467 bytes | 既知のengine `fs` browser-externalize warningは残る |
+| payload identity | canonical、committed embedded、built clientの全3ファイルでSHA-256一致 | source import後のHosted bytesは未確認 |
+| adapter build | vinext 0.0.50 / Vite 8.0.13でbuild成功。`dist/server/index.js`、client assets、hosting manifestを生成 | Sites build/saveの証明ではない |
+| local runtime | built Worker + asset bindingをWrangler localで起動。root redirect、Studio HTML、JS、CSSをHTTP確認 | production URLではない |
+| browser behavior | Chromium 3/3。auto-start、choice、node edit、reload localStorage、JSON export/import成功 | Safari/Firefox/physical device/assistive techは未確認 |
+| responsive / visual | desktopと390 x 844をfull-page captureし目視。adapter wrapperやoverflowなし | human product acceptanceではない |
+| public boundary | 3 files / 48,467 bytes、禁止パターン9分類、form/remote script/style/visible commercial linkなし | hosted dispatch headers/accessは未確認 |
+| hosting manifest | `.openai/hosting.json` は `d1: null`, `r2: null` のみ | `project_id`をfabricateしていない |
 
-## Local acceptance evidence
+`vinext start` のNode production serverはbuilt `public/studio` を404にしたため、
+production-like local commandはSites buildのWorkerとasset bindingを直接動かす
+`wrangler dev`へ修正した。これはlocal repairであり、deploy commandではない。
 
-- `npm ls --depth=0`: exit 0。Public Studio workspace、engine、Playwright 1.58.2、Vite 8.0.7 を解決。既存 Web Tester の platform-specific optional Rollup dependency が Windows で未充足と表示されるが exit 0。
-- `npm run test:public`: 4/4 pass。canonical sample の full engine validation、draft validation fail-closed、canonical/engine reuse、no account/personal-data form を確認。
-- `npm run build:public`: engine TypeScript build と Vite production build が pass。Vite は shared `entities.js` の `fs` を browser externalize した旨を警告するが、生成とruntime smokeは成功。
-- `npm run scan:public`: 3 files / 48,467 bytes、relative JS/CSS、9 forbidden pattern classificationsが pass。
-- `npm run test:e2e:public`: Chromium 3/3 pass。auto-start/engine transition/edit、reload persistence/export-full-validation/import、desktop+narrow layout/public boundaryを確認。
-- `npm run check:safety`: spec-index 37、docs authority tests 4/4、94 Markdown filenames、342 text files encoding、19 synced modelsが pass。
-- `git diff --check`: documentation closeout前の executable deltaで pass。最終 staging前に再実行する。
+詳細なarchitecture、hash、コマンド、next gateは
+`docs/sites/SITES_SOURCE_ADAPTER.md` が正本。source intake全体の判定は
+`docs/sites/PUBLIC_STUDIO_READINESS.md` が正本。
 
-実ビルドの画像は Playwright の ignored `apps/public-studio/test-results/` に同一端末の一時 evidence として生成される。Git正本ではなく、再実行で置き換わる。
+## Product / authority boundary
 
-## Product and authority boundaries
-
-- JSON が full-fidelity source。Public Studio はcanonical sampleをcompile時にcloneし、公開向けchoice copyだけを上書きする。
-- TypeScript engineがruntime semanticsのsource of truth。Public Studio固有のchoice evaluatorはない。
-- G2 SP-KNOW-002 は `done` のまま。pure knowledge-derived choice availability と zero persistent-event mutation の契約を変更していない。
-- G3 Choice Consequence Lens は `proposed / unlocked` のまま。この後選ばれる説明パターンは public surfaceへ投影可能だが、internal diagnosticsや推測文を露出させない別sliceが必要。
-- G4〜G8 の依存ladderは維持。Public StudioのS0完了は、G3実装、G5 Unity parity、G8 public distributionを承認しない。
-- publication、Sites save、analytics、domain/brand/legal、contact URL、auth/personal data、commerce、production/physical-device acceptanceはhuman-owned gate。
+- JSONがfull-fidelity sourceで、TypeScript engineがruntime semanticsの正本。
+- Adapterは既存production payloadを配るだけで、engine semanticsをcopyしない。
+- localStorageとJSON import/exportは同一browser/profile内の既存挙動。
+- S1A完了はSites compatibility、private preview、production、public release、
+  analytics、commercial contact、cloud persistence、G3〜G8を承認しない。
+- Sites source import/version saveはhuman-owned。owner-only production deploymentも
+  別の明示決定が必要。public visibilityはさらに別のrelease gate。
 
 ## Residual work
 
-- **S1 private Sites compatibility**: purposeはstatic candidateがSites内でsemanticsを変えずprivate save/previewできるかを知ること。effectは`local_candidate`維持または`needs_adapter`/`blocked`への根拠付き分類。requirementsはprivate unpublished project、`apps/public-studio/dist/`、publication/analytics/form/domain/commerceを無効のままにすること。stateはpending human gate。ownerはuser/operator。next moveは `docs/sites/PUBLIC_STUDIO_READINESS.md` のexact gateを実行し、指定JSONを返す。
-- **S2 evidence-led editing improvement**: purposeは最も大きい実観測摩擦を1つ減らすこと。effectはpublic editorを推測で広げず使いやすくすること。requirementsはS1または日本語local reviewから具体的な1件を選ぶこと。stateはproposed、未承認。ownerはshared。next moveはfinding受領後に1 bounded sliceを定義する。
-- **Engine browser packaging debt**: purposeはViteの`fs` externalization warningを消しbrowser boundaryを明確にすること。effectはhosting adapterの不確実性とbundle shimを減らすこと。requirementsは`entities.ts`のNode CSV I/Oとpure entity resolutionの分離、engine/browser regression。stateはnon-blocking quality debt。ownerはassistant after dedicated engine packet。next moveはS1でruntime failureが出た場合だけadapterより先に再評価する。
-- **Cross-browser / physical-device review**: purposeはChromium single-machine evidenceの境界を広げること。effectはresponsive/accessibility confidence向上。requirementsは対象browser/deviceとacceptance scopeの選定。stateはunverified review debt。ownerはshared/human for physical devices。next moveはpublic release gateが見えた時に専用matrixを決める。
-- **G0 human originality review**: purposeはmachine correctnessとstory/Japanese/GUI usefulnessを分けること。effectはG2 probeへのhuman passまたは具体的defect。requirementsはexisting Web Tester両routeとDashboardのreview。stateはpending user-owned。next moveはPublic Studio gateと混ぜず既存review flowを使う。
-- **G3 Choice Consequence Lens**: purposeはwhy available / what changes / what opensをdeterministic factsから説明すること。effectはauthor explanation surfaceと将来のpublic explanation projectionの方向選定。requirementsはseparate EXPLORE packetと3つのmaterially different same-content directions。stateはproposed/unlocked。ownerはshared direction。next moveはSites laneとは別missionでEXPLOREする。
-- **Release/security/toolchain debt**: purposeはsupported reproducible consumption。effectはlint/audit/toolchain/negative path gates。requirementsはhuman-approved dependency/toolchain scope。stateはnon-blocking、未承認。ownerはshared。next moveはdedicated sliceとし、Public Studioへ自動upgradeを混ぜない。
+- **S1B Sites source import/version save**: purposeはadapter sourceをSitesが無改変で
+  build/saveできるか事実化すること。effectは`adapter_candidate`からaccepted、
+  `adapter_partial`、または`blocked`への分類。requirementsは
+  `apps/sites-public-studio-adapter/`、private/unpublished workspace、deploy/share/
+  analytics/form/domain/auth/storage/commerce無効。stateはpending human gate。
+  ownerはuser/operator。next moveはsource importとversion saveだけを試し、
+  exact messageと保存結果を返す。
+- **Owner-only deployment decision**: purposeはSitesがnon-deployed review URLを持たない
+  場合の次gateを決めること。effectはownerだけが閲覧できるproduction URLの作成可否。
+  requirementsはS1B成功、verified owner-only access、明示承認。stateはblocked by
+  authority。ownerはuser。next moveは自動では進めず、必要性が判明した時だけ判断する。
+- **S2 evidence-led editing improvement**: purposeは実観測された最大摩擦を1件減らす
+  こと。effectはeditor usability向上。requirementsはlocalまたはSites review finding。
+  stateはproposed、未承認。ownerはshared。next moveはS1B finding後に別slice化する。
+- **Cross-browser / physical-device review**: purposeはChromium single-machine境界を広げる
+  こと。effectはresponsive/accessibility confidence向上。requirementsは対象matrix。
+  stateはunverified。ownerはshared/human。next moveはrelease gateが見えた時に定義する。
+- **G0 / G3 / G5 / release debt**: purposeとauthorityがSites adapterと異なるため分離。
+  effectはoriginality review、Choice Consequence Lens、Unity parity、release readiness。
+  requirementsは各専用packet。stateはpending/proposed。ownerは各human/shared gate。
+  next moveはS1Bへ混ぜない。
 
 ## Exact next gate
 
-最優先は **S1 private Sites import/save**。公開しない。手順・success signal・返却JSONは `docs/sites/PUBLIC_STUDIO_READINESS.md` が正本。Sitesがbuilt outputを受けずsource-onlyの場合は、その場で `needs_adapter` として止める。別runtime、external service、publicationで迂回しない。
+最優先は **S1B source import and version save only**。
 
-S1成功後に進められる最遠の安全な主線は次の通り。
+1. Sitesへ `apps/sites-public-studio-adapter/` をsource projectとして渡す。
+2. private/unpublishedを維持し、sharing、analytics、form、domain、auth、storage、
+   commerceを無効のままにする。
+3. source buildとversion saveだけを試す。
+4. deploymentが必要と表示されたら実行せず停止する。
+5. exact step、visible message、version save成否、first render前後を返す。
 
-1. private Sites compatibilityを事実化する。
-2. local/Sites reviewで最大のediting frictionを1件だけ選び、S2 bounded improvementで解消する。
-3. 別laneのG3でChoice Consequence Lensのmacro directionを選び、deterministic explanationをauthor用に固定する。
-4. G4の8-node evidence-mysteryでauthor -> validate -> play -> save/reload -> exportを一度end-to-endに実証する。
-5. G4で観測した摩擦だけをG6 authoring experienceへ渡す。
-6. G5 Unity parityとG7 release readinessは独立trackで閉じる。
-7. S3/G8のpublic distribution、analytics、commercial contactは明示的human release gate後だけ開く。
-
-この順序はroadmap提案であり、S1以外の実装承認を意味しない。
-
-## 再開
-
-通常は `AGENTS.md` → `docs/REPO_LOCAL_RULES.md` → この文書だけを読む。Public Studioのreview/gateでは次に `docs/sites/PUBLIC_STUDIO_READINESS.md` を読む。
+再開時は `AGENTS.md` → `docs/REPO_LOCAL_RULES.md` → この文書を読む。
+adapter laneでは続けて `docs/sites/SITES_SOURCE_ADAPTER.md` と
+`docs/sites/PUBLIC_STUDIO_READINESS.md` を読む。
 
 ```powershell
 git fetch --prune origin
 git status --short --branch
 git rev-list --left-right --count HEAD...origin/main
 npm ls --depth=0
-npm run test:public
-npm run build:public
-npm run scan:public
+npm run check:sites-adapter
+npm run scan:sites-adapter
+npm run build:sites-adapter
+npm run test:e2e:sites-adapter
+npm run check:safety
 ```
 
-Local review URLは `http://127.0.0.1:4174/` (`npm run preview:public`)。Safe next commandは `git status --short --branch`。S1 private gate、G0 human review、G3 EXPLORE、G5 IMPLEMENT、release/toolchainは目的とauthorityが異なるため同一sliceへ混ぜない。
+Local production-like review URLは `http://127.0.0.1:4184/`
+（`npm run preview:sites-adapter`）。

@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "algorithm": "sha256",
+  "files": [
+    {
+      "source": "apps/public-studio/dist/assets/index-BKLVLmRp.js",
+      "target": "public/studio/assets/index-BKLVLmRp.js",
+      "bytes": 26133,
+      "sha256": "c45c190bd5c9ba935853e41848f3b60d1f4066f70063161ee5dd314d5bf7527f"
+    },
+    {
+      "source": "apps/public-studio/dist/assets/index-DIOR_NPc.css",
+      "target": "public/studio/assets/index-DIOR_NPc.css",
+      "bytes": 13402,
+      "sha256": "4f2f3b8dbaf46ca46734b245979c33c0870cbaac4e517a45557e4d6ef8c1ba0c"
+    },
+    {
+      "source": "apps/public-studio/dist/index.html",
+      "target": "public/studio/index.html",
+      "bytes": 8932,
+      "sha256": "e63f37ea6b33305317d30a8407fc07d7f2f0fa95b37ff5d10aa29337158f9976"
+    }
+  ]
+}

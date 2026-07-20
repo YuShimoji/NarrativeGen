@@ -1,0 +1,39 @@
+{
+  "name": "@narrativegen/sites-public-studio-adapter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "vinext dev --hostname 127.0.0.1 --port 5184",
+    "build": "vinext build",
+    "start": "wrangler dev --config ./dist/server/wrangler.json --ip 127.0.0.1 --port 4184",
+    "sync:payload": "node ./scripts/sync-public-studio.mjs --write",
+    "check:payload": "node ./scripts/sync-public-studio.mjs --check",
+    "check:embedded": "node ./scripts/sync-public-studio.mjs --embedded-only",
+    "scan": "node ./scripts/scan-adapter.mjs",
+    "test:e2e": "playwright test --config ./playwright.config.js",
+    "test": "npm run check:payload && npm run check:embedded && npm run scan && npm run build && npm run test:e2e"
+  },
+  "dependencies": {
+    "next": "16.2.6",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.37.1",
+    "@playwright/test": "1.58.2",
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.2",
+    "@vitejs/plugin-rsc": "0.5.26",
+    "react-server-dom-webpack": "19.2.6",
+    "typescript": "5.9.3",
+    "vinext": "0.0.50",
+    "vite": "8.0.13",
+    "wrangler": "4.92.0"
+  }
+}

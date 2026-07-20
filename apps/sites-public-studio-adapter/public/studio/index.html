@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="決定的な物語モデルを、その場で体験・編集・検証できるNarrativeGenのローカル公開候補。"
+    />
+    <meta name="theme-color" content="#163f3a" />
+    <title>NarrativeGen Public Studio</title>
+    <script type="module" crossorigin src="./assets/index-BKLVLmRp.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DIOR_NPc.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#experience">本文へ移動</a>
+
+    <header class="site-header">
+      <a class="brand" href="#experience" aria-label="NarrativeGen Public Studio トップへ">
+        <span class="brand-mark" aria-hidden="true">N</span>
+        <span>
+          <strong>NarrativeGen</strong>
+          <small>Public Studio</small>
+        </span>
+      </a>
+      <nav class="site-nav" aria-label="メインナビゲーション">
+        <a href="#experience">体験する</a>
+        <a href="#edit">編集する</a>
+        <a href="#learn">仕組みを知る</a>
+      </nav>
+      <span class="candidate-badge">ローカル検証版</span>
+    </header>
+
+    <main>
+      <section id="experience" class="workflow-section hero-section" aria-labelledby="experience-title">
+        <div class="workflow-marker" aria-hidden="true">01</div>
+        <div class="hero-copy">
+          <p class="eyebrow">DETERMINISTIC STORY SANDBOX</p>
+          <h1 id="experience-title">物語の条件を、<br />遊べる形で試す。</h1>
+          <p class="hero-lead">
+            世界の事実と登場人物の知識を一度定義し、選択肢がどう変わるかをその場で確かめます。
+            サンプルはすでに開始されています。
+          </p>
+          <div class="hero-notes" aria-label="このStudioの特徴">
+            <span>登録不要</span>
+            <span>決定的に再生</span>
+            <span>端末内だけで編集</span>
+          </div>
+        </div>
+
+        <article class="play-surface" aria-labelledby="play-heading">
+          <header class="surface-header">
+            <div>
+              <p class="surface-kicker">LIVE STORY</p>
+              <h2 id="play-heading">南書庫のレシート</h2>
+            </div>
+            <button id="restart-preview" class="button button-quiet" type="button">最初から</button>
+          </header>
+          <div id="story-panel" class="story-panel" aria-live="polite">
+            <p id="story-speaker" class="story-speaker"></p>
+            <div id="story-text" class="story-text"></div>
+            <div id="story-choices" class="story-choices" aria-label="選択肢"></div>
+          </div>
+          <p id="play-status" class="inline-status" role="status"></p>
+        </article>
+      </section>
+
+      <section id="edit" class="workflow-section editor-section" aria-labelledby="edit-title">
+        <div class="workflow-marker" aria-hidden="true">02</div>
+        <div class="section-heading">
+          <p class="eyebrow">LOCAL AUTHORING</p>
+          <h2 id="edit-title">触って、変化を確かめる。</h2>
+          <p>
+            ノード本文・選択肢・遷移先を編集すると、上のプレビューへすぐ反映されます。
+            下書きはこのブラウザにだけ自動保存され、サーバーへ送信されません。
+          </p>
+        </div>
+
+        <div class="local-only-banner" role="note">
+          <strong>ブラウザ内だけに保存</strong>
+          <span id="draft-status">サンプルを読み込みました</span>
+        </div>
+
+        <div class="editor-toolbar" aria-label="JSONと下書きの操作">
+          <button id="export-json" class="button button-primary" type="button">JSONを書き出す</button>
+          <label class="button button-secondary" for="import-json">JSONを読み込む</label>
+          <input id="import-json" class="visually-hidden" type="file" accept="application/json,.json" />
+          <button id="reset-draft" class="button button-quiet" type="button">サンプルに戻す</button>
+          <p id="transfer-status" class="toolbar-status" role="status"></p>
+        </div>
+
+        <div class="studio-grid">
+          <aside class="node-rail" aria-labelledby="node-list-title">
+            <div class="panel-heading">
+              <p class="surface-kicker">STORY SPINE</p>
+              <h3 id="node-list-title">ノード一覧</h3>
+            </div>
+            <div id="node-list" class="node-list"></div>
+          </aside>
+
+          <section class="node-editor" aria-labelledby="node-editor-title">
+            <div class="panel-heading panel-heading-row">
+              <div>
+                <p class="surface-kicker">SELECTED NODE</p>
+                <h3 id="node-editor-title">ノードを編集</h3>
+              </div>
+              <button id="preview-selected" class="button button-quiet" type="button">ここから試す</button>
+            </div>
+
+            <label class="field-label" for="node-text">本文</label>
+            <textarea id="node-text" rows="9"></textarea>
+
+            <div class="choice-editor-heading">
+              <div>
+                <p class="field-label">選択肢</p>
+                <p>表示文と遷移先を編集できます。</p>
+              </div>
+            </div>
+            <div id="choice-editor" class="choice-editor"></div>
+          </section>
+
+          <aside class="validation-panel" aria-labelledby="validation-title">
+            <div class="panel-heading panel-heading-row">
+              <div>
+                <p class="surface-kicker">MODEL CHECK</p>
+                <h3 id="validation-title">簡易検証</h3>
+              </div>
+              <button id="refresh-validation" class="icon-button" type="button" aria-label="検証を更新">↻</button>
+            </div>
+            <p id="validation-summary" class="validation-summary" role="status"></p>
+            <ul id="validation-list" class="validation-list"></ul>
+            <p class="validation-note">完全な仕様検証は開発用の検証工程で行います。</p>
+          </aside>
+        </div>
+      </section>
+
+      <section id="learn" class="workflow-section learn-section" aria-labelledby="learn-title">
+        <div class="workflow-marker" aria-hidden="true">03</div>
+        <div class="section-heading">
+          <p class="eyebrow">HOW IT WORKS</p>
+          <h2 id="learn-title">物語を書き、事実を定義し、同じ結果を再生する。</h2>
+          <p>
+            NarrativeGenはJSONを正本にし、条件・効果・人物の知識を決定的なランタイムで評価します。
+            物語本文と技術情報を分け、作者が意図を保ったまま検証できることを目指しています。
+          </p>
+        </div>
+
+        <ol class="mechanism-spine">
+          <li>
+            <span>1</span>
+            <div><strong>物語を定義</strong><p>ノード、選択肢、世界の事実をJSONで保持します。</p></div>
+          </li>
+          <li>
+            <span>2</span>
+            <div><strong>条件を評価</strong><p>同じモデルと状態から、利用可能な選択肢を再現します。</p></div>
+          </li>
+          <li>
+            <span>3</span>
+            <div><strong>その場で確かめる</strong><p>編集と再生を往復し、意図した分岐かを確認します。</p></div>
+          </li>
+        </ol>
+
+        <details class="technical-details">
+          <summary>このプレビューの技術情報</summary>
+          <dl>
+            <div><dt>ノード数</dt><dd id="detail-node-count">—</dd></div>
+            <div><dt>現在位置</dt><dd id="detail-current-node">—</dd></div>
+            <div><dt>利用可能な選択肢</dt><dd id="detail-choice-count">—</dd></div>
+            <div><dt>進行ステップ</dt><dd id="detail-session-time">—</dd></div>
+          </dl>
+        </details>
+      </section>
+
+      <section class="commercial-section" aria-labelledby="commercial-title">
+        <p class="eyebrow">COMMERCIAL USE / EARLY ACCESS</p>
+        <h2 id="commercial-title">商用利用・先行アクセス</h2>
+        <p>
+          ホスト型エディタ、商用サポート、先行アクセスの形を検討しています。
+          現在このStudio内に購入機能はなく、提供時期も未定です。
+        </p>
+        <a id="commercial-contact" class="button button-inverse" href="#" hidden rel="noreferrer">案内ページを見る</a>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>NarrativeGen Public Studio <span>working label</span></p>
+      <p>編集内容はこのブラウザ内だけに保存されます。</p>
+    </footer>
+  </body>
+</html>

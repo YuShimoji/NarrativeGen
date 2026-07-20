@@ -38,6 +38,7 @@
     "build:engine": "npm run build -w @narrativegen/engine-ts",
     "build:tester": "npm run build -w @narrativegen/web-tester",
     "build:public": "npm run build:engine && npm run build -w @narrativegen/public-studio",
+    "build:sites-adapter": "npm run build -w @narrativegen/sites-public-studio-adapter",
     "dev": "npm run dev:tester",
     "dev:engine": "npm run build -w @narrativegen/engine-ts -- --watch",
     "dev:tester": "npm run dev -w @narrativegen/web-tester",
@@ -53,8 +54,10 @@
     "test:engine": "npm run test -w @narrativegen/engine-ts",
     "test:tester": "npm run test -w @narrativegen/web-tester",
     "test:public": "npm run test -w @narrativegen/public-studio",
+    "test:sites-adapter": "npm run test -w @narrativegen/sites-public-studio-adapter",
     "test:e2e": "npx playwright test --config apps/web-tester/playwright.config.js",
     "test:e2e:public": "npm run test:e2e -w @narrativegen/public-studio",
+    "test:e2e:sites-adapter": "npm run test:e2e -w @narrativegen/sites-public-studio-adapter",
     "test:watch": "npm run test -w @narrativegen/engine-ts -- --watch",
     "validate": "npm run validate:engine",
     "validate:engine": "npm run validate:models -w @narrativegen/engine-ts",
@@ -77,8 +80,12 @@
     "check:models-sync": "node scripts/sync-models.mjs --check",
     "preview": "npm run build:all && npm run preview:tester",
     "preview:tester": "npm run preview -w @narrativegen/web-tester",
+    "preview:sites-adapter": "npm run start -w @narrativegen/sites-public-studio-adapter",
     "preview:public": "npm run preview -w @narrativegen/public-studio",
-    "scan:public": "npm run scan:dist -w @narrativegen/public-studio"
+    "scan:public": "npm run scan:dist -w @narrativegen/public-studio",
+    "scan:sites-adapter": "npm run scan -w @narrativegen/sites-public-studio-adapter",
+    "sync:sites-adapter": "npm run sync:payload -w @narrativegen/sites-public-studio-adapter",
+    "check:sites-adapter": "npm run check:payload -w @narrativegen/sites-public-studio-adapter"
   },
   "devDependencies": {
     "@redocly/cli": "^1.34.3",
