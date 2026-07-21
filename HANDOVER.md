@@ -12,7 +12,8 @@ fresh `npm ci --foreground-scripts` 後の検証で、`origin/main` のadapter�
 Sites公式starterの `build/sites-vite-plugin.ts` を参照する一方、rootのUnity用
 `[Bb]uild/` ignoreによりその必須ファイルがremoteへ入っていないことを検出した。
 clean clone相当では `vinext build` が unresolved import で停止するため、現在の
-`codex/fix-sites-adapter-repro` branchで公式starterと同一のpluginを復元し、
+`codex/fix-sites-adapter-repro` branchのimplementation commit `5bd97cf` で
+公式starterと同一のpluginを復元し、
 この1ファイルだけを追跡できるignore例外を追加した。依存、runtime semantics、
 payload、hosting manifest、公開状態は変更していない。
 
@@ -34,7 +35,7 @@ URL、共有・domain・analytics設定は一切実行していない。修復�
 
 | 判断対象 | 現在の事実 | workflow / decisionへの効き方 |
 |---|---|---|
-| remote同期 | `origin/main` の最新 `c93a0f4` をfast-forward取得。修復branchはその直上 | 古い製品前提を持ち込まず、修復差分だけをレビュー・統合できる |
+| remote同期 | `origin/main` の最新 `c93a0f4` をfast-forward取得。修復branchをpushし、push直後のtracking parity `0 0` | 古い製品前提を持ち込まず、修復差分だけをレビュー・統合できる |
 | 開発環境 | Node 22.19.0 / npm 10.9.3 / .NET SDK 9.0.304。lockfileから995 packagesを復元しdoctor 27/27 | README要件を満たし、編集・build・testを継続できる |
 | repo回帰 | safety gate成功。engine 335 tests、formatter 72 checks / 18 models、Public Studio contract 4、全build成功 | Public Studio追加後も既存engine/Web契約を後続sliceの基準点にできる |
 | adapter再現性 | missing Sites pluginを追跡可能に修復。payload/embedded SHA一致、3 files / 48,467 bytes、禁止9分類、vinext build、Chromium 3/3成功 | 別 cloneでもadapter sourceをbuildできる状態へ戻した。Sites import成功までは意味しない |
@@ -70,9 +71,9 @@ production-like local commandはSites buildのWorkerとasset bindingを直接動
 
 - **Repair integration**: purposeはclean cloneでのadapter build failureをremote正本から
   除くこと。effectはreproducibleなS1B input。requirementsはこのbranchの2 implementation
-  filesとhandoffをreviewし、`main`へ統合すること。stateはlocal acceptance完了、remote
-  branch化対象。ownerはassistant follow-through / maintainer merge。next moveはcommit・push後に
-  branchをreviewし、merge後の`origin/main`でparityとadapter testを再確認する。
+  filesとhandoffをreviewし、`main`へ統合すること。stateはlocal acceptance、commit、remote
+  branch push完了。ownerはmaintainer merge。next moveはbranchをreviewし、merge後の
+  `origin/main`でparityとadapter testを再確認する。
 - **S1B Sites source import/version save**: purposeは修復済みadapter sourceをSitesが無改変で
   build/saveできるか事実化すること。effectは`adapter_candidate`からaccepted、
   `adapter_partial`、または`blocked`への分類。requirementsは
