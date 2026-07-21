@@ -24,6 +24,9 @@ authentication, storage binding, form, or commerce capability was created.
   and CSS references. There is no iframe or visual wrapper.
 - `worker/index.ts`, `vite.config.ts`, and `build/sites-vite-plugin.ts` retain
   the minimal Sites vinext/Cloudflare Worker build shape.
+- `build/sites-vite-plugin.ts` is a tracked source file even though the root
+  Unity ignore policy excludes other `Build/` directories. Removing the narrow
+  `.gitignore` exception makes a clean clone fail while loading `vite.config.ts`.
 - Production-like local review uses the built Worker and its asset binding via
   Wrangler. This is local emulation only and performs no deployment.
 - Visitor runtime code does not read `apps/public-studio/`,
@@ -87,6 +90,10 @@ The production-like local URL is `http://127.0.0.1:4184/`. It redirects to
 
 ## Verified Local Evidence
 
+- A fresh lockfile install exposed that the required Sites Vite plugin had been
+  omitted by the root `Build/` ignore pattern. The plugin was restored from the
+  bundled Sites starter, made narrowly trackable, and the full adapter test was
+  rerun successfully.
 - vinext build emitted a callable `dist/server/index.js`, the exact static
   payload under `dist/client/studio/`, and `dist/.openai/hosting.json`.
 - Workerd HTTP returned root redirect, Studio HTML, JavaScript, and CSS. The
