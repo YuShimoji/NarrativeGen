@@ -1,7 +1,7 @@
 # NarrativeGen Public Studio Sites Source Adapter
 
-Status: `adapter_candidate`
-Last verified: 2026-07-21
+Status: `adapter_partial`
+Last reconciled: 2026-07-27
 Source-import folder: `apps/sites-public-studio-adapter/`
 
 ## Purpose And Boundary
@@ -11,9 +11,10 @@ minimal vinext/Cloudflare Worker project while preserving the existing Public
 Studio production payload byte-for-byte. It does not reimplement the editor,
 story runtime, validation, persistence, or JSON transfer logic.
 
-The adapter has not been imported into Sites. No Sites project, project ID,
-credential, saved version, deployment, URL, access change, domain, analytics,
-authentication, storage binding, form, or commerce capability was created.
+Human-observed Sites evidence records a successful source import, build, and
+Version 1 save. The project uses owner-only custom access. No Preview URL or
+Live URL exists, and deployment was neither required nor performed. Hosted
+runtime behavior remains unobserved.
 
 ## Architecture
 
@@ -63,14 +64,16 @@ without reading the sibling canonical build.
 
 ```json
 {
+  "project_id": "appgprj_6a65fabf5ca48191a9b7f2b063d05cf8",
   "d1": null,
   "r2": null
 }
 ```
 
-It intentionally omits `project_id`. Do not fabricate one. A real project ID
-may be written only by an authorized later Sites provisioning flow. D1, R2,
-authentication, secrets, analytics, and environment configuration remain absent.
+The `project_id` is the real non-secret linkage returned by the authorized Sites
+provisioning flow. It is not a credential, URL, deployment proof, or runtime
+acceptance. D1, R2, authentication, secrets, analytics, storage, and environment
+configuration remain absent.
 
 ## Local Commands
 
@@ -88,7 +91,7 @@ npm run test:sites-adapter
 The production-like local URL is `http://127.0.0.1:4184/`. It redirects to
 `http://127.0.0.1:4184/studio/`.
 
-## Verified Local Evidence
+## Verified Evidence
 
 - A fresh lockfile install exposed that the required Sites Vite plugin had been
   omitted by the root `Build/` ignore pattern. The plugin was restored from the
@@ -105,20 +108,22 @@ The production-like local URL is `http://127.0.0.1:4184/`. It redirects to
   readable, and showed no adapter UI.
 - The bounded text/DOM scan passed 3 files / 48,467 bytes and nine forbidden
   pattern classes.
+- Human-observed Sites intake accepted this adapter source, completed its build,
+  and saved Version 1 with owner-only custom access. No Preview/Live URL was
+  created and no deployment was performed.
 
-This evidence establishes a locally verified source adapter only. It does not
-establish Sites source-import, version-save, hosted-runtime, private-preview,
-production, public-release, or revenue readiness.
+This evidence establishes a locally verified source adapter and an accepted
+Sites source-import/build/version-save contract. It does not establish hosted
+runtime behavior, private-preview compatibility, production readiness,
+public-release readiness, analytics readiness, or revenue readiness.
 
 ## Exact Next Human Gate
 
-1. Give Sites exactly `apps/sites-public-studio-adapter/` as a source project.
-2. Keep the project unpublished and all sharing, analytics, form, domain,
-   authentication, storage, and commerce controls disabled.
-3. Attempt source import and version save only.
-4. Stop before any deployment, including owner-only production deployment.
-5. Report the exact intake/build/save result. On failure, include the visible
-   message and whether failure occurred before or after the first hosted render.
-
-Only a later explicit owner decision may authorize owner-only production
-deployment. Public visibility remains locked behind a separate release gate.
+1. Decide whether to owner-only deploy saved Version 1 for runtime review or
+   explicitly hold.
+2. A hold preserves owner-only access, absent Preview/Live URLs, and unknown
+   hosted-runtime behavior.
+3. A separately authorized deployment must retain owner-only custom access,
+   target Version 1, and then verify root/assets/story/edit/reload/export.
+4. Public visibility, sharing, analytics, form, domain, authentication, storage,
+   commerce, and monetization remain locked behind separate gates.

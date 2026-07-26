@@ -1,13 +1,13 @@
 # Development Plan
 
 Status: roadmap source of truth
-Last updated: 2026-07-26
+Last updated: 2026-07-27
 
 This file is the single roadmap document. Agent operating rules live in `docs/REPO_LOCAL_RULES.md`; current state and next resume steps live in the root `HANDOVER.md`; feature/spec status lives in `docs/spec-index.json`; durable decisions live in `docs/governance/decision-log.md`.
 
 ## Current Priorities
 
-1. **SR0 closed; hand off the private compatibility gate**
+1. **SR0 closed; S1 source/save accepted**
    - SR0 is accepted. Runtime revision `44656de` contains the exact adapter
      repair, all seven LF normalizations, the index-blob regression guard, and a
      self-contained full adapter test. It was fast-forwarded to `origin/main`
@@ -16,15 +16,19 @@ This file is the single roadmap document. Agent operating rules live in `docs/RE
    - The supervising report owns the exact final docs SHA and its repeated
      clone evidence. The repository roadmap no longer treats repair integration
      as an active implementation lane.
-   - The only unlocked successor is the human-owned S1 source
-     import/version-save operation. SR0 does not authorize any Sites
-     project, deployment, sharing, analytics, domain, auth, storage, form,
-     commerce, or publication action.
+   - Human-observed Sites evidence now records a successful adapter source
+     import, build, and Version 1 save with owner-only custom access. No
+     Preview URL or Live URL exists, and deployment was neither required nor
+     performed.
+   - The repository records the provisioned non-secret project binding.
+     Hosted runtime behavior remains unknown, so the only unlocked successor
+     is an explicit owner-only deployment-or-hold decision.
 
 2. **Public Studio private-compatibility gate**
    - Keep `apps/public-studio/` as a separate Japanese-first, browser-local demonstration and editing lane. It reuses the shared browser engine and canonical procedural-choice sample; it must not become a second runtime or model authority.
-   - The local candidate is implemented and locally validated. The next gate is one human-owned private Sites import/save using `docs/sites/PUBLIC_STUDIO_READINESS.md`; publication, analytics, auth, personal data, AI configuration, and transactions remain disabled.
-   - After the private gate, use one observed editing friction to choose the next bounded slice. Do not broaden the editor from hypothetical demand.
+   - Source intake and Version 1 save are accepted; private hosted-runtime compatibility remains partial because root/assets/story/edit/reload/export were not observed on Sites.
+   - The next human gate is whether to deploy Version 1 with owner-only access for runtime review or hold. Publication, analytics, auth, personal data, AI configuration, transactions, and public visibility remain disabled.
+   - Choose S2 only after one concrete local or hosted-runtime editing friction is observed. Do not broaden the editor from hypothetical demand or from the current evidence gap.
 
 3. **Playable baseline and originality-probe review**
    - Keep `models/examples/vertical-slice.json` as the survival check for authoring, play, save, and reload.
@@ -78,8 +82,8 @@ This lane can gather public-demo and lightweight-editing evidence without changi
 |---|---|---|---|---|
 | **SR0 — Restore adapter reproducibility** | Remove the clean-clone-only missing-plugin failure and checkout encoding noise before Sites receives the source | The repair ancestry and all seven LF normalizations are in `origin/main`; a fresh clone is clean before/after one isolated install and passes safety plus the full adapter test | Do not treat an ignored local file, cached clean status, or branch-only CI as main evidence; exact push/clone evidence belongs in the supervising report | `done`; runtime acceptance passed at `44656de`; the final docs-only follow-up carries no runtime or dependency change, and S1 is handed to the user |
 | **S0 — Local public-studio candidate** | Put one deterministic story experience, small editor, and transfer loop into a static Japanese-first surface | Auto-start, edit/live preview, local restore, engine-valid export/import, responsive smoke, build scan, and local artifact inspection pass | Must reuse canonical sample/engine; no private data, AI configuration, transactions, analytics, or network runtime | `done locally`; assistant-owned implementation is validated; artifact is not published |
-| **S1 — Private Sites compatibility** | Learn whether the static output can be privately saved and previewed in Sites without changing runtime semantics | The exact readiness return record confirms root/assets/runtime/edit/reload/export and the project remains private | Accepted SR0 first; human Sites access; import mode may require a bounded adapter; publication controls must stay disabled | `pending human gate after SR0`; user/operator owns private import and save; return the prescribed JSON findings |
-| **S2 — Evidence-led editing improvement** | Reduce the largest observed author friction while keeping the public surface small | One S1 or local-review friction is named, measured, fixed, and regression-tested | Do not infer demand for node creation, graph editing, collaboration, or accounts | `proposed`; assistant may implement only after one concrete friction is selected from review evidence |
+| **S1 — Private Sites compatibility** | Learn whether the adapter can be saved privately and whether the hosted runtime preserves behavior | Source import/build/Version 1 save pass is distinct from root/assets/runtime/edit/reload/export evidence | Source/save accepted with owner-only custom access; no Preview/Live URL and no deployment. Runtime behavior remains unknown until a separately authorized owner-only deployment | `adapter_partial`; source/save is done, user owns the Version 1 deploy-or-hold decision, and no external Sites action is authorized by this roadmap update |
+| **S2 — Evidence-led editing improvement** | Reduce the largest observed author friction while keeping the public surface small | One local or hosted-runtime friction is named, measured, fixed, and regression-tested | Do not infer demand for node creation, graph editing, collaboration, or accounts; unknown runtime behavior is not a friction finding | `proposed`; assistant may implement only after one concrete friction is selected from review evidence |
 | **S3 — Explicit public-demo decision** | Decide whether and how a reviewed candidate becomes publicly reachable and observable | Scope, owner, privacy/analytics policy, approved URL, rollback, and acceptance checks are explicitly approved before any publication | Publication, Sites-managed analytics, legal copy, brand/domain, and commercial contact are human gates; commerce remains a separate system | `hold`; user-owned release decision; no deployment or analytics work begins from S0/S1 alone |
 
 Parallel compatibility work remains available but is not the core originality sequence: SP-DTYARN-001 should proceed spec-first, and regression/a11y work should begin from a reproduced or precisely named gap rather than a generic maintenance label.

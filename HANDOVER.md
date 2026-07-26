@@ -1,6 +1,6 @@
 # 作業申し送り
 
-## 現在地 — 2026-07-26
+## 現在地 — 2026-07-27
 
 `main` / `origin/main` が開発正本。SR0 closure revisionは、同期済みの
 `origin/main@c93a0f4cb6494bed63bf797234858ceb9f76c39d` を基点に、
@@ -44,11 +44,18 @@ runtime contentをfast-forwardし、parity `0 0`、status clean、root dependenc
 この文書だけの追随commitはruntime、dependency、payloadを変更せず、最終SHAと
 docs-follow-up cloneの実測は実行タスクの監修報告が正本となる。
 
-現在のlaneは`HANDOFF / S1B / human_owned`。次工程は
-**S1B Sites source import and version save only**である。Sites source import、
-project作成、project ID、credential、version save、deployment、URL、
-sharing、domain、analytics、auth、storage、form、commerceはSR0では実行していない。
-Sites側の判定は**`Sites source-import unverified`**のままである。
+現在のlaneは`HANDOFF / S1 / source-save-accepted`。人間が観測したSites evidenceでは、
+`apps/sites-public-studio-adapter/`のsource import、build、Version 1保存が成功した。
+project accessはowner-only customのままで、Preview URLとLive URLは存在せず、
+deploymentは要求されず、実行もされていない。実project binding
+`appgprj_6a65fabf5ca48191a9b7f2b063d05cf8`は
+`apps/sites-public-studio-adapter/.openai/hosting.json`へ記録済みで、`d1`と`r2`は
+`null`のままである。
+
+S1のsource intake/save判定はaccepted。root/assets/story/edit/reload/exportの
+hosted-runtime behaviorは未観測であり、失敗ではなく**unknown**である。
+したがってprivate hosted-runtime compatibility全体は`adapter_partial`で、
+次のhuman gateはVersion 1をowner-only deploymentするか明示的にholdするかの決定である。
 
 ## 監修AIへの現状報告
 
@@ -62,17 +69,18 @@ Sites側の判定は**`Sites source-import unverified`**のままである。
 | clean-clone acceptance | `44656de`をremoteから通常cloneし、install前clean、isolated `npm ci` 1回、safety/adapter、install後cleanを確認 | valid post-push acceptance evidence。docs-only追随revisionも最終監修報告で同じ境界を再確認する |
 | report-derived evidence | 修復branch先端の既存GitHub CI success、以前のengine/Unity詳細件数 | 補助証拠。今回のlive test結果やhuman acceptanceとして再利用しない |
 | nonblocking debt | npm audit、Web Tester lint未設定、Vite externalize/large chunk、C# nullable/XML doc、optional/extraneous表示 | SR0を停止しない。dependency upgradeや一括修復はG7専用sliceで扱う |
-| Sites / release | Sites操作、deployment、publication、公開URL、各種bindingは未実施 | local/remote技術greenはS1B human acceptanceやrelease承認ではない |
+| Sites / binding | 人間観測ではsource import/build/Version 1 saveが成功。accessはowner-only custom、Preview/Live URLなし、deployment要求なし・実行なし。実project IDをmanifestへbinding済み | source/saveのvalid passとrepository linkage。hosted runtime、production readiness、public releaseの証拠ではない |
 
 ## Product / authority boundary
 
 - JSONがfull-fidelity sourceで、TypeScript engineがruntime semanticsの正本。
 - Adapterは既存production payloadを配るだけで、engine semanticsをcopyしない。
 - localStorageとJSON import/exportは同一browser/profile内の既存挙動。
-- SR0完了はSites compatibility、private preview、production、public release、
-  analytics、commercial contact、cloud persistence、G0、G3、G5、G7、G8を承認しない。
-- Sites source import/version saveはhuman-owned。owner-only production deploymentも
-  別の明示決定が必要。public visibilityはさらに別のrelease gate。
+- SR0とS1 source/save完了はhosted-runtime compatibility、production readiness、
+  public release、analytics、commercial contact、cloud persistence、G0、G3、G5、
+  G7、G8を承認しない。
+- Version 1のowner-only production deploymentは別の明示決定が必要。
+  public visibilityはさらに別のrelease gateであり、S3までlockedである。
 
 ## Residual work
 
@@ -83,20 +91,23 @@ Sites側の判定は**`Sites source-import unverified`**のままである。
   `AUTH-NG-REPO-GIT-FOLLOWTHROUGH-20260726`。next moveは実装を再開せず、
   commit/push/fresh-clone/primary evidenceを監修報告へ分離記録する。
 - **S1B Sites source import/version save**: purposeはadapter sourceをSitesが無改変で
-  build/saveできるか事実化すること。effectは`adapter_candidate`からaccepted、
-  `adapter_partial`、または`blocked`への分類。requirementsはSR0 accepted、
+  build/saveできるか事実化すること。effectはsource intake/save acceptedと
+  hosted-runtime evidence gapの分離。requirementsはSR0 accepted、
   `apps/sites-public-studio-adapter/`、private/unpublished workspace、deploy/share/
-  analytics/form/domain/auth/storage/commerce無効。stateはpending human gate after
-  SR0。ownerはuser/operator。next moveはsource importとversion saveだけを試し、
-  exact messageと保存結果を返す。
+  analytics/form/domain/auth/storage/commerce無効。stateはdone for source import/build/
+  Version 1 save based on human-observed evidence。ownerはuser/operator、repository
+  binding follow-throughはassistant。next moveはsource/saveを再実行せず、
+  hosted runtimeをunknownのまま次のowner decisionへ渡す。
 - **Owner-only deployment decision**: purposeはSitesがnon-deployed review URLを
   持たない場合の次gateを決めること。effectはownerだけが閲覧できるproduction URLの
-  作成可否。requirementsはS1B成功、verified owner-only access、明示承認。
-  stateはblocked by authority。ownerはuser。next moveは自動では進めず、必要性が
-  判明した時だけ判断する。
+  作成可否とhosted-runtime reviewの入口。requirementsは保存済みVersion 1、
+  verified owner-only custom access、deployまたはholdの明示決定。
+  stateはpending human decision。ownerはuser。next moveは自動では進めず、
+  Version 1のowner-only deploymentかholdを選ぶ。
 - **S2 evidence-led editing improvement**: purposeは実観測された最大摩擦を1件減らす
-  こと。effectはeditor usability向上。requirementsはlocalまたはSites review finding。
-  stateはproposed。ownerはshared。next moveはS1B finding後に別slice化する。
+  こと。effectはeditor usability向上。requirementsはlocalまたはhosted runtimeの
+  concrete review finding。stateはproposed。ownerはshared。next moveは実摩擦を
+  1件観測した後に別slice化し、現在のunknownから仮説を捏造しない。
 - **Cross-browser / physical-device review**: purposeはChromium single-machine境界を
   広げること。effectはresponsive/accessibility confidence向上。requirementsは
   対象matrix。stateはunverified。ownerはshared/human。next moveはrelease gateが
@@ -104,21 +115,23 @@ Sites側の判定は**`Sites source-import unverified`**のままである。
 - **G0 / G3 / G5 / G7 / G8**: purposeとauthorityがSR0/S1と異なるため分離する。
   effectはoriginality review、Choice Consequence Lens、Unity parity、
   release readiness、外部連携。requirementsは各専用packet。stateは
-  pending/proposed/hold。ownerは各human/shared gate。next moveはS1Bへ混ぜない。
+  pending/proposed/hold。ownerは各human/shared gate。next moveはdeployment decisionへ
+  混ぜない。
 
 ## Exact next gate
 
-SR0はaccepted。次の入口はhuman-ownedの
-**S1B source import and version save only**である。
+SR0とS1 source import/build/Version 1 saveはaccepted。次の入口はhuman-ownedの
+**Version 1 owner-only deployment decision**である。
 
-1. `git fetch --prune origin`後にlocal `main`と`origin/main`のparityを確認する。
-2. `npm run check:safety`と`npm run test:sites-adapter`で正本の基線を再確認する。
-3. 人間の明示操作でSitesへ`apps/sites-public-studio-adapter/`をsource projectとして渡す。
-4. private/unpublishedを維持し、sharing、analytics、form、domain、auth、storage、
-   commerceを無効のままにする。
-5. source buildとversion saveだけを試す。
-6. deploymentが必要と表示されたら実行せず停止する。
-7. exact step、visible message、version save成否、first render前後を返す。
+1. ownerがVersion 1をowner-only deploymentしてhosted-runtime reviewへ進むか、
+   deploymentをholdするかを明示する。
+2. holdの場合はSites外部状態を変えず、hosted-runtime behaviorをunknownのまま保つ。
+3. deployを別missionで明示承認した場合だけ、owner-only custom accessを維持して
+   Version 1を対象にする。
+4. deployment後のreviewではroot/assets/story/edit/reload/exportを実測し、
+   unknownをpass/failへ更新する。
+5. public access、sharing、analytics、domain、auth、storage、form、commerceは
+   S3 public-release gateまでlockedのままにする。
 
 再開時は`AGENTS.md` → `docs/REPO_LOCAL_RULES.md` → この文書を読む。
 adapter laneでは続けて`docs/sites/SITES_SOURCE_ADAPTER.md`と

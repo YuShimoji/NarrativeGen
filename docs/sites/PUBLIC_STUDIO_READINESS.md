@@ -1,13 +1,22 @@
 # Public Studio Sites Readiness
 
-Status: `adapter_candidate`
-Last verified: 2026-07-21
+Status: `adapter_partial`
+Last reconciled: 2026-07-27
 Lane: `SITES_SOURCE_ADAPTER`
 Artifact owners: `apps/public-studio/` and `apps/sites-public-studio-adapter/`
 
 ## Verdict
 
-Raw static intake requires a source-project adapter. `apps/sites-public-studio-adapter/` is now a locally verified vinext source candidate that serves the exact three-file Japanese-first Public Studio payload. It has not been imported, saved, deployed, published, connected to analytics, or proven compatible with Sites. The next gate is a human-owned **source import and version save only**; every deployment remains disabled.
+Raw static intake requires a source-project adapter. Human-observed Sites
+evidence records that `apps/sites-public-studio-adapter/` was imported, built,
+and saved as Version 1 with owner-only custom access. No Preview URL or Live URL
+exists, and deployment was neither required nor performed.
+
+The source/save gate therefore passes. Root rendering, asset loading, story
+flow, editing, reload persistence, and export on the hosted runtime were not
+observed; they are unknown rather than failed. Overall private hosted-runtime
+compatibility remains partial. The next human gate is an explicit decision to
+owner-only deploy Version 1 for runtime review or to hold.
 
 ## What Is Ready
 
@@ -19,6 +28,7 @@ Raw static intake requires a source-project adapter. `apps/sites-public-studio-a
 | JSON transfer | Exported JSON reloads through the full Node engine validator in the browser test; JSON import rejects simplified structural errors before preview | Browser UI exposes a simplified check; canonical development validation remains authoritative |
 | Responsive review | Chromium automation passes at desktop and 390 x 844 with no horizontal overflow; screenshots were inspected locally | No physical-device, other-browser, assistive-technology, or production proof |
 | Public-surface hygiene | Built assets pass the forbidden-term scan; no form, account, personal-data input, remote script/style, purchase flow, or visible commercial link by default | Build scan is bounded to generated text assets and DOM assertions |
+| Sites source/save | Human-observed source import, build, and Version 1 save succeeded; access remained owner-only custom | No Preview/Live URL and no hosted render evidence; deployment/publication were not performed |
 
 ## Runtime And Source Boundaries
 
@@ -27,7 +37,10 @@ Raw static intake requires a source-project adapter. `apps/sites-public-studio-a
 - Generated asset paths are relative (`./assets/...`). The output contains one HTML file, one CSS asset, and one JavaScript asset.
 - The application makes no network request for normal demo, editing, validation, persistence, import, or export behavior.
 - Commercial information is copy-only. `VITE_PUBLIC_STUDIO_CONTACT_URL` is optional, accepts HTTPS only, and leaves the link hidden when blank or invalid. Any approved URL remains a human configuration decision.
-- The separate adapter has the minimum local hosting manifest (`d1: null`, `r2: null`) and no `project_id`. Publication, deployment, custom domain, analytics, credentials, authentication, persistence, and monetization are explicitly outside this candidate.
+- The adapter hosting manifest contains the provisioned non-secret `project_id`
+  plus `d1: null` and `r2: null`. It contains no token, credential, URL, secret,
+  analytics, authentication, or storage value. The binding is source linkage,
+  not deployment or runtime proof.
 
 ## Source Adapter
 
@@ -64,41 +77,62 @@ C:\Users\thank\Storage\Game Projects\NarrativeGen\apps\public-studio\dist\
 
 The 2026-07-19 local output was 3 files / 48,467 bytes. Build emitted a Vite warning that `fs` from the shared engine entity module was browser-externalized; demo, edit, persistence, export/import, and browser tests still passed. Treat removal of that warning as engine packaging debt, not as proof that private Sites save will work.
 
-## Exact Human-Owned Sites Source Gate
+## Current Sites Evidence
 
-Required action:
-
-1. Start from a private, unpublished Sites project or source-import workspace.
-2. Import `apps/sites-public-studio-adapter/` as the source project. Do not import only `dist/` and do not rewrite the Studio into another runtime.
-3. Keep all publication, sharing, analytics, form, domain, and commerce controls disabled.
-4. Save a version only if Sites accepts and builds the source without requiring a deployment.
-5. Do not deploy. If Sites requires any production deployment to render a URL, report that requirement and stop.
-6. If a non-deployed review surface exists, confirm root render, CSS/JavaScript loading, automatic sample start, one choice transition, one node-text edit, reload persistence, JSON export, and absence of account/payment/internal-development surfaces.
-
-Return exactly these findings to the supervising AI:
+The human-observed return record is:
 
 ```json
 {
-  "private_save_completed": false,
-  "root_rendered": false,
-  "assets_loaded": false,
-  "sample_auto_started": false,
-  "choice_transition_worked": false,
-  "node_edit_updated_preview": false,
-  "local_draft_survived_reload": false,
-  "json_export_worked": false,
-  "forbidden_surface_found": false,
-  "sites_intake_mode": "source_adapter_or_unknown",
-  "runtime_notes": []
+  "private_save_completed": true,
+  "saved_version": 1,
+  "access": "owner-only custom",
+  "preview_url": null,
+  "live_url": null,
+  "deployment_required": false,
+  "deployment_performed": false,
+  "root_rendered": null,
+  "assets_loaded": null,
+  "sample_auto_started": null,
+  "choice_transition_worked": null,
+  "node_edit_updated_preview": null,
+  "local_draft_survived_reload": null,
+  "json_export_worked": null,
+  "forbidden_surface_found": null,
+  "sites_intake_mode": "source_adapter",
+  "runtime_notes": [
+    "Source import, build, and Version 1 save passed.",
+    "No non-deployed preview or live URL was available.",
+    "Hosted runtime behavior was not observed."
+  ]
 }
 ```
 
-Success signal: every functional boolean except `forbidden_surface_found` is `true`, `forbidden_surface_found` is `false`, and the project remains private and unpublished. On failure, include the exact step, visible message, and whether the failure happened before or after the first page render.
+`null` means unobserved. It must not be converted to a failed boolean. Local
+Worker checks remain valid within local scope but do not fill the hosted-runtime
+evidence gap.
+
+## Exact Next Human Gate
+
+1. Decide whether to owner-only deploy saved Version 1 for runtime review or
+   explicitly hold deployment.
+2. A hold preserves the current owner-only project, saved version, absent URLs,
+   and unknown runtime evidence.
+3. A separately authorized deployment must retain owner-only custom access and
+   target Version 1.
+4. After deployment, verify root/assets/story/edit/reload/export and update the
+   `null` fields with observed pass/fail results.
+5. Public access, sharing, analytics, form, domain, authentication, storage,
+   commerce, and monetization remain locked behind separate gates.
 
 ## Post-Gate Classification
 
-- Keep `adapter_candidate` while local adapter evidence is green but Sites source import/version save has not run.
-- Use `adapter_partial` when Sites accepts the source shape but changes relative asset/runtime behavior or cannot save the version without a bounded repair.
+- Use `adapter_partial` when source import/save has passed but hosted-runtime
+  behavior remains unobserved, or when a bounded runtime repair is still needed.
+- Use `adapter_accepted` only after owner-only hosted review confirms
+  root/assets/story/edit/reload/export without changing runtime semantics.
 - Use `blocked` when private import/save cannot be attempted or would require publication, credentials, data collection, a second runtime, or another out-of-scope capability.
 
-After a successful private gate, select one concrete friction finding for the next bounded editing slice. Do not add analytics or public distribution until an explicit public-release decision exists.
+Select S2 only after one concrete local or hosted review friction is observed.
+Do not treat the current runtime evidence gap as a friction finding, and do not
+add analytics or public distribution until an explicit public-release decision
+exists.
