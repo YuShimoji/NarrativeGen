@@ -7,17 +7,17 @@ This file is the single roadmap document. Agent operating rules live in `docs/RE
 
 ## Current Priorities
 
-1. **SR0 canonical closure and S1 handoff**
-   - The SR0 closure revision consumes the exact adapter repair at `5057d8a`,
-     retains its tracked Sites plugin and narrow ignore exception, normalizes
-     all seven detected CRLF index blobs to the repository LF policy, and adds
-     an index-blob regression check under `check:safety`.
-   - SR0 is accepted only when that revision is fast-forwarded to
-     `origin/main` and an ordinary fresh clone is clean before and after one
-     isolated install while safety and the full adapter test pass. The
-     supervising report owns the exact pushed SHA and clone evidence.
-   - After SR0 acceptance, the only unlocked successor is the human-owned S1
-     source import/version-save operation. SR0 does not authorize any Sites
+1. **SR0 closed; hand off the private compatibility gate**
+   - SR0 is accepted. Runtime revision `44656de` contains the exact adapter
+     repair, all seven LF normalizations, the index-blob regression guard, and a
+     self-contained full adapter test. It was fast-forwarded to `origin/main`
+     and passed ordinary remote-clone acceptance before this docs-only status
+     follow-up.
+   - The supervising report owns the exact final docs SHA and its repeated
+     clone evidence. The repository roadmap no longer treats repair integration
+     as an active implementation lane.
+   - The only unlocked successor is the human-owned S1 source
+     import/version-save operation. SR0 does not authorize any Sites
      project, deployment, sharing, analytics, domain, auth, storage, form,
      commerce, or publication action.
 
@@ -76,7 +76,7 @@ This lane can gather public-demo and lightweight-editing evidence without changi
 
 | Gate / target | Purpose and what becomes possible | Completion signal | Requirements / main risk | State, owner, next move |
 |---|---|---|---|---|
-| **SR0 — Restore adapter reproducibility** | Remove the clean-clone-only missing-plugin failure and checkout encoding noise before Sites receives the source | The repair ancestry and all seven LF normalizations are in `origin/main`; a fresh clone is clean before/after one isolated install and passes safety plus the full adapter test | Do not treat an ignored local file, cached clean status, or branch-only CI as main evidence; exact push/clone evidence belongs in the supervising report | `closure revision assembled`; assistant completes non-force push and remote fresh-clone verification under the repository follow-through authority, then hands S1 to the user |
+| **SR0 — Restore adapter reproducibility** | Remove the clean-clone-only missing-plugin failure and checkout encoding noise before Sites receives the source | The repair ancestry and all seven LF normalizations are in `origin/main`; a fresh clone is clean before/after one isolated install and passes safety plus the full adapter test | Do not treat an ignored local file, cached clean status, or branch-only CI as main evidence; exact push/clone evidence belongs in the supervising report | `done`; runtime acceptance passed at `44656de`; the final docs-only follow-up carries no runtime or dependency change, and S1 is handed to the user |
 | **S0 — Local public-studio candidate** | Put one deterministic story experience, small editor, and transfer loop into a static Japanese-first surface | Auto-start, edit/live preview, local restore, engine-valid export/import, responsive smoke, build scan, and local artifact inspection pass | Must reuse canonical sample/engine; no private data, AI configuration, transactions, analytics, or network runtime | `done locally`; assistant-owned implementation is validated; artifact is not published |
 | **S1 — Private Sites compatibility** | Learn whether the static output can be privately saved and previewed in Sites without changing runtime semantics | The exact readiness return record confirms root/assets/runtime/edit/reload/export and the project remains private | Accepted SR0 first; human Sites access; import mode may require a bounded adapter; publication controls must stay disabled | `pending human gate after SR0`; user/operator owns private import and save; return the prescribed JSON findings |
 | **S2 — Evidence-led editing improvement** | Reduce the largest observed author friction while keeping the public surface small | One S1 or local-review friction is named, measured, fixed, and regression-tested | Do not infer demand for node creation, graph editing, collaboration, or accounts | `proposed`; assistant may implement only after one concrete friction is selected from review evidence |

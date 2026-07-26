@@ -34,33 +34,32 @@ raw CRLF blobをindexへ直接入れたnegative fixtureとLF controlの両方を
 またrootの`test:sites-adapter`は最初に`build:public`を実行するため、fresh cloneに
 ignoredな`apps/public-studio/dist`が存在しなくてもfull adapter acceptanceを開始できる。
 
-現在のlaneは`CLOSE / SR0 / reproducible_main`。このrevisionの独立integration
-worktreeではlockfileから一度だけ依存を復元し、差分検査、tracked EOL検査、safety、
-adapter payload/scan/build/Chromium E2E、Public Studio、全体buildを通した。
-最終remote acceptanceは、このrevisionを非強制fast-forwardで`origin/main`へ反映し、
-そのremoteから作った通常のfresh cloneがinstall前後ともtracked cleanで、
-`check:safety`と`test:sites-adapter`を通ることによって確定する。最終SHAとpush、
-fresh-clone、primary checkoutの実測は実行タスクの監修報告を正本とし、この文書内の
-将来予測で代用しない。
+SR0はclosed。受入れruntime revision
+`44656de13d018fd0c88f505532b85e4cc59ae04f`を非強制fast-forwardで
+`origin/main`へ反映し、そのremoteから作った通常のfresh cloneでinstall前後の
+tracked clean、isolated `npm ci --foreground-scripts` 1回、`check:safety`、
+自己完結した`test:sites-adapter`を確認した。primary checkoutにも同じaccepted
+runtime contentをfast-forwardし、parity `0 0`、status clean、root dependency tree
+解決済みである。
+この文書だけの追随commitはruntime、dependency、payloadを変更せず、最終SHAと
+docs-follow-up cloneの実測は実行タスクの監修報告が正本となる。
 
-SR0 acceptance後に解放される次工程はhuman-ownedの
+現在のlaneは`HANDOFF / S1B / human_owned`。次工程は
 **S1B Sites source import and version save only**である。Sites source import、
 project作成、project ID、credential、version save、deployment、URL、
 sharing、domain、analytics、auth、storage、form、commerceはSR0では実行していない。
-判定はSR0 acceptanceまでは
-**`adapter_candidate + Sites source-import unverified`**、SR0 acceptance後も
 Sites側の判定は**`Sites source-import unverified`**のままである。
 
 ## 監修AIへの現状報告
 
 | 判断対象 | 今回の実測 | 証拠の区分と判断境界 |
 |---|---|---|
-| Git入力 | base `c93a0f4`、repair tip `5057d8a`、implementation `5bd97cf`。repair tipはbaseの直系子孫 | ref取得と祖先・差分監査によるrepository-derived evidence。最終remote SHAはpush後の報告で確定する |
+| Git / remote | base `c93a0f4`、repair tip `5057d8a`、implementation `5bd97cf`、accepted runtime `44656de`。すべて直系fast-forward | ref取得、祖先監査、non-force push、`ls-remote`によるrepository-derived evidence。docs-only final SHAは監修報告で確定する |
 | repair scope | `.gitignore`の狭い例外、tracked plugin、adapter説明、handoff追随だけをrepair branchから消費 | product/runtime semantics、dependency、payloadへの差分はない |
 | checkout hygiene | 5 Web Tester JSに加えCSV 1、C# test 1の計7 index blobを真のCRLF違反として検出しLF化 | working-tree表示だけに依存せずindex/blobを検査。EOL無視比較は一致 |
 | regression guard | raw CRLF index fixtureは失敗対象、LF fixtureは成功。実repositoryのindexも成功 | focused testと実indexの両方によるcurrent-run evidence |
 | local integration | `git diff --check`、`check:safety`、adapter check/scan/build/E2E、`test:public`、`build:all`が成功 | 独立worktreeの技術検証。remote pushやfresh cloneの代替ではない |
-| clean-clone acceptance | 更新済み`origin/main`から通常cloneし、install前clean、isolated `npm ci` 1回、safety/adapter、install後cleanを確認する | post-push acceptance evidence。最終監修報告でcommit/push/clone/primaryを別々に記録する |
+| clean-clone acceptance | `44656de`をremoteから通常cloneし、install前clean、isolated `npm ci` 1回、safety/adapter、install後cleanを確認 | valid post-push acceptance evidence。docs-only追随revisionも最終監修報告で同じ境界を再確認する |
 | report-derived evidence | 修復branch先端の既存GitHub CI success、以前のengine/Unity詳細件数 | 補助証拠。今回のlive test結果やhuman acceptanceとして再利用しない |
 | nonblocking debt | npm audit、Web Tester lint未設定、Vite externalize/large chunk、C# nullable/XML doc、optional/extraneous表示 | SR0を停止しない。dependency upgradeや一括修復はG7専用sliceで扱う |
 | Sites / release | Sites操作、deployment、publication、公開URL、各種bindingは未実施 | local/remote技術greenはS1B human acceptanceやrelease承認ではない |
@@ -77,13 +76,12 @@ Sites側の判定は**`Sites source-import unverified`**のままである。
 
 ## Residual work
 
-- **SR0 remote/fresh-clone closure**: purposeは統合内容が端末cacheやignored fileに
-  依存しないと確定すること。effectは再現可能なS1 input。requirementsは
-  non-force fast-forward、更新remoteからの通常clone、install前後clean、isolated
-  `npm ci` 1回、safety/adapter green。stateはclosure revision assembled and locally
-  validated。ownerはassistant under
-  `AUTH-NG-REPO-GIT-FOLLOWTHROUGH-20260726`。next moveはpush直前にrefを再取得し、
-  remote/fresh-clone/primaryの実測を分離して報告する。
+- **SR0 closure evidence**: purposeは統合内容が端末cacheやignored fileに依存しないと
+  確定すること。effectは再現可能なS1 input。requirementsはnon-force fast-forward、
+  更新remoteからの通常clone、install前後clean、isolated `npm ci` 1回、
+  safety/adapter green。stateはdone。ownerはassistant under
+  `AUTH-NG-REPO-GIT-FOLLOWTHROUGH-20260726`。next moveは実装を再開せず、
+  commit/push/fresh-clone/primary evidenceを監修報告へ分離記録する。
 - **S1B Sites source import/version save**: purposeはadapter sourceをSitesが無改変で
   build/saveできるか事実化すること。effectは`adapter_candidate`からaccepted、
   `adapter_partial`、または`blocked`への分類。requirementsはSR0 accepted、
@@ -110,8 +108,8 @@ Sites側の判定は**`Sites source-import unverified`**のままである。
 
 ## Exact next gate
 
-SR0 final reportで`origin/main`とfresh cloneがacceptedなら、次の入口は
-human-ownedの**S1B source import and version save only**である。
+SR0はaccepted。次の入口はhuman-ownedの
+**S1B source import and version save only**である。
 
 1. `git fetch --prune origin`後にlocal `main`と`origin/main`のparityを確認する。
 2. `npm run check:safety`と`npm run test:sites-adapter`で正本の基線を再確認する。
