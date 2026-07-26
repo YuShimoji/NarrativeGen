@@ -1,6 +1,6 @@
 /**
  * ModelValidator - モデル検証機能
- * 
+ *
  * ストーリーモデルの整合性を検証し、問題を検出します。
  * - 到達不能ノードの検出
  * - 参照切れ（存在しないノードへの遷移）の検出
@@ -204,7 +204,7 @@ export class ModelValidator {
 
       for (let i = 0; i < node.choices.length; i++) {
         const choice = node.choices[i]
-        
+
         // ターゲットが未設定
         if (!choice.target) {
           this.issues.push(new ValidationIssue(
@@ -235,7 +235,7 @@ export class ModelValidator {
    */
   _detectCircularReferences(model) {
     const cycles = this._findCycles(model)
-    
+
     for (const cycle of cycles) {
       this.issues.push(new ValidationIssue(
         ValidationCategory.CIRCULAR_REFERENCE,
@@ -276,15 +276,15 @@ export class ModelValidator {
     for (const [nodeId, node] of Object.entries(model.nodes)) {
       // 選択肢がない、または空の選択肢配列
       const hasNoChoices = !node.choices || node.choices.length === 0
-      
+
       // 有効な遷移先を持つ選択肢がない
-      const hasNoValidTargets = node.choices && 
-        node.choices.length > 0 && 
+      const hasNoValidTargets = node.choices &&
+        node.choices.length > 0 &&
         node.choices.every(c => !c.target)
 
       if (hasNoChoices || hasNoValidTargets) {
         // エンディングノードとしてマークされているかチェック
-        const isEnding = node.isEnding || 
+        const isEnding = node.isEnding ||
                         node.type === 'ending' ||
                         nodeId.toLowerCase().includes('end') ||
                         nodeId.toLowerCase().includes('ending')
@@ -494,8 +494,8 @@ export class ModelValidator {
    * 警告以上の問題があるかどうか
    */
   hasWarningsOrErrors() {
-    return this.issues.some(i => 
-      i.severity === ValidationSeverity.ERROR || 
+    return this.issues.some(i =>
+      i.severity === ValidationSeverity.ERROR ||
       i.severity === ValidationSeverity.WARNING
     )
   }

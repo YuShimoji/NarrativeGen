@@ -1,40 +1,54 @@
 # Development Plan
 
 Status: roadmap source of truth
-Last updated: 2026-07-19
+Last updated: 2026-07-26
 
 This file is the single roadmap document. Agent operating rules live in `docs/REPO_LOCAL_RULES.md`; current state and next resume steps live in the root `HANDOVER.md`; feature/spec status lives in `docs/spec-index.json`; durable decisions live in `docs/governance/decision-log.md`.
 
 ## Current Priorities
 
-1. **Public Studio private-compatibility gate**
+1. **SR0 canonical closure and S1 handoff**
+   - The SR0 closure revision consumes the exact adapter repair at `5057d8a`,
+     retains its tracked Sites plugin and narrow ignore exception, normalizes
+     all seven detected CRLF index blobs to the repository LF policy, and adds
+     an index-blob regression check under `check:safety`.
+   - SR0 is accepted only when that revision is fast-forwarded to
+     `origin/main` and an ordinary fresh clone is clean before and after one
+     isolated install while safety and the full adapter test pass. The
+     supervising report owns the exact pushed SHA and clone evidence.
+   - After SR0 acceptance, the only unlocked successor is the human-owned S1
+     source import/version-save operation. SR0 does not authorize any Sites
+     project, deployment, sharing, analytics, domain, auth, storage, form,
+     commerce, or publication action.
+
+2. **Public Studio private-compatibility gate**
    - Keep `apps/public-studio/` as a separate Japanese-first, browser-local demonstration and editing lane. It reuses the shared browser engine and canonical procedural-choice sample; it must not become a second runtime or model authority.
    - The local candidate is implemented and locally validated. The next gate is one human-owned private Sites import/save using `docs/sites/PUBLIC_STUDIO_READINESS.md`; publication, analytics, auth, personal data, AI configuration, and transactions remain disabled.
    - After the private gate, use one observed editing friction to choose the next bounded slice. Do not broaden the editor from hypothetical demand.
 
-2. **Playable baseline and originality-probe review**
+3. **Playable baseline and originality-probe review**
    - Keep `models/examples/vertical-slice.json` as the survival check for authoring, play, save, and reload.
    - Use `models/examples/originality-spine-probe.json` as the current review artifact for whether Character Knowledge and Perception Policy produce a player-visible route difference without old-ADV-style manual wiring.
    - The cross-sample state leak and Japanese-first probe presentation are repaired. Do not reopen them without a reproduced defect or review finding.
 
-3. **Procedural-narrative policy frontier**
+4. **Procedural-narrative policy frontier**
    - The user accepted Contract A on 2026-07-12. [SP-KNOW-002](../specs/knowledge-derived-choice-availability.md) owns the reusable pure choice-availability contract; the [comparison](../samples/originality-spine-policy-contract-comparison.md) remains non-normative evidence.
    - The G2 TS/Web slice is `done`: schema, engine, inference, cache, probe, Dashboard, Story-boundary, three-browser, build, safety, push, parity, and commit-associated CI agree.
    - Contract B event materialization, Unity parity, and G3 Choice Consequence Lens remain separate lanes. Do not fold them into G2 closeout.
 
-4. **SP-DTYARN-001 continuation**
+5. **SP-DTYARN-001 continuation**
    - Extend Dynamic Text to Yarn conversion beyond the implemented `[entity]`, `[entity.prop]`, and numeric comparison support.
    - Fix the intended Yarn representation in `docs/specs/dynamic-text-yarn-export.md` before code changes.
 
-5. **Experience-direction exploration before broad UI work**
+6. **Experience-direction exploration before broad UI work**
    - Compare materially different directions for layout/information hierarchy, Japanese/English behavior, visual system, and motion before a broad modernization slice.
    - Produce low-cost review evidence first. Human direction selection advances the spec/prototype; implementation still requires an explicit `IMPLEMENT` packet unless that packet already names the choice as its final gate. Do not enter a micro-polish loop without a chosen direction and fixed acceptance axes.
 
-6. **SP-009 UI quality expansion**
+7. **SP-009 UI quality expansion**
    - The primary Story / Graph / Play / Modal checklist is marked complete, while technical debt still names debug and secondary modal surfaces. Reconcile that coverage and name the exact remaining screens before another implementation slice.
    - Track any newly confirmed screen-level gaps in `docs/checklists/A11Y_RESPONSIVE_CHECKLIST.md`; do not use a generic Phase 8 label as proof of unfinished behavior.
 
-7. **E2E and regression stability**
+8. **E2E and regression stability**
    - GitHub #81-#83 are closed in `docs/tasks/FLAKY_ISSUES_TRACKER.md`. Do not treat them as active work unless the runbook threshold is met by a reproduced recurrence.
    - Add or formalize negative-path import/export checks where they remove manual uncertainty.
 
@@ -62,8 +76,9 @@ This lane can gather public-demo and lightweight-editing evidence without changi
 
 | Gate / target | Purpose and what becomes possible | Completion signal | Requirements / main risk | State, owner, next move |
 |---|---|---|---|---|
+| **SR0 — Restore adapter reproducibility** | Remove the clean-clone-only missing-plugin failure and checkout encoding noise before Sites receives the source | The repair ancestry and all seven LF normalizations are in `origin/main`; a fresh clone is clean before/after one isolated install and passes safety plus the full adapter test | Do not treat an ignored local file, cached clean status, or branch-only CI as main evidence; exact push/clone evidence belongs in the supervising report | `closure revision assembled`; assistant completes non-force push and remote fresh-clone verification under the repository follow-through authority, then hands S1 to the user |
 | **S0 — Local public-studio candidate** | Put one deterministic story experience, small editor, and transfer loop into a static Japanese-first surface | Auto-start, edit/live preview, local restore, engine-valid export/import, responsive smoke, build scan, and local artifact inspection pass | Must reuse canonical sample/engine; no private data, AI configuration, transactions, analytics, or network runtime | `done locally`; assistant-owned implementation is validated; artifact is not published |
-| **S1 — Private Sites compatibility** | Learn whether the static output can be privately saved and previewed in Sites without changing runtime semantics | The exact readiness return record confirms root/assets/runtime/edit/reload/export and the project remains private | Human Sites access; import mode may require a bounded adapter; publication controls must stay disabled | `pending human gate`; user/operator owns private import and save; return the prescribed JSON findings |
+| **S1 — Private Sites compatibility** | Learn whether the static output can be privately saved and previewed in Sites without changing runtime semantics | The exact readiness return record confirms root/assets/runtime/edit/reload/export and the project remains private | Accepted SR0 first; human Sites access; import mode may require a bounded adapter; publication controls must stay disabled | `pending human gate after SR0`; user/operator owns private import and save; return the prescribed JSON findings |
 | **S2 — Evidence-led editing improvement** | Reduce the largest observed author friction while keeping the public surface small | One S1 or local-review friction is named, measured, fixed, and regression-tested | Do not infer demand for node creation, graph editing, collaboration, or accounts | `proposed`; assistant may implement only after one concrete friction is selected from review evidence |
 | **S3 — Explicit public-demo decision** | Decide whether and how a reviewed candidate becomes publicly reachable and observable | Scope, owner, privacy/analytics policy, approved URL, rollback, and acceptance checks are explicitly approved before any publication | Publication, Sites-managed analytics, legal copy, brand/domain, and commercial contact are human gates; commerce remains a separate system | `hold`; user-owned release decision; no deployment or analytics work begins from S0/S1 alone |
 

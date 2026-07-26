@@ -1,6 +1,6 @@
 /**
  * ValidationPanel - モデル検証結果表示パネル
- * 
+ *
  * ModelValidatorの結果をUIに表示し、問題箇所へのナビゲーションを提供します。
  */
 
@@ -41,9 +41,9 @@ export class ValidationPanel {
 
     const issues = this.validator.validate(this.appState.model)
     const summary = this.validator.getSummary()
-    
+
     this._renderResults(issues, summary)
-    
+
     return summary
   }
 
@@ -52,7 +52,7 @@ export class ValidationPanel {
    */
   _renderNoModel() {
     if (!this.container) return
-    
+
     this.container.innerHTML = `
       <div class="validation-panel">
         <div class="validation-empty">
@@ -69,10 +69,10 @@ export class ValidationPanel {
   _renderResults(issues, summary) {
     if (!this.container) return
 
-    const statusClass = summary.errors > 0 ? 'status-error' : 
+    const statusClass = summary.errors > 0 ? 'status-error' :
                        summary.warnings > 0 ? 'status-warning' : 'status-ok'
-    
-    const statusIcon = summary.errors > 0 ? '❌' : 
+
+    const statusIcon = summary.errors > 0 ? '❌' :
                       summary.warnings > 0 ? '⚠️' : '✅'
 
     this.container.innerHTML = `
@@ -82,7 +82,7 @@ export class ValidationPanel {
           <span class="validation-title">モデル検証結果</span>
           <button class="btn-refresh" title="再検証">🔄</button>
         </div>
-        
+
         <div class="validation-summary">
           <div class="summary-item ${summary.errors > 0 ? 'has-issues' : ''}">
             <span class="count">${summary.errors}</span>
@@ -130,7 +130,7 @@ export class ValidationPanel {
   _renderIssueItem(issue, index) {
     const severityIcon = this._getSeverityIcon(issue.severity)
     const categoryLabel = this._getCategoryLabel(issue.category)
-    
+
     return `
       <div class="validation-issue ${issue.severity}" data-index="${index}" data-node-id="${issue.nodeId || ''}">
         <div class="issue-header">
@@ -256,10 +256,10 @@ export class ValidationPanel {
 
     const hasError = issues.some(i => i.severity === ValidationSeverity.ERROR)
     const hasWarning = issues.some(i => i.severity === ValidationSeverity.WARNING)
-    
+
     const badgeClass = hasError ? 'badge-error' : hasWarning ? 'badge-warning' : 'badge-info'
     const icon = hasError ? '❌' : hasWarning ? '⚠️' : 'ℹ️'
-    
+
     return `<span class="node-validation-badge ${badgeClass}" title="${issues.length}件の問題">${icon}</span>`
   }
 }
