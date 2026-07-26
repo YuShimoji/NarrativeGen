@@ -54,7 +54,7 @@
     "test:engine": "npm run test -w @narrativegen/engine-ts",
     "test:tester": "npm run test -w @narrativegen/web-tester",
     "test:public": "npm run test -w @narrativegen/public-studio",
-    "test:sites-adapter": "npm run test -w @narrativegen/sites-public-studio-adapter",
+    "test:sites-adapter": "npm run build:public && npm run test -w @narrativegen/sites-public-studio-adapter",
     "test:e2e": "npx playwright test --config apps/web-tester/playwright.config.js",
     "test:e2e:public": "npm run test:e2e -w @narrativegen/public-studio",
     "test:e2e:sites-adapter": "npm run test:e2e -w @narrativegen/sites-public-studio-adapter",

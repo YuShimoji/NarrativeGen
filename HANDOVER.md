@@ -31,6 +31,8 @@ hosting manifest、公開状態は変更していない。
 LF管理対象にCR byteがあれば失敗する。`scripts/tracked-eol-check.test.mjs`は
 raw CRLF blobをindexへ直接入れたnegative fixtureとLF controlの両方を検証する。
 この検査は`check:encoding-safety`経由で`check:safety`に組み込まれている。
+またrootの`test:sites-adapter`は最初に`build:public`を実行するため、fresh cloneに
+ignoredな`apps/public-studio/dist`が存在しなくてもfull adapter acceptanceを開始できる。
 
 現在のlaneは`CLOSE / SR0 / reproducible_main`。このrevisionの独立integration
 worktreeではlockfileから一度だけ依存を復元し、差分検査、tracked EOL検査、safety、
