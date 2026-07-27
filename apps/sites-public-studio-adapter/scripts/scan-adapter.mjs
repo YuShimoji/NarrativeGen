@@ -1,6 +1,8 @@
 import { readFile, readdir, stat } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
+import { validateHostingManifest } from './hosting-manifest-contract.mjs'
+
 const studioRoot = resolve(import.meta.dirname, '..', 'public', 'studio')
 const adapterRoot = resolve(import.meta.dirname, '..')
 const forbiddenPatterns = [
@@ -46,10 +48,7 @@ if (!/id="commercial-contact"[^>]*\bhidden\b/i.test(html)) {
 }
 
 const hosting = JSON.parse(await readFile(resolve(adapterRoot, '.openai', 'hosting.json'), 'utf8'))
-const hostingKeys = Object.keys(hosting).sort()
-if (JSON.stringify(hostingKeys) !== JSON.stringify(['d1', 'r2']) || hosting.d1 !== null || hosting.r2 !== null) {
-  throw new Error('Hosting manifest must contain only null d1 and r2 bindings before provisioning')
-}
+const hostingManifest = validateHostingManifest(hosting)
 
 const violations = []
 for (const file of files) {
@@ -72,7 +71,7 @@ console.log(
       totalBytes,
       executableAssets,
       forbiddenPatterns: forbiddenPatterns.length,
-      hostingManifest: { d1: hosting.d1, r2: hosting.r2, projectIdPresent: 'project_id' in hosting },
+      hostingManifest,
     },
     null,
     2,

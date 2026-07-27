@@ -14,8 +14,9 @@
     "check:payload": "node ./scripts/sync-public-studio.mjs --check",
     "check:embedded": "node ./scripts/sync-public-studio.mjs --embedded-only",
     "scan": "node ./scripts/scan-adapter.mjs",
+    "test:hosting-manifest": "node --test ./scripts/hosting-manifest-contract.test.mjs",
     "test:e2e": "playwright test --config ./playwright.config.js",
-    "test": "npm run check:payload && npm run check:embedded && npm run scan && npm run build && npm run test:e2e"
+    "test": "npm run test:hosting-manifest && npm run check:payload && npm run check:embedded && npm run scan && npm run build && npm run test:e2e"
   },
   "dependencies": {
     "next": "16.2.6",
