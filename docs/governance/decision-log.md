@@ -4,6 +4,7 @@
 
 | 日付 | 決定事項 | 選択肢 | 決定理由 |
 |------|----------|--------|----------|
+| 2026-07-27 | 保存済みPublic Studio Version 1をowner-only custom accessのままproduction deploymentし、public releaseとは分離 | 既存Version 1をowner-only deploy / hold / access拡大 | userが既存Version 1だけのdeploymentを明示承認。deploymentは`succeeded`、accessはcustom・許可account user 1・全group 0、version数1を維持した。Live URL値は非共有条件によりrepositoryへ保存しない。hosted runtime受入、access拡大、analytics/domain/auth/storage/commerce、public releaseは別gate |
 | 2026-07-12 | G1 Contract A を採用し SP-KNOW-002 契約を確定 | Contract A / Contract B / 再探索 | user が optional `knowledgeRules`、exact `knowledgeRule / noticed` condition、public pure `evaluateKnowledgeRule` diagnostic、unchanged `getAvailableChoices`、shared inference semantics、separate `procedural-choice-spine-probe.json` / `SP-KNOW-002`、availability 時の perception-event 非生成を一括承認。SP-KNOW-001 persistent node-trigger v0 は維持し、Contract B、Unity、G3 は別決定とした |
 | 2026-06-15 | 開発優先順を Playable first, then green に切替 | Playable first / Green first 継続 / CI先行 | `vertical-slice.json` を作家が短編を作りブラウザで遊ぶ正本成果物にし、テスト・lint・schema・CI・doctor・リファクタリングを体験保護の衛兵に戻すため |
 | 2026-06-15 | Agent 指示リセット: 薄い入口 + repo-local rules + HANDOVER 現在状態に整理 | NLMYTGen 型に更新 / AGENTS肥大化 / v18 docs維持 | Agent入口に手順・状態・履歴を溜めず、通常再開の読了予算を `AGENTS.md` -> `docs/REPO_LOCAL_RULES.md` -> `HANDOVER.md` に固定するため |

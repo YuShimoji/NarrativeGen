@@ -7,7 +7,7 @@ This file is the single roadmap document. Agent operating rules live in `docs/RE
 
 ## Current Priorities
 
-1. **SR0 closed; S1 source/save accepted**
+1. **SR0 closed; S1 owner-only deployment complete**
    - SR0 is accepted. Runtime revision `44656de` contains the exact adapter
      repair, all seven LF normalizations, the index-blob regression guard, and a
      self-contained full adapter test. It was fast-forwarded to `origin/main`
@@ -16,18 +16,20 @@ This file is the single roadmap document. Agent operating rules live in `docs/RE
    - The supervising report owns the exact final docs SHA and its repeated
      clone evidence. The repository roadmap no longer treats repair integration
      as an active implementation lane.
-   - Human-observed Sites evidence now records a successful adapter source
-     import, build, and Version 1 save with owner-only custom access. No
-     Preview URL or Live URL exists, and deployment was neither required nor
-     performed.
-   - The repository records the provisioned non-secret project binding.
-     Hosted runtime behavior remains unknown, so the only unlocked successor
-     is an explicit owner-only deployment-or-hold decision.
+   - Sites evidence records a successful adapter source import, build, Version
+     1 save, and deployment of that existing version only. Access remains
+     owner-only custom: one allowed account user and no allowed groups.
+   - A Live URL exists but its value is intentionally not stored in this
+     repository. No Preview URL exists. The repository records only the
+     provisioned non-secret project binding; D1 and R2 remain null.
+   - Hosted runtime behavior remains unknown. The only unlocked successor is
+     an owner-authenticated review of the existing deployment; it requires no
+     new version, redeployment, or access change.
 
 2. **Public Studio private-compatibility gate**
    - Keep `apps/public-studio/` as a separate Japanese-first, browser-local demonstration and editing lane. It reuses the shared browser engine and canonical procedural-choice sample; it must not become a second runtime or model authority.
    - Source intake and Version 1 save are accepted; private hosted-runtime compatibility remains partial because root/assets/story/edit/reload/export were not observed on Sites.
-   - The next human gate is whether to deploy Version 1 with owner-only access for runtime review or hold. Publication, analytics, auth, personal data, AI configuration, transactions, and public visibility remain disabled.
+   - Version 1 is deployed with owner-only access. The next human gate is runtime review of root/assets/story/edit/reload/export. Publication, analytics, auth, personal data, AI configuration, transactions, and public visibility remain disabled.
    - Choose S2 only after one concrete local or hosted-runtime editing friction is observed. Do not broaden the editor from hypothetical demand or from the current evidence gap.
 
 3. **Playable baseline and originality-probe review**
@@ -72,7 +74,7 @@ This is a dependency-ordered proposal, not an approved implementation queue. A l
 | **G5 — Restore cross-runtime semantic parity** | Let the approved policy behavior survive Unity integration instead of becoming Web-only originality | C# model shape, rule evaluation, TS/C# fixtures, and one Unity integration sample agree on the SP-KNOW-002 semantics | Requires stable TS semantics; Unity must not independently evolve; Editor visual acceptance is separate | `hold`; separate Unity `IMPLEMENT` authority is not granted; user owns visual/public distribution decisions |
 | **G6 — Mature the authoring experience around proven work** | Reorganize the tool around the real Writer / TechDesigner / Integrator loop and reduce language/visual friction | Stage-based cockpit direction, two-layer UI localization, and narrative visual grammar are each selected through low-cost evidence and delivered as bounded slices | Do not redesign around an unproven workflow; high-subjectivity direction needs human selection | `proposed`; shared direction, assistant implementation after explicit packets; start only after G4 reveals the actual friction |
 | **G7 — Establish release readiness** | Make a reproducible build trustworthy enough for versioned consumption | Supported toolchains are pinned; production audit findings have an approved resolution/baseline; backend build and real Web Tester lint are in the standard gate; negative import/export and recurring parity checks are enforced | Dependency upgrades require approval and may change behavior; quality work must protect the playable path | `proposed support track`; shared approval/assistant execution; schedule as a dedicated security/toolchain slice before release claims |
-| **G8 — Open conditional ecosystem paths** | Connect external writing, distribution, and status surfaces without creating a second source of truth | WritingPage gates pass before integration; public Unity/package publication is explicitly human-approved; any Project Cockpit is generated from canonical docs; Public Studio stays private until its own release gate | External format stability, publication scope, credentials, analytics, and maintenance ownership are outside current authority | `hold (conditional)`; the local Public Studio candidate does not unlock publication; user unlocks each path and the assistant implements only the approved bounded adapter or generated projection |
+| **G8 — Open conditional ecosystem paths** | Connect external writing, distribution, and status surfaces without creating a second source of truth | WritingPage gates pass before integration; public Unity/package publication is explicitly human-approved; any Project Cockpit is generated from canonical docs; Public Studio stays private until its own release gate | External format stability, publication scope, credentials, analytics, and maintenance ownership are outside current authority | `hold (conditional)`; an owner-only production deployment does not unlock public distribution; user unlocks each path and the assistant implements only the approved bounded adapter or generated projection |
 
 ## Parallel Public Studio Target Ladder
 
@@ -82,9 +84,9 @@ This lane can gather public-demo and lightweight-editing evidence without changi
 |---|---|---|---|---|
 | **SR0 — Restore adapter reproducibility** | Remove the clean-clone-only missing-plugin failure and checkout encoding noise before Sites receives the source | The repair ancestry and all seven LF normalizations are in `origin/main`; a fresh clone is clean before/after one isolated install and passes safety plus the full adapter test | Do not treat an ignored local file, cached clean status, or branch-only CI as main evidence; exact push/clone evidence belongs in the supervising report | `done`; runtime acceptance passed at `44656de`; the final docs-only follow-up carries no runtime or dependency change, and S1 is handed to the user |
 | **S0 — Local public-studio candidate** | Put one deterministic story experience, small editor, and transfer loop into a static Japanese-first surface | Auto-start, edit/live preview, local restore, engine-valid export/import, responsive smoke, build scan, and local artifact inspection pass | Must reuse canonical sample/engine; no private data, AI configuration, transactions, analytics, or network runtime | `done locally`; assistant-owned implementation is validated; artifact is not published |
-| **S1 — Private Sites compatibility** | Learn whether the adapter can be saved privately and whether the hosted runtime preserves behavior | Source import/build/Version 1 save pass is distinct from root/assets/runtime/edit/reload/export evidence | Source/save accepted with owner-only custom access; no Preview/Live URL and no deployment. Runtime behavior remains unknown until a separately authorized owner-only deployment | `adapter_partial`; source/save is done, user owns the Version 1 deploy-or-hold decision, and no external Sites action is authorized by this roadmap update |
+| **S1 — Private Sites compatibility** | Learn whether the adapter can be saved privately and whether the hosted runtime preserves behavior | Source import/build/Version 1 save and owner-only deployment pass are distinct from root/assets/runtime/edit/reload/export evidence | Existing Version 1 is deployed; access remains custom with one account user and zero groups; Live URL exists but is not stored here; runtime behavior is unobserved | `adapter_partial`; control-plane work is done, user owns the owner-authenticated runtime review, and no new version, redeployment, or access change is authorized by this roadmap update |
 | **S2 — Evidence-led editing improvement** | Reduce the largest observed author friction while keeping the public surface small | One local or hosted-runtime friction is named, measured, fixed, and regression-tested | Do not infer demand for node creation, graph editing, collaboration, or accounts; unknown runtime behavior is not a friction finding | `proposed`; assistant may implement only after one concrete friction is selected from review evidence |
-| **S3 — Explicit public-demo decision** | Decide whether and how a reviewed candidate becomes publicly reachable and observable | Scope, owner, privacy/analytics policy, approved URL, rollback, and acceptance checks are explicitly approved before any publication | Publication, Sites-managed analytics, legal copy, brand/domain, and commercial contact are human gates; commerce remains a separate system | `hold`; user-owned release decision; no deployment or analytics work begins from S0/S1 alone |
+| **S3 — Explicit public-demo decision** | Decide whether and how a reviewed candidate becomes publicly reachable and observable | Scope, owner, privacy/analytics policy, approved URL, rollback, and acceptance checks are explicitly approved before any publication | Publication, access expansion, Sites-managed analytics, legal copy, brand/domain, and commercial contact are human gates; commerce remains a separate system | `hold`; user-owned release decision; the current owner-only deployment is not public release and does not authorize access or analytics changes |
 
 Parallel compatibility work remains available but is not the core originality sequence: SP-DTYARN-001 should proceed spec-first, and regression/a11y work should begin from a reproduced or precisely named gap rather than a generic maintenance label.
 

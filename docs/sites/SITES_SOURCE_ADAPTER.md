@@ -11,10 +11,11 @@ minimal vinext/Cloudflare Worker project while preserving the existing Public
 Studio production payload byte-for-byte. It does not reimplement the editor,
 story runtime, validation, persistence, or JSON transfer logic.
 
-Human-observed Sites evidence records a successful source import, build, and
-Version 1 save. The project uses owner-only custom access. No Preview URL or
-Live URL exists, and deployment was neither required nor performed. Hosted
-runtime behavior remains unobserved.
+Sites evidence records a successful source import, build, Version 1 save, and
+deployment of that existing version only. The project still uses owner-only
+custom access with one allowed account user and no allowed groups. A Live URL
+exists, but its value is intentionally not stored or repeated in this
+repository. No Preview URL exists. Hosted runtime behavior remains unobserved.
 
 ## Architecture
 
@@ -75,6 +76,12 @@ provisioning flow. It is not a credential, URL, deployment proof, or runtime
 acceptance. D1, R2, authentication, secrets, analytics, storage, and environment
 configuration remain absent.
 
+`scripts/hosting-manifest-contract.mjs` accepts only two exact safe shapes:
+unprovisioned `{ d1: null, r2: null }`, or provisioned with a syntactically
+valid `appgprj_...` project ID plus those two null bindings. Unexpected keys,
+malformed IDs, and non-null D1/R2 bindings fail closed. Four focused tests cover
+both accepted shapes and the rejection cases.
+
 ## Local Commands
 
 From the repository root:
@@ -82,6 +89,7 @@ From the repository root:
 ```powershell
 npm run check:sites-adapter
 npm run scan:sites-adapter
+npm run test:hosting-manifest -w @narrativegen/sites-public-studio-adapter
 npm run build:sites-adapter
 npm run preview:sites-adapter
 npm run test:e2e:sites-adapter
@@ -108,9 +116,14 @@ The production-like local URL is `http://127.0.0.1:4184/`. It redirects to
   readable, and showed no adapter UI.
 - The bounded text/DOM scan passed 3 files / 48,467 bytes and nine forbidden
   pattern classes.
-- Human-observed Sites intake accepted this adapter source, completed its build,
-  and saved Version 1 with owner-only custom access. No Preview/Live URL was
-  created and no deployment was performed.
+- Sites intake accepted this adapter source, completed its build, saved Version
+  1, and successfully deployed that existing version only. Access remains
+  custom with one allowed account user and no allowed groups. A Live URL exists
+  but is intentionally unrecorded; hosted runtime behavior was not observed.
+- Provisioning exposed that the previous scan accepted only a pre-provisioning
+  manifest. The bounded contract repair accepts the exact provisioned shape,
+  rejects added capabilities, and passes 4/4 focused tests plus the full 3/3
+  adapter Chromium suite.
 
 This evidence establishes a locally verified source adapter and an accepted
 Sites source-import/build/version-save contract. It does not establish hosted
@@ -119,11 +132,12 @@ public-release readiness, analytics readiness, or revenue readiness.
 
 ## Exact Next Human Gate
 
-1. Decide whether to owner-only deploy saved Version 1 for runtime review or
-   explicitly hold.
-2. A hold preserves owner-only access, absent Preview/Live URLs, and unknown
-   hosted-runtime behavior.
-3. A separately authorized deployment must retain owner-only custom access,
-   target Version 1, and then verify root/assets/story/edit/reload/export.
+1. Open the existing deployment in an owner-authenticated browser without
+   repeating the Live URL value in repository files or reports.
+2. Verify root/assets/story/edit/reload/export and record observed pass/fail
+   results. A failure stops this gate; it does not authorize source repair or
+   redeployment.
+3. Keep Version 1, owner-only custom access, and the current capability-free
+   manifest unchanged.
 4. Public visibility, sharing, analytics, form, domain, authentication, storage,
    commerce, and monetization remain locked behind separate gates.

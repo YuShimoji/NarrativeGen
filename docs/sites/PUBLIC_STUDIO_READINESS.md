@@ -7,16 +7,19 @@ Artifact owners: `apps/public-studio/` and `apps/sites-public-studio-adapter/`
 
 ## Verdict
 
-Raw static intake requires a source-project adapter. Human-observed Sites
-evidence records that `apps/sites-public-studio-adapter/` was imported, built,
-and saved as Version 1 with owner-only custom access. No Preview URL or Live URL
-exists, and deployment was neither required nor performed.
+Raw static intake requires a source-project adapter. Sites evidence records that
+`apps/sites-public-studio-adapter/` was imported, built, saved as Version 1,
+and that existing version alone was deployed successfully. Access remains
+owner-only custom with one allowed account user and no allowed groups. A Live
+URL exists, but its value is intentionally not stored or repeated here. No
+Preview URL exists.
 
 The source/save gate therefore passes. Root rendering, asset loading, story
 flow, editing, reload persistence, and export on the hosted runtime were not
 observed; they are unknown rather than failed. Overall private hosted-runtime
-compatibility remains partial. The next human gate is an explicit decision to
-owner-only deploy Version 1 for runtime review or to hold.
+compatibility remains partial. The next human gate is owner-authenticated review
+of the existing deployment, without creating a version, redeploying, or changing
+access.
 
 ## What Is Ready
 
@@ -28,7 +31,7 @@ owner-only deploy Version 1 for runtime review or to hold.
 | JSON transfer | Exported JSON reloads through the full Node engine validator in the browser test; JSON import rejects simplified structural errors before preview | Browser UI exposes a simplified check; canonical development validation remains authoritative |
 | Responsive review | Chromium automation passes at desktop and 390 x 844 with no horizontal overflow; screenshots were inspected locally | No physical-device, other-browser, assistive-technology, or production proof |
 | Public-surface hygiene | Built assets pass the forbidden-term scan; no form, account, personal-data input, remote script/style, purchase flow, or visible commercial link by default | Build scan is bounded to generated text assets and DOM assertions |
-| Sites source/save | Human-observed source import, build, and Version 1 save succeeded; access remained owner-only custom | No Preview/Live URL and no hosted render evidence; deployment/publication were not performed |
+| Sites control plane | Source import, build, Version 1 save, and deployment of that version succeeded; access remains custom with one account user and zero groups | Live URL value is intentionally unrecorded; hosted render behavior remains unobserved; this is not public release |
 
 ## Runtime And Source Boundaries
 
@@ -79,7 +82,7 @@ The 2026-07-19 local output was 3 files / 48,467 bytes. Build emitted a Vite war
 
 ## Current Sites Evidence
 
-The human-observed return record is:
+The current read-only Sites control-plane record is:
 
 ```json
 {
@@ -87,9 +90,13 @@ The human-observed return record is:
   "saved_version": 1,
   "access": "owner-only custom",
   "preview_url": null,
-  "live_url": null,
+  "production_url_present": true,
+  "production_url_recorded": false,
   "deployment_required": false,
-  "deployment_performed": false,
+  "deployment_performed": true,
+  "deployment_status": "succeeded",
+  "allowed_account_users": 1,
+  "allowed_groups": 0,
   "root_rendered": null,
   "assets_loaded": null,
   "sample_auto_started": null,
@@ -100,8 +107,8 @@ The human-observed return record is:
   "forbidden_surface_found": null,
   "sites_intake_mode": "source_adapter",
   "runtime_notes": [
-    "Source import, build, and Version 1 save passed.",
-    "No non-deployed preview or live URL was available.",
+    "Source import, build, Version 1 save, and owner-only deployment passed.",
+    "A Live URL exists; its value is intentionally not stored or repeated.",
     "Hosted runtime behavior was not observed."
   ]
 }
@@ -113,14 +120,15 @@ evidence gap.
 
 ## Exact Next Human Gate
 
-1. Decide whether to owner-only deploy saved Version 1 for runtime review or
-   explicitly hold deployment.
-2. A hold preserves the current owner-only project, saved version, absent URLs,
-   and unknown runtime evidence.
-3. A separately authorized deployment must retain owner-only custom access and
-   target Version 1.
-4. After deployment, verify root/assets/story/edit/reload/export and update the
-   `null` fields with observed pass/fail results.
+1. In an owner-authenticated browser, open the existing Live URL without
+   repeating its value in reports or repository files.
+2. Verify root redirect/render, CSS/JavaScript assets, automatic sample start,
+   one choice transition, node edit/live preview, reload persistence, JSON
+   export/import, and absence of forbidden surfaces.
+3. Update the `null` fields with observed pass/fail results. On failure, record
+   the displayed error and reproduction conditions; do not repair source or
+   redeploy from this gate.
+4. Keep the current version count and owner-only custom access unchanged.
 5. Public access, sharing, analytics, form, domain, authentication, storage,
    commerce, and monetization remain locked behind separate gates.
 
