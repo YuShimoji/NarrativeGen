@@ -14,9 +14,10 @@ Cloudでは既存のnpm workspaceをlockfileから再現し、TypeScript engine�
 | legacy Maintenance script | `bash scripts/codex/maintenance.sh` |
 | 通常の検証 | `bash scripts/codex/check.sh` |
 | Secrets | ローカルfixture、build、ブラウザー試験には不要 |
+| Cloudのcache | `npm_config_cache=/workspace/.npm-cache`、`PLAYWRIGHT_BROWSERS_PATH=/workspace/.playwright-browsers`。Install scriptとStart skillで同じ値を使う |
 | Privacy | Only me |
 
-Node 20を使う旧CI例を環境作成の既定値にしない。依存の追加やpackage-lockの更新はこの環境整備に含めない。setupは既存lockfileの`npm ci`、既存Playwrightのbrowser install、`build:all`を実行する。LinuxではPlaywrightの`--with-deps`でブラウザー実行用のOSライブラリも準備する。
+Node 20を使う旧CI例を環境作成の既定値にしない。依存の追加やpackage-lockの更新はこの環境整備に含めない。setupは既存lockfileの`npm ci`、既存Playwrightのbrowser install、3browserの起動とページ表示、`build:all`を実行する。Linuxでrootまたはpasswordless sudoを使える時は`--with-deps`でOSライブラリも準備する。それ以外は既存OSライブラリで3browserを実際に起動し、ライブラリ不足ならsetupを失敗させる。root認証を求めて停止したり、不足を無視して成功stampを作ったりしない。
 
 現行CloudではInstall scriptとStart skillを保存してPublishする。既存環境の編集はSave後にRepublishし、新しいtaskで確認する。legacy環境にはSetup / Maintenance scriptの同じコマンドを設定できる。[公式の環境設定手順](https://learn.chatgpt.com/docs/environments/cloud-environments)を参照。
 
@@ -44,6 +45,6 @@ bash scripts/codex/check.sh
 
 `npm run clean`と`fresh-install`は通常Cloud経路に使わない。maintenanceはlockfile、workspace manifest、setup script、Node版、OSとarchitectureの一致をignoredの`node_modules`内で判定する。入力が変われば有限のsetupを一度実行する。既存taskの作業ファイルやブラウザーの保存データを削除しない。
 
-新環境のネットワークにはnpm registryとPlaywrightのbrowser配布先が必要。既存のPackage managers設定で足りない場合は、setupログで不足hostを確認する。外部APIやSitesの公開権限は追加しない。
+新環境のネットワークにはnpm registryとPlaywrightのbrowser配布先が必要。既存のPackage managers設定で足りない場合は、setupログで不足hostを確認する。Cloudでは`cdn.playwright.dev`の許可が必要だった。外部APIやSitesの公開権限は追加しない。
 
 2026-10-11の隔離checkout（Windows / Node 24.13.0）で、lockfileを変えずにsetupとmaintenanceを実行した。`check.sh`は完了し、engine 335件、Public Studio contract 4件、Chromium実操作3件が通過した。保存した文章の再読込、choice編集、JSON export/importと狭いviewportを実操作で確認した。workspace別のVite配置を判別し、古いsetup stampを拒否する検査も確認した。LinuxのOSライブラリinstallとCloudの実行結果は環境のsetup reportで確認する。
