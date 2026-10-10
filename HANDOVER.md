@@ -1,6 +1,12 @@
 # 作業申し送り
 
-## 現在地 — 2026-07-27
+## 現在地 — 2026-10-11
+
+Cloud Codex用のsetup / maintenance / 検証は[Cloud開発手順](docs/CLOUD_CODEX.md)を使う。
+環境整備branchは`codex/cloud-codex-environment-20261011`で、`main/cea2545`から分けた。
+Node 22.13以上と既存lockfileを使い、Playwrightの3browserを準備する。
+隔離checkoutでsetup / maintenance、既存safetyとbuild、engine 335件、Public Studio contract 4件、Chromium実操作3件を確認した。
+Cloud登録・PublishとLinuxでの結果は環境setup reportで照合する。既存のowner-only Sites reviewと製品・公開の判断待ちは下記のまま保持する。
 
 `main` / `origin/main` が開発正本。今回の同期開始時は
 `97d22cd372914bccdc16daa36ac94fd01089a231`で一致し、`git fetch --prune

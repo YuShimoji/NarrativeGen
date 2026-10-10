@@ -10,6 +10,7 @@ manual, status snapshot, closeout template, roadmap, or handoff log.
 3. `README.md` when project overview or commands are needed
 4. `docs/spec-index.json` and relevant spec files when behavior changes
 5. `docs/ai/*.md` only when the task touches agent workflow or decision gates
+6. `docs/CLOUD_CODEX.md` when preparing or using a Cloud Codex environment
 
 If a referenced file is missing, treat that reference as stale and continue
 with the nearest available project doc.
