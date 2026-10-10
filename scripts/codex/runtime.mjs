@@ -24,7 +24,16 @@ const inputs = ['package.json', 'package-lock.json', 'scripts/codex/setup.sh',
   'apps/sites-public-studio-adapter/package.json'];
 const digest = createHash('sha256');
 for (const input of inputs) digest.update(input).update(fs.readFileSync(path.join(root, input)));
-const state = { inputHash: digest.digest('hex'), node: process.versions.node, platform: process.platform, arch: process.arch };
+const profile = process.env.CODEX_PLAYWRIGHT_BROWSERS ?? 'chromium firefox webkit';
+const browsers = profile.trim().split(/[ \t]+/);
+if (/[\r\n]/.test(profile) || browsers.some(name => !['chromium', 'firefox', 'webkit'].includes(name)) || new Set(browsers).size !== browsers.length) {
+  console.error('CODEX_PLAYWRIGHT_BROWSERS must list distinct browser names separated by spaces: chromium firefox webkit.');
+  process.exit(2);
+}
+const state = {
+  inputHash: digest.digest('hex'), node: process.versions.node, platform: process.platform, arch: process.arch,
+  browserProfile: browsers.join(' '), browserPath: process.env.PLAYWRIGHT_BROWSERS_PATH || 'default'
+};
 if (args.includes('--record')) {
   if (!fs.existsSync('node_modules/@playwright/test/cli.js')) throw new Error('Playwright was not installed.');
   fs.writeFileSync(stampPath, `${JSON.stringify(state)}\n`);

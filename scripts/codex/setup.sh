@@ -2,6 +2,7 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 node scripts/codex/runtime.mjs
+read -r -a browser_names <<< "${CODEX_PLAYWRIGHT_BROWSERS:-chromium firefox webkit}"
 npm ci --no-audit --no-fund
 browser_install_args=()
 if [[ "$(uname -s)" == Linux ]]; then
@@ -11,10 +12,12 @@ if [[ "$(uname -s)" == Linux ]]; then
     printf '%s\n' 'No unattended root access; checking browsers against the installed OS libraries.'
   fi
 fi
-node node_modules/@playwright/test/cli.js install "${browser_install_args[@]}" chromium firefox webkit
-node --input-type=module <<'NODE'
+node node_modules/@playwright/test/cli.js install "${browser_install_args[@]}" "${browser_names[@]}"
+node --input-type=module - "${browser_names[@]}" <<'NODE'
 import { chromium, firefox, webkit } from '@playwright/test';
-for (const [name, engine] of Object.entries({ chromium, firefox, webkit })) {
+const engines = { chromium, firefox, webkit };
+for (const name of process.argv.slice(2)) {
+  const engine = engines[name];
   const browser = await engine.launch({ headless: true });
   try {
     const page = await browser.newPage();
