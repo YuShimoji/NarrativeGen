@@ -12,7 +12,8 @@ Unity C# SDKはTS版のparityを追う。
 2026-10-18にlocal `main`をその版`6f2a1d8`へ早送りし、2026-11-21に`origin/main`へ通常pushした。
 SR0とS1 deploymentの詳細な証拠はGit履歴と決定履歴にあり、この文書には再掲しない。
 
-次の集中セッションは、下の「焦点の判断待ち」から1つ選ぶところから始める。
+次の集中セッションの焦点は、2026-11-21にuserが選んだG3 Choice Consequence Lens EXPLOREである
+（下の「EXPLORE packet」）。
 
 ## 2026-11-21にこの端末（Windows、Node v24.13.0）で確認したこと
 
@@ -57,20 +58,58 @@ SR0とS1 deploymentの詳細な証拠はGit履歴と決定履歴にあり、こ�
 5. public access、sharing、analytics、domain、auth、storage、form、commerceは
    S3 public-release gateまでlockedのまま。新しいversion、再deployment、access変更は不要。
 
-## 焦点の判断待ち（次の集中セッションの最初に1つ選ぶ）
+## 次の集中セッション：G3 Choice Consequence Lens EXPLORE
 
-[Roadmap](docs/plans/DEVELOPMENT_PLAN.md)のNorth Starとgate列はまだ`proposed`である。
+2026-11-21にuserが焦点「A. G3 Choice Consequence Lens探索」を選んだ。これはEXPLOREの開始の選択で、
+Lensの実装承認ではない（実装は方向選択後の別`IMPLEMENT` packet）。選ばなかった候補
+（B. G4 workflow proof、C. Public Studio S1→S2、D. North Starの再確認）は
+[Roadmap](docs/plans/DEVELOPMENT_PLAN.md)のgate列に残り、North Starは`proposed`のまま。
 
-| 候補 | 埋める不足 | 最初の操作 | 終了条件 | 人の関与 |
-|---|---|---|---|---|
-| **A. G3 Choice Consequence Lens探索**（roadmap推奨の第一候補） | engineの推論・知識・方針の効果が作者に見えず、hidden diagnosticsに留まっている | EXPLORE packetとして、`originality-spine-probe.json`の同じ内容で「なぜ選べるか／何が変わるか／何が開くか」を示すread-only lensを異なる3方向でmockする | 3方向のmockと比較材料が揃い、userが選んだmacro方向をspecへ固定する。実装は別の`IMPLEMENT` packet | macro方向の選択（user）。G0は並行でよい |
-| **B. G4 一人制作ワークフロー実証** | 機能が実際の物語の形で作業を減らすか未実証 | 8ノードの証拠ミステリー骨格で author→validate→play→save/reload→export を通す計画を作り、配線数と手作業例外の計測方法を決める | 1本の制作経路を通し、計測記録とuserの有用性判断が揃う | 本文・物語判断はuser（AIは執筆しない）。構造の足場と計測はassistant |
-| **C. Public Studio S1→S2** | 公開デモ面のhosted runtime互換性が未確定 | S1確認の結果を受け取り、観測された摩擦1件をS2候補にする | 摩擦1件の修正と回帰試験、またはS1 accept | S1確認はuser |
-| **D. コンセプトの再確認** | 4か月の中断後、「実験的な物語生成システム」で次に確かめたい問いが未記録 | 現North Star（作者が世界・知識・意図を一度定義し、runtimeが選択肢・event・文章を導く）を読み、採用・改訂・別の問いを決める | Roadmapの北極星をuser採用版へ書き換え、A〜Cの順序を確定する | userの判断。assistantは比較材料を用意 |
+### EXPLORE packet
 
-推奨: Aを主作業にし、セッション冒頭にG0を済ませる。理由は、G1・G2が完了してpolicy semanticsが
-安定し、A はroadmap上unlockedで、作者がengineの効果を確かめる面が独自性の検証に直結するため。
-Dで北極星を変える場合はA〜Cの順序が変わるので、Dを選ぶならA〜Cより先に扱う。
+- **成果**: 同じ内容について「なぜこの選択肢を選べるか／選ぶと何が変わるか／何が開くか」を
+  作者に示すread-only lensを、実質的に異なる3方向でmockする。userがmacro方向を1つ選んだら、
+  その方向と固定する評価軸をspec（予定: `docs/specs/choice-consequence-lens.md`、spec-indexへ
+  `todo`で登録。使える状態値は`done`・`partial`・`todo`・`legacy`）に固定して終える。
+- **内容（固定）**: 主は`models/examples/originality-spine-probe.json`
+  （`desk`→`ask_mira_reframe`→`memory_reframed`→条件`hasEvent`の`follow_semantic_change`、
+  比較用の`treat_as_old_clue`→`old_adv_end`）。Contract Aの`knowledgeRule`条件も説明できるかを見るため、
+  `procedural-choice-spine-probe.json`の`follow_semantic_change`を2つ目の確認材料に含めるかを
+  EXPLOREの最初に決める。
+- **根拠に使える既存のengine事実**（mockの文はこれらの実出力から作り、手書きの事実を置かない）:
+
+  | 問い | 使える事実 | 所在 |
+  |---|---|---|
+  | なぜ選べるか | choiceの`conditions`、`getAvailableChoices`に含まれるか、`evaluateKnowledgeRule`の`KnowledgeEvaluationFact`、条件のeventを作ったPerception Policy（`applyPerceptionPolicies`）。条件ごとの評価`evalCondition`は内部関数で、`index.ts`と`browser.ts`から公開exportされていない | `packages/engine-ts/src/session-ops.ts`、`condition-effect-ops.ts`、`character-knowledge.ts`、`perception-policy.ts` |
+  | 何が変わるか | choiceの`effects`（例: `createEvent`とそのproperties）、`applyChoice`前後の`diffSessionState` | `session-ops.ts`、`session-history.ts` |
+  | 何が開くか | `target`、`buildDependencyGraph`＋`getAffectedChoices`、`findReachableNodes` | `inference/forward-chaining.ts`、`inference/backward-chaining.ts` |
+
+- **再利用する既存の画面**: GUI editorとグラフtabのWhat-if（UC-5、選択肢ごとの状態変化と新たに
+  到達可能なノード）は`apps/web-tester/src/features/inference/inference-panel.js`と
+  `inference-bridge.js`、Character Knowledgeの事実表示は`apps/web-tester/src/ui/designer-dashboard.js`。
+  Lensはこれらと何が違うか（「なぜ選べるか」と事実への遡り）を各mockで明示し、同じ計算の
+  二重実装を前提にしない。
+- **EXPLOREで確かめる既知の差分**: `diffSessionState`は`key: value`形式の文字列を返し、構造化された
+  事実ではない。条件ごとの成否と理由を返す公開APIもない（`evalCondition`は非公開）。engineへexplain用APIを足すのは
+  public API契約の追加なので、EXPLOREではWeb Tester側で既存exportから計算し、API追加の要否は
+  `IMPLEMENT` packetの判断材料として記録する。
+- **方向の軸**（roadmapに記録済みの分岐）: 作者専用かplayerにも見せるか、物語の語彙か技術の語彙か。
+  3案はこの軸と配置（右pane／グラフ上／route timelineなど）で実質的に違うものにする。
+  具体的な3案はEXPLOREで作り、ここでは決めない。
+- **固定する評価軸**（mockを見る前に固定）: 1) どの文も、元のengine事実（条件・効果・rule fact・
+  graph edge）へ1操作で遡れる。2) 推測の文を出さない。3) raw diagnostic token（`perceptionPolicy:`、
+  `trigger=`、`noticed=`）をStoryのplayer向け本文に出さない。4) read-only（model・sessionを変えない）。
+  5) 「選べない選択肢」の理由も同じ形で示せる。6) 1440pxと768pxで読める。
+- **mockの作り方と出力先**: 低コストの静的HTMLを3案。各案は同じ事実JSON（engineで生成し
+  scriptも残す）を描画する。予定の出力先は`docs/samples/choice-consequence-lens/`。
+  userには3案と比較表を並べて見せ、操作の比較はUI操作コスト指針の「冒頭の運用規則」に沿って
+  入力数・視線移動・探索を案ごとに並べる。
+- **userが選ぶもの**: macro方向1つ（または全案不可と理由）。選択後の細部の調整は、
+  `IMPLEMENT` packetが最終gateと明示しない限り始めない。
+- **止まる条件**: engineの意味論の変更、新しい依存、public APIの追加・変更、player向け本文の変更。
+  これらが必要になったら、該当する操作だけを止めて判断材料にまとめる。
+- **並行するもの**: G0の確認（下表）はセッション冒頭に済ませると、Lensが説明すべきroute差の
+  基準になる。結果を待たずにEXPLOREを始めてよい。
 
 ## Product / authority boundary
 
@@ -88,8 +127,8 @@ Dで北極星を変える場合はA〜Cの順序が変わるので、Dを選ぶ�
 |---|---|---|---|---|
 | G0 baseline review | 機械的な正しさと物語として伝わるかを分ける | 両試作とDashboardを同時に見る | pending / user | 上の表の手順で一度観測 |
 | S1 hosted-runtime review | `adapter_partial`をacceptか限定修復へ | owner認証、既存Live URL、変更しない観測 | pending / user | 上の「S1の確認手順」 |
-| G3 Choice Consequence Lens | 作者が選択肢の理由と結果を確かめられる | 安定したpolicy semantics、事実へ遡れる文だけ | proposed・unlocked / shared | 焦点にAを選んだらEXPLORE packetから |
-| G4 workflow proof | 実際の物語で作業量の削減を確かめる | 1本の制作経路、user所有の本文 | proposed / shared | 焦点にBを選んだら計測計画から |
+| G3 Choice Consequence Lens | 作者が選択肢の理由と結果を確かめられる | 安定したpolicy semantics、事実へ遡れる文だけ | 次の焦点に選択済み・EXPLORE未着手 / shared（方向選択はuser） | 上の「EXPLORE packet」 |
+| G4 workflow proof | 実際の物語で作業量の削減を確かめる | 1本の制作経路、user所有の本文 | proposed / shared | G3の方向が決まってから順序を見直す |
 | S2 editing improvement | 観測された最大の摩擦を1件減らす | S1またはlocal reviewの具体的な所見 | proposed / shared | 所見が出てから別slice |
 | SP-DTYARN-001 | Dynamic TextのYarn変換を広げる | 変換表現を先にspecで固定 | partial / assistant | specから。今の焦点候補ではない |
 | G5 Unity parity、G7 release、G8 外部連携 | 別のpurpose・authority | 各専用packet | hold・proposed / 各gate | A〜Dと混ぜない |

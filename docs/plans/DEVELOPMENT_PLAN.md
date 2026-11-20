@@ -14,10 +14,10 @@ This file is the single roadmap document. Agent operating rules live in `docs/RE
      history (`d4a38d3` and `cea2545`) and the 2026-07-27 decision-log row.
    - NarrativeGen is an independent experimental narrative-generation system,
      not a story supplier for other projects (decision log, 2026-09-28).
-   - The next focused session starts by choosing one focus from the candidates
-     in `HANDOVER.md`. The proposed North Star below is still `proposed`; the
-     restart is the point to adopt or revise it. Until then, G3 Choice
-     Consequence Lens EXPLORE remains the recommended first core-lane slice.
+   - On 2026-11-21 the user selected G3 Choice Consequence Lens EXPLORE as the
+     focus of the next session. The EXPLORE packet lives in `HANDOVER.md`.
+     This starts exploration only; Lens implementation still needs a later
+     `IMPLEMENT` packet. The North Star below stays `proposed`.
    - Two short human reviews stay open and do not block each other: G0
      originality baseline and the S1 hosted-runtime review of the existing
      owner-only Version 1 (no new version, redeployment, or access change).
