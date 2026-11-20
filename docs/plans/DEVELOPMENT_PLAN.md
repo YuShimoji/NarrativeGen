@@ -1,30 +1,26 @@
 # Development Plan
 
 Status: roadmap source of truth
-Last updated: 2026-07-27
+Last updated: 2026-11-21
 
 This file is the single roadmap document. Agent operating rules live in `docs/REPO_LOCAL_RULES.md`; current state and next resume steps live in the root `HANDOVER.md`; feature/spec status lives in `docs/spec-index.json`; durable decisions live in `docs/governance/decision-log.md`.
 
 ## Current Priorities
 
-1. **SR0 closed; S1 owner-only deployment complete**
-   - SR0 is accepted. Runtime revision `44656de` contains the exact adapter
-     repair, all seven LF normalizations, the index-blob regression guard, and a
-     self-contained full adapter test. It was fast-forwarded to `origin/main`
-     and passed ordinary remote-clone acceptance before this docs-only status
-     follow-up.
-   - The supervising report owns the exact final docs SHA and its repeated
-     clone evidence. The repository roadmap no longer treats repair integration
-     as an active implementation lane.
-   - Sites evidence records a successful adapter source import, build, Version
-     1 save, and deployment of that existing version only. Access remains
-     owner-only custom: one allowed account user and no allowed groups.
-   - A Live URL exists but its value is intentionally not stored in this
-     repository. No Preview URL exists. The repository records only the
-     provisioned non-secret project binding; D1 and R2 remain null.
-   - Hosted runtime behavior remains unknown. The only unlocked successor is
-     an owner-authenticated review of the existing deployment; it requires no
-     new version, redeployment, or access change.
+1. **Restart focus selection (2026-11-21)**
+   - Product implementation has been idle since 2026-07-27; the only later
+     change is the Cloud Codex environment (`docs/CLOUD_CODEX.md`). SR0 is
+     closed and S1 owner-only deployment is done; their evidence lives in Git
+     history (`d4a38d3` and `cea2545`) and the 2026-07-27 decision-log row.
+   - NarrativeGen is an independent experimental narrative-generation system,
+     not a story supplier for other projects (decision log, 2026-09-28).
+   - The next focused session starts by choosing one focus from the candidates
+     in `HANDOVER.md`. The proposed North Star below is still `proposed`; the
+     restart is the point to adopt or revise it. Until then, G3 Choice
+     Consequence Lens EXPLORE remains the recommended first core-lane slice.
+   - Two short human reviews stay open and do not block each other: G0
+     originality baseline and the S1 hosted-runtime review of the existing
+     owner-only Version 1 (no new version, redeployment, or access change).
 
 2. **Public Studio private-compatibility gate**
    - Keep `apps/public-studio/` as a separate Japanese-first, browser-local demonstration and editing lane. It reuses the shared browser engine and canonical procedural-choice sample; it must not become a second runtime or model authority.

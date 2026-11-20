@@ -4,6 +4,7 @@
 
 | 日付 | 決定事項 | 選択肢 | 決定理由 |
 |------|----------|--------|----------|
+| 2026-09-28 | NarrativeGenは他作品への物語供給元ではなく、独立した実験的な物語生成システムとして扱う | 独立した実験を保持 / Studio・UnityChatNovelGame等への供給元化 | userが親Game Projectsで、他projectとの接続は以前から想定しておらず実験的な物語生成システムの構築がコンセプトだったと明示した。親の非3D試作がsampleとengineを借りたことは供給元化・Studio参加の採択ではない。作品間供給は制作目的・利用範囲・互換性が必要になった時点で別途判断する。原記録は親repoの`docs/decision-log.md`「2026-09-28：NarrativeGenの実験目的を保持し…」節 |
 | 2026-07-27 | 保存済みPublic Studio Version 1をowner-only custom accessのままproduction deploymentし、public releaseとは分離 | 既存Version 1をowner-only deploy / hold / access拡大 | userが既存Version 1だけのdeploymentを明示承認。deploymentは`succeeded`、accessはcustom・許可account user 1・全group 0、version数1を維持した。Live URL値は非共有条件によりrepositoryへ保存しない。hosted runtime受入、access拡大、analytics/domain/auth/storage/commerce、public releaseは別gate |
 | 2026-07-12 | G1 Contract A を採用し SP-KNOW-002 契約を確定 | Contract A / Contract B / 再探索 | user が optional `knowledgeRules`、exact `knowledgeRule / noticed` condition、public pure `evaluateKnowledgeRule` diagnostic、unchanged `getAvailableChoices`、shared inference semantics、separate `procedural-choice-spine-probe.json` / `SP-KNOW-002`、availability 時の perception-event 非生成を一括承認。SP-KNOW-001 persistent node-trigger v0 は維持し、Contract B、Unity、G3 は別決定とした |
 | 2026-06-15 | 開発優先順を Playable first, then green に切替 | Playable first / Green first 継続 / CI先行 | `vertical-slice.json` を作家が短編を作りブラウザで遊ぶ正本成果物にし、テスト・lint・schema・CI・doctor・リファクタリングを体験保護の衛兵に戻すため |

@@ -1,155 +1,109 @@
 # 作業申し送り
 
-## 現在地 — 2026-10-11
+## 現在地 — 2026-11-21（再起動準備）
 
-Cloud Codex用のsetup / maintenance / 検証は[Cloud開発手順](docs/CLOUD_CODEX.md)を使う。
-環境整備branchは`codex/cloud-codex-environment-20261011`で、`main/cea2545`から分けた。
-Node 22.13以上と既存lockfileを使い、Playwrightの3browserを準備する。
-隔離checkoutでsetup / maintenance、既存safetyとbuild、engine 335件、Public Studio contract 4件、Chromium実操作3件を確認した。
-Cloud登録・PublishとLinuxでの結果は環境setup reportで照合する。既存のowner-only Sites reviewと製品・公開の判断待ちは下記のまま保持する。
+NarrativeGenは、他作品への物語供給を前提にしない実験的な物語生成システムである
+（2026-09-28のuser明示、[決定履歴](docs/governance/decision-log.md)）。JSONがfull-fidelity
+source、TypeScript engineがruntime semanticsの正本で、Web Testerで制作・再生し、
+Unity C# SDKはTS版のparityを追う。
 
-`main` / `origin/main` が開発正本。今回の同期開始時は
-`97d22cd372914bccdc16daa36ac94fd01089a231`で一致し、`git fetch --prune
-origin`後もparity `0 0`、status clean、進行中Git operationなしだったためpullは
-不要だった。Sites manifest contract修復は
-`ea415ea70395c9c2d63ea851187e1eb73923009d`である。この文書追随の最終SHA、
-normal push、remote readbackは今回の監修報告が正本となる。
+製品の実装は2026-07-27（Public Studio Version 1のowner-only deployment）以降止まっている。
+その後の変更は2026-10-11のCloud Codex環境整備だけで（[Cloud開発手順](docs/CLOUD_CODEX.md)）、
+2026-10-18にlocal `main`をその版`6f2a1d8`へ早送りし、2026-11-21に`origin/main`へ通常pushした。
+SR0とS1 deploymentの詳細な証拠はGit履歴と決定履歴にあり、この文書には再掲しない。
 
-修復はrootのUnity向け`[Bb]uild/` ignoreがSites adapter必須の
-`apps/sites-public-studio-adapter/build/sites-vite-plugin.ts`までremote artifactから
-除外していた問題を、当該ディレクトリと1ファイルだけのignore例外、tracked pluginで
-閉じる。依存、Public Studioの表示・編集挙動、engine semantics、payload、
-hosting manifest、公開状態は変更していない。
+次の集中セッションは、下の「焦点の判断待ち」から1つ選ぶところから始める。
 
-同じSR0 revisionで、rootの`* text=auto eol=lf`に反してindex blobがCRLFだった
-次の7ファイルをLFへ正規化した。
+## 2026-11-21にこの端末（Windows、Node v24.13.0）で確認したこと
 
-- `apps/web-tester/models/examples/test_hierarchy.csv`
-- `apps/web-tester/src/config/keybindings.js`
-- `apps/web-tester/src/features/model-validator.js`
-- `apps/web-tester/src/ui/model-updater.js`
-- `apps/web-tester/src/ui/node-manager.js`
-- `apps/web-tester/src/ui/validation-panel.js`
-- `packages/tests/NarrativeGen.Tests/EngineSmokeTests.cs`
-
-正規化前後はEOL無視比較で一致する。差分検査に抵触した既存行末空白は、
-上記2 JavaScriptファイルの該当行だけ除去した。今後は
-`scripts/tracked-eol-check.mjs`がworking treeではなくGit index blobを検査し、
-LF管理対象にCR byteがあれば失敗する。`scripts/tracked-eol-check.test.mjs`は
-raw CRLF blobをindexへ直接入れたnegative fixtureとLF controlの両方を検証する。
-この検査は`check:encoding-safety`経由で`check:safety`に組み込まれている。
-またrootの`test:sites-adapter`は最初に`build:public`を実行するため、fresh cloneに
-ignoredな`apps/public-studio/dist`が存在しなくてもfull adapter acceptanceを開始できる。
-
-SR0はclosed。受入れruntime revision
-`44656de13d018fd0c88f505532b85e4cc59ae04f`を非強制fast-forwardで
-`origin/main`へ反映し、そのremoteから作った通常のfresh cloneでinstall前後の
-tracked clean、isolated `npm ci --foreground-scripts` 1回、`check:safety`、
-自己完結した`test:sites-adapter`を確認した。primary checkoutにも同じaccepted
-runtime contentをfast-forwardし、parity `0 0`、status clean、root dependency tree
-解決済みである。
-現在のlaneは`HANDOFF / S1 / owner-only-deployed-runtime-review-pending`。
-`apps/sites-public-studio-adapter/`のsource import、build、Version 1保存に続き、
-保存済みVersion 1だけのowner-only production deploymentが`succeeded`である。
-project accessは`custom`のまま、許可account userは1、group / workspace group /
-tenant groupはすべて0である。Live URLは存在するが、値はユーザーの非共有条件に従い
-repositoryへ保存しない。Preview URLは存在しない。実project binding
-`appgprj_6a65fabf5ca48191a9b7f2b063d05cf8`は
-`apps/sites-public-studio-adapter/.openai/hosting.json`へ記録済みで、`d1`と`r2`は
-`null`のまま、version数は1のままである。
-
-S1のsource intake/saveとowner-only deployment control-plane判定はaccepted。
-root/assets/story/edit/reload/exportの
-hosted-runtime behaviorは未観測であり、失敗ではなく**unknown**である。
-したがってprivate hosted-runtime compatibility全体は`adapter_partial`で、
-次のhuman gateはowner本人の認証状態で既存deploymentを閲覧し、runtime behaviorを
-pass/failへ更新することである。新しいversion、再deployment、access変更は不要である。
-
-## 監修AIへの現状報告
-
-| 判断対象 | 今回の実測 | 証拠の区分と判断境界 |
+| 対象 | 状態 | 確認方法 |
 |---|---|---|
-| Git / remote | 同期開始時`main == origin/main == 97d22cd`、parity `0 0`。manifest contract修復は`ea415ea` | fetch/prune、status、operation marker、ref、diffのcurrent-run evidence。docs follow-upとpush後parityは監修報告で確定する |
-| repair scope | `.gitignore`の狭い例外、tracked plugin、adapter説明、handoff追随だけをrepair branchから消費 | product/runtime semantics、dependency、payloadへの差分はない |
-| checkout hygiene | 5 Web Tester JSに加えCSV 1、C# test 1の計7 index blobを真のCRLF違反として検出しLF化 | working-tree表示だけに依存せずindex/blobを検査。EOL無視比較は一致 |
-| regression guard | raw CRLF index fixtureは失敗対象、LF fixtureは成功。実repositoryのindexも成功 | focused testと実indexの両方によるcurrent-run evidence |
-| local integration | provisioned manifestで旧scanが失敗することを再現後、manifest contract test 4/4、scan、full adapter build/E2E 3/3、`check:safety`、`git diff --check`が成功 | current checkoutの技術検証。hosted runtime、人間受入、public releaseの代替ではない |
-| clean-clone acceptance | `44656de`をremoteから通常cloneし、install前clean、isolated `npm ci` 1回、safety/adapter、install後cleanを確認済み | 過去のvalid post-push acceptance evidence。今回はcurrent checkoutの最小gateを実行し、fresh cloneは再実行していない |
-| report-derived evidence | 修復branch先端の既存GitHub CI success、以前のengine/Unity詳細件数 | 補助証拠。今回のlive test結果やhuman acceptanceとして再利用しない |
-| nonblocking debt | npm audit、Web Tester lint未設定、Vite externalize/large chunk、C# nullable/XML doc、optional/extraneous表示 | SR0を停止しない。dependency upgradeや一括修復はG7専用sliceで扱う |
-| Sites / binding | Version 1だけのdeploymentが`succeeded`。accessはcustom、許可account user 1、全group 0、Preview URLなし、Live URL値は非記録。version数1、D1/R2なし | read-only Sites control-plane evidence。hosted runtime操作、production readiness、public releaseの証拠ではない |
+| 依存関係 | 解決済み。`@rollup/rollup-linux-x64-gnu`のUNMET OPTIONALと`@tybys/wasm-util` extraneousは既知の非blocking表示 | `npm ls --depth=0` |
+| 文書・encoding・model同期 | 成功（spec-index、docs-authority、encoding 366ファイル、tracked EOL、model 19件同期） | `npm run check:safety` |
+| engine | 27ファイル・335件成功 | `npm run test:engine` |
+| Playable baseline | vertical-slice（proof route・AI mock採用・CSV import/roundtrip）、originality probe、procedural-choice probeの9件×Chromium/Firefox/WebKit＝27件が再試行なしで成功（4.1分） | `npx playwright test`に`vertical-slice originality-spine-probe procedural-choice-spine-probe`を指定。port 5173衝突のため別port（下の再開手順の注意） |
+| 未実行 | Web Tester / Public Studioのunit、Sites adapter試験、Unity SDKの.NET試験、Unity Editor、人による試遊 | 再開後、触る範囲に応じて実行する |
+
+## 使えるもの
+
+- **Playable vertical slice**: `models/examples/vertical-slice.json`。`npm run dev`→
+  `http://localhost:5173/`→`vertical-slice.json`→`実行`。制作・再生・保存・再読込の生存確認。
+- **独自性の試作**: `originality-spine-probe.json`（Character Knowledge＋Perception Policyでroute差が出るか）、
+  `procedural-choice-spine-probe.json`（SP-KNOW-002 Contract A。知識から選択肢の可否が決まる）。
+  G2のTS/Web sliceはdone。
+- **Public Studio**: `apps/public-studio/`のローカル候補（S0 done）。Sites上のVersion 1は
+  owner-only custom accessでdeploy済み。hosted runtimeの挙動は未観測（unknown）。Live URLの値は
+  userの非共有条件によりrepositoryへ保存しない。
+- **Unity SDK**: SP-UNITY-001 done（今回は未再実行）。
+- 仕様の状態は[spec-index](docs/spec-index.json)：partialはSP-009、SP-DTYARN-001、SP-TGEN-001、SP-WP-001。
+
+## 人の確認待ち（どちらも短時間で、互いに止めない）
+
+| 確認 | 何が決まるか | 手順 | 返すもの |
+|---|---|---|---|
+| **G0 独自性の基準確認** | 試作が「旧来のflag ADVと違うroute差」を物語として伝えているか。G3・G4の土台になる | [originality review](docs/samples/originality-spine-probe-review-ja.md)と[procedural-choice review](docs/samples/procedural-choice-spine-probe-review-ja.md)の手順で、両試作のrouteと`設計ダッシュボード`を見る | 項目ごとにpass、または具体的な欠陥（画面・操作・期待との差） |
+| **S1 hosted runtime確認** | owner-only Version 1でroot/assets/story/edit/reload/exportが動くか。`adapter_partial`をacceptか限定修復へ変える | 下の「S1の確認手順」 | 各項目のpass / fail / null。failは表示されたerrorと再現条件 |
+
+### S1の確認手順
+
+1. owner認証済みbrowserで既存Live URLを開き、root redirect/renderとCSS/JS assetを観測する。
+   URL値は報告やrepositoryへ再掲しない。
+2. canonical sampleのauto start、choice遷移、node edit/live preview、reload後の
+   browser-local draft、JSON export/importを順に観測する（操作の詳細は
+   [Public Studioレビュー手順](docs/sites/PUBLIC_STUDIO_REVIEW_JA.md)と同じ）。
+3. account、form、personal-data input、purchase、visible commercial linkなどの
+   forbidden surfaceがないことを観測する。
+4. failureならsource修正や再deploymentを始めず、errorと再現条件を記録する。
+5. public access、sharing、analytics、domain、auth、storage、form、commerceは
+   S3 public-release gateまでlockedのまま。新しいversion、再deployment、access変更は不要。
+
+## 焦点の判断待ち（次の集中セッションの最初に1つ選ぶ）
+
+[Roadmap](docs/plans/DEVELOPMENT_PLAN.md)のNorth Starとgate列はまだ`proposed`である。
+
+| 候補 | 埋める不足 | 最初の操作 | 終了条件 | 人の関与 |
+|---|---|---|---|---|
+| **A. G3 Choice Consequence Lens探索**（roadmap推奨の第一候補） | engineの推論・知識・方針の効果が作者に見えず、hidden diagnosticsに留まっている | EXPLORE packetとして、`originality-spine-probe.json`の同じ内容で「なぜ選べるか／何が変わるか／何が開くか」を示すread-only lensを異なる3方向でmockする | 3方向のmockと比較材料が揃い、userが選んだmacro方向をspecへ固定する。実装は別の`IMPLEMENT` packet | macro方向の選択（user）。G0は並行でよい |
+| **B. G4 一人制作ワークフロー実証** | 機能が実際の物語の形で作業を減らすか未実証 | 8ノードの証拠ミステリー骨格で author→validate→play→save/reload→export を通す計画を作り、配線数と手作業例外の計測方法を決める | 1本の制作経路を通し、計測記録とuserの有用性判断が揃う | 本文・物語判断はuser（AIは執筆しない）。構造の足場と計測はassistant |
+| **C. Public Studio S1→S2** | 公開デモ面のhosted runtime互換性が未確定 | S1確認の結果を受け取り、観測された摩擦1件をS2候補にする | 摩擦1件の修正と回帰試験、またはS1 accept | S1確認はuser |
+| **D. コンセプトの再確認** | 4か月の中断後、「実験的な物語生成システム」で次に確かめたい問いが未記録 | 現North Star（作者が世界・知識・意図を一度定義し、runtimeが選択肢・event・文章を導く）を読み、採用・改訂・別の問いを決める | Roadmapの北極星をuser採用版へ書き換え、A〜Cの順序を確定する | userの判断。assistantは比較材料を用意 |
+
+推奨: Aを主作業にし、セッション冒頭にG0を済ませる。理由は、G1・G2が完了してpolicy semanticsが
+安定し、A はroadmap上unlockedで、作者がengineの効果を確かめる面が独自性の検証に直結するため。
+Dで北極星を変える場合はA〜Cの順序が変わるので、Dを選ぶならA〜Cより先に扱う。
 
 ## Product / authority boundary
 
 - JSONがfull-fidelity sourceで、TypeScript engineがruntime semanticsの正本。
 - Adapterは既存production payloadを配るだけで、engine semanticsをcopyしない。
 - localStorageとJSON import/exportは同一browser/profile内の既存挙動。
-- SR0、S1 source/save、owner-only deployment完了はhosted-runtime compatibility、
-  production readiness、
-  public release、analytics、commercial contact、cloud persistence、G0、G3、G5、
-  G7、G8を承認しない。
 - owner-only production deploymentは公開ではない。public visibility、sharing、
-  workspace / selected usersへのaccess拡大は別のrelease gateで、S3までlockedである。
+  workspace / selected usersへのaccess拡大は別のrelease gateで、S3までlocked。
+- NarrativeGenを他作品（Game StudioやUnityChatNovelGame等）の供給元にする作業は今の範囲外。
+- AIは物語本文を執筆しない。制作システムの整備が役割（[Invariants](docs/INVARIANTS.md)）。
 
 ## Residual work
 
-- **SR0 closure evidence**: purposeは統合内容が端末cacheやignored fileに依存しないと
-  確定すること。effectは再現可能なS1 input。requirementsはnon-force fast-forward、
-  更新remoteからの通常clone、install前後clean、isolated `npm ci` 1回、
-  safety/adapter green。stateはdone。ownerはassistant under
-  `AUTH-NG-REPO-GIT-FOLLOWTHROUGH-20260726`。next moveは実装を再開せず、
-  commit/push/fresh-clone/primary evidenceを監修報告へ分離記録する。
-- **S1B Sites source import/version save**: purposeはadapter sourceをSitesが無改変で
-  build/saveできるか事実化すること。effectはsource intake/save acceptedと
-  hosted-runtime evidence gapの分離。requirementsはSR0 accepted、
-  `apps/sites-public-studio-adapter/`、private owner-only project、share/
-  analytics/form/domain/auth/storage/commerce無効。stateはdone for source import/build/
-  Version 1 save based on human-observed evidence。ownerはuser/operator、repository
-  binding follow-throughはassistant。next moveはsource/saveを再実行しない。
-- **Owner-only Version 1 deployment**: purposeはownerだけが閲覧できるhosted-runtime
-  review入口を作ること。effectはLive URLの存在とruntime観測可能性。requirementsは
-  保存済みVersion 1、owner-only custom access維持、新versionなし。stateはdone、
-  deployment `succeeded`、access custom / account user 1 / groups 0。ownerはuser。
-  next moveは再deploymentせず、既存deploymentをowner認証でreviewする。
-- **Hosted-runtime owner review**: purposeはroot/assets/story/edit/reload/exportの
-  unknownをpass/failへ変えること。effectは`adapter_partial`からacceptまたはbounded
-  repairへの判断。requirementsはowner認証、既存Live URL、同一browser/profileの
-  localStorage境界、source/access/deploymentを変更しない観測。stateはpending human
-  review。ownerはuser/operator。next moveは自動sample、choice、edit、reload、
-  JSON export/import、forbidden surfaceを1回観測して結果を返す。
-- **S2 evidence-led editing improvement**: purposeは実観測された最大摩擦を1件減らす
-  こと。effectはeditor usability向上。requirementsはlocalまたはhosted runtimeの
-  concrete review finding。stateはproposed。ownerはshared。next moveは実摩擦を
-  1件観測した後に別slice化し、現在のunknownから仮説を捏造しない。
-- **Cross-browser / physical-device review**: purposeはChromium single-machine境界を
-  広げること。effectはresponsive/accessibility confidence向上。requirementsは
-  対象matrix。stateはunverified。ownerはshared/human。next moveはrelease gateが
-  見えた時に定義する。
-- **G0 / G3 / G5 / G7 / G8**: purposeとauthorityがSR0/S1と異なるため分離する。
-  effectはoriginality review、Choice Consequence Lens、Unity parity、
-  release readiness、外部連携。requirementsは各専用packet。stateは
-  pending/proposed/hold。ownerは各human/shared gate。next moveはhosted runtime reviewへ
-  混ぜない。
+| 項目 | purpose / effect | requirements | state / owner | next move |
+|---|---|---|---|---|
+| G0 baseline review | 機械的な正しさと物語として伝わるかを分ける | 両試作とDashboardを同時に見る | pending / user | 上の表の手順で一度観測 |
+| S1 hosted-runtime review | `adapter_partial`をacceptか限定修復へ | owner認証、既存Live URL、変更しない観測 | pending / user | 上の「S1の確認手順」 |
+| G3 Choice Consequence Lens | 作者が選択肢の理由と結果を確かめられる | 安定したpolicy semantics、事実へ遡れる文だけ | proposed・unlocked / shared | 焦点にAを選んだらEXPLORE packetから |
+| G4 workflow proof | 実際の物語で作業量の削減を確かめる | 1本の制作経路、user所有の本文 | proposed / shared | 焦点にBを選んだら計測計画から |
+| S2 editing improvement | 観測された最大の摩擦を1件減らす | S1またはlocal reviewの具体的な所見 | proposed / shared | 所見が出てから別slice |
+| SP-DTYARN-001 | Dynamic TextのYarn変換を広げる | 変換表現を先にspecで固定 | partial / assistant | specから。今の焦点候補ではない |
+| G5 Unity parity、G7 release、G8 外部連携 | 別のpurpose・authority | 各専用packet | hold・proposed / 各gate | A〜Dと混ぜない |
+| 非blocking debt | npm audit、Web Tester lint未設定、Vite chunk警告、C# nullable等 | G7専用slice | proposed / shared | [Technical debt](docs/TECHNICAL_DEBT.md) |
 
-## Exact next gate
+作業ツリーの補足: `.codex-tmp/cloud-codex-20261011/NarrativeGen`は親Game Projectsの
+Cloud環境整備用worktree（`6f2a1d8`、branch `codex/cloud-codex-environment-20261011`）で、
+この文書の範囲では触らない。
 
-SR0、S1 source import/build/Version 1 save、owner-only deploymentはaccepted。
-次の入口はhuman-ownedの**既存Version 1 hosted-runtime review**である。
+## 再開手順
 
-1. owner認証済みbrowserで既存Live URLを開き、root redirect/renderとCSS/JS assetを
-   観測する。URL値は報告やrepositoryへ再掲しない。
-2. canonical sampleのauto start、choice遷移、node edit/live preview、reload後の
-   browser-local draft、JSON export/importを順に観測する。
-3. account、form、personal-data input、purchase、visible commercial linkなどの
-   forbidden surfaceがないことを観測する。
-4. 各項目をpass/fail/nullで返し、failureならsource修正や再deploymentを始めず、
-   表示されたerrorと再現条件を記録する。
-5. public access、sharing、analytics、domain、auth、storage、form、commerceは
-   S3 public-release gateまでlockedのままにする。
-
-再開時は`AGENTS.md` → `docs/REPO_LOCAL_RULES.md` → この文書を読む。
-adapter laneでは続けて`docs/sites/SITES_SOURCE_ADAPTER.md`と
-`docs/sites/PUBLIC_STUDIO_READINESS.md`を読む。
+再開時は`AGENTS.md` → `docs/REPO_LOCAL_RULES.md` → この文書を読み、選んだ焦点に必要な
+spec・review文書だけを追加で読む。Public Studio laneでは
+`docs/sites/SITES_SOURCE_ADAPTER.md`と`docs/sites/PUBLIC_STUDIO_READINESS.md`も読む。
 
 ```powershell
 git fetch --prune origin
@@ -159,11 +113,21 @@ git status --short --branch
 git rev-list --left-right --count HEAD...origin/main
 npm ls --depth=0
 npm run check:safety
-npm run test:sites-adapter
+npm run test:engine
+npm run dev
 ```
 
-別端末のfresh cloneで依存関係がない場合だけ、上記`npm ls`の前に
-`npm ci --foreground-scripts`を一度完了させる。installを並行実行しない。
+E2E前にport 5173の使用者を確かめる。Web Testerの`playwright.config.js`は
+`reuseExistingServer`が有効で、5173を別project（2026-11-21はLOWPASS-SALVAGE-ATLASのdev server）が
+使っていると、そのページへ接続して全件`__NARRATIVEGEN_DEVTOOLS__`待ちのtimeoutになる。
+NarrativeGenの不具合ではない。他projectのserverは止めず、別portで標準configを上書きして実行する
+（2026-11-21はuntrackedの一時configで`npx vite --port 5183 --strictPort`と`baseURL`だけを差し替えた）。
 
-Local production-like review URLは`http://127.0.0.1:4184/`
-（`npm run preview:sites-adapter`）。
+```powershell
+Get-NetTCPConnection -LocalPort 5173 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Get-Process -Id $_.OwningProcess }
+```
+
+別端末のfresh cloneで依存関係がない場合だけ、`npm ls`の前に
+`npm ci --foreground-scripts`を一度完了させる。installを並行実行しない。
+Public Studio laneでは`npm run test:sites-adapter`を足す。Local production-like review URLは
+`http://127.0.0.1:4184/`（`npm run preview:sites-adapter`）。
