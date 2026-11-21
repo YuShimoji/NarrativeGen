@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NarrativeGen Studio</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">NarrativeGen <span>Studio</span></div>
+      <label class="picker">
+        <span class="sr-only">物語</span>
+        <select id="story-picker" aria-label="物語を選ぶ"></select>
+      </label>
+      <button type="button" id="restart" class="btn">最初から</button>
+      <div class="views" role="tablist" aria-label="表示">
+        <button type="button" role="tab" data-view="run" class="view-tab" aria-selected="true">実行</button>
+        <button type="button" role="tab" data-view="check" class="view-tab" aria-selected="false">点検</button>
+      </div>
+    </header>
+    <main id="app" aria-live="polite"></main>
+    <div id="drop-hint" class="drop-hint" hidden>JSONを離すと、その物語を開きます</div>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

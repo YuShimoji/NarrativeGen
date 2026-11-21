@@ -1,172 +1,75 @@
 # 作業申し送り
 
-## 現在地 — 2026-11-21（再起動準備）
+## 現在地 — 2026-11-21（再構築を開始）
 
-NarrativeGenは、他作品への物語供給を前提にしない実験的な物語生成システムである
-（2026-09-28のuser明示、[決定履歴](docs/governance/decision-log.md)）。JSONがfull-fidelity
-source、TypeScript engineがruntime semanticsの正本で、Web Testerで制作・再生し、
-Unity C# SDKはTS版のparityを追う。
+- 開発目標: 作者が物と人物の知識を一度定義すれば、エンジンが違和感・出来事・文章・選択肢の開閉を決定論で導き、
+  作者がその判断を画面で確かめられる実験的な物語生成システム（原初設計「Entity中心のプロパティ駆動型ナラティブ生成」）。
+- 今回の増分: 新しい作業場`apps/studio`で、JSONを読まずにエンジンが何を判断したか（違和感のゲージ、生まれた出来事、
+  差し込まれた文、選択肢が開いた理由・閉じた理由）と、物語全体の点検結果が分かること。
+- 現在のボトルネック: userによるStudio画面の受入（見え方・操作感）。その後は作業場での編集。
 
-製品の実装は2026-07-27（Public Studio Version 1のowner-only deployment）以降止まっている。
-その後の変更は2026-10-11のCloud Codex環境整備だけで（[Cloud開発手順](docs/CLOUD_CODEX.md)）、
-2026-10-18にlocal `main`をその版`6f2a1d8`へ早送りし、2026-11-21に`origin/main`へ通常pushした。
-SR0とS1 deploymentの詳細な証拠はGit履歴と決定履歴にあり、この文書には再掲しない。
-
-次の集中セッションの焦点は、2026-11-21にuserが選んだG3 Choice Consequence Lens EXPLOREである
-（下の「EXPLORE packet」）。
-
-## 2026-11-21にこの端末（Windows、Node v24.13.0）で確認したこと
-
-| 対象 | 状態 | 確認方法 |
-|---|---|---|
-| 依存関係 | 解決済み。`@rollup/rollup-linux-x64-gnu`のUNMET OPTIONALと`@tybys/wasm-util` extraneousは既知の非blocking表示 | `npm ls --depth=0` |
-| 文書・encoding・model同期 | 成功（spec-index、docs-authority、encoding 366ファイル、tracked EOL、model 19件同期） | `npm run check:safety` |
-| engine | 27ファイル・335件成功 | `npm run test:engine` |
-| Playable baseline | vertical-slice（proof route・AI mock採用・CSV import/roundtrip）、originality probe、procedural-choice probeの9件×Chromium/Firefox/WebKit＝27件が再試行なしで成功（4.1分） | `npx playwright test`に`vertical-slice originality-spine-probe procedural-choice-spine-probe`を指定。port 5173衝突のため別port（下の再開手順の注意） |
-| 未実行 | Web Tester / Public Studioのunit、Sites adapter試験、Unity SDKの.NET試験、Unity Editor、人による試遊 | 再開後、触る範囲に応じて実行する |
+2026-11-21、userが再起動時に「作り変えるぐらいの再構築」を依頼し、確認画面がJSON中心でエンジンの機能を判断しにくい・
+ゲーム部分の同時開発に全体が没頭する・Web画面がボタンまみれ、の3点を挙げた。構想図（構成図と画面3案）を見て、
+画面A「判断を横に添える」とゲーム層の凍結を選んだ（[決定履歴](docs/governance/decision-log.md)、
+[仕様 SP-STUDIO-001](docs/specs/studio-rebuild.md)）。同日朝に選んだG3 Lens EXPLOREはStudioの右列に吸収した。
 
 ## 使えるもの
 
-- **Playable vertical slice**: `models/examples/vertical-slice.json`。`npm run dev`→
-  `http://localhost:5173/`→`vertical-slice.json`→`実行`。制作・再生・保存・再読込の生存確認。
-- **独自性の試作**: `originality-spine-probe.json`（Character Knowledge＋Perception Policyでroute差が出るか）、
-  `procedural-choice-spine-probe.json`（SP-KNOW-002 Contract A。知識から選択肢の可否が決まる）。
-  G2のTS/Web sliceはdone。
-- **Public Studio**: `apps/public-studio/`のローカル候補（S0 done）。Sites上のVersion 1は
-  owner-only custom accessでdeploy済み。hosted runtimeの挙動は未観測（unknown）。Live URLの値は
-  userの非共有条件によりrepositoryへ保存しない。
-- **Unity SDK**: SP-UNITY-001 done（今回は未再実行）。
-- 仕様の状態は[spec-index](docs/spec-index.json)：partialはSP-009、SP-DTYARN-001、SP-TGEN-001、SP-WP-001。
+| 対象 | 状態 | 起動・確認 |
+|---|---|---|
+| Studio（新・主画面） | 実行（本文＋判断の列＋たどった道筋）と点検（全選択肢を実際に選ぶ物語点検）。サンプル選択かJSONドロップで開く。1440px・768pxで表示を確認済み | `npm run dev:studio` → `http://127.0.0.1:5185/` |
+| エンジンの判断の記録 | `packages/engine-ts/src/trace.ts`（`traceStart`・`traceStep`・`traceText`・`traceCondition`・`checkModel`ほか）。読み取り専用で意味論は変えない。`index.ts`と`browser.ts`から公開 | `npm run test:engine`（28ファイル・357件、2026-11-21） |
+| 旧Web Tester | 編集・グラフ・export等。置き換えまで残し、新機能は足さない | `npm run dev`（port 5173が他projectと衝突する時は下の注意） |
+| サンプル | `originality-spine-probe.json`（知覚→出来事→差し込み→選択肢解放の一連が出る）、`procedural-choice-spine-probe.json`（knowledgeRule条件）、`vertical-slice.json` | Studioの物語選択 |
+| ゲーム層（凍結） | Play演出・BGM、Unity SDK、Public Studio、Sites adapter。再構築中は変更しない | 再開は別の作業単位 |
 
-## 人の確認待ち（どちらも短時間で、互いに止めない）
+点検の既知の限界: 数値が増え続ける物語（`full_integration`・`inventory_test`・`trading`・`tutorial`など8件）は
+状態数2000で打ち切る。画面に打ち切りを明示し、「問題なし」は調べた範囲だけの結果と表示する。
+
+## 人の確認待ち
 
 | 確認 | 何が決まるか | 手順 | 返すもの |
 |---|---|---|---|
-| **G0 独自性の基準確認** | 試作が「旧来のflag ADVと違うroute差」を物語として伝えているか。G3・G4の土台になる | [originality review](docs/samples/originality-spine-probe-review-ja.md)と[procedural-choice review](docs/samples/procedural-choice-spine-probe-review-ja.md)の手順で、両試作のrouteと`設計ダッシュボード`を見る | 項目ごとにpass、または具体的な欠陥（画面・操作・期待との差） |
-| **S1 hosted runtime確認** | owner-only Version 1でroot/assets/story/edit/reload/exportが動くか。`adapter_partial`をacceptか限定修復へ変える | 下の「S1の確認手順」 | 各項目のpass / fail / null。failは表示されたerrorと再現条件 |
+| **Studio画面の受入** | A案の画面で、エンジンが機能しているかを判断できるか。編集の作業単位へ進むか、画面を直すか | `npm run dev:studio`→`originality-spine-probe`→最初の選択肢を選ぶ→右列を読む→色付きの語を押す→`点検`→「この道筋を再生」 | 近い／一部違う／違う。違う所は画面の場所と期待との差 |
+| G0 独自性の基準確認 | 試作が旧来のflag ADVと違うroute差を物語として伝えているか | Studioで`originality-spine-probe`の2つの結末を再生して比べる（旧手順は[originality review](docs/samples/originality-spine-probe-review-ja.md)） | pass、または具体的な欠陥 |
 
-### S1の確認手順
-
-1. owner認証済みbrowserで既存Live URLを開き、root redirect/renderとCSS/JS assetを観測する。
-   URL値は報告やrepositoryへ再掲しない。
-2. canonical sampleのauto start、choice遷移、node edit/live preview、reload後の
-   browser-local draft、JSON export/importを順に観測する（操作の詳細は
-   [Public Studioレビュー手順](docs/sites/PUBLIC_STUDIO_REVIEW_JA.md)と同じ）。
-3. account、form、personal-data input、purchase、visible commercial linkなどの
-   forbidden surfaceがないことを観測する。
-4. failureならsource修正や再deploymentを始めず、errorと再現条件を記録する。
-5. public access、sharing、analytics、domain、auth、storage、form、commerceは
-   S3 public-release gateまでlockedのまま。新しいversion、再deployment、access変更は不要。
-
-## 次の集中セッション：G3 Choice Consequence Lens EXPLORE
-
-2026-11-21にuserが焦点「A. G3 Choice Consequence Lens探索」を選んだ。これはEXPLOREの開始の選択で、
-Lensの実装承認ではない（実装は方向選択後の別`IMPLEMENT` packet）。選ばなかった候補
-（B. G4 workflow proof、C. Public Studio S1→S2、D. North Starの再確認）は
-[Roadmap](docs/plans/DEVELOPMENT_PLAN.md)のgate列に残り、North Starは`proposed`のまま。
-
-### EXPLORE packet
-
-- **成果**: 同じ内容について「なぜこの選択肢を選べるか／選ぶと何が変わるか／何が開くか」を
-  作者に示すread-only lensを、実質的に異なる3方向でmockする。userがmacro方向を1つ選んだら、
-  その方向と固定する評価軸をspec（予定: `docs/specs/choice-consequence-lens.md`、spec-indexへ
-  `todo`で登録。使える状態値は`done`・`partial`・`todo`・`legacy`）に固定して終える。
-- **内容（固定）**: 主は`models/examples/originality-spine-probe.json`
-  （`desk`→`ask_mira_reframe`→`memory_reframed`→条件`hasEvent`の`follow_semantic_change`、
-  比較用の`treat_as_old_clue`→`old_adv_end`）。Contract Aの`knowledgeRule`条件も説明できるかを見るため、
-  `procedural-choice-spine-probe.json`の`follow_semantic_change`を2つ目の確認材料に含めるかを
-  EXPLOREの最初に決める。
-- **根拠に使える既存のengine事実**（mockの文はこれらの実出力から作り、手書きの事実を置かない）:
-
-  | 問い | 使える事実 | 所在 |
-  |---|---|---|
-  | なぜ選べるか | choiceの`conditions`、`getAvailableChoices`に含まれるか、`evaluateKnowledgeRule`の`KnowledgeEvaluationFact`、条件のeventを作ったPerception Policy（`applyPerceptionPolicies`）。条件ごとの評価`evalCondition`は内部関数で、`index.ts`と`browser.ts`から公開exportされていない | `packages/engine-ts/src/session-ops.ts`、`condition-effect-ops.ts`、`character-knowledge.ts`、`perception-policy.ts` |
-  | 何が変わるか | choiceの`effects`（例: `createEvent`とそのproperties）、`applyChoice`前後の`diffSessionState` | `session-ops.ts`、`session-history.ts` |
-  | 何が開くか | `target`、`buildDependencyGraph`＋`getAffectedChoices`、`findReachableNodes` | `inference/forward-chaining.ts`、`inference/backward-chaining.ts` |
-
-- **再利用する既存の画面**: GUI editorとグラフtabのWhat-if（UC-5、選択肢ごとの状態変化と新たに
-  到達可能なノード）は`apps/web-tester/src/features/inference/inference-panel.js`と
-  `inference-bridge.js`、Character Knowledgeの事実表示は`apps/web-tester/src/ui/designer-dashboard.js`。
-  Lensはこれらと何が違うか（「なぜ選べるか」と事実への遡り）を各mockで明示し、同じ計算の
-  二重実装を前提にしない。
-- **EXPLOREで確かめる既知の差分**: `diffSessionState`は`key: value`形式の文字列を返し、構造化された
-  事実ではない。条件ごとの成否と理由を返す公開APIもない（`evalCondition`は非公開）。engineへexplain用APIを足すのは
-  public API契約の追加なので、EXPLOREではWeb Tester側で既存exportから計算し、API追加の要否は
-  `IMPLEMENT` packetの判断材料として記録する。
-- **方向の軸**（roadmapに記録済みの分岐）: 作者専用かplayerにも見せるか、物語の語彙か技術の語彙か。
-  3案はこの軸と配置（右pane／グラフ上／route timelineなど）で実質的に違うものにする。
-  具体的な3案はEXPLOREで作り、ここでは決めない。
-- **固定する評価軸**（mockを見る前に固定）: 1) どの文も、元のengine事実（条件・効果・rule fact・
-  graph edge）へ1操作で遡れる。2) 推測の文を出さない。3) raw diagnostic token（`perceptionPolicy:`、
-  `trigger=`、`noticed=`）をStoryのplayer向け本文に出さない。4) read-only（model・sessionを変えない）。
-  5) 「選べない選択肢」の理由も同じ形で示せる。6) 1440pxと768pxで読める。
-- **mockの作り方と出力先**: 低コストの静的HTMLを3案。各案は同じ事実JSON（engineで生成し
-  scriptも残す）を描画する。予定の出力先は`docs/samples/choice-consequence-lens/`。
-  userには3案と比較表を並べて見せ、操作の比較はUI操作コスト指針の「冒頭の運用規則」に沿って
-  入力数・視線移動・探索を案ごとに並べる。
-- **userが選ぶもの**: macro方向1つ（または全案不可と理由）。選択後の細部の調整は、
-  `IMPLEMENT` packetが最終gateと明示しない限り始めない。
-- **止まる条件**: engineの意味論の変更、新しい依存、public APIの追加・変更、player向け本文の変更。
-  これらが必要になったら、該当する操作だけを止めて判断材料にまとめる。
-- **並行するもの**: G0の確認（下表）はセッション冒頭に済ませると、Lensが説明すべきroute差の
-  基準になる。結果を待たずにEXPLOREを始めてよい。
-
-## Product / authority boundary
-
-- JSONがfull-fidelity sourceで、TypeScript engineがruntime semanticsの正本。
-- Adapterは既存production payloadを配るだけで、engine semanticsをcopyしない。
-- localStorageとJSON import/exportは同一browser/profile内の既存挙動。
-- owner-only production deploymentは公開ではない。public visibility、sharing、
-  workspace / selected usersへのaccess拡大は別のrelease gateで、S3までlocked。
-- NarrativeGenを他作品（Game StudioやUnityChatNovelGame等）の供給元にする作業は今の範囲外。
-- AIは物語本文を執筆しない。制作システムの整備が役割（[Invariants](docs/INVARIANTS.md)）。
+S1 hosted runtime確認（Public Studioのowner-only Version 1）はゲーム層の凍結に含め、再開時に扱う。
 
 ## Residual work
 
 | 項目 | purpose / effect | requirements | state / owner | next move |
 |---|---|---|---|---|
-| G0 baseline review | 機械的な正しさと物語として伝わるかを分ける | 両試作とDashboardを同時に見る | pending / user | 上の表の手順で一度観測 |
-| S1 hosted-runtime review | `adapter_partial`をacceptか限定修復へ | owner認証、既存Live URL、変更しない観測 | pending / user | 上の「S1の確認手順」 |
-| G3 Choice Consequence Lens | 作者が選択肢の理由と結果を確かめられる | 安定したpolicy semantics、事実へ遡れる文だけ | 次の焦点に選択済み・EXPLORE未着手 / shared（方向選択はuser） | 上の「EXPLORE packet」 |
-| G4 workflow proof | 実際の物語で作業量の削減を確かめる | 1本の制作経路、user所有の本文 | proposed / shared | G3の方向が決まってから順序を見直す |
-| S2 editing improvement | 観測された最大の摩擦を1件減らす | S1またはlocal reviewの具体的な所見 | proposed / shared | 所見が出てから別slice |
-| SP-DTYARN-001 | Dynamic TextのYarn変換を広げる | 変換表現を先にspecで固定 | partial / assistant | specから。今の焦点候補ではない |
-| G5 Unity parity、G7 release、G8 外部連携 | 別のpurpose・authority | 各専用packet | hold・proposed / 各gate | A〜Dと混ぜない |
-| 非blocking debt | npm audit、Web Tester lint未設定、Vite chunk警告、C# nullable等 | G7専用slice | proposed / shared | [Technical debt](docs/TECHNICAL_DEBT.md) |
+| Studio受入 | 画面Aが課題1・3を解いているかを確かめる | userが実画面を見る | pending / user | 上の手順 |
+| Studioでの編集 | 旧Web Testerを開かずに本文・条件・効果を直せる | 受入後、観測した摩擦から範囲を決める | proposed / assistant実装・方向はuser | 受入結果を見て作業単位を切る |
+| 旧Web Tester退役 | 二つの画面の維持をやめる | 移す機能の棚卸しと退役条件 | proposed / shared | 編集の作業単位の後 |
+| 点検の打ち切り緩和 | 数値が増え続ける物語でも全体を点検できる | 状態の同一視の方法を仕様で決める（意味論は変えない） | proposed / assistant | 受入後 |
+| 言い換え・描写追跡の記録 | `[entity~]`と言い換え辞書の判断も右列で見える | traceの拡張 | proposed / assistant | 編集より後 |
+| ゲーム層の再開 | 演出・Unity・Public Studio | 接続はmodel JSONとsession APIだけ（[Invariants](docs/INVARIANTS.md)） | frozen / user判断 | 再構築の区切りでuserが再開を決める |
+| SP-DTYARN-001、G5〜G8、非blocking debt | 別のpurpose | 各専用packet | hold・proposed | [Roadmap](docs/plans/DEVELOPMENT_PLAN.md) |
 
-作業ツリーの補足: `.codex-tmp/cloud-codex-20261011/NarrativeGen`は親Game Projectsの
-Cloud環境整備用worktree（`6f2a1d8`、branch `codex/cloud-codex-environment-20261011`）で、
-この文書の範囲では触らない。
+## Product / authority boundary
+
+- JSONがfull-fidelity sourceで、TypeScript engineがruntime semanticsの正本。Studioは判断の記録を描くだけで意味論を複製しない。
+- NarrativeGenは他作品への物語供給元ではない（2026-09-28）。AIは物語本文を執筆しない。
+- owner-only production deploymentは公開ではない。public release系はS3までlocked（ゲーム層の凍結中は触らない）。
 
 ## 再開手順
 
-再開時は`AGENTS.md` → `docs/REPO_LOCAL_RULES.md` → この文書を読み、選んだ焦点に必要な
-spec・review文書だけを追加で読む。Public Studio laneでは
-`docs/sites/SITES_SOURCE_ADAPTER.md`と`docs/sites/PUBLIC_STUDIO_READINESS.md`も読む。
+`AGENTS.md` → `docs/REPO_LOCAL_RULES.md` → この文書 → [SP-STUDIO-001](docs/specs/studio-rebuild.md)。
 
 ```powershell
-git fetch --prune origin
 git switch main
 git pull --ff-only origin main
-git status --short --branch
-git rev-list --left-right --count HEAD...origin/main
 npm ls --depth=0
 npm run check:safety
 npm run test:engine
-npm run dev
+npm run dev:studio
 ```
 
-E2E前にport 5173の使用者を確かめる。Web Testerの`playwright.config.js`は
-`reuseExistingServer`が有効で、5173を別project（2026-11-21はLOWPASS-SALVAGE-ATLASのdev server）が
-使っていると、そのページへ接続して全件`__NARRATIVEGEN_DEVTOOLS__`待ちのtimeoutになる。
-NarrativeGenの不具合ではない。他projectのserverは止めず、別portで標準configを上書きして実行する
-（2026-11-21はuntrackedの一時configで`npx vite --port 5183 --strictPort`と`baseURL`だけを差し替えた）。
+別端末のfresh cloneで依存関係が無い場合だけ、先に`npm ci --foreground-scripts`を一度完了させる。
+旧Web TesterのE2E前はport 5173の使用者を確かめ、他projectのserverが使っていれば止めずに別portで実行する
+（`reuseExistingServer`が他projectのページへ接続し、全件timeoutになるため）。
 
 ```powershell
 Get-NetTCPConnection -LocalPort 5173 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Get-Process -Id $_.OwningProcess }
 ```
-
-別端末のfresh cloneで依存関係がない場合だけ、`npm ls`の前に
-`npm ci --foreground-scripts`を一度完了させる。installを並行実行しない。
-Public Studio laneでは`npm run test:sites-adapter`を足す。Local production-like review URLは
-`http://127.0.0.1:4184/`（`npm run preview:sites-adapter`）。

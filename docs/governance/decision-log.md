@@ -4,6 +4,7 @@
 
 | 日付 | 決定事項 | 選択肢 | 決定理由 |
 |------|----------|--------|----------|
+| 2026-11-21 | 再構築: エンジンの判断の記録（trace）と新作業場`apps/studio`を芯にし、ゲーム層を凍結する。作業場の画面はA案「判断を横に添える」 | 画面A 判断を横に添える / B 因果の流れ / C 本文に注釈。ゲーム層: 凍結して切り離す / 別レーンで並行 | userが再起動時に「作り変えるぐらいの再構築」を依頼し、確認画面がJSON中心でエンジンの機能を判断しにくい・ゲーム部分の同時開発に全体が没頭する・Web画面がボタンまみれ、の3点を指摘。構想図を見てA案と凍結を選択。同日のG3 Lens EXPLOREの焦点はこの作業場の右列に吸収した。旧Web Testerは置き換えまで残し新機能を足さない。仕様は`docs/specs/studio-rebuild.md` |
 | 2026-11-21 | 再起動後の集中セッションの焦点をG3 Choice Consequence Lens EXPLOREにする | A. G3 Lens探索 / B. G4 workflow proof / C. Public Studio S1→S2 / D. North Star再確認 | userがAを選択。G1・G2完了でpolicy semanticsが安定し、G3はunlocked。選択はEXPLOREの開始で、Lens実装・North Star採用・API追加の承認ではない。packetは`HANDOVER.md` |
 | 2026-09-28 | NarrativeGenは他作品への物語供給元ではなく、独立した実験的な物語生成システムとして扱う | 独立した実験を保持 / Studio・UnityChatNovelGame等への供給元化 | userが親Game Projectsで、他projectとの接続は以前から想定しておらず実験的な物語生成システムの構築がコンセプトだったと明示した。親の非3D試作がsampleとengineを借りたことは供給元化・Studio参加の採択ではない。作品間供給は制作目的・利用範囲・互換性が必要になった時点で別途判断する。原記録は親repoの`docs/decision-log.md`「2026-09-28：NarrativeGenの実験目的を保持し…」節 |
 | 2026-07-27 | 保存済みPublic Studio Version 1をowner-only custom accessのままproduction deploymentし、public releaseとは分離 | 既存Version 1をowner-only deploy / hold / access拡大 | userが既存Version 1だけのdeploymentを明示承認。deploymentは`succeeded`、accessはcustom・許可account user 1・全group 0、version数1を維持した。Live URL値は非共有条件によりrepositoryへ保存しない。hosted runtime受入、access拡大、analytics/domain/auth/storage/commerce、public releaseは別gate |

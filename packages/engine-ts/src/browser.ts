@@ -144,3 +144,6 @@ export type { KnowledgeProfile, AnomalyResult } from './anomaly-detector.js'
 // Session history (undo/back navigation)
 export { createSessionHistory, pushHistory, popHistory, canUndo, historyDepth, clearHistory, diffSessionState } from './session-history.js'
 export type { SessionHistory } from './session-history.js'
+
+export { traceText, traceCondition, traceChoices, traceTemplates, traceScene, traceStart, traceStep, diffState, checkModel } from './trace.js'
+export type { TextSegment, TextTrace, ConditionTrace, ChoiceTrace, TemplateTrace, PerceptionTrace, PerceptionOutcome, StateChange, SceneTrace, StepTrace, RouteEnding, StuckState, ModelCheck } from './trace.js'

@@ -43,6 +43,8 @@
     "dev:engine": "npm run build -w @narrativegen/engine-ts -- --watch",
     "dev:tester": "npm run dev -w @narrativegen/web-tester",
     "dev:public": "npm run build:engine && npm run dev -w @narrativegen/public-studio",
+    "dev:studio": "npm run dev -w @narrativegen/studio",
+    "build:studio": "npm run build -w @narrativegen/studio",
     "dev:all": "run-p dev:engine dev:tester",
     "clean": "pwsh -Command \"Get-ChildItem -Path . -Include node_modules,dist -Recurse -Directory | Remove-Item -Recurse -Force\"",
     "fresh-install": "npm run clean && npm install && npm run build:all",

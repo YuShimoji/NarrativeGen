@@ -1,0 +1,17 @@
+{
+  "name": "@narrativegen/studio",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5185",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4185"
+  },
+  "dependencies": {
+    "@narrativegen/engine-ts": "file:../../packages/engine-ts"
+  },
+  "devDependencies": {
+    "vite": "8.0.7"
+  }
+}

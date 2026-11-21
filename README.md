@@ -1,6 +1,6 @@
 # NarrativeGen
 
-NarrativeGen is an interactive narrative engine for node-and-choice stories. It keeps the primary model in JSON, runs through the TypeScript engine, previews and edits in Web Tester, and targets Unity through the C# SDK.
+NarrativeGen is an experimental, entity- and property-driven narrative generation engine. The primary model is JSON and the TypeScript engine owns runtime semantics. **Studio** (`apps/studio`) shows what the engine decided and why (perception, events, inserted text, choice gates, whole-story checks). The older Web Tester remains for editing and export until Studio replaces it. The game layer (play presentation, Unity SDK, Public Studio) is frozen during the 2026-11 rebuild; see [`docs/specs/studio-rebuild.md`](docs/specs/studio-rebuild.md).
 
 ## Resume First
 
@@ -12,6 +12,15 @@ The same current snapshot is available without a local clone at [NarrativeGen cu
 - Roadmap: [`docs/plans/DEVELOPMENT_PLAN.md`](docs/plans/DEVELOPMENT_PLAN.md)
 - Spec index: [`docs/spec-index.json`](docs/spec-index.json) / [`docs/spec-viewer.html`](docs/spec-viewer.html)
 - Long-term decisions: [`docs/governance/decision-log.md`](docs/governance/decision-log.md)
+
+## Studio
+
+```powershell
+npm run dev:studio
+# open http://127.0.0.1:5185/
+```
+
+Pick a story at the top, then use 実行 to play while the right column explains each engine judgment, or 点検 to play every open choice and list endings, dead ends, choices that never open, and unresolved references. Drop a model JSON onto the page to open your own story.
 
 ## Playable Vertical Slice First
 
@@ -58,7 +67,8 @@ This route must stay playable before broader test, lint, CI, schema, or refactor
 - `packages/backend/` - Express REST API
 - `packages/sdk-unity/` - Unity C# SDK in UPM package form
 - `packages/tests/` - .NET tests for the Unity SDK
-- `apps/web-tester/` - Vite Web Tester UI and Playwright E2E tests
+- `apps/studio/` - Studio: engine judgment viewer and whole-story check (primary surface)
+- `apps/web-tester/` - legacy Web Tester UI (editing, export) and Playwright E2E tests; no new features
 - `models/` - schema, example models, and spreadsheet samples
 - `docs/` - specs, operations docs, checklists, and governance notes
 

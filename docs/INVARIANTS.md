@@ -17,6 +17,8 @@
 - WritingPage 連携は双方向だが、WritingPage 側のフォーマット安定が前提条件。不安定な状態での連携実装は行わない
 - TypeScript 版 (engine-ts) が SDK の正本。Unity SDK (sdk-unity) は TS 版のパリティを目標とし、独自に進化しない
 - AI は執筆しない。制作システム整備が役割
+- エンジン（`packages/engine-ts`）とゲーム層（Play演出・BGM・`packages/sdk-unity`・`apps/public-studio`・Sites adapter）の接続は model JSON と session API（`startSession` / `getAvailableChoices` / `applyChoice`）だけにする。2026-11-21の再構築中、ゲーム層は凍結し、エンジン・作業場の作業単位でゲーム層を変更しない
+- 作業場（`apps/studio`）はエンジンの判断の記録（`trace`）を描くだけで、意味論を複製しない。画面に生のJSONを出さない
 
 ## Prohibited Interpretations / Shortcuts
 

@@ -331,5 +331,14 @@
     "cat": "system",
     "file": "docs/specs/pipeline-workflow.md",
     "summary": "End-to-end workflow for story creation: Design → Author → Validate → Export → Integrate. HUMAN_AUTHORITY 5件反映済み (1人運用/JSON主軸/AI支援スコープ外/AUTHORING_GUIDE拡張)。WritingPage連携は延期 (安定待ち)。"
+  },
+  {
+    "id": "SP-STUDIO-001",
+    "title": "Studio Rebuild and Engine Trace",
+    "status": "partial",
+    "pct": 40,
+    "cat": "core",
+    "file": "docs/specs/studio-rebuild.md",
+    "summary": "2026-11-21 rebuild: read-only engine trace (traceStart/traceStep/checkModel) and apps/studio that shows engine judgments instead of JSON; game layer frozen. Editing and web-tester retirement remain."
   }
 ]

@@ -1,28 +1,29 @@
 # Development Plan
 
 Status: roadmap source of truth
-Last updated: 2026-11-21
+Last updated: 2026-11-21 (Studio rebuild)
 
 This file is the single roadmap document. Agent operating rules live in `docs/REPO_LOCAL_RULES.md`; current state and next resume steps live in the root `HANDOVER.md`; feature/spec status lives in `docs/spec-index.json`; durable decisions live in `docs/governance/decision-log.md`.
 
 ## Current Priorities
 
-1. **Restart focus selection (2026-11-21)**
-   - Product implementation has been idle since 2026-07-27; the only later
-     change is the Cloud Codex environment (`docs/CLOUD_CODEX.md`). SR0 is
-     closed and S1 owner-only deployment is done; their evidence lives in Git
-     history (`d4a38d3` and `cea2545`) and the 2026-07-27 decision-log row.
-   - NarrativeGen is an independent experimental narrative-generation system,
-     not a story supplier for other projects (decision log, 2026-09-28).
-   - On 2026-11-21 the user selected G3 Choice Consequence Lens EXPLORE as the
-     focus of the next session. The EXPLORE packet lives in `HANDOVER.md`.
-     This starts exploration only; Lens implementation still needs a later
-     `IMPLEMENT` packet. The North Star below stays `proposed`.
-   - Two short human reviews stay open and do not block each other: G0
-     originality baseline and the S1 hosted-runtime review of the existing
-     owner-only Version 1 (no new version, redeployment, or access change).
+1. **Studio rebuild (2026-11-21, [SP-STUDIO-001](../specs/studio-rebuild.md))**
+   - The user asked for a near-full rebuild on restart and named three problems:
+     the review screen shows JSON so engine behavior is hard to judge, game-side
+     work keeps absorbing development, and the Web preview is button-heavy.
+   - Adopted direction: a read-only engine trace (`traceStart` / `traceStep` /
+     `checkModel`) plus a new `apps/studio` in layout A ("judgments beside the
+     story"); the game layer is frozen. The same-day G3 Lens EXPLORE focus is
+     absorbed into Studio's judgment column.
+   - Next increments, in order: user acceptance of the Studio screen; editing in
+     Studio (text, conditions, effects) chosen from observed friction; inventory
+     of Web Tester features to move, then its retirement condition. Engine
+     semantics stay unchanged unless a separate decision says otherwise.
+   - NarrativeGen remains an independent experimental narrative-generation
+     system, not a story supplier (decision log, 2026-09-28).
 
-2. **Public Studio private-compatibility gate**
+2. **Public Studio private-compatibility gate (frozen during the rebuild)**
+   - Frozen with the rest of the game layer on 2026-11-21. The notes below are kept for when it reopens as its own work unit.
    - Keep `apps/public-studio/` as a separate Japanese-first, browser-local demonstration and editing lane. It reuses the shared browser engine and canonical procedural-choice sample; it must not become a second runtime or model authority.
    - Source intake and Version 1 save are accepted; private hosted-runtime compatibility remains partial because root/assets/story/edit/reload/export were not observed on Sites.
    - Version 1 is deployed with owner-only access. The next human gate is runtime review of root/assets/story/edit/reload/export. Publication, analytics, auth, personal data, AI configuration, transactions, and public visibility remain disabled.
@@ -65,7 +66,7 @@ This is a dependency-ordered proposal, not an approved implementation queue. A l
 | **G0 — Lock the current originality baseline** | Separate machine correctness from whether the probe actually communicates a meaningful story difference | Human reviews both probe branches and Designer Dashboard together; findings are recorded as pass or concrete defects | Requires subjective GUI/story judgment; automation cannot approve it | `pending verification`; user owns judgment; remains separate from completed technical direction selection and G2 validation |
 | **G1 — Choose the policy contract** | Decide how Character Knowledge acts at choice evaluation and prevent the engine from growing two competing policy models | [Comparison evidence](../samples/originality-spine-policy-contract-comparison.md) records exactly two contracts; one direction and its public/fixture defaults are accepted | Must preserve JSON-first, TS-as-source, deterministic/offline behavior; avoid invisible background complexity | `done`; user accepted Contract A and SP-KNOW-002 defaults on 2026-07-12 |
 | **G2 — Ship one procedural-choice vertical slice** | Make knowledge-derived state change a choice before the author manually wires an equivalent event/flag chain | One fixed scenario shows a choice becoming available or unavailable from Character Knowledge, with engine tests, schema validation, dashboard evidence, and no raw diagnostics in player copy | Contract A only; zero perception-event mutation; commit-associated CI must close before lifecycle `done` | `done`; AS-1 through AS-12 pass, implementation is pushed, and its commit-associated CI is green |
-| **G3 — Explain consequences from engine facts** | Turn inference and policy power into an author-usable reason surface instead of hidden diagnostics; the selected explanation pattern may later supply a bounded public-facing “why this opened” surface | A read-only Choice Consequence Lens explains why a choice is available, what state changes, and what opens, with every statement traceable to deterministic facts | Policy semantics must be stable; inferred or speculative prose is prohibited; public projection must not expose internal diagnostics | `proposed / unlocked`; not started; assistant prototypes three same-content directions only after a separate EXPLORE packet, user selects the macro direction |
+| **G3 — Explain consequences from engine facts** | Turn inference and policy power into an author-usable reason surface instead of hidden diagnostics; the selected explanation pattern may later supply a bounded public-facing “why this opened” surface | A read-only Choice Consequence Lens explains why a choice is available, what state changes, and what opens, with every statement traceable to deterministic facts | Policy semantics must be stable; inferred or speculative prose is prohibited; public projection must not expose internal diagnostics | `in progress via SP-STUDIO-001`; on 2026-11-21 the user chose layout A (judgments beside the story) from three same-content mocks; Studio's judgment column is the Lens; user acceptance of the screen is next |
 | **G4 — Prove the one-person authoring workflow** | Demonstrate that the primitives reduce work in a real story shape rather than only in a technical probe | One eight-node evidence-mystery starter pack completes author -> validate -> play -> save/reload -> export, with wiring count and manual exceptions recorded | Human owns creative acceptance; do not mass-produce templates before one workflow proof | `proposed`; shared ownership; assistant scaffolds and measures, user judges story usefulness |
 | **G5 — Restore cross-runtime semantic parity** | Let the approved policy behavior survive Unity integration instead of becoming Web-only originality | C# model shape, rule evaluation, TS/C# fixtures, and one Unity integration sample agree on the SP-KNOW-002 semantics | Requires stable TS semantics; Unity must not independently evolve; Editor visual acceptance is separate | `hold`; separate Unity `IMPLEMENT` authority is not granted; user owns visual/public distribution decisions |
 | **G6 — Mature the authoring experience around proven work** | Reorganize the tool around the real Writer / TechDesigner / Integrator loop and reduce language/visual friction | Stage-based cockpit direction, two-layer UI localization, and narrative visual grammar are each selected through low-cost evidence and delivered as bounded slices | Do not redesign around an unproven workflow; high-subjectivity direction needs human selection | `proposed`; shared direction, assistant implementation after explicit packets; start only after G4 reveals the actual friction |
