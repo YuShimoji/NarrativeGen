@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5185",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1 --port 4185"
+    "preview": "vite preview --host 127.0.0.1 --port 4185",
+    "test": "node --test \"test/*.test.mjs\""
   },
   "dependencies": {
     "@narrativegen/engine-ts": "file:../../packages/engine-ts"

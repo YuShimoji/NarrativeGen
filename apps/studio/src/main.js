@@ -9,6 +9,7 @@ import {
   esc,
   num,
 } from './format.js'
+import * as edit from './edit.js'
 
 const samples = import.meta.glob('../../../models/examples/*.json', { import: 'default' })
 const sampleList = Object.keys(samples)
@@ -29,6 +30,12 @@ const state = {
   check: null,
   error: '',
   focusSeg: null,
+  // editing
+  source: null, // { kind: 'sample', file } | { kind: 'file', fileName }
+  editing: false,
+  dirty: new Set(),
+  notice: '',
+  saving: false,
 }
 
 // ---------------------------------------------------------------------------
@@ -58,13 +65,16 @@ async function openSample(path) {
   if (!loader) return
   const model = await loader()
   const name = path.split('/').pop().replace(/\.json$/, '')
-  openModel(structuredClone(model), name)
+  openModel(structuredClone(model), name, { kind: 'sample', file: path.replace(/^(\.\.\/)+/, '') })
   picker.value = path
   pref('sample', path)
 }
 
-function openModel(model, name) {
+function openModel(model, name, source) {
   state.error = ''
+  state.source = source ?? null
+  state.dirty = new Set()
+  state.notice = ''
   if (!model || typeof model !== 'object' || !model.nodes || !model.startNode || !model.nodes[model.startNode]) {
     state.error = `「${name}」は物語モデルとして読めません（nodes と startNode が必要です）。`
     render()
@@ -110,6 +120,16 @@ function replay(path) {
   }
   state.cursor = state.steps.length - 1
   setView('run')
+}
+
+function replayQuiet(path) {
+  for (const choiceId of path) {
+    const last = state.steps[state.steps.length - 1]
+    const ct = last.scene.choices.find((c) => c.choice.id === choiceId)
+    if (!ct || !ct.available) break
+    state.steps.push(traceStep(last.session, state.model, choiceId))
+  }
+  state.cursor = state.steps.length - 1
 }
 
 function setView(view) {
@@ -181,6 +201,7 @@ function storyHtml(step) {
       <header class="scene-head">
         <span class="speaker">${esc(node?.speaker ?? '')}</span>
         <span class="node-id" title="場面のID">${esc(scene.nodeId)}</span>
+        <button type="button" class="btn btn-small edit-toggle" data-act="edit">✎ この場面を編集</button>
       </header>
       <div class="story-text">${textHtml}</div>
       ${scene.text.exact ? '' : '<p class="note">この本文は部分ごとの出所を復元できなかったため、そのまま表示しています。</p>'}
@@ -378,9 +399,375 @@ function runHtml() {
   const step = current()
   if (!step) return ''
   return `<div class="run">
-    <div class="run-main">${storyHtml(step)}${timelineHtml()}</div>
+    <div class="run-main">${state.editing ? editorHtml(step) : storyHtml(step)}<div id="timeline-wrap">${timelineHtml()}</div></div>
     ${judgmentHtml(step)}
   </div>`
+}
+
+// ---------------------------------------------------------------------------
+// editor (in place of the story column; the judgment column follows every edit)
+
+const RULE_OPS = {
+  resource: ['>=', '<=', '>', '<', '=='],
+  variable: ['==', '!=', 'contains', '!contains', '>=', '<=', '>', '<'],
+}
+const OP_LABEL = { '>=': '以上', '<=': '以下', '>': 'より大きい', '<': '未満', '==': 'と等しい', '!=': 'と違う', contains: 'を含む', '!contains': 'を含まない' }
+const TRUE_LABEL = {
+  flag: ['オン', 'オフ'],
+  setFlag: ['オンにする', 'オフにする'],
+  hasEvent: ['起きている', 'まだ起きていない'],
+  hasItem: ['持っている', '持っていない'],
+}
+
+function effectSentence(e) {
+  const n = state.names
+  switch (e.type) {
+    case 'perceiveEntity':
+      return `${esc(n.character(e.character))}が${esc(n.entity(e.entity))}を知覚する（分野 ${esc(e.domain)}${e.eventId ? `、出来事 ${esc(n.event(e.eventId))}` : ''}）`
+    case 'modifyVariable':
+      return `<span class="term">${esc(e.key)}</span> ${esc(e.op)} ${esc(e.value)}`
+    case 'goto':
+      return `場面 ${esc(e.target)} へ移る`
+    default:
+      return esc(e.type)
+  }
+}
+
+function options(values, selected, label = (v) => v) {
+  return values.map((v) => `<option value="${esc(v)}"${String(v) === String(selected) ? ' selected' : ''}>${esc(label(v))}</option>`).join('')
+}
+
+function ruleHtml(rule, field, index, choiceId) {
+  const at = `data-field="${field}" data-index="${index}" data-cid="${esc(choiceId)}"`
+  const remove = `<button type="button" class="rule-x" data-act="remove-rule" ${at} aria-label="消す">✕</button>`
+  const kind = edit.keyKind(rule)
+  if (!kind) {
+    const traced = current().scene.choices.find((x) => x.choice.id === choiceId)?.conditions[index]
+    const text = field === 'conditions' ? conditionSentence(traced ?? { condition: rule }, state.names, current().session) : effectSentence(rule)
+    return `<span class="rule rule-fixed" title="この種類は旧Web Testerで編集">${text}${remove}</span>`
+  }
+  const keyField = rule.type === 'createEvent' ? 'id' : 'key'
+  const parts = [`<input class="rule-key" list="keys-${kind}" value="${esc(rule[keyField])}" data-part="${keyField}" ${at} aria-label="対象" size="${Math.max(6, String(rule[keyField] ?? '').length)}">`]
+  if (TRUE_LABEL[rule.type]) {
+    const [yes, no] = TRUE_LABEL[rule.type]
+    parts.push(`<select data-part="value" ${at}>${options(['true', 'false'], String(rule.value), (v) => (v === 'true' ? yes : no))}</select>`)
+  } else if (RULE_OPS[rule.type]) {
+    parts.push(`<span>が</span><input class="rule-val" value="${esc(rule.value)}" data-part="value" ${at} aria-label="値" size="4">`)
+    parts.push(`<select data-part="op" ${at}>${options(RULE_OPS[rule.type], rule.op, (v) => OP_LABEL[v] ?? v)}</select>`)
+  } else if (rule.type === 'addResource') {
+    parts.push(`<span>に</span><input class="rule-val" type="number" value="${esc(rule.delta)}" data-part="delta" ${at} aria-label="足す量">`)
+  } else if (rule.type === 'setVariable') {
+    parts.push(`<span>を</span><input class="rule-val" value="${esc(rule.value)}" data-part="value" ${at} aria-label="値" size="6">`)
+  } else if (rule.type === 'createEvent') {
+    parts.push(`<span>名前</span><input class="rule-val" value="${esc(rule.name)}" data-part="name" ${at} aria-label="出来事の名前" size="10">`)
+  }
+  const label = (field === 'conditions' ? edit.CONDITION_KINDS : edit.EFFECT_KINDS)[rule.type]?.label ?? rule.type
+  return `<span class="rule"><span class="rule-kind">${esc(label)}</span>${parts.join('')}${remove}</span>`
+}
+
+function addRuleSelect(field, choiceId) {
+  const kinds = field === 'conditions' ? edit.CONDITION_KINDS : edit.EFFECT_KINDS
+  return `<select class="rule-add" data-act="add-rule" data-field="${field}" data-cid="${esc(choiceId)}" aria-label="${field === 'conditions' ? '条件を足す' : '効果を足す'}">
+    <option value="">＋${field === 'conditions' ? '条件' : '効果'}</option>${Object.entries(kinds).map(([k, v]) => `<option value="${k}">${esc(v.label)}</option>`).join('')}</select>`
+}
+
+function choiceMark(ct) {
+  if (!ct) return '<span class="state">?</span>'
+  const why = ct.available ? '今この選択肢は開いている' : `閉じている: ${ct.conditions.filter((c) => !c.passed).map((c) => conditionSentence(c, state.names, current().session).replace(/<[^>]+>/g, '')).join('／')}`
+  return `<span class="state" title="${esc(why)}">${ct.available ? '開' : '閉'}</span>`
+}
+
+function previewHtml(step) {
+  const { text } = step.scene
+  return text.exact ? text.segments.map((s, i) => segmentHtml(s, `0-${i}`)).join('') : esc(text.text)
+}
+
+function editorHtml(step) {
+  const nodeId = step.scene.nodeId
+  const node = state.model.nodes[nodeId]
+  const keys = edit.knownKeys(state.model)
+  const snippets = edit.textSnippets(state.model)
+  const group = (label, items) => (items.length ? `<optgroup label="${esc(label)}">${items.map((x) => `<option value="${esc(x.text)}">${esc(x.label)}</option>`).join('')}</optgroup>` : '')
+  const nodeIds = Object.keys(state.model.nodes)
+  const choices = (node.choices ?? []).map((c) => {
+    const ct = step.scene.choices.find((x) => x.choice.id === c.id)
+    const cid = esc(c.id)
+    return `<li class="edit-choice ${ct?.available ? 'open' : 'closed'}" data-row="${cid}">
+      <div class="ec-row">
+        <span data-mark="${cid}">${choiceMark(ct)}</span>
+        <input class="ec-text" value="${esc(c.text)}" data-edit="choice-text" data-cid="${cid}" aria-label="選択肢の文">
+        <span class="ec-arrow" aria-hidden="true">→</span>
+        <select data-edit="choice-target" data-cid="${cid}" aria-label="行き先">${options(nodeIds, c.target)}<option value="__new">＋新しい場面</option></select>
+        <button type="button" class="btn btn-small" data-act="go" data-cid="${cid}" ${ct?.available ? '' : 'disabled'} title="この選択肢を選んで次の場面へ">選ぶ</button>
+        <button type="button" class="rule-x" data-act="remove-choice" data-cid="${cid}" aria-label="選択肢を消す">✕</button>
+      </div>
+      <div class="ec-rules"><span class="ec-label">条件</span>${(c.conditions ?? []).map((r, i) => ruleHtml(r, 'conditions', i, c.id)).join('')}${addRuleSelect('conditions', c.id)}</div>
+      <div class="ec-rules"><span class="ec-label">効果</span>${(c.effects ?? []).map((r, i) => ruleHtml(r, 'effects', i, c.id)).join('')}${addRuleSelect('effects', c.id)}</div>
+    </li>`
+  }).join('')
+  const datalists = Object.entries(keys).map(([k, list]) => `<datalist id="keys-${k}">${list.map((v) => `<option value="${esc(v)}">`).join('')}</datalist>`).join('')
+  return `<article class="story editing" aria-label="場面の編集">
+    <header class="scene-head">
+      <label class="ed-speaker"><span>話者</span><input value="${esc(node.speaker ?? '')}" data-edit="speaker" size="10"></label>
+      <span class="node-id" title="場面のID">${esc(nodeId)}</span>
+      <button type="button" class="btn btn-small edit-toggle" data-act="stop-edit">編集を終える</button>
+    </header>
+    <textarea id="edit-text" class="ed-text" data-edit="text" rows="6" aria-label="本文">${esc(node.text ?? '')}</textarea>
+    <div class="ed-tools">
+      <select data-act="insert" aria-label="本文に挿入">
+        <option value="">本文に挿入…</option>
+        ${group('物の性質', snippets.entityProps)}${group('状態', snippets.values)}${group('条件付きの文', snippets.conditional)}
+      </select>
+      <span class="sub">[物.性質] {状態} {?フラグ:文} の形で書けます</span>
+    </div>
+    <div class="ed-preview">
+      <div class="ed-label">エンジンが組み立てた本文</div>
+      <div id="preview" class="story-text">${previewHtml(step)}</div>
+      <div id="seg-detail" class="seg-detail" hidden></div>
+    </div>
+    ${step.scene.ending && !(node.choices ?? []).length ? '<p class="sub">選択肢が無いので、ここが結末になります。</p>' : ''}
+    <ol class="edit-choices">${choices}</ol>
+    <button type="button" class="btn btn-small" data-act="add-choice">＋ 選択肢を追加</button>
+    ${datalists}
+  </article>`
+}
+
+// edits: apply to the model, re-trace the same path, then refresh what depends on it
+
+function retrace() {
+  const path = state.steps.slice(1).map((s) => s.choiceId)
+  const steps = [traceStart(state.model)]
+  for (const id of path) {
+    const last = steps[steps.length - 1]
+    const ct = last.scene.choices.find((c) => c.choice.id === id)
+    if (!ct || !ct.available) break
+    steps.push(traceStep(last.session, state.model, id))
+  }
+  state.steps = steps
+  state.cursor = Math.min(state.cursor, steps.length - 1)
+}
+
+function afterEdit(mark, { full = false } = {}) {
+  state.dirty.add(mark)
+  state.names = createNames(state.model)
+  state.check = null
+  const nodeBefore = current()?.scene.nodeId
+  try {
+    retrace()
+  } catch (err) {
+    state.error = `再計算できません: ${err instanceof Error ? err.message : String(err)}`
+    full = true
+  }
+  updateSaveArea()
+  if (full || current().scene.nodeId !== nodeBefore) {
+    render()
+    return
+  }
+  const step = current()
+  const preview = document.getElementById('preview')
+  if (preview) preview.innerHTML = previewHtml(step)
+  const aside = app.querySelector('.judgment')
+  if (aside) aside.outerHTML = judgmentHtml(step)
+  const tl = document.getElementById('timeline-wrap')
+  if (tl) tl.innerHTML = timelineHtml()
+  for (const el of app.querySelectorAll('[data-mark]')) {
+    const ct = step.scene.choices.find((x) => x.choice.id === el.dataset.mark)
+    el.innerHTML = choiceMark(ct)
+    el.closest('.edit-choice')?.classList.toggle('open', !!ct?.available)
+    el.closest('.edit-choice')?.classList.toggle('closed', !ct?.available)
+    const go = el.closest('.ec-row')?.querySelector('[data-act="go"]')
+    if (go) go.disabled = !ct?.available
+  }
+}
+
+function coerceRuleValue(rule, part, raw) {
+  if (part === 'delta') return Number(raw) || 0
+  if (part === 'value' && TRUE_LABEL[rule.type]) return raw === 'true'
+  if (part === 'value' && rule.type === 'resource') return Number(raw) || 0
+  if (part === 'value' && rule.type === 'variable' && ['>=', '<=', '>', '<'].includes(rule.op)) return Number(raw) || 0
+  return raw
+}
+
+function editRulePart(el) {
+  const nodeId = current().scene.nodeId
+  const { field, cid } = el.dataset
+  const index = Number(el.dataset.index)
+  const c = state.model.nodes[nodeId].choices.find((x) => x.id === cid)
+  const rule = { ...c[field][index] }
+  rule[el.dataset.part] = coerceRuleValue(rule, el.dataset.part, el.value)
+  if (el.dataset.part === 'op' && rule.type === 'variable') rule.value = coerceRuleValue(rule, 'value', String(rule.value))
+  edit.setRule(state.model, nodeId, cid, field, index, rule)
+  afterEdit(`choice:${cid}`)
+}
+
+function onEditInput(el) {
+  const nodeId = current().scene.nodeId
+  if (el.dataset.part) return editRulePart(el)
+  switch (el.dataset.edit) {
+    case 'text':
+      edit.setNodeText(state.model, nodeId, el.value)
+      return afterEdit(`text:${nodeId}`)
+    case 'speaker':
+      edit.setNodeSpeaker(state.model, nodeId, el.value)
+      return afterEdit(`speaker:${nodeId}`)
+    case 'choice-text':
+      edit.setChoiceText(state.model, nodeId, el.dataset.cid, el.value)
+      return afterEdit(`choice:${el.dataset.cid}`)
+    default:
+      return undefined
+  }
+}
+
+function onEditChange(el) {
+  const nodeId = current().scene.nodeId
+  if (el.dataset.edit === 'choice-target') {
+    let target = el.value
+    if (target === '__new') target = edit.addNode(state.model)
+    edit.setChoiceTarget(state.model, nodeId, el.dataset.cid, target)
+    return afterEdit(`choice:${el.dataset.cid}`, { full: true })
+  }
+  if (el.dataset.act === 'add-rule' && el.value) {
+    const { field, cid } = el.dataset
+    const kinds = field === 'conditions' ? edit.CONDITION_KINDS : edit.EFFECT_KINDS
+    const kindDef = kinds[el.value]
+    const keyList = edit.knownKeys(state.model)[edit.keyKind({ type: el.value })] ?? []
+    edit.addRule(state.model, nodeId, cid, field, kindDef.make(keyList[0] ?? `new_${el.value.toLowerCase()}`))
+    return afterEdit(`choice:${cid}`, { full: true })
+  }
+  if (el.dataset.act === 'insert' && el.value) {
+    const ta = document.getElementById('edit-text')
+    const at = ta.selectionStart ?? ta.value.length
+    ta.value = ta.value.slice(0, at) + el.value + ta.value.slice(ta.selectionEnd ?? at)
+    const caret = at + el.value.length
+    el.value = ''
+    ta.focus()
+    ta.setSelectionRange(caret, caret)
+    return onEditInput(ta)
+  }
+  if (el.dataset.part && el.tagName === 'SELECT') return editRulePart(el)
+  return undefined
+}
+
+function onEditAction(btn) {
+  const nodeId = current().scene.nodeId
+  const { act, cid } = btn.dataset
+  if (act === 'edit') {
+    state.editing = true
+    return render()
+  }
+  if (act === 'stop-edit') {
+    state.editing = false
+    return render()
+  }
+  if (act === 'go') return choose(cid)
+  if (act === 'add-choice') {
+    const id = edit.addChoice(state.model, nodeId, { target: nodeId })
+    return afterEdit(`choice:${id}`, { full: true })
+  }
+  if (act === 'remove-choice') {
+    edit.removeChoice(state.model, nodeId, cid)
+    return afterEdit(`choice:${cid}`, { full: true })
+  }
+  if (act === 'remove-rule') {
+    edit.removeRule(state.model, nodeId, cid, btn.dataset.field, Number(btn.dataset.index))
+    return afterEdit(`choice:${cid}`, { full: true })
+  }
+  return undefined
+}
+
+// saving: models/ files go back to their own file through the dev server; a dropped file is written out
+
+const saveArea = document.getElementById('save-area')
+
+function updateSaveArea() {
+  const n = state.dirty.size
+  if (!n) {
+    saveArea.innerHTML = state.notice ? `<span class="notice">${state.notice}</span>` : ''
+    return
+  }
+  const label = state.source?.kind === 'sample' ? '保存' : 'JSONを書き出す'
+  saveArea.innerHTML = `<span class="dirty">未保存の変更 ${n} か所</span><button type="button" id="save" class="btn btn-primary">${label}</button>`
+}
+
+function checkSummary() {
+  const c = checkModel(state.model)
+  const issues = c.stuck.length + c.neverOpened.length + c.impossibleEvents.length + c.unresolvedRefs.length + c.missingTargets.length + c.unlinkedNodes.length + c.errors.length
+  state.check = c
+  return `点検: 結末 ${c.endings.length}・問題 ${issues}${c.truncated ? '（上限で打ち切り）' : ''}`
+}
+
+async function save() {
+  if (!state.dirty.size || !state.model) return
+  const summary = checkSummary()
+  if (state.source?.kind !== 'sample') {
+    const blob = new Blob([JSON.stringify(state.model, null, 2) + '\n'], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `${state.name}.json`
+    a.click()
+    URL.revokeObjectURL(a.href)
+    state.dirty = new Set()
+    state.notice = `${esc(state.name)}.json を書き出しました。${summary}`
+    updateSaveArea()
+    return
+  }
+  state.saving = true
+  // saving a models/ file makes the dev server reload the page; keep the place to come back to
+  remember(`${esc(state.source.file)} に保存しました。${summary}`)
+  try {
+    const res = await fetch('/__studio/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file: state.source.file, model: state.model }),
+    })
+    const data = await res.json()
+    if (!data.ok) throw new Error(data.error)
+    state.dirty = new Set()
+    state.notice = `${esc(data.file)} に保存しました。${summary}${data.reformatted ? '（このファイルは手書きの整形だったので、今回から標準の整形になりました）' : ''}`
+    remember(state.notice)
+  } catch (err) {
+    forget()
+    state.error = `保存できません: ${err instanceof Error ? err.message : String(err)}`
+  } finally {
+    state.saving = false
+  }
+  updateSaveArea()
+  if (state.error) render()
+}
+
+function remember(notice) {
+  try {
+    sessionStorage.setItem('ng-studio:resume', JSON.stringify({
+      path: state.steps.slice(1).map((s) => s.choiceId),
+      cursor: state.cursor,
+      editing: state.editing,
+      notice,
+    }))
+  } catch {
+    // the page still works without it; only the place after reload is lost
+  }
+}
+
+function forget() {
+  try {
+    sessionStorage.removeItem('ng-studio:resume')
+  } catch {
+    // nothing to clear
+  }
+}
+
+function takeResume() {
+  try {
+    const raw = sessionStorage.getItem('ng-studio:resume')
+    sessionStorage.removeItem('ng-studio:resume')
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+function confirmDiscard() {
+  return !state.dirty.size || window.confirm(`保存していない変更が ${state.dirty.size} か所あります。捨てて続けますか？`)
 }
 
 // ---------------------------------------------------------------------------
@@ -450,10 +837,21 @@ function render() {
   state.error = ''
 }
 
+app.addEventListener('input', (event) => {
+  const el = event.target
+  if (el.tagName === 'SELECT') return
+  if (el.dataset.edit || el.dataset.part) onEditInput(el)
+})
+app.addEventListener('change', (event) => {
+  const el = event.target
+  if (el.tagName === 'SELECT') onEditChange(el)
+})
+
 app.addEventListener('click', (event) => {
   const target = event.target.closest('button')
   if (!target) return
-  if (target.dataset.choice) choose(target.dataset.choice)
+  if (target.dataset.act) onEditAction(target)
+  else if (target.dataset.choice) choose(target.dataset.choice)
   else if (target.dataset.step) {
     state.cursor = Number(target.dataset.step)
     render()
@@ -469,8 +867,20 @@ app.addEventListener('click', (event) => {
   }
 })
 
+let pickerValue = ''
+picker.addEventListener('focus', () => { pickerValue = picker.value })
 picker.addEventListener('change', () => {
+  if (!confirmDiscard()) {
+    picker.value = pickerValue
+    return
+  }
   if (picker.value !== '__file') openSample(picker.value)
+})
+saveArea.addEventListener('click', (event) => {
+  if (event.target.closest('#save')) save()
+})
+window.addEventListener('beforeunload', (event) => {
+  if (state.dirty.size && !state.saving) event.preventDefault()
 })
 document.getElementById('restart').addEventListener('click', () => {
   restart()
@@ -492,13 +902,13 @@ window.addEventListener('drop', async (e) => {
   e.preventDefault()
   hint.hidden = true
   const file = e.dataTransfer?.files?.[0]
-  if (!file) return
+  if (!file || !confirmDiscard()) return
   try {
     const model = JSON.parse(await file.text())
     const name = file.name.replace(/\.json$/i, '')
     fillPicker(name)
     picker.value = '__file'
-    openModel(model, name)
+    openModel(model, name, { kind: 'file', fileName: file.name })
   } catch {
     state.error = `「${file.name}」はJSONとして読めません。`
     render()
@@ -510,4 +920,14 @@ const savedView = pref('view')
 if (savedView === 'check' || savedView === 'run') state.view = savedView
 const savedSample = pref('sample')
 const initial = sampleList.find((s) => s.path === savedSample) ?? sampleList.find((s) => s.name === DEFAULT_SAMPLE) ?? sampleList[0]
-openSample(initial.path).then(() => setView(state.view))
+const resume = takeResume()
+openSample(initial.path).then(() => {
+  if (resume) {
+    replayQuiet(resume.path ?? [])
+    state.cursor = Math.min(resume.cursor ?? 0, state.steps.length - 1)
+    state.editing = !!resume.editing
+    state.notice = resume.notice ?? ''
+    updateSaveArea()
+  }
+  setView(state.view)
+})

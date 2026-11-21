@@ -336,9 +336,9 @@
     "id": "SP-STUDIO-001",
     "title": "Studio Rebuild and Engine Trace",
     "status": "partial",
-    "pct": 40,
+    "pct": 55,
     "cat": "core",
     "file": "docs/specs/studio-rebuild.md",
-    "summary": "2026-11-21 rebuild: read-only engine trace (traceStart/traceStep/checkModel) and apps/studio that shows engine judgments instead of JSON; game layer frozen. Editing and web-tester retirement remain."
+    "summary": "2026-11-21 rebuild: read-only engine trace (traceStart/traceStep/checkModel) and apps/studio that shows engine judgments instead of JSON; game layer frozen. In-place editing (text, choices, simple conditions/effects) with save to models/ added. Complex-rule editing and web-tester retirement remain."
   }
 ]
