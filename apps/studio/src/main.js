@@ -36,6 +36,7 @@ const state = {
   dirty: new Set(),
   notice: '',
   saving: false,
+  open: new Set(), // which <details> in the editor stay open across re-renders
 }
 
 // ---------------------------------------------------------------------------
@@ -437,37 +438,120 @@ function options(values, selected, label = (v) => v) {
   return values.map((v) => `<option value="${esc(v)}"${String(v) === String(selected) ? ' selected' : ''}>${esc(label(v))}</option>`).join('')
 }
 
-function ruleHtml(rule, field, index, choiceId) {
-  const at = `data-field="${field}" data-index="${index}" data-cid="${esc(choiceId)}"`
-  const remove = `<button type="button" class="rule-x" data-act="remove-rule" ${at} aria-label="消す">✕</button>`
-  const kind = edit.keyKind(rule)
-  if (!kind) {
-    const traced = current().scene.choices.find((x) => x.choice.id === choiceId)?.conditions[index]
-    const text = field === 'conditions' ? conditionSentence(traced ?? { condition: rule }, state.names, current().session) : effectSentence(rule)
-    return `<span class="rule rule-fixed" title="この種類は旧Web Testerで編集">${text}${remove}</span>`
-  }
-  const keyField = rule.type === 'createEvent' ? 'id' : 'key'
-  const parts = [`<input class="rule-key" list="keys-${kind}" value="${esc(rule[keyField])}" data-part="${keyField}" ${at} aria-label="対象" size="${Math.max(6, String(rule[keyField] ?? '').length)}">`]
-  if (TRUE_LABEL[rule.type]) {
-    const [yes, no] = TRUE_LABEL[rule.type]
-    parts.push(`<select data-part="value" ${at}>${options(['true', 'false'], String(rule.value), (v) => (v === 'true' ? yes : no))}</select>`)
-  } else if (RULE_OPS[rule.type]) {
-    parts.push(`<span>が</span><input class="rule-val" value="${esc(rule.value)}" data-part="value" ${at} aria-label="値" size="4">`)
-    parts.push(`<select data-part="op" ${at}>${options(RULE_OPS[rule.type], rule.op, (v) => OP_LABEL[v] ?? v)}</select>`)
-  } else if (rule.type === 'addResource') {
-    parts.push(`<span>に</span><input class="rule-val" type="number" value="${esc(rule.delta)}" data-part="delta" ${at} aria-label="足す量">`)
-  } else if (rule.type === 'setVariable') {
-    parts.push(`<span>を</span><input class="rule-val" value="${esc(rule.value)}" data-part="value" ${at} aria-label="値" size="6">`)
-  } else if (rule.type === 'createEvent') {
-    parts.push(`<span>名前</span><input class="rule-val" value="${esc(rule.name)}" data-part="name" ${at} aria-label="出来事の名前" size="10">`)
-  }
-  const label = (field === 'conditions' ? edit.CONDITION_KINDS : edit.EFFECT_KINDS)[rule.type]?.label ?? rule.type
-  return `<span class="rule"><span class="rule-kind">${esc(label)}</span>${parts.join('')}${remove}</span>`
+// every editable value carries the path to it in the model (data-path) and how to read it (data-type)
+const at = (path) => `data-path="${esc(JSON.stringify(path))}"`
+const removeBtn = (path, label = '消す') => `<button type="button" class="rule-x" data-act="remove-at" ${at(path)} aria-label="${label}">✕</button>`
+const PROPERTY_OPS = ['==', '!=', '>=', '<=', '>', '<']
+
+function ruleLabel(id) {
+  const r = state.model.knowledgeRules?.[id]
+  if (!r) return `${id}（無いルール）`
+  return `${state.names.character(r.character)}→${state.names.entity(r.entity)}（${r.domain}）`
 }
 
-function addRuleSelect(field, choiceId) {
+function valueInput(path, value, type, cls = 'rule-val') {
+  if (type === 'boolean') return `<select ${at(path)} data-type="bool">${options(['true', 'false'], String(value), (v) => (v === 'true' ? 'true（はい）' : 'false（いいえ）'))}</select>`
+  if (type === 'number') return `<input class="${cls}" type="number" step="any" value="${esc(value)}" ${at(path)} data-type="num" aria-label="値">`
+  return `<input class="${cls}" value="${esc(value)}" ${at(path)} aria-label="値" size="${Math.max(4, String(value ?? '').length)}">`
+}
+
+/** Who perceives what, with which knowledge, expecting which values; shared by rules, effects and policies. */
+function perceptionForm(obj, path, { event = false } = {}) {
+  const m = state.model
+  const n = state.names
+  const chars = Object.keys(m.characters ?? {})
+  const ents = Object.keys(m.entities ?? {})
+  const domains = edit.domainsOf(m, obj.character)
+  const domainOpts = domains.includes(obj.domain) ? domains : [...domains, obj.domain]
+  const props = edit.entityProperties(m, obj.entity)
+  const numeric = edit.numericProperties(m, obj.entity)
+  const profiles = m.characters?.[obj.character]?.knowledgeProfiles ?? []
+  const profile = profiles.find((p) => p.domain === obj.domain) ?? profiles.find((p) => p.domain === 'general')
+  const tol = profile && typeof profile.tolerance === 'number'
+    ? `<span class="sub">許容幅 ±${Math.round(profile.tolerance * 100)}%${profile.domain !== obj.domain ? '（この分野が無いので general）' : ''}</span>`
+    : '<span class="sub bad-text">この人物にこの分野も general も無い</span>'
+  const exps = Object.entries(obj.expectations ?? {})
+  const expHtml = exps.map(([k, v]) => `<span class="exp"><span class="term">${esc(k)}</span><span>は</span>${valueInput([...path, 'expectations', k], v, 'number')}<span>前後のはず</span><span class="sub">（初期値 ${esc(props[k]?.defaultValue ?? '—')}）</span>${removeBtn([...path, 'expectations', k], '予想を消す')}</span>`).join('')
+  const free = numeric.filter((k) => !(k in (obj.expectations ?? {})))
+  const addExp = free.length
+    ? `<select class="rule-add" data-act="add-exp" ${at([...path, 'expectations'])} aria-label="予想を足す"><option value="">＋予想</option>${options(free, '')}</select>`
+    : ''
+  const warn = exps.length ? '' : `<span class="sub bad-text">${numeric.length ? '予想が1つも無いので、何とも比べません' : 'この物に数値の性質が無いので、予想を置けません'}</span>`
+  return `<div class="pform">
+    <div class="pf-row">
+      <select ${at([...path, 'character'])} aria-label="人物">${options(chars.includes(obj.character) ? chars : [...chars, obj.character], obj.character, (v) => n.character(v))}</select><span>が</span>
+      <select ${at([...path, 'entity'])} aria-label="物">${options(ents.includes(obj.entity) ? ents : [...ents, obj.entity], obj.entity, (v) => n.entity(v))}</select><span>を、分野</span>
+      <select ${at([...path, 'domain'])} aria-label="知識の分野">${options(domainOpts, obj.domain)}</select><span>の知識で見る</span>${tol}
+    </div>
+    <div class="pf-row">${expHtml}${addExp}${warn}</div>
+    ${event ? `<div class="pf-row"><span>違和感から生まれる出来事</span>
+      <input value="${esc(obj.eventId ?? '')}" ${at([...path, 'eventId'])} data-type="opt" placeholder="event_${esc(obj.character)}_perceives_${esc(obj.entity)}" aria-label="出来事のID" size="18">
+      <span>名前</span><input value="${esc(obj.eventName ?? '')}" ${at([...path, 'eventName'])} data-type="opt" aria-label="出来事の名前" size="14">
+      <label class="pf-check"><input type="checkbox" ${obj.onlyIfNoticed ? 'checked' : ''} ${at([...path, 'onlyIfNoticed'])}>気づいた時だけ作る</label></div>` : ''}
+  </div>`
+}
+
+function ruleHtml(rule, path, field) {
+  const remove = removeBtn(path)
+  const label = (field === 'conditions' ? edit.CONDITION_KINDS : edit.EFFECT_KINDS)[rule.type]?.label ?? rule.type
+  const kind = edit.keyKind(rule)
+  const m = state.model
+  if (kind) {
+    const keyField = rule.type === 'createEvent' ? 'id' : 'key'
+    const parts = [`<input class="rule-key" list="keys-${kind}" value="${esc(rule[keyField])}" ${at([...path, keyField])} aria-label="対象" size="${Math.max(6, String(rule[keyField] ?? '').length)}">`]
+    if (TRUE_LABEL[rule.type]) {
+      const [yes, no] = TRUE_LABEL[rule.type]
+      parts.push(`<select ${at([...path, 'value'])} data-type="bool">${options(['true', 'false'], String(rule.value), (v) => (v === 'true' ? yes : no))}</select>`)
+    } else if (RULE_OPS[rule.type]) {
+      parts.push(`<span>が</span><input class="rule-val" value="${esc(rule.value)}" ${at([...path, 'value'])} ${rule.type === 'resource' ? 'data-type="num"' : ''} aria-label="値" size="4">`)
+      parts.push(`<select ${at([...path, 'op'])}>${options(RULE_OPS[rule.type], rule.op, (v) => OP_LABEL[v] ?? v)}</select>`)
+    } else if (rule.type === 'addResource') {
+      parts.push(`<span>に</span><input class="rule-val" type="number" value="${esc(rule.delta)}" ${at([...path, 'delta'])} data-type="num" aria-label="足す量">`)
+    } else if (rule.type === 'setVariable') {
+      parts.push(`<span>を</span><input class="rule-val" value="${esc(rule.value)}" ${at([...path, 'value'])} aria-label="値" size="6">`)
+    } else if (rule.type === 'createEvent') {
+      parts.push(`<span>名前</span><input class="rule-val" value="${esc(rule.name)}" ${at([...path, 'name'])} aria-label="出来事の名前" size="10">`)
+    }
+    return `<span class="rule"><span class="rule-kind">${esc(label)}</span>${parts.join('')}${remove}</span>`
+  }
+  if (rule.type === 'knowledgeRule') {
+    const def = m.knowledgeRules?.[rule.rule]
+    const ids = Object.keys(m.knowledgeRules ?? {})
+    const uses = edit.ruleUses(m, rule.rule)
+    return `<div class="rule rule-block"><div class="pf-row"><span class="rule-kind">${esc(label)}</span>
+      <select ${at([...path, 'rule'])} aria-label="知識ルール">${options(ids.includes(rule.rule) ? ids : [...ids, rule.rule], rule.rule, ruleLabel)}<option value="__new">＋新しい知識ルール</option></select>
+      <span class="sub">ルール <span class="term">${esc(rule.rule)}</span>${uses > 1 ? `は ${uses} か所で共有` : ''}</span>${remove}</div>
+      ${def ? perceptionForm(def, ['knowledgeRules', rule.rule]) : '<p class="sub bad-text">このルールはモデルにありません。上で選び直してください。</p>'}</div>`
+  }
+  if (rule.type === 'property') {
+    const props = edit.entityProperties(m, rule.entity)
+    const keys = Object.keys(props)
+    const ents = Object.keys(m.entities ?? {})
+    return `<span class="rule"><span class="rule-kind">${esc(label)}</span>
+      <select ${at([...path, 'entity'])} aria-label="物">${options(ents.includes(rule.entity) ? ents : [...ents, rule.entity], rule.entity, (v) => state.names.entity(v))}</select><span>の</span>
+      <select ${at([...path, 'key'])} aria-label="性質">${options(keys.includes(rule.key) ? keys : [...keys, rule.key], rule.key)}</select><span>が</span>
+      ${valueInput([...path, 'value'], rule.value, props[rule.key]?.type)}
+      <select ${at([...path, 'op'])}>${options(PROPERTY_OPS, rule.op, (v) => OP_LABEL[v] ?? v)}</select>${remove}</span>`
+  }
+  if (rule.type === 'and' || rule.type === 'or') {
+    const kids = (rule.conditions ?? []).map((c, i) => ruleHtml(c, [...path, 'conditions', i], field)).join('')
+    return `<div class="rule rule-block rule-group"><div class="pf-row"><span class="rule-kind">${esc(label)}</span>${remove}</div>
+      <div class="group-body">${kids || '<span class="sub">（まだ何も無い）</span>'}${addRuleSelect([...path, 'conditions'], field)}</div></div>`
+  }
+  if (rule.type === 'not') {
+    return `<div class="rule rule-block rule-group"><div class="pf-row"><span class="rule-kind">${esc(label)}</span>${remove}</div>
+      <div class="group-body">${rule.condition ? ruleHtml(rule.condition, [...path, 'condition'], field) : ''}</div></div>`
+  }
+  if (rule.type === 'perceiveEntity') {
+    return `<div class="rule rule-block"><div class="pf-row"><span class="rule-kind">${esc(label)}</span>${remove}</div>${perceptionForm(rule, path, { event: true })}</div>`
+  }
+  const text = field === 'conditions' ? conditionSentence({ condition: rule }, state.names, current().session) : effectSentence(rule)
+  return `<span class="rule rule-fixed" title="この種類は旧Web Testerで編集">${text}${remove}</span>`
+}
+
+function addRuleSelect(listPath, field) {
   const kinds = field === 'conditions' ? edit.CONDITION_KINDS : edit.EFFECT_KINDS
-  return `<select class="rule-add" data-act="add-rule" data-field="${field}" data-cid="${esc(choiceId)}" aria-label="${field === 'conditions' ? '条件を足す' : '効果を足す'}">
+  return `<select class="rule-add" data-act="add-rule" data-field="${field}" ${at(listPath)} aria-label="${field === 'conditions' ? '条件を足す' : '効果を足す'}">
     <option value="">＋${field === 'conditions' ? '条件' : '効果'}</option>${Object.entries(kinds).map(([k, v]) => `<option value="${k}">${esc(v.label)}</option>`).join('')}</select>`
 }
 
@@ -482,6 +566,65 @@ function previewHtml(step) {
   return text.exact ? text.segments.map((s, i) => segmentHtml(s, `0-${i}`)).join('') : esc(text.text)
 }
 
+function policiesHtml(nodeId) {
+  const list = (state.model.perceptionPolicies ?? []).map((p, i) => [p, i]).filter(([p]) => p.trigger?.node === nodeId)
+  const rows = list.map(([p, i]) => `<div class="rule rule-block"><div class="pf-row"><span class="rule-kind">知覚の方針</span><span class="sub"><span class="term">${esc(p.id)}</span></span>${removeBtn(['perceptionPolicies', i], '方針を消す')}</div>
+    ${perceptionForm(p, ['perceptionPolicies', i], { event: true })}</div>`).join('')
+  return `<section class="ed-section"><h4>この場面に入った時の知覚</h4>${rows || '<p class="sub">この場面に入っても、誰も何も知覚しません。</p>'}
+    <button type="button" class="btn btn-small" data-act="add-policy">＋ この場面に入った時の知覚を足す</button></section>`
+}
+
+function defsHtml() {
+  const m = state.model
+  const n = state.names
+  const chars = Object.entries(m.characters ?? {}).map(([id, c]) => {
+    const uses = edit.usesOf(m, 'character', id)
+    const rows = (c.knowledgeProfiles ?? []).map((p, i) => {
+      const base = ['characters', id, 'knowledgeProfiles', i]
+      return `<tr><td><input value="${esc(p.domain)}" ${at([...base, 'domain'])} aria-label="知識の分野" size="14"></td>
+        <td>${valueInput([...base, 'accuracy'], p.accuracy ?? '', 'number')}</td>
+        <td>${valueInput([...base, 'tolerance'], p.tolerance ?? '', 'number')}</td>
+        <td>${removeBtn(base, '分野を消す')}</td></tr>`
+    }).join('')
+    return `<div class="def"><div class="def-head"><input class="def-name" value="${esc(c.name)}" ${at(['characters', id, 'name'])} aria-label="人物の名前"><span class="node-id">${esc(id)}</span>
+      <button type="button" class="rule-x" data-act="remove-def" data-kind="character" data-id="${esc(id)}" ${uses ? `disabled title="${uses} か所で使われているので消せません"` : ''} aria-label="人物を消す">✕</button></div>
+      <table class="def-table"><thead><tr><th>知識の分野</th><th>正確さ</th><th>許容幅（割合）</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+      <button type="button" class="btn btn-small" data-act="add-profile" data-id="${esc(id)}">＋ 分野</button></div>`
+  }).join('')
+  const ents = Object.entries(m.entities ?? {}).map(([id, e]) => {
+    const uses = edit.usesOf(m, 'entity', id)
+    const others = Object.keys(m.entities).filter((x) => x !== id)
+    const own = e.properties ?? {}
+    const all = edit.entityProperties(m, id)
+    const rows = Object.entries(all).map(([k, p]) => {
+      const inherited = !(k in own)
+      return `<tr class="${inherited ? 'inherited' : ''}"><td><span class="term">${esc(k)}</span></td><td>${esc(p.type)}</td>
+        <td>${inherited ? `${esc(p.defaultValue ?? '')}<span class="sub">（${esc(n.entity(e.parentEntity))}から）</span>` : valueInput(['entities', id, 'properties', k, 'defaultValue'], p.defaultValue ?? '', p.type)}</td>
+        <td>${inherited ? '' : removeBtn(['entities', id, 'properties', k], '性質を消す')}</td></tr>`
+    }).join('')
+    return `<div class="def"><div class="def-head"><input class="def-name" value="${esc(e.name)}" ${at(['entities', id, 'name'])} aria-label="物の名前"><span class="node-id">${esc(id)}</span>
+      <label class="sub">親 <select ${at(['entities', id, 'parentEntity'])} data-type="opt"><option value="">なし</option>${options(others, e.parentEntity ?? '', (v) => n.entity(v))}</select></label>
+      <button type="button" class="rule-x" data-act="remove-def" data-kind="entity" data-id="${esc(id)}" ${uses ? `disabled title="${uses} か所で使われているので消せません"` : ''} aria-label="物を消す">✕</button></div>
+      <table class="def-table"><thead><tr><th>性質</th><th>型</th><th>初期値</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="pf-row"><input class="new-prop" data-new-prop="${esc(id)}" placeholder="新しい性質の名前" size="14" aria-label="新しい性質の名前">
+        <select data-new-prop-type="${esc(id)}" aria-label="型">${options(['number', 'string', 'boolean'], 'number')}</select>
+        <button type="button" class="btn btn-small" data-act="add-prop" data-id="${esc(id)}">＋ 性質</button></div></div>`
+  }).join('')
+  const rules = Object.entries(m.knowledgeRules ?? {}).map(([id, r]) => {
+    const uses = edit.ruleUses(m, id)
+    return `<div class="def"><div class="def-head"><span class="term">${esc(id)}</span><span class="sub">${uses ? `${uses} か所の条件で使用` : 'どの条件でも使っていない'}</span>
+      <button type="button" class="rule-x" data-act="remove-def" data-kind="rule" data-id="${esc(id)}" aria-label="ルールを消す">✕</button></div>${perceptionForm(r, ['knowledgeRules', id])}</div>`
+  }).join('')
+  return `<details class="ed-defs" data-open-key="defs" ${state.open.has('defs') ? 'open' : ''}><summary>人物と物（物語全体の定義）</summary>
+    <h4>人物と知識</h4><p class="sub">許容幅は予想からのずれの割合です。ずれが許容幅を超えると違和感になります。</p>${chars || '<p class="sub">人物がいません。</p>'}
+    <button type="button" class="btn btn-small" data-act="add-character">＋ 人物</button>
+    <h4>物と性質</h4>${ents || '<p class="sub">物がありません。</p>'}
+    <button type="button" class="btn btn-small" data-act="add-entity">＋ 物</button>
+    <h4>知識ルール</h4>${rules || '<p class="sub">知識ルールがありません。</p>'}
+    <button type="button" class="btn btn-small" data-act="add-rule-def">＋ 知識ルール</button>
+  </details>`
+}
+
 function editorHtml(step) {
   const nodeId = step.scene.nodeId
   const node = state.model.nodes[nodeId]
@@ -489,9 +632,11 @@ function editorHtml(step) {
   const snippets = edit.textSnippets(state.model)
   const group = (label, items) => (items.length ? `<optgroup label="${esc(label)}">${items.map((x) => `<option value="${esc(x.text)}">${esc(x.label)}</option>`).join('')}</optgroup>` : '')
   const nodeIds = Object.keys(state.model.nodes)
-  const choices = (node.choices ?? []).map((c) => {
+  const isStart = nodeId === state.model.startNode
+  const choices = (node.choices ?? []).map((c, ci) => {
     const ct = step.scene.choices.find((x) => x.choice.id === c.id)
     const cid = esc(c.id)
+    const cpath = ['nodes', nodeId, 'choices', ci]
     return `<li class="edit-choice ${ct?.available ? 'open' : 'closed'}" data-row="${cid}">
       <div class="ec-row">
         <span data-mark="${cid}">${choiceMark(ct)}</span>
@@ -501,15 +646,16 @@ function editorHtml(step) {
         <button type="button" class="btn btn-small" data-act="go" data-cid="${cid}" ${ct?.available ? '' : 'disabled'} title="この選択肢を選んで次の場面へ">選ぶ</button>
         <button type="button" class="rule-x" data-act="remove-choice" data-cid="${cid}" aria-label="選択肢を消す">✕</button>
       </div>
-      <div class="ec-rules"><span class="ec-label">条件</span>${(c.conditions ?? []).map((r, i) => ruleHtml(r, 'conditions', i, c.id)).join('')}${addRuleSelect('conditions', c.id)}</div>
-      <div class="ec-rules"><span class="ec-label">効果</span>${(c.effects ?? []).map((r, i) => ruleHtml(r, 'effects', i, c.id)).join('')}${addRuleSelect('effects', c.id)}</div>
+      <div class="ec-rules"><span class="ec-label">条件</span>${(c.conditions ?? []).map((r, i) => ruleHtml(r, [...cpath, 'conditions', i], 'conditions')).join('')}${addRuleSelect([...cpath, 'conditions'], 'conditions')}</div>
+      <div class="ec-rules"><span class="ec-label">効果</span>${(c.effects ?? []).map((r, i) => ruleHtml(r, [...cpath, 'effects', i], 'effects')).join('')}${addRuleSelect([...cpath, 'effects'], 'effects')}</div>
     </li>`
   }).join('')
   const datalists = Object.entries(keys).map(([k, list]) => `<datalist id="keys-${k}">${list.map((v) => `<option value="${esc(v)}">`).join('')}</datalist>`).join('')
   return `<article class="story editing" aria-label="場面の編集">
     <header class="scene-head">
       <label class="ed-speaker"><span>話者</span><input value="${esc(node.speaker ?? '')}" data-edit="speaker" size="10"></label>
-      <span class="node-id" title="場面のID">${esc(nodeId)}</span>
+      <label class="ed-id"><span>場面ID</span><input value="${esc(nodeId)}" data-rename size="${Math.max(8, nodeId.length)}" aria-label="場面のID（変えると行き先も追従）"></label>
+      <button type="button" class="btn btn-small" data-act="delete-node" data-node="${esc(nodeId)}" ${isStart ? 'disabled title="開始の場面は消せません"' : ''}>場面を消す</button>
       <button type="button" class="btn btn-small edit-toggle" data-act="stop-edit">編集を終える</button>
     </header>
     <textarea id="edit-text" class="ed-text" data-edit="text" rows="6" aria-label="本文">${esc(node.text ?? '')}</textarea>
@@ -528,6 +674,8 @@ function editorHtml(step) {
     ${step.scene.ending && !(node.choices ?? []).length ? '<p class="sub">選択肢が無いので、ここが結末になります。</p>' : ''}
     <ol class="edit-choices">${choices}</ol>
     <button type="button" class="btn btn-small" data-act="add-choice">＋ 選択肢を追加</button>
+    ${policiesHtml(nodeId)}
+    ${defsHtml()}
     ${datalists}
   </article>`
 }
@@ -559,7 +707,7 @@ function afterEdit(mark, { full = false } = {}) {
     full = true
   }
   updateSaveArea()
-  if (full || current().scene.nodeId !== nodeBefore) {
+  if (full || state.view !== 'run' || current().scene.nodeId !== nodeBefore) {
     render()
     return
   }
@@ -580,29 +728,67 @@ function afterEdit(mark, { full = false } = {}) {
   }
 }
 
-function coerceRuleValue(rule, part, raw) {
-  if (part === 'delta') return Number(raw) || 0
-  if (part === 'value' && TRUE_LABEL[rule.type]) return raw === 'true'
-  if (part === 'value' && rule.type === 'resource') return Number(raw) || 0
-  if (part === 'value' && rule.type === 'variable' && ['>=', '<=', '>', '<'].includes(rule.op)) return Number(raw) || 0
-  return raw
+/** One dirty mark per choice, scene or definition, so the count reads as places, not keystrokes. */
+function markOf(path) {
+  if (path[0] === 'nodes') return path.slice(0, path[2] === 'choices' ? 4 : 2).join('/')
+  return path.slice(0, 2).join('/')
 }
 
-function editRulePart(el) {
-  const nodeId = current().scene.nodeId
-  const { field, cid } = el.dataset
-  const index = Number(el.dataset.index)
-  const c = state.model.nodes[nodeId].choices.find((x) => x.id === cid)
-  const rule = { ...c[field][index] }
-  rule[el.dataset.part] = coerceRuleValue(rule, el.dataset.part, el.value)
-  if (el.dataset.part === 'op' && rule.type === 'variable') rule.value = coerceRuleValue(rule, 'value', String(rule.value))
-  edit.setRule(state.model, nodeId, cid, field, index, rule)
-  afterEdit(`choice:${cid}`)
+function readValue(el) {
+  if (el.type === 'checkbox') return el.checked
+  switch (el.dataset.type) {
+    case 'num':
+      return el.value === '' ? Number.NaN : Number(el.value)
+    case 'bool':
+      return el.value === 'true'
+    case 'opt':
+      return el.value === '' ? undefined : el.value
+    default:
+      return el.value
+  }
+}
+
+/** Keeps a rule consistent after one of its parts changed (types follow ops and properties). */
+function settle(owner, key, value) {
+  const m = state.model
+  if (!owner || typeof owner !== 'object') return
+  if (owner.type === 'variable') {
+    owner.value = ['>=', '<=', '>', '<'].includes(owner.op) ? Number(owner.value) || 0 : String(owner.value)
+  }
+  if (owner.type === 'property') {
+    const props = edit.entityProperties(m, owner.entity)
+    if (key === 'entity' && !(owner.key in props)) owner.key = Object.keys(props)[0] ?? ''
+    const t = props[owner.key]?.type
+    if (key === 'entity' || key === 'key') owner.value = props[owner.key]?.defaultValue ?? ''
+    if (t === 'number') owner.value = Number(owner.value) || 0
+    else if (t === 'boolean') owner.value = owner.value === true || owner.value === 'true'
+    else owner.value = String(owner.value ?? '')
+  }
+  if (owner.expectations && key === 'character') {
+    const domains = edit.domainsOf(m, value)
+    if (!domains.includes(owner.domain)) owner.domain = domains[0] ?? 'general'
+  }
+  if (owner.expectations && key === 'entity') {
+    const numeric = edit.numericProperties(m, value)
+    const kept = Object.fromEntries(Object.entries(owner.expectations).filter(([k]) => numeric.includes(k)))
+    if (!Object.keys(kept).length && numeric[0]) kept[numeric[0]] = Number(edit.entityProperties(m, value)[numeric[0]].defaultValue ?? 0)
+    owner.expectations = kept
+  }
+  if (owner.type === 'knowledgeRule' && key === 'rule' && value === '__new') owner.rule = edit.addKnowledgeRule(m)
+}
+
+function onPathEdit(el) {
+  const path = JSON.parse(el.dataset.path)
+  const value = readValue(el)
+  if (typeof value === 'number' && Number.isNaN(value)) return undefined
+  edit.setAt(state.model, path, value)
+  settle(edit.getAt(state.model, path.slice(0, -1)), path[path.length - 1], value)
+  return afterEdit(markOf(path), { full: el.tagName === 'SELECT' || el.type === 'checkbox' })
 }
 
 function onEditInput(el) {
   const nodeId = current().scene.nodeId
-  if (el.dataset.part) return editRulePart(el)
+  if (el.dataset.path) return onPathEdit(el)
   switch (el.dataset.edit) {
     case 'text':
       edit.setNodeText(state.model, nodeId, el.value)
@@ -627,52 +813,127 @@ function onEditChange(el) {
     return afterEdit(`choice:${el.dataset.cid}`, { full: true })
   }
   if (el.dataset.act === 'add-rule' && el.value) {
-    const { field, cid } = el.dataset
-    const kinds = field === 'conditions' ? edit.CONDITION_KINDS : edit.EFFECT_KINDS
-    const kindDef = kinds[el.value]
-    const keyList = edit.knownKeys(state.model)[edit.keyKind({ type: el.value })] ?? []
-    edit.addRule(state.model, nodeId, cid, field, kindDef.make(keyList[0] ?? `new_${el.value.toLowerCase()}`))
-    return afterEdit(`choice:${cid}`, { full: true })
+    const path = JSON.parse(el.dataset.path)
+    edit.pushAt(state.model, path, edit.newRule(state.model, el.dataset.field, el.value))
+    return afterEdit(markOf(path), { full: true })
+  }
+  if (el.dataset.act === 'add-exp' && el.value) {
+    const path = JSON.parse(el.dataset.path)
+    const owner = edit.getAt(state.model, path.slice(0, -1))
+    const def = edit.entityProperties(state.model, owner.entity)[el.value]?.defaultValue
+    edit.setAt(state.model, [...path, el.value], Number(def ?? 0))
+    return afterEdit(markOf(path), { full: true })
   }
   if (el.dataset.act === 'insert' && el.value) {
     const ta = document.getElementById('edit-text')
-    const at = ta.selectionStart ?? ta.value.length
-    ta.value = ta.value.slice(0, at) + el.value + ta.value.slice(ta.selectionEnd ?? at)
-    const caret = at + el.value.length
+    const caretAt = ta.selectionStart ?? ta.value.length
+    ta.value = ta.value.slice(0, caretAt) + el.value + ta.value.slice(ta.selectionEnd ?? caretAt)
+    const caret = caretAt + el.value.length
     el.value = ''
     ta.focus()
     ta.setSelectionRange(caret, caret)
     return onEditInput(ta)
   }
-  if (el.dataset.part && el.tagName === 'SELECT') return editRulePart(el)
+  if (el.dataset.path) return onPathEdit(el)
   return undefined
+}
+
+function onRename(el) {
+  const oldId = current().scene.nodeId
+  const newId = el.value.trim()
+  if (newId === oldId) return undefined
+  try {
+    edit.renameNode(state.model, oldId, newId)
+  } catch (err) {
+    state.error = err instanceof Error ? err.message : String(err)
+    return render()
+  }
+  return afterEdit(`node:${oldId}`, { full: true })
+}
+
+function deleteNodeAsked(id) {
+  const refs = edit.nodeReferences(state.model, id)
+  const lines = [
+    ...refs.choices.map((c) => `・場面 ${c.nodeId} の選択肢「${c.text}」`),
+    ...refs.gotos.map((c) => `・場面 ${c.nodeId} の選択肢「${c.text}」の移動の効果`),
+    ...refs.policies.map((p) => `・この場面に入った時の知覚 ${p}`),
+  ]
+  const msg = `場面 ${id} を消します。${lines.length ? `\n一緒に消えるもの:\n${lines.join('\n')}` : ''}\n（保存するまでファイルは変わりません）`
+  if (!window.confirm(msg)) return undefined
+  try {
+    edit.deleteNode(state.model, id)
+  } catch (err) {
+    state.error = err instanceof Error ? err.message : String(err)
+    return render()
+  }
+  return afterEdit(`node:${id}`, { full: true })
 }
 
 function onEditAction(btn) {
   const nodeId = current().scene.nodeId
-  const { act, cid } = btn.dataset
-  if (act === 'edit') {
-    state.editing = true
-    return render()
+  const { act, cid, id } = btn.dataset
+  const m = state.model
+  switch (act) {
+    case 'edit':
+      state.editing = true
+      return render()
+    case 'stop-edit':
+      state.editing = false
+      return render()
+    case 'go':
+      return choose(cid)
+    case 'add-choice': {
+      const newId = edit.addChoice(m, nodeId, { target: nodeId })
+      return afterEdit(`choice:${newId}`, { full: true })
+    }
+    case 'remove-choice':
+      edit.removeChoice(m, nodeId, cid)
+      return afterEdit(`choice:${cid}`, { full: true })
+    case 'remove-at': {
+      const path = JSON.parse(btn.dataset.path)
+      edit.removeAt(m, path)
+      return afterEdit(markOf(path), { full: true })
+    }
+    case 'add-policy': {
+      const i = edit.addPerceptionPolicy(m, nodeId)
+      return afterEdit(`perceptionPolicies/${m.perceptionPolicies[i].id}`, { full: true })
+    }
+    case 'add-character':
+      return afterEdit(`characters/${edit.addCharacter(m)}`, { full: true })
+    case 'add-entity':
+      return afterEdit(`entities/${edit.addEntity(m)}`, { full: true })
+    case 'add-rule-def':
+      return afterEdit(`knowledgeRules/${edit.addKnowledgeRule(m)}`, { full: true })
+    case 'add-profile':
+      edit.pushAt(m, ['characters', id, 'knowledgeProfiles'], { domain: `domain_${(m.characters[id].knowledgeProfiles ?? []).length + 1}`, accuracy: 0.5, tolerance: 0.25 })
+      return afterEdit(`characters/${id}`, { full: true })
+    case 'add-prop': {
+      const key = app.querySelector(`[data-new-prop="${CSS.escape(id)}"]`)?.value.trim()
+      const type = app.querySelector(`[data-new-prop-type="${CSS.escape(id)}"]`)?.value
+      try {
+        edit.addEntityProperty(m, id, key, type)
+      } catch (err) {
+        state.error = err instanceof Error ? err.message : String(err)
+        return render()
+      }
+      return afterEdit(`entities/${id}`, { full: true })
+    }
+    case 'remove-def': {
+      const { kind } = btn.dataset
+      if (kind === 'rule') {
+        const uses = edit.ruleUses(m, id)
+        if (uses && !window.confirm(`知識ルール ${id} は ${uses} か所の条件で使われています。消すと、その条件は「ルールが無い」で閉じます。消しますか？`)) return undefined
+        delete m.knowledgeRules[id]
+        return afterEdit(`knowledgeRules/${id}`, { full: true })
+      }
+      delete m[kind === 'character' ? 'characters' : 'entities'][id]
+      return afterEdit(`${kind}/${id}`, { full: true })
+    }
+    case 'delete-node':
+      return deleteNodeAsked(btn.dataset.node)
+    default:
+      return undefined
   }
-  if (act === 'stop-edit') {
-    state.editing = false
-    return render()
-  }
-  if (act === 'go') return choose(cid)
-  if (act === 'add-choice') {
-    const id = edit.addChoice(state.model, nodeId, { target: nodeId })
-    return afterEdit(`choice:${id}`, { full: true })
-  }
-  if (act === 'remove-choice') {
-    edit.removeChoice(state.model, nodeId, cid)
-    return afterEdit(`choice:${cid}`, { full: true })
-  }
-  if (act === 'remove-rule') {
-    edit.removeRule(state.model, nodeId, cid, btn.dataset.field, Number(btn.dataset.index))
-    return afterEdit(`choice:${cid}`, { full: true })
-  }
-  return undefined
 }
 
 // saving: models/ files go back to their own file through the dev server; a dropped file is written out
@@ -810,7 +1071,7 @@ function checkHtml() {
       ${section('作られることのない出来事', c.impossibleEvents, '条件で待っている出来事は、すべてどこかで作られます。', (id) => `<li>「${esc(n.event(id))}」<span class="node-id">${esc(id)}</span></li>`)}
       ${section('解決できない参照', c.unresolvedRefs, '本文の参照はすべて解決しました。', (r) => `<li><span class="node-id">${esc(r.nodeId)}</span> ${esc(r.ref)}</li>`)}
       ${section('存在しない行き先', c.missingTargets, '行き先はすべて存在します。', (m) => `<li><span class="node-id">${esc(m.nodeId)}</span>「${esc(n.choice(m.nodeId, m.choiceId))}」→ ${esc(m.target)}</li>`)}
-      ${section('どこからもつながらない場面', c.unlinkedNodes, 'すべての場面が開始からつながっています。', (id) => `<li><span class="node-id">${esc(id)}</span></li>`)}
+      ${section('どこからもつながらない場面', c.unlinkedNodes, 'すべての場面が開始からつながっています。', (id) => `<li><span class="node-id">${esc(id)}</span> ${esc((state.model.nodes[id]?.text ?? '').slice(0, 30)) || '（本文なし）'} <button type="button" class="btn btn-small" data-act="delete-node" data-node="${esc(id)}">消す</button></li>`)}
       ${c.unplayedNodes.length ? section('つながっているが条件で届かない場面', c.unplayedNodes, '', (id) => `<li><span class="node-id">${esc(id)}</span></li>`) : ''}
       ${c.errors.length ? section('実行時のエラー', c.errors, '', (e) => `<li><span class="node-id">${esc(e.nodeId)}</span>「${esc(n.choice(e.nodeId, e.choiceId))}」: ${esc(e.message)}</li>`) : ''}
     </div>
@@ -839,13 +1100,21 @@ function render() {
 
 app.addEventListener('input', (event) => {
   const el = event.target
-  if (el.tagName === 'SELECT') return
-  if (el.dataset.edit || el.dataset.part) onEditInput(el)
+  if (el.tagName === 'SELECT' || el.type === 'checkbox') return
+  if (el.dataset.edit || el.dataset.path) onEditInput(el)
 })
 app.addEventListener('change', (event) => {
   const el = event.target
   if (el.tagName === 'SELECT') onEditChange(el)
+  else if (el.type === 'checkbox' && el.dataset.path) onPathEdit(el)
+  else if (el.dataset.rename !== undefined) onRename(el)
 })
+app.addEventListener('toggle', (event) => {
+  const key = event.target.dataset?.openKey
+  if (!key) return
+  if (event.target.open) state.open.add(key)
+  else state.open.delete(key)
+}, true)
 
 app.addEventListener('click', (event) => {
   const target = event.target.closest('button')

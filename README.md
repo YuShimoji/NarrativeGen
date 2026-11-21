@@ -22,7 +22,7 @@ npm run dev:studio
 
 Pick a story at the top, then use 実行 to play while the right column explains each engine judgment, or 点検 to play every open choice and list endings, dead ends, choices that never open, and unresolved references. Drop a model JSON onto the page to open your own story.
 
-To edit, press 「この場面を編集」 on a scene: the text, speaker, choices, targets (including a new scene) and simple conditions/effects become editable, and the right column re-traces on every change. 「保存」 writes a `models/` story back to its own JSON file through the dev server after the engine's schema and integrity check; a dropped file is downloaded instead.
+To edit, press 「この場面を編集」 on a scene: the text, speaker, choices, targets (including a new scene), conditions (including knowledge rules, entity properties and nested all/any/not) and effects (including perception) become editable, together with scene-entry perception policies, the characters/entities definitions under 「人物と物」, and scene rename/delete; the right column re-traces on every change. 「保存」 writes a `models/` story back to its own JSON file through the dev server after the engine's schema and integrity check; a dropped file is downloaded instead.
 
 ## Playable Vertical Slice First
 
