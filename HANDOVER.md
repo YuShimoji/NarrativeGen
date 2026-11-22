@@ -6,7 +6,7 @@
   作者がその判断を画面で確かめられる実験的な物語生成システム（原初設計「Entity中心のプロパティ駆動型ナラティブ生成」）。
 - 今回の増分: 前提から組む物語に「尋ねる」「見直す」を足し、聞いた話で人物の見込みと許容幅が変わるようにした（2026-11-22のuser回答）。
   その変化と各場面の蓋然を、Studioの右列で読める。
-- 現在のボトルネック: 行為を直した物語の受入（見本2本）と、Studio編集の受入。
+- 現在のボトルネック: 前提を置く画面が無いこと（前提はJSONの手書き）と、Studio編集の受入。行為6種と式は2026-11-23にuserが採用した。
 
 2026-11-22、userが再開時に3点を依頼した（原文は[要求台帳](docs/USER_REQUEST_LEDGER.md)）: 開発ワークフローの体系化、
 ストーリー構築方法の具体化、前提をいくつか与えただけで蓋然的にストーリーが構築できるシステムのプロトタイプ。
@@ -33,7 +33,6 @@
 
 | 確認 | 何が決まるか | 手順 | 返すもの |
 |---|---|---|---|
-| **行為を直した物語の受入** | 尋ねる・見直すと、聞いた話で見込みが変わる展開が、求めた向きか。新しい式（尋ねるの重み、見込みの混ぜ方、[SP-PREMISE-001 4.3節](docs/specs/premise-driven-story.md)）を採るか | 下の「前提から組んだ物語の確認手順」。見本は2本 | 近い／一部違う／違う。違う所と、式を直す向き |
 | **蓋然の欄と「写して育てる」の受入** | 物語を進めながら蓋然と理由を読めるか。写した後の編集で困らないか | 下の「前提から組んだ物語の確認手順」 | 近い／一部違う／違う。読みにくい所、足りない情報 |
 | **Studio編集の受入** | その場で編集で物語を直せるか。旧Web Testerを退役できるか | 下の「Studio編集の確認手順」 | 近い／一部違う／違う。足りない編集と、引っかかった操作 |
 | G0 独自性の基準確認 | 試作が旧来のflag ADVと違うroute差を物語として伝えているか | Studioで`originality-spine-probe`の2つの結末を再生して比べる | pass、または具体的な欠陥 |
@@ -63,14 +62,13 @@ S1 hosted runtime確認（Public Studioのowner-only Version 1）はゲーム層
 
 | 項目 | purpose / effect | requirements | state / owner | next move |
 |---|---|---|---|---|
-| 行為の式の確認 | 尋ねるの重み、見込みの混ぜ方、話した側も相手の見方を聞くこと（SP-PREMISE-001 4.3節）をuserが採るか | 見本2本の確認 | pending / user | 確認の結果で式を直す。違っていても生成器の構造は残る |
 | 前提を置く画面 | JSONを書かずに前提を置き、数値を変えて結末の割合を比べる | 画面のラフ | proposed / assistant | 次の作業単位でラフを出す |
-| 前提生成の拡張 | 複数の物と場、時間の経過、又聞き・嘘・聞き違い | 行為の式の確認 | proposed / shared | 確認の後に不足から選ぶ |
+| 前提生成の拡張 | 複数の物と場、時間の経過、又聞き・嘘・聞き違い | userがどれを先にするか | proposed / shared | userが選んだものから着手 |
 | Studio編集の受入 | 旧Web Testerを開かずに物語を直せるかを確かめる | userが実際の物語で試す | pending / user | 上の手順 |
 | 編集の残り | 会話テンプレート・言い換え辞書・経過数の条件の編集、性質名の改名 | 受入で観測した摩擦から順を決める | proposed / assistant | 受入結果を見て作業単位を切る |
 | 旧Web Tester退役 | 二つの画面の維持をやめる | 移す機能の棚卸しと退役条件 | proposed / shared | 編集の作業単位の後 |
 | 点検の打ち切り緩和 | 数値が増え続ける物語でも全体を点検できる | 状態の同一視の方法を仕様で決める | proposed / assistant | 受入後 |
-| `docs/AUTHORING_GUIDE.md`の更新 | 旧Web Tester中心の手順を7工程へ合わせる | 行為の式の確認 | proposed / assistant | 約32KBの文書の全面更新になるため、式の確認の後の作業単位で書く |
+| `docs/AUTHORING_GUIDE.md`の更新 | 旧Web Tester中心の手順を7工程へ合わせる | なし（行為と式は採用済み） | proposed / assistant | 約32KBの文書の全面更新になるため、別の作業単位で書く |
 | ゲーム層の再開 | 演出・Unity・Public Studio | 接続はmodel JSONとsession APIだけ（[Invariants](docs/INVARIANTS.md)） | frozen / user判断 | 再構築の区切りでuserが再開を決める |
 | SP-DTYARN-001、G5〜G8、非blocking debt | 別のpurpose | 各専用packet | hold・proposed | [Roadmap](docs/plans/DEVELOPMENT_PLAN.md) |
 
