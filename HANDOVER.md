@@ -19,7 +19,7 @@
 | 対象 | 状態 | 起動・確認 |
 |---|---|---|
 | 前提から物語を組む（試作） | 前提ファイル → 物語のモデル＋導出の記録。違和感はエンジンが決め、行為は前提の数値による重みで選ぶ。結末の割合と、意図を満たす最も蓋然な主線を出す（方法は[SP-PREMISE-001](docs/specs/premise-driven-story.md)） | `npm run generate:story -- models/premises/cheeseburger-weight.json` → Studioの物語選択「cheeseburger-weight（前提から生成）」。[導出の記録の見本](docs/samples/premise-story-cheeseburger-weight-review-ja.md) |
-| Studio（主画面） | 実行（本文＋判断の列＋道筋）、点検、その場で編集（範囲は[SP-STUDIO-001](docs/specs/studio-rebuild.md) 4節）。`models/`の物語は「保存」で元のJSONへ書き戻し。`models/generated/`の物語も選べる。小さい数値は有効3桁で表示。1440pxで確認（768pxは2026-11-21） | `npm run dev:studio` → `http://127.0.0.1:5185/`、編集関数の試験は`npm test -w @narrativegen/studio`（7件） |
+| Studio（主画面） | 実行（本文＋判断の列＋道筋）、点検、その場で編集（範囲は[SP-STUDIO-001](docs/specs/studio-rebuild.md) 4節）。`models/`の物語は「保存」で元のJSONへ書き戻し。`models/generated/`の物語も選べる。小さい数値は有効3桁で表示。幅1440px・768pxで確認（2026-11-22、生成した物語の実行画面） | `npm run dev:studio` → `http://127.0.0.1:5185/`、編集関数の試験は`npm test -w @narrativegen/studio`（7件） |
 | エンジンの判断の記録 | `packages/engine-ts/src/trace.ts`（`traceStart`・`traceStep`・`checkModel`ほか）。読み取り専用で意味論は変えない | `npm run test:engine`（29ファイル・367件、2026-11-22） |
 | 旧Web Tester | 編集・グラフ・export等。置き換えまで残し、新機能は足さない | `npm run dev`（port 5173が他projectと衝突する時は下の注意） |
 | サンプル | `originality-spine-probe.json`、`procedural-choice-spine-probe.json`、`vertical-slice.json` | Studioの物語選択 |
@@ -32,7 +32,7 @@
 
 | 確認 | 何が決まるか | 手順 | 返すもの |
 |---|---|---|---|
-| **前提から組む方式の採否** | 試作の仮の決め（[SP-PREMISE-001 4節](docs/specs/premise-driven-story.md)）を採るか直すか。Studioに前提の画面を作るか。Decision #4との関係 | 下の「前提から組む方式の確認手順」 | 項目ごとに採る／直す／捨てる。物語として読めたか、足りない出来事の種類 |
+| **前提から組む方式の採否** | 試作の仮の決め（[SP-PREMISE-001 4節](docs/specs/premise-driven-story.md)）を採るか直すか。Studioに前提の画面を作るか。Decision #4との関係 | 下の「前提から組む方式の確認手順」 | Recordinatorの問い`01M81SKWBNW29HPMMM91R44J0A`（Project `pc96190c8a9`、5設問、2026-11-22送信・未回答）へ回答。物語として読めたか、足りない出来事の種類は自由レビュー欄へ |
 | **Studio編集の受入** | その場で編集で物語を直せるか。旧Web Testerを退役できるか | 下の「Studio編集の確認手順」 | 近い／一部違う／違う。足りない編集と、引っかかった操作 |
 | G0 独自性の基準確認 | 試作が旧来のflag ADVと違うroute差を物語として伝えているか | Studioで`originality-spine-probe`の2つの結末を再生して比べる | pass、または具体的な欠陥 |
 
