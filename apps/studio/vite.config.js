@@ -61,10 +61,61 @@ function studioSave() {
   }
 }
 
+/**
+ * Dev-only route for stories built from a premise. models/generated stays rebuildable,
+ * so a story the author wants to edit is copied to models/examples/ under a free name
+ * (and to the legacy tester's mirror, which check:models-sync compares).
+ */
+function studioGrow() {
+  return {
+    name: 'narrativegen-studio-grow',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use('/__studio/grow', async (req, res) => {
+        const reply = (status, data) => {
+          res.statusCode = status
+          res.setHeader('Content-Type', 'application/json; charset=utf-8')
+          res.end(JSON.stringify(data))
+        }
+        if (req.method !== 'POST') return reply(405, { ok: false, error: 'POST only' })
+        try {
+          const { file, model } = JSON.parse(await readBody(req))
+          const source = path.resolve(repoRoot, String(file ?? ''))
+          const generatedRoot = path.resolve(modelsRoot, 'generated')
+          if (!source.startsWith(generatedRoot + path.sep) || !source.endsWith('.json') || !fs.existsSync(source)) {
+            return reply(400, { ok: false, error: 'models/generated/ の物語だけ写せます' })
+          }
+          const { loadModel } = await import('@narrativegen/engine-ts')
+          try {
+            loadModel(structuredClone(model))
+          } catch (err) {
+            return reply(422, { ok: false, error: err instanceof Error ? err.message : String(err) })
+          }
+          const examples = path.resolve(modelsRoot, 'examples')
+          const base = path.basename(source, '.json')
+          let name = base
+          for (let n = 2; fs.existsSync(path.resolve(examples, `${name}.json`)); n += 1) name = `${base}-${n}`
+          // the copy will be edited by hand, so the generator's probability labels would go stale
+          for (const node of Object.values(model.nodes ?? {})) {
+            for (const choice of node.choices ?? []) choice.text = String(choice.text).replace(/\s*〔蓋然 [0-9.]+%〕$/, '')
+          }
+          const text = JSON.stringify(model, null, 2) + '\n'
+          fs.writeFileSync(path.resolve(examples, `${name}.json`), text, 'utf8')
+          const mirror = path.resolve(repoRoot, 'apps/web-tester/models/examples')
+          if (fs.existsSync(mirror)) fs.writeFileSync(path.resolve(mirror, `${name}.json`), text, 'utf8')
+          return reply(200, { ok: true, file: `models/examples/${name}.json`, model })
+        } catch (err) {
+          return reply(500, { ok: false, error: err instanceof Error ? err.message : String(err) })
+        }
+      })
+    },
+  }
+}
+
 export default defineConfig({
   root: rootDir,
   base: './',
-  plugins: [studioSave()],
+  plugins: [studioSave(), studioGrow()],
   resolve: {
     alias: {
       // use the engine source directly so the Studio always shows current semantics

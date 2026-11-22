@@ -103,6 +103,25 @@ export interface StoryStep {
   options: StoryAction[]
 }
 
+/** What was possible in one scene of the generated model, and what the model kept playable. */
+export interface SceneDerivation {
+  /** every action possible in this scene, most probable first */
+  options: StoryAction[]
+  /** action key -> choice id, for the options the model kept as choices */
+  choices: Record<string, string>
+  /** action key the main line takes from here, when the scene is on the main line */
+  main?: string
+  /** set when nothing more can happen here */
+  ending?: StoryEnding
+}
+
+/** Wording for one action: what it is, how its weight is formed, and the premise quantities read. */
+export interface ActionExplanation {
+  label: string
+  formula: string
+  factors: string[]
+}
+
 export interface EndingShare {
   ending: StoryEnding
   probability: number
@@ -114,6 +133,8 @@ export interface StoryDerivation {
   perceptions: PerceptionFact[]
   /** the constructed story: one step per event, start to ending */
   mainLine: StoryStep[]
+  /** per node id of the generated model: the actions that were possible there */
+  scenes: Record<string, SceneDerivation>
   ending: StoryEnding
   /** product of the step probabilities on the main line */
   mainLineProbability: number
@@ -520,6 +541,8 @@ export function generateStory(premise: StoryPremise, options: GenerateStoryOptio
   // --- model: nodes are (state, arriving action) ----------------------------
   const nodes: Record<string, NodeDef> = {}
   const nodeIds = new Map<string, string>()
+  const scenes: Record<string, SceneDerivation> = {}
+  const choiceIdOf = (a: StoryAction) => a.key.replace(/[:>]/g, '_')
   const pending: Array<{ id: string; state: State; onMain: boolean }> = []
 
   function textValues(a: StoryAction | null): Record<string, string> {
@@ -628,7 +651,7 @@ export function generateStory(premise: StoryPremise, options: GenerateStoryOptio
   function choiceFor(from: State, a: StoryAction, onMain: boolean): Choice {
     const conditions = conditionsOf(a)
     return {
-      id: a.key.replace(/[:>]/g, '_'),
+      id: choiceIdOf(a),
       text: choiceText(a),
       target: nodeFor(applyAction(from, a), a, onMain),
       ...(conditions ? { conditions } : {}),
@@ -646,6 +669,7 @@ export function generateStory(premise: StoryPremise, options: GenerateStoryOptio
     const kept = [main, ...all.filter((o) => o.key !== main.key && o.probability >= minProbability).slice(0, alternatives)]
     const from = cursor
     nodes[cursorId].choices = kept.map((o) => choiceFor(from, o, o === main))
+    scenes[cursorId] = { options: all, choices: Object.fromEntries(kept.map((o) => [o.key, choiceIdOf(o)])), main: main.key }
     const next = applyAction(cursor, main)
     const nextId = nodeFor(next, main, true)
     mainLine.push({ from: cursorId, to: nextId, action: main, options: all })
@@ -658,7 +682,12 @@ export function generateStory(premise: StoryPremise, options: GenerateStoryOptio
     const current = pending.shift()!
     if (nodes[current.id].choices) continue
     const all = possibleActions(current.state, people)
-    if (all.length > 0) nodes[current.id].choices = [choiceFor(current.state, all[0], false)]
+    if (all.length > 0) {
+      nodes[current.id].choices = [choiceFor(current.state, all[0], false)]
+      scenes[current.id] = { options: all, choices: { [all[0].key]: choiceIdOf(all[0]) } }
+    } else {
+      scenes[current.id] = { options: [], choices: {}, ending: endingOf(current.state) }
+    }
   }
 
   const knowledgeRules: Model['knowledgeRules'] = {}
@@ -689,6 +718,7 @@ export function generateStory(premise: StoryPremise, options: GenerateStoryOptio
     focus,
     perceptions,
     mainLine,
+    scenes,
     ending: endingOf(finalState),
     mainLineProbability: round(mainLine.reduce((p, step) => p * step.action.probability, 1), 6),
     ...(hasIntent ? { intent: premise.intent } : {}),
@@ -728,21 +758,49 @@ const FACTOR_TEXT: Record<WeightFactor['source'], (who: string, value: number) =
   listeners: (who, v) => `${who}がまだ話していない相手 ${v}人`,
 }
 
+const FORMULA: Record<StoryActionKind, string> = {
+  look: '知識の正確さ',
+  tell: '違和感の強さ ÷ まだ話していない相手の数',
+  verify: '違和感の強さ × 知識の正確さ',
+  letGo: '(1 − 違和感の強さ) × (1 − 知識の正確さ)',
+}
+
+function actionLabel(name: (id: string) => string, a: StoryAction): string {
+  if (a.kind === 'look') return `${name(a.actor)}が見る → ${a.result === 'noticed' ? '違和感を覚える' : '気に留めない'}`
+  if (a.kind === 'tell') {
+    const out = a.result === 'heard' ? 'まだ見ていない相手に伝わる' : a.result === 'shared' ? '共通の話題になる' : '見方が食い違う'
+    return `${name(a.actor)}が${name(a.target!)}に話す → ${out}`
+  }
+  if (a.kind === 'verify') return `${name(a.actor)}が確かめる`
+  return `${name(a.actor)}がそのままにする`
+}
+
+/** Wording for one action of a derivation, for screens that show why it was probable. */
+export function explainAction(premise: StoryPremise, action: StoryAction): ActionExplanation {
+  const name = (id: string) => premise.characters[id]?.name ?? id
+  const heard = action.kind === 'look' && action.factors.some((f) => f.source === 'toldSeverity')
+  return {
+    label: actionLabel(name, action),
+    formula: heard ? '知識の正確さ ＋ 聞いた違和感の強さ' : FORMULA[action.kind],
+    factors: action.factors.map((f) => FACTOR_TEXT[f.source](name(f.character), f.value)),
+  }
+}
+
+export function endingLabel(ending: StoryEnding): string {
+  return ENDING_LABEL[ending]
+}
+
+export function beatLabel(beat: StoryBeat): string {
+  return BEAT_LABEL[beat]
+}
+
 /** Readable account of a derivation: what the engine judged, the story, and why each step was probable. */
 export function describeDerivation(premise: StoryPremise, derivation: StoryDerivation): string {
   const name = (id: string) => premise.characters[id]?.name ?? id
   const prop = (key: string) => premise.wording?.propertyNames?.[key] ?? key
   const pct = (p: number) => `${(p * 100).toFixed((p > 0 && p < 0.1) || (p > 0.9 && p < 1) ? 1 : 0)}%`
   const lines: string[] = []
-  const label = (a: StoryAction) => {
-    if (a.kind === 'look') return `${name(a.actor)}が見る → ${a.result === 'noticed' ? '違和感を覚える' : '気に留めない'}`
-    if (a.kind === 'tell') {
-      const out = a.result === 'heard' ? 'まだ見ていない相手に伝わる' : a.result === 'shared' ? '共通の話題になる' : '見方が食い違う'
-      return `${name(a.actor)}が${name(a.target!)}に話す → ${out}`
-    }
-    if (a.kind === 'verify') return `${name(a.actor)}が確かめる`
-    return `${name(a.actor)}がそのままにする`
-  }
+  const label = (a: StoryAction) => actionLabel(name, a)
 
   lines.push(`# 前提から組んだ物語: ${derivation.title}`, '')
   lines.push('## エンジンが前提から判断したこと（必然）', '')

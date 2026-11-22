@@ -1,4 +1,4 @@
-import { checkModel, traceStart, traceStep } from '@narrativegen/engine-ts/browser'
+import { beatLabel, checkModel, endingLabel, explainAction, generateStory, traceStart, traceStep } from '@narrativegen/engine-ts/browser'
 import {
   HIDDEN_EVENT_PROPS,
   OUTCOME,
@@ -16,6 +16,8 @@ const samples = {
   ...import.meta.glob('../../../models/examples/*.json', { import: 'default' }),
   ...import.meta.glob('../../../models/generated/*.json', { import: 'default' }),
 }
+// the premise a generated story was built from, by the same file name
+const premises = import.meta.glob('../../../models/premises/*.json', { import: 'default' })
 const sampleList = Object.keys(samples)
   .map((p) => {
     const base = p.split('/').pop().replace(/\.json$/, '')
@@ -44,6 +46,8 @@ const state = {
   notice: '',
   saving: false,
   open: new Set(), // which <details> in the editor stay open across re-renders
+  // for a story built from a premise: { premise, derivation, baseline, fresh } (SP-PREMISE-001 4.1)
+  story: null,
 }
 
 // ---------------------------------------------------------------------------
@@ -73,13 +77,39 @@ async function openSample(path) {
   if (!loader) return
   const model = await loader()
   const name = path.split('/').pop().replace(/\.json$/, '')
-  openModel(structuredClone(model), name, { kind: 'sample', file: path.replace(/^(\.\.\/)+/, '') })
+  openModel(structuredClone(model), name, { kind: 'sample', file: path.replace(/^(\.\.\/)+/, '') }, await storyFor(path, model))
   picker.value = path
   pref('sample', path)
 }
 
-function openModel(model, name, source) {
+/** Key-order independent JSON, to tell whether a model still equals what its premise builds. */
+function canon(value) {
+  return JSON.stringify(value, (key, v) =>
+    v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, v[k]])) : v)
+}
+
+/** For a story in models/generated: rebuild it from its premise through the engine and keep the derivation. */
+async function storyFor(path, model) {
+  if (!path.includes('/models/generated/')) return null
+  const loader = premises[path.replace('/models/generated/', '/models/premises/')]
+  if (!loader) return null
+  try {
+    const premise = await loader()
+    const built = generateStory(structuredClone(premise))
+    const baseline = canon(built.model)
+    return { premise, derivation: built.derivation, baseline, fresh: baseline === canon(model) }
+  } catch {
+    return null
+  }
+}
+
+function isGenerated() {
+  return state.source?.kind === 'sample' && state.source.file.startsWith('models/generated/')
+}
+
+function openModel(model, name, source, story = null) {
   state.error = ''
+  state.story = story
   state.source = source ?? null
   state.dirty = new Set()
   state.notice = ''
@@ -93,6 +123,7 @@ function openModel(model, name, source) {
   state.names = createNames(model)
   state.check = null
   restart()
+  updateSaveArea()
 }
 
 function restart() {
@@ -292,6 +323,78 @@ function perceptionCard(p) {
   </section>`
 }
 
+// ---------------------------------------------------------------------------
+// probability (stories built from a premise): read from the engine's derivation, never recomputed here
+
+const pct = (p) => `${(p * 100).toFixed((p > 0 && p < 0.1) || (p > 0.9 && p < 1) ? 1 : 0)}%`
+
+function storyInStep() {
+  const s = state.story
+  return !!s && (state.dirty.size ? canon(state.model) === s.baseline : s.fresh)
+}
+
+function shareRow(label, p, extra = '', cls = '') {
+  return `<li class="${cls}"><div class="share-head"><span class="share-label">${label}</span><b>${pct(p)}</b></div>
+    <div class="share-bar" aria-hidden="true"><div style="width:${(p * 100).toFixed(1)}%"></div></div>${extra}</li>`
+}
+
+function wholeStoryHtml(d) {
+  const rows = d.endings.map((e) => shareRow(esc(endingLabel(e.ending)), e.probability)).join('')
+  const wants = d.intent
+    ? [...(d.intent.include ?? []).map(beatLabel), ...(d.intent.ending ? [`結末は「${endingLabel(d.intent.ending)}」`] : [])]
+    : []
+  const intent = wants.length
+    ? `<p class="sub">作者の意図: ${wants.map(esc).join('、')}。満たす展開は全体の ${pct(d.intentShare)}。主線はその中で最も蓋然なもの。</p>`
+    : ''
+  return `<p class="sub">この前提から起こりうる展開すべてが行き着く結末の割合（調べた状態 ${d.statesExplored}${d.truncated ? '・上限で打ち切り' : ''}）</p>
+    <ul class="shares">${rows}</ul>${intent}`
+}
+
+function probabilityCard(step) {
+  const story = state.story
+  if (!story) return ''
+  if (!storyInStep()) {
+    const why = state.dirty.size
+      ? 'この物語を手で直したので、前提から組んだ時の蓋然と理由は出せません。直した物語を残す時は「写して育てる」を使います。'
+      : '保存されている物語が、今の前提から組んだものと違います。<span class="term">npm run generate:story</span> で組み直すと、蓋然と理由が出ます。'
+    return `<section class="card card-prob"><h3><span class="tag">蓋然</span>前提から組んだ物語と違っています</h3><p class="sub">${why}</p></section>`
+  }
+  const d = story.derivation
+  const scene = d.scenes[step.scene.nodeId]
+  if (!scene) return ''
+  let arrived = ''
+  if (step.choiceId) {
+    const prev = d.scenes[step.fromNodeId]
+    const key = prev && Object.keys(prev.choices).find((k) => prev.choices[k] === step.choiceId)
+    const act = key && prev.options.find((o) => o.key === key)
+    if (act) {
+      arrived = `<p class="sub">ここへ来た行為: ${esc(explainAction(story.premise, act).label)}（蓋然 ${pct(act.probability)}・${prev.main === key ? '主線' : '脇道'}）</p>`
+    }
+  }
+  if (!scene.options.length) {
+    return `<section class="card card-prob"><h3><span class="tag">蓋然</span>結末: ${esc(endingLabel(scene.ending))}</h3>${arrived}${wholeStoryHtml(d)}</section>`
+  }
+  const rows = scene.options.map((o) => {
+    const ex = explainAction(story.premise, o)
+    const kept = scene.choices[o.key]
+    const isMain = scene.main === o.key
+    const badge = isMain ? '<span class="badge badge-main">主線</span>' : kept ? '' : '<span class="badge">選択肢にしていない</span>'
+    const why = `<p class="sub">重み ${num(o.weight)} ＝ ${esc(ex.formula)}（${ex.factors.map(esc).join('、')}）</p>`
+    return shareRow(`${esc(ex.label)}${badge}`, o.probability, why, `${isMain ? 'is-main' : ''} ${kept ? '' : 'is-left-out'}`)
+  }).join('')
+  const leftOut = scene.options.some((o) => !scene.choices[o.key])
+    ? `<p class="sub">${scene.main
+        ? '選択肢にするのは、主線の行為と、蓋然が10%以上の別の行為を上から2つまで。'
+        : 'ここは脇道なので、最も蓋然な行為だけを選択肢にしている。'}</p>`
+    : ''
+  const whole = step.scene.nodeId === state.model.startNode
+    ? `<details><summary>この前提から起こりうる結末</summary>${wholeStoryHtml(d)}</details>`
+    : ''
+  return `<section class="card card-prob"><h3><span class="tag">蓋然</span>この場面で起こりうること</h3>${arrived}
+    <p class="sub">割合は、行為の重みを、この場面で可能な行為の重みの合計で割った値。重みは前提の数値から作る。</p>
+    <ul class="shares">${rows}</ul>${leftOut}${whole}</section>`
+}
+
 function changesCard(step) {
   const shown = step.changes.filter((c) => c.kind !== 'node')
   if (!shown.length) return ''
@@ -382,6 +485,7 @@ function choicesCard(step) {
 
 function judgmentHtml(step) {
   const cards = [
+    probabilityCard(step),
     ...step.perceptions.map(perceptionCard),
     changesCard(step),
     compositionCard(step),
@@ -949,6 +1053,12 @@ const saveArea = document.getElementById('save-area')
 
 function updateSaveArea() {
   const n = state.dirty.size
+  if (isGenerated()) {
+    // a generated story stays rebuildable from its premise; edits are kept by copying it (SP-PREMISE-001 4.2)
+    saveArea.innerHTML = `${state.notice ? `<span class="notice">${state.notice}</span>` : ''}${n ? `<span class="dirty">未保存の変更 ${n} か所</span>` : ''}
+      <button type="button" id="grow" class="btn ${n ? 'btn-primary' : ''}" title="models/examples/ へ写しを作り、以後はその写しを編集します。生成した物語は前提から組み直せるまま残ります。">写して育てる</button>`
+    return
+  }
   if (!n) {
     saveArea.innerHTML = state.notice ? `<span class="notice">${state.notice}</span>` : ''
     return
@@ -962,6 +1072,48 @@ function checkSummary() {
   const issues = c.stuck.length + c.neverOpened.length + c.impossibleEvents.length + c.unresolvedRefs.length + c.missingTargets.length + c.unlinkedNodes.length + c.errors.length
   state.check = c
   return `点検: 結末 ${c.endings.length}・問題 ${issues}${c.truncated ? '（上限で打ち切り）' : ''}`
+}
+
+/** Copy a generated story to models/examples/ and continue on the copy. */
+async function grow() {
+  if (!state.model || !isGenerated()) return
+  const summary = checkSummary()
+  state.saving = true
+  try {
+    const res = await fetch('/__studio/grow', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file: state.source.file, model: state.model }),
+    })
+    const data = await res.json()
+    if (!data.ok) throw new Error(data.error)
+    const path = `../../../${data.file}`
+    const name = data.file.split('/').pop().replace(/\.json$/, '')
+    const notice = `${esc(data.file)} へ写しました。以後はこの写しを編集します。前提とのつながりは持ちません。${summary}`
+    const keep = { path: state.steps.slice(1).map((s) => s.choiceId), cursor: state.cursor, editing: state.editing }
+    pref('sample', path)
+    // the dev server may reload the page when it sees the new file; either way the author lands on the copy
+    remember(notice, path)
+    if (!sampleList.some((s) => s.path === path)) {
+      samples[path] = async () => data.model
+      sampleList.push({ path, name })
+      sampleList.sort((a, b) => a.name.localeCompare(b.name))
+      fillPicker()
+    }
+    state.saving = false
+    openModel(structuredClone(data.model), name, { kind: 'sample', file: data.file })
+    picker.value = path
+    replayQuiet(keep.path)
+    state.cursor = Math.min(keep.cursor, state.steps.length - 1)
+    state.editing = keep.editing
+    state.notice = notice
+    updateSaveArea()
+    render()
+  } catch (err) {
+    state.saving = false
+    state.error = `写せません: ${err instanceof Error ? err.message : String(err)}`
+    render()
+  }
 }
 
 async function save() {
@@ -1003,9 +1155,10 @@ async function save() {
   if (state.error) render()
 }
 
-function remember(notice) {
+function remember(notice, sample = picker.value) {
   try {
     sessionStorage.setItem('ng-studio:resume', JSON.stringify({
+      sample,
       path: state.steps.slice(1).map((s) => s.choiceId),
       cursor: state.cursor,
       editing: state.editing,
@@ -1154,6 +1307,7 @@ picker.addEventListener('change', () => {
 })
 saveArea.addEventListener('click', (event) => {
   if (event.target.closest('#save')) save()
+  if (event.target.closest('#grow')) grow()
 })
 window.addEventListener('beforeunload', (event) => {
   if (state.dirty.size && !state.saving) event.preventDefault()
@@ -1198,7 +1352,8 @@ const savedSample = pref('sample')
 const initial = sampleList.find((s) => s.path === savedSample) ?? sampleList.find((s) => s.name === DEFAULT_SAMPLE) ?? sampleList[0]
 const resume = takeResume()
 openSample(initial.path).then(() => {
-  if (resume) {
+  // a remembered place belongs to one story; never replay it onto another
+  if (resume && (!resume.sample || resume.sample === initial.path)) {
     replayQuiet(resume.path ?? [])
     state.cursor = Math.min(resume.cursor ?? 0, state.steps.length - 1)
     state.editing = !!resume.editing

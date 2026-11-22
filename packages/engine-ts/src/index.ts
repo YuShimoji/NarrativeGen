@@ -380,5 +380,5 @@ export { traceText, traceCondition, traceChoices, traceTemplates, traceScene, tr
 export type { TextSegment, TextTrace, ConditionTrace, ChoiceTrace, TemplateTrace, PerceptionTrace, PerceptionOutcome, StateChange, SceneTrace, StepTrace, RouteEnding, StuckState, ModelCheck } from './trace.js'
 
 // Premise-driven story construction (SP-PREMISE-001 prototype)
-export { generateStory, describeDerivation, DEFAULT_PATTERNS } from './premise-story.js'
-export type { StoryPremise, PremiseBelief, PremiseWording, PatternId, StoryAction, StoryActionKind, StoryStep, StoryEnding, StoryDerivation, PerceptionFact, EndingShare, WeightFactor, GenerateStoryOptions, GeneratedStory } from './premise-story.js'
+export { generateStory, describeDerivation, explainAction, endingLabel, beatLabel, DEFAULT_PATTERNS } from './premise-story.js'
+export type { StoryPremise, PremiseBelief, PremiseWording, PatternId, StoryAction, StoryActionKind, StoryStep, StoryEnding, StoryDerivation, PerceptionFact, EndingShare, WeightFactor, GenerateStoryOptions, GeneratedStory, SceneDerivation, ActionExplanation, StoryBeat, StoryIntent } from './premise-story.js'

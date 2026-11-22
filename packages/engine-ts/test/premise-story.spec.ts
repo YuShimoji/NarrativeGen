@@ -6,6 +6,7 @@ import {
   applyChoice,
   checkModel,
   clearSessionCaches,
+  explainAction,
   generateStory,
   getAvailableChoices,
   loadModel,
@@ -132,6 +133,24 @@ describe('premise-story (SP-PREMISE-001 prototype)', () => {
     const { derivation } = generateStory(premise)
     expect(derivation.perceptions.map((p) => p.character)).toEqual(['detective_a', 'witness_b'])
     expect(derivation.warnings).toHaveLength(2)
+  })
+
+  it('explains every scene of the model: what was possible, what stayed playable, and why', () => {
+    const premise = readPremise()
+    const { model, derivation } = generateStory(premise)
+    expect(Object.keys(derivation.scenes).sort()).toEqual(Object.keys(model.nodes).sort())
+    for (const [nodeId, scene] of Object.entries(derivation.scenes)) {
+      const choiceIds = (model.nodes[nodeId].choices ?? []).map((c) => c.id).sort()
+      expect(Object.values(scene.choices).sort()).toEqual(choiceIds)
+      if (scene.options.length === 0) expect(scene.ending).toBeDefined()
+      else expect(scene.options.reduce((sum, o) => sum + o.probability, 0)).toBeCloseTo(1, 3)
+    }
+    const start = derivation.scenes[model.startNode]
+    expect(start.main).toBe(derivation.mainLine[0].action.key)
+    const first = explainAction(premise, start.options[0])
+    expect(first.label).toBe('探偵Aが見る → 違和感を覚える')
+    expect(first.formula).toBe('知識の正確さ')
+    expect(first.factors).toEqual(['探偵Aの知識の正確さ 0.9'])
   })
 
   it('keeps the committed generated story in step with its premise', () => {

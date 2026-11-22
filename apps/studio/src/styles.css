@@ -321,3 +321,18 @@ summary { cursor: pointer; }
   .topbar { flex-wrap: wrap; row-gap: 8px; padding: 10px 16px; }
   .picker select { min-width: 0; max-width: 52vw; }
 }
+
+/* probability of each action in a story built from a premise */
+.card-prob .tag { background: var(--accent-bg); color: var(--accent); border-color: transparent; }
+.shares { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; }
+.share-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 14px; }
+.share-head b { font-variant-numeric: tabular-nums; flex: none; }
+.share-label { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.share-bar { height: 6px; margin-top: 4px; border-radius: 3px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; }
+.share-bar > div { height: 100%; background: var(--text-3); }
+.shares .is-main .share-bar > div { background: var(--accent); }
+.shares .is-main .share-label { font-weight: 600; }
+.shares .is-left-out .share-label { color: var(--text-2); }
+.badge { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--text-2); background: var(--surface-2); }
+.badge-main { background: var(--accent-bg); color: var(--accent); border-color: transparent; }
+.card-prob details { margin-top: 10px; }
