@@ -1,0 +1,61 @@
+{
+  "title": "チーズバーガーの重さ（聞いた話で見方が変わる）",
+  "entities": {
+    "portable_food": {
+      "id": "portable_food",
+      "name": "携帯食料",
+      "properties": {
+        "weight": { "key": "weight", "type": "number", "defaultValue": 0.1 },
+        "size": { "key": "size", "type": "number", "defaultValue": 0.1 }
+      }
+    },
+    "cheeseburger": {
+      "id": "cheeseburger",
+      "name": "チーズバーガー",
+      "parentEntity": "portable_food",
+      "properties": {
+        "size": { "key": "size", "type": "number", "defaultValue": 0.3 }
+      }
+    },
+    "someones_cheeseburger": {
+      "id": "someones_cheeseburger",
+      "name": "誰かが食べていたチーズバーガー",
+      "parentEntity": "cheeseburger",
+      "properties": {
+        "weight": { "key": "weight", "type": "number", "defaultValue": 0.12 }
+      }
+    }
+  },
+  "characters": {
+    "detective_a": {
+      "id": "detective_a",
+      "name": "探偵A",
+      "knowledgeProfiles": [{ "domain": "modern_products", "accuracy": 0.9, "tolerance": 0.05 }]
+    },
+    "witness_b": {
+      "id": "witness_b",
+      "name": "目撃者B",
+      "knowledgeProfiles": [{ "domain": "food_items", "accuracy": 0.7, "tolerance": 0.15 }]
+    },
+    "drunk_person": {
+      "id": "drunk_person",
+      "name": "酔った人",
+      "knowledgeProfiles": [{ "domain": "general", "accuracy": 0.3, "tolerance": 0.5 }]
+    }
+  },
+  "beliefs": [
+    { "character": "detective_a", "entity": "someones_cheeseburger", "domain": "modern_products", "expectations": { "weight": 0.1 } },
+    { "character": "witness_b", "entity": "someones_cheeseburger", "domain": "food_items", "expectations": { "weight": 0.1 } },
+    { "character": "drunk_person", "entity": "someones_cheeseburger", "domain": "general", "expectations": { "weight": 0.1 } }
+  ],
+  "scene": {
+    "present": ["detective_a", "witness_b", "drunk_person"],
+    "focus": "someones_cheeseburger"
+  },
+  "intent": {
+    "include": ["realized", "dissolved"]
+  },
+  "wording": {
+    "propertyNames": { "weight": "重さ", "size": "大きさ" }
+  }
+}

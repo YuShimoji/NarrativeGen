@@ -336,3 +336,5 @@ summary { cursor: pointer; }
 .badge { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--text-2); background: var(--surface-2); }
 .badge-main { background: var(--accent-bg); color: var(--accent); border-color: transparent; }
 .card-prob details { margin-top: 10px; }
+/* how hearing someone changed the expectation: set apart from the weight line */
+.card-prob .heard { padding-left: 8px; border-left: 2px solid var(--accent); color: var(--text); }

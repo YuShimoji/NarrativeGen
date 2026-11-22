@@ -30,7 +30,7 @@ To edit, press 「この場面を編集」 on a scene: the text, speaker, choice
 npm run generate:story -- models/premises/cheeseburger-weight.json
 ```
 
-Reads things, characters, beliefs and a scene from a premise file, lets the engine decide who notices a gap, chooses who looks, tells, checks or lets go by premise-derived weights, and writes an ordinary model to `models/generated/` (shown in Studio as 「<name>（前提から生成）」) together with a readable account of why each step was probable. Method, limits and open decisions: [`docs/specs/premise-driven-story.md`](docs/specs/premise-driven-story.md). The whole authoring workflow: [`docs/specs/pipeline-workflow.md`](docs/specs/pipeline-workflow.md).
+Reads things, characters, beliefs and a scene from a premise file, lets the engine decide who notices a gap, chooses who looks, looks again, tells, asks, checks or lets go by premise-derived weights (what a person expects changes with whose account they have heard), and writes an ordinary model to `models/generated/` (shown in Studio as 「<name>（前提から生成）」) together with a readable account of why each step was probable. Method, limits and open decisions: [`docs/specs/premise-driven-story.md`](docs/specs/premise-driven-story.md). The whole authoring workflow: [`docs/specs/pipeline-workflow.md`](docs/specs/pipeline-workflow.md).
 
 ## Playable Vertical Slice First
 

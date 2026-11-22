@@ -368,7 +368,9 @@ function probabilityCard(step) {
     const key = prev && Object.keys(prev.choices).find((k) => prev.choices[k] === step.choiceId)
     const act = key && prev.options.find((o) => o.key === key)
     if (act) {
-      arrived = `<p class="sub">ここへ来た行為: ${esc(explainAction(story.premise, act).label)}（蓋然 ${pct(act.probability)}・${prev.main === key ? '主線' : '脇道'}）</p>`
+      const came = explainAction(story.premise, act)
+      arrived = `<p class="sub">ここへ来た行為: ${esc(came.label)}（蓋然 ${pct(act.probability)}・${prev.main === key ? '主線' : '脇道'}）</p>${
+        came.judgment ? `<p class="sub heard">${esc(came.judgment)}</p>` : ''}`
     }
   }
   if (!scene.options.length) {
@@ -379,7 +381,8 @@ function probabilityCard(step) {
     const kept = scene.choices[o.key]
     const isMain = scene.main === o.key
     const badge = isMain ? '<span class="badge badge-main">主線</span>' : kept ? '' : '<span class="badge">選択肢にしていない</span>'
-    const why = `<p class="sub">重み ${num(o.weight)} ＝ ${esc(ex.formula)}（${ex.factors.map(esc).join('、')}）</p>`
+    const why = `<p class="sub">重み ${num(o.weight)} ＝ ${esc(ex.formula)}（${ex.factors.map(esc).join('、')}）</p>${
+      ex.judgment ? `<p class="sub heard">${esc(ex.judgment)}</p>` : ''}`
     return shareRow(`${esc(ex.label)}${badge}`, o.probability, why, `${isMain ? 'is-main' : ''} ${kept ? '' : 'is-left-out'}`)
   }).join('')
   const leftOut = scene.options.some((o) => !scene.choices[o.key])

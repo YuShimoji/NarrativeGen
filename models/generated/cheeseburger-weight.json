@@ -55,6 +55,21 @@
           "domain": "modern_products",
           "accuracy": 0.9,
           "tolerance": 0.05
+        },
+        {
+          "domain": "modern_products+drunk_person",
+          "accuracy": 0.9,
+          "tolerance": 0.1125
+        },
+        {
+          "domain": "modern_products+drunk_person+witness_b",
+          "accuracy": 0.9,
+          "tolerance": 0.126316
+        },
+        {
+          "domain": "modern_products+witness_b",
+          "accuracy": 0.9,
+          "tolerance": 0.09375
         }
       ]
     },
@@ -66,6 +81,16 @@
           "domain": "food_items",
           "accuracy": 0.7,
           "tolerance": 0.15
+        },
+        {
+          "domain": "food_items+detective_a",
+          "accuracy": 0.7,
+          "tolerance": 0.09375
+        },
+        {
+          "domain": "food_items+detective_a+drunk_person",
+          "accuracy": 0.7,
+          "tolerance": 0.126316
         }
       ]
     },
@@ -77,6 +102,16 @@
           "domain": "general",
           "accuracy": 0.3,
           "tolerance": 0.3
+        },
+        {
+          "domain": "general+detective_a",
+          "accuracy": 0.3,
+          "tolerance": 0.1125
+        },
+        {
+          "domain": "general+detective_a+witness_b",
+          "accuracy": 0.3,
+          "tolerance": 0.126316
         }
       ]
     }
@@ -113,20 +148,20 @@
       "text": "[someones_cheeseburger]がある。探偵A、目撃者B、酔った人がいる。",
       "choices": [
         {
-          "id": "look_witness_b",
-          "text": "目撃者Bが見る 〔蓋然 37%〕",
-          "target": "s1_look_witness_b",
+          "id": "look_drunk_person",
+          "text": "酔った人が見る 〔蓋然 16%〕",
+          "target": "s1_look_drunk_person",
           "effects": [
             {
               "type": "perceiveEntity",
-              "character": "witness_b",
+              "character": "drunk_person",
               "entity": "someones_cheeseburger",
-              "domain": "food_items",
+              "domain": "general",
               "expectations": {
                 "weight": 0.1
               },
-              "eventId": "notice_witness_b",
-              "eventName": "目撃者Bの違和感",
+              "eventId": "notice_drunk_person",
+              "eventName": "酔った人の違和感",
               "onlyIfNoticed": true
             }
           ]
@@ -151,60 +186,52 @@
           ]
         },
         {
-          "id": "look_drunk_person",
-          "text": "酔った人が見る 〔蓋然 16%〕",
-          "target": "s3_look_drunk_person",
+          "id": "look_witness_b",
+          "text": "目撃者Bが見る 〔蓋然 37%〕",
+          "target": "s3_look_witness_b",
           "effects": [
             {
               "type": "perceiveEntity",
-              "character": "drunk_person",
+              "character": "witness_b",
               "entity": "someones_cheeseburger",
-              "domain": "general",
+              "domain": "food_items",
               "expectations": {
                 "weight": 0.1
               },
-              "eventId": "notice_drunk_person",
-              "eventName": "酔った人の違和感",
+              "eventId": "notice_witness_b",
+              "eventName": "目撃者Bの違和感",
               "onlyIfNoticed": true
             }
           ]
         }
       ]
     },
-    "s1_look_witness_b": {
-      "id": "s1_look_witness_b",
-      "text": "目撃者Bは[someones_cheeseburger]を見る。重さは[notice_witness_b.expected_value]のはずだと思っていた。実際は[notice_witness_b.actual_value]。目撃者Bは違和感を覚える。",
+    "s1_look_drunk_person": {
+      "id": "s1_look_drunk_person",
+      "text": "酔った人は[someones_cheeseburger]を見る。重さは0.1のはずだと思っていて、実際の[someones_cheeseburger.weight]はその見込みの幅に収まる。酔った人は何も気に留めない。",
       "choices": [
         {
-          "id": "letGo_witness_b",
-          "text": "目撃者Bがそのままにする 〔蓋然 12%〕",
-          "target": "s4_letGo_witness_b",
-          "conditions": [
-            {
-              "type": "hasEvent",
-              "key": "notice_witness_b",
-              "value": true
-            }
-          ],
+          "id": "look_witness_b",
+          "text": "目撃者Bが見る 〔蓋然 44%〕",
+          "target": "s4_look_witness_b",
           "effects": [
             {
-              "type": "createEvent",
-              "id": "letgo_witness_b",
-              "name": "目撃者Bがそのままにした",
-              "properties": {
-                "observer": {
-                  "defaultValue": "witness_b"
-                },
-                "source_entity": {
-                  "defaultValue": "someones_cheeseburger"
-                }
-              }
+              "type": "perceiveEntity",
+              "character": "witness_b",
+              "entity": "someones_cheeseburger",
+              "domain": "food_items",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_witness_b",
+              "eventName": "目撃者Bの違和感",
+              "onlyIfNoticed": true
             }
           ]
         },
         {
           "id": "look_detective_a",
-          "text": "探偵Aが見る 〔蓋然 48%〕",
+          "text": "探偵Aが見る 〔蓋然 56%〕",
           "target": "s5_look_detective_a",
           "effects": [
             {
@@ -220,25 +247,6 @@
               "onlyIfNoticed": true
             }
           ]
-        },
-        {
-          "id": "look_drunk_person",
-          "text": "酔った人が見る 〔蓋然 16%〕",
-          "target": "s6_look_drunk_person",
-          "effects": [
-            {
-              "type": "perceiveEntity",
-              "character": "drunk_person",
-              "entity": "someones_cheeseburger",
-              "domain": "general",
-              "expectations": {
-                "weight": 0.1
-              },
-              "eventId": "notice_drunk_person",
-              "eventName": "酔った人の違和感",
-              "onlyIfNoticed": true
-            }
-          ]
         }
       ]
     },
@@ -248,115 +256,7 @@
       "choices": [
         {
           "id": "verify_detective_a",
-          "text": "探偵Aが確かめる 〔蓋然 28%〕",
-          "target": "s16_verify_detective_a",
-          "conditions": [
-            {
-              "type": "hasEvent",
-              "key": "notice_detective_a",
-              "value": true
-            }
-          ],
-          "effects": [
-            {
-              "type": "createEvent",
-              "id": "verify_detective_a",
-              "name": "探偵Aが確かめた",
-              "properties": {
-                "observer": {
-                  "defaultValue": "detective_a"
-                },
-                "source_entity": {
-                  "defaultValue": "someones_cheeseburger"
-                },
-                "primary_property": {
-                  "defaultValue": "weight"
-                },
-                "actual_value": {
-                  "defaultValue": 0.12
-                }
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "s3_look_drunk_person": {
-      "id": "s3_look_drunk_person",
-      "text": "酔った人は[someones_cheeseburger]を見る。重さは0.1のはずだと思っていて、実際の[someones_cheeseburger.weight]はその見込みの幅に収まる。酔った人は何も気に留めない。",
-      "choices": [
-        {
-          "id": "look_detective_a",
-          "text": "探偵Aが見る 〔蓋然 56%〕",
-          "target": "s17_look_detective_a",
-          "effects": [
-            {
-              "type": "perceiveEntity",
-              "character": "detective_a",
-              "entity": "someones_cheeseburger",
-              "domain": "modern_products",
-              "expectations": {
-                "weight": 0.1
-              },
-              "eventId": "notice_detective_a",
-              "eventName": "探偵Aの違和感",
-              "onlyIfNoticed": true
-            }
-          ]
-        }
-      ]
-    },
-    "s4_letGo_witness_b": {
-      "id": "s4_letGo_witness_b",
-      "text": "目撃者Bは違和感をそのままにする。",
-      "choices": [
-        {
-          "id": "look_drunk_person",
-          "text": "酔った人が見る 〔蓋然 25%〕",
-          "target": "s7_look_drunk_person",
-          "effects": [
-            {
-              "type": "perceiveEntity",
-              "character": "drunk_person",
-              "entity": "someones_cheeseburger",
-              "domain": "general",
-              "expectations": {
-                "weight": 0.1
-              },
-              "eventId": "notice_drunk_person",
-              "eventName": "酔った人の違和感",
-              "onlyIfNoticed": true
-            }
-          ]
-        },
-        {
-          "id": "look_detective_a",
-          "text": "探偵Aが見る 〔蓋然 75%〕",
-          "target": "s8_look_detective_a",
-          "effects": [
-            {
-              "type": "perceiveEntity",
-              "character": "detective_a",
-              "entity": "someones_cheeseburger",
-              "domain": "modern_products",
-              "expectations": {
-                "weight": 0.1
-              },
-              "eventId": "notice_detective_a",
-              "eventName": "探偵Aの違和感",
-              "onlyIfNoticed": true
-            }
-          ]
-        }
-      ]
-    },
-    "s5_look_detective_a": {
-      "id": "s5_look_detective_a",
-      "text": "探偵Aは[someones_cheeseburger]を見る。重さは[notice_detective_a.expected_value]のはずだと思っていた。実際は[notice_detective_a.actual_value]。探偵Aは違和感を覚える。",
-      "choices": [
-        {
-          "id": "verify_detective_a",
-          "text": "探偵Aが確かめる 〔蓋然 29%〕",
+          "text": "探偵Aが確かめる 〔蓋然 22%〕",
           "target": "s18_verify_detective_a",
           "conditions": [
             {
@@ -389,13 +289,13 @@
         }
       ]
     },
-    "s6_look_drunk_person": {
-      "id": "s6_look_drunk_person",
-      "text": "酔った人は[someones_cheeseburger]を見る。重さは0.1のはずだと思っていて、実際の[someones_cheeseburger.weight]はその見込みの幅に収まる。酔った人は何も気に留めない。",
+    "s3_look_witness_b": {
+      "id": "s3_look_witness_b",
+      "text": "目撃者Bは[someones_cheeseburger]を見る。重さは[notice_witness_b.expected_value]のはずだと思っていた。実際は[notice_witness_b.actual_value]。目撃者Bは違和感を覚える。",
       "choices": [
         {
           "id": "look_detective_a",
-          "text": "探偵Aが見る 〔蓋然 57%〕",
+          "text": "探偵Aが見る 〔蓋然 43%〕",
           "target": "s19_look_detective_a",
           "effects": [
             {
@@ -414,14 +314,14 @@
         }
       ]
     },
-    "s7_look_drunk_person": {
-      "id": "s7_look_drunk_person",
-      "text": "酔った人は[someones_cheeseburger]を見る。重さは0.1のはずだと思っていて、実際の[someones_cheeseburger.weight]はその見込みの幅に収まる。酔った人は何も気に留めない。",
+    "s4_look_witness_b": {
+      "id": "s4_look_witness_b",
+      "text": "目撃者Bは[someones_cheeseburger]を見る。重さは[notice_witness_b.expected_value]のはずだと思っていた。実際は[notice_witness_b.actual_value]。目撃者Bは違和感を覚える。",
       "choices": [
         {
           "id": "look_detective_a",
-          "text": "探偵Aが見る 〔蓋然 100%〕",
-          "target": "s9_look_detective_a",
+          "text": "探偵Aが見る 〔蓋然 50%〕",
+          "target": "s6_look_detective_a",
           "effects": [
             {
               "type": "perceiveEntity",
@@ -436,16 +336,76 @@
               "onlyIfNoticed": true
             }
           ]
+        },
+        {
+          "id": "letGo_witness_b",
+          "text": "目撃者Bがそのままにする 〔蓋然 12%〕",
+          "target": "s7_letGo_witness_b",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_witness_b",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "letgo_witness_b",
+              "name": "目撃者Bがそのままにした",
+              "properties": {
+                "observer": {
+                  "defaultValue": "witness_b"
+                },
+                "source_entity": {
+                  "defaultValue": "someones_cheeseburger"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "ask_drunk_person_witness_b",
+          "text": "酔った人が目撃者Bに尋ねる 〔蓋然 11%〕",
+          "target": "s8_ask_drunk_person_witness_b",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_witness_b",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "ask_drunk_person_witness_b",
+              "name": "酔った人が目撃者Bに尋ねた",
+              "properties": {
+                "asker": {
+                  "defaultValue": "drunk_person"
+                },
+                "answerer": {
+                  "defaultValue": "witness_b"
+                },
+                "source_entity": {
+                  "defaultValue": "someones_cheeseburger"
+                },
+                "severity": {
+                  "defaultValue": 27
+                }
+              }
+            }
+          ]
         }
       ]
     },
-    "s8_look_detective_a": {
-      "id": "s8_look_detective_a",
+    "s5_look_detective_a": {
+      "id": "s5_look_detective_a",
       "text": "探偵Aは[someones_cheeseburger]を見る。重さは[notice_detective_a.expected_value]のはずだと思っていた。実際は[notice_detective_a.actual_value]。探偵Aは違和感を覚える。",
       "choices": [
         {
           "id": "verify_detective_a",
-          "text": "探偵Aが確かめる 〔蓋然 39%〕",
+          "text": "探偵Aが確かめる 〔蓋然 24%〕",
           "target": "s20_verify_detective_a",
           "conditions": [
             {
@@ -478,14 +438,14 @@
         }
       ]
     },
-    "s9_look_detective_a": {
-      "id": "s9_look_detective_a",
+    "s6_look_detective_a": {
+      "id": "s6_look_detective_a",
       "text": "探偵Aは[someones_cheeseburger]を見る。重さは[notice_detective_a.expected_value]のはずだと思っていた。実際は[notice_detective_a.actual_value]。探偵Aは違和感を覚える。",
       "choices": [
         {
           "id": "tell_detective_a_drunk_person",
-          "text": "探偵Aが酔った人に話す 〔蓋然 26%〕",
-          "target": "s10_tell_detective_a_drunk_person",
+          "text": "探偵Aが酔った人に話す 〔蓋然 13%〕",
+          "target": "s9_tell_detective_a_drunk_person",
           "conditions": [
             {
               "type": "hasEvent",
@@ -525,8 +485,8 @@
         },
         {
           "id": "verify_detective_a",
-          "text": "探偵Aが確かめる 〔蓋然 47%〕",
-          "target": "s11_verify_detective_a",
+          "text": "探偵Aが確かめる 〔蓋然 24%〕",
+          "target": "s10_verify_detective_a",
           "conditions": [
             {
               "type": "hasEvent",
@@ -557,8 +517,97 @@
           ]
         },
         {
+          "id": "ask_drunk_person_detective_a",
+          "text": "酔った人が探偵Aに尋ねる 〔蓋然 19%〕",
+          "target": "s11_ask_drunk_person_detective_a",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_detective_a",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "ask_drunk_person_detective_a",
+              "name": "酔った人が探偵Aに尋ねた",
+              "properties": {
+                "asker": {
+                  "defaultValue": "drunk_person"
+                },
+                "answerer": {
+                  "defaultValue": "detective_a"
+                },
+                "source_entity": {
+                  "defaultValue": "someones_cheeseburger"
+                },
+                "severity": {
+                  "defaultValue": 80
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s7_letGo_witness_b": {
+      "id": "s7_letGo_witness_b",
+      "text": "目撃者Bは違和感をそのままにする。",
+      "choices": [
+        {
+          "id": "look_detective_a",
+          "text": "探偵Aが見る 〔蓋然 100%〕",
+          "target": "s21_look_detective_a",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "detective_a",
+              "entity": "someones_cheeseburger",
+              "domain": "modern_products",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_detective_a",
+              "eventName": "探偵Aの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s8_ask_drunk_person_witness_b": {
+      "id": "s8_ask_drunk_person_witness_b",
+      "text": "酔った人は目撃者Bに、[someones_cheeseburger]のどこが気になるのかを尋ねる。目撃者Bは、重さが思っていたのと違うと答える。",
+      "choices": [
+        {
+          "id": "look_detective_a",
+          "text": "探偵Aが見る 〔蓋然 41%〕",
+          "target": "s22_look_detective_a",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "detective_a",
+              "entity": "someones_cheeseburger",
+              "domain": "modern_products",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_detective_a",
+              "eventName": "探偵Aの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s9_tell_detective_a_drunk_person": {
+      "id": "s9_tell_detective_a_drunk_person",
+      "text": "探偵Aは酔った人に、[someones_cheeseburger]の重さが思っていたのと違うと話す。酔った人は自分で見て何も気に留めなかった。二人の見方は食い違う。",
+      "choices": [
+        {
           "id": "tell_detective_a_witness_b",
-          "text": "探偵Aが目撃者Bに話す 〔蓋然 26%〕",
+          "text": "探偵Aが目撃者Bに話す 〔蓋然 18%〕",
           "target": "s12_tell_detective_a_witness_b",
           "conditions": [
             {
@@ -596,17 +645,390 @@
               }
             }
           ]
+        },
+        {
+          "id": "relook_drunk_person",
+          "text": "酔った人が見直す 〔蓋然 25%〕",
+          "target": "s13_relook_drunk_person",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "drunk_person",
+              "entity": "someones_cheeseburger",
+              "domain": "general+detective_a",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_drunk_person_heard_detective_a",
+              "eventName": "酔った人の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        },
+        {
+          "id": "relook_detective_a",
+          "text": "探偵Aが見直す 〔蓋然 20%〕",
+          "target": "s14_relook_detective_a",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "detective_a",
+              "entity": "someones_cheeseburger",
+              "domain": "modern_products+drunk_person",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_detective_a_heard_drunk_person",
+              "eventName": "探偵Aの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
         }
       ]
     },
-    "s10_tell_detective_a_drunk_person": {
-      "id": "s10_tell_detective_a_drunk_person",
-      "text": "探偵Aは酔った人に、[someones_cheeseburger]の重さが思っていたのと違うと話す。酔った人は自分で見て何も気に留めなかった。二人の見方は食い違う。",
+    "s10_verify_detective_a": {
+      "id": "s10_verify_detective_a",
+      "text": "探偵Aは[someones_cheeseburger]の重さを確かめる。[someones_cheeseburger.weight]。見込みの0.1とは違っていた。\n\n違和感は確かめられ、事実として残った。"
+    },
+    "s11_ask_drunk_person_detective_a": {
+      "id": "s11_ask_drunk_person_detective_a",
+      "text": "酔った人は探偵Aに、[someones_cheeseburger]のどこが気になるのかを尋ねる。探偵Aは、重さが思っていたのと違うと答える。",
+      "choices": [
+        {
+          "id": "relook_drunk_person",
+          "text": "酔った人が見直す 〔蓋然 31%〕",
+          "target": "s23_relook_drunk_person",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "drunk_person",
+              "entity": "someones_cheeseburger",
+              "domain": "general+detective_a",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_drunk_person_heard_detective_a",
+              "eventName": "酔った人の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s12_tell_detective_a_witness_b": {
+      "id": "s12_tell_detective_a_witness_b",
+      "text": "探偵Aは目撃者Bに、[someones_cheeseburger]の重さが思っていたのと違うと話す。目撃者Bも同じ違和感を覚えていた。二人に共通の話題ができる。",
+      "choices": [
+        {
+          "id": "verify_detective_a",
+          "text": "探偵Aが確かめる 〔蓋然 13%〕",
+          "target": "s15_verify_detective_a",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_detective_a",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_detective_a",
+              "name": "探偵Aが確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "detective_a"
+                },
+                "source_entity": {
+                  "defaultValue": "someones_cheeseburger"
+                },
+                "primary_property": {
+                  "defaultValue": "weight"
+                },
+                "actual_value": {
+                  "defaultValue": 0.12
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "relook_witness_b",
+          "text": "目撃者Bが見直す 〔蓋然 28%〕",
+          "target": "s16_relook_witness_b",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "witness_b",
+              "entity": "someones_cheeseburger",
+              "domain": "food_items+detective_a",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_witness_b_heard_detective_a",
+              "eventName": "目撃者Bの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        },
+        {
+          "id": "relook_detective_a",
+          "text": "探偵Aが見直す 〔蓋然 22%〕",
+          "target": "s17_relook_detective_a",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "detective_a",
+              "entity": "someones_cheeseburger",
+              "domain": "modern_products+drunk_person+witness_b",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_detective_a_heard_drunk_person_witness_b",
+              "eventName": "探偵Aの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s13_relook_drunk_person": {
+      "id": "s13_relook_drunk_person",
+      "text": "酔った人は探偵Aの話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_drunk_person_heard_detective_a.expected_value]のはず。実際は[notice_drunk_person_heard_detective_a.actual_value]。今度は酔った人も違和感を覚える。",
+      "choices": [
+        {
+          "id": "relook_detective_a",
+          "text": "探偵Aが見直す 〔蓋然 29%〕",
+          "target": "s24_relook_detective_a",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "detective_a",
+              "entity": "someones_cheeseburger",
+              "domain": "modern_products+drunk_person",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_detective_a_heard_drunk_person",
+              "eventName": "探偵Aの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s14_relook_detective_a": {
+      "id": "s14_relook_detective_a",
+      "text": "探偵Aは酔った人の話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_detective_a_heard_drunk_person.expected_value]のはず。実際は[notice_detective_a_heard_drunk_person.actual_value]。探偵Aの違和感は残る。",
+      "choices": [
+        {
+          "id": "relook_drunk_person",
+          "text": "酔った人が見直す 〔蓋然 29%〕",
+          "target": "s25_relook_drunk_person",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "drunk_person",
+              "entity": "someones_cheeseburger",
+              "domain": "general+detective_a",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_drunk_person_heard_detective_a",
+              "eventName": "酔った人の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s15_verify_detective_a": {
+      "id": "s15_verify_detective_a",
+      "text": "探偵Aは[someones_cheeseburger]の重さを確かめる。[someones_cheeseburger.weight]。見込みの0.1とは違っていた。\n\n違和感は確かめられ、事実として残った。"
+    },
+    "s16_relook_witness_b": {
+      "id": "s16_relook_witness_b",
+      "text": "目撃者Bは探偵Aの話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_witness_b_heard_detective_a.expected_value]のはず。実際は[notice_witness_b_heard_detective_a.actual_value]。目撃者Bの違和感は残る。",
+      "choices": [
+        {
+          "id": "relook_detective_a",
+          "text": "探偵Aが見直す 〔蓋然 30%〕",
+          "target": "s26_relook_detective_a",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "detective_a",
+              "entity": "someones_cheeseburger",
+              "domain": "modern_products+drunk_person+witness_b",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_detective_a_heard_drunk_person_witness_b",
+              "eventName": "探偵Aの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s17_relook_detective_a": {
+      "id": "s17_relook_detective_a",
+      "text": "探偵Aは酔った人と目撃者Bの話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_detective_a_heard_drunk_person_witness_b.expected_value]のはず。実際は[notice_detective_a_heard_drunk_person_witness_b.actual_value]。探偵Aの違和感は残る。",
+      "choices": [
+        {
+          "id": "relook_witness_b",
+          "text": "目撃者Bが見直す 〔蓋然 36%〕",
+          "target": "s27_relook_witness_b",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "witness_b",
+              "entity": "someones_cheeseburger",
+              "domain": "food_items+detective_a",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_witness_b_heard_detective_a",
+              "eventName": "目撃者Bの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s18_verify_detective_a": {
+      "id": "s18_verify_detective_a",
+      "text": "探偵Aは[someones_cheeseburger]の重さを確かめる。[someones_cheeseburger.weight]。見込みの0.1とは違っていた。\n\n違和感は確かめられ、事実として残った。"
+    },
+    "s19_look_detective_a": {
+      "id": "s19_look_detective_a",
+      "text": "探偵Aは[someones_cheeseburger]を見る。重さは[notice_detective_a.expected_value]のはずだと思っていた。実際は[notice_detective_a.actual_value]。探偵Aは違和感を覚える。",
+      "choices": [
+        {
+          "id": "verify_detective_a",
+          "text": "探偵Aが確かめる 〔蓋然 22%〕",
+          "target": "s28_verify_detective_a",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_detective_a",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_detective_a",
+              "name": "探偵Aが確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "detective_a"
+                },
+                "source_entity": {
+                  "defaultValue": "someones_cheeseburger"
+                },
+                "primary_property": {
+                  "defaultValue": "weight"
+                },
+                "actual_value": {
+                  "defaultValue": 0.12
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s20_verify_detective_a": {
+      "id": "s20_verify_detective_a",
+      "text": "探偵Aは[someones_cheeseburger]の重さを確かめる。[someones_cheeseburger.weight]。見込みの0.1とは違っていた。\n\n違和感は確かめられ、事実として残った。"
+    },
+    "s21_look_detective_a": {
+      "id": "s21_look_detective_a",
+      "text": "探偵Aは[someones_cheeseburger]を見る。重さは[notice_detective_a.expected_value]のはずだと思っていた。実際は[notice_detective_a.actual_value]。探偵Aは違和感を覚える。",
+      "choices": [
+        {
+          "id": "verify_detective_a",
+          "text": "探偵Aが確かめる 〔蓋然 31%〕",
+          "target": "s29_verify_detective_a",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_detective_a",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_detective_a",
+              "name": "探偵Aが確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "detective_a"
+                },
+                "source_entity": {
+                  "defaultValue": "someones_cheeseburger"
+                },
+                "primary_property": {
+                  "defaultValue": "weight"
+                },
+                "actual_value": {
+                  "defaultValue": 0.12
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s22_look_detective_a": {
+      "id": "s22_look_detective_a",
+      "text": "探偵Aは[someones_cheeseburger]を見る。重さは[notice_detective_a.expected_value]のはずだと思っていた。実際は[notice_detective_a.actual_value]。探偵Aは違和感を覚える。",
+      "choices": [
+        {
+          "id": "verify_detective_a",
+          "text": "探偵Aが確かめる 〔蓋然 22%〕",
+          "target": "s30_verify_detective_a",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_detective_a",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_detective_a",
+              "name": "探偵Aが確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "detective_a"
+                },
+                "source_entity": {
+                  "defaultValue": "someones_cheeseburger"
+                },
+                "primary_property": {
+                  "defaultValue": "weight"
+                },
+                "actual_value": {
+                  "defaultValue": 0.12
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s23_relook_drunk_person": {
+      "id": "s23_relook_drunk_person",
+      "text": "酔った人は探偵Aの話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_drunk_person_heard_detective_a.expected_value]のはず。実際は[notice_drunk_person_heard_detective_a.actual_value]。今度は酔った人も違和感を覚える。",
       "choices": [
         {
           "id": "tell_detective_a_witness_b",
-          "text": "探偵Aが目撃者Bに話す 〔蓋然 52%〕",
-          "target": "s13_tell_detective_a_witness_b",
+          "text": "探偵Aが目撃者Bに話す 〔蓋然 26%〕",
+          "target": "s31_tell_detective_a_witness_b",
           "conditions": [
             {
               "type": "hasEvent",
@@ -643,35 +1065,35 @@
               }
             }
           ]
-        },
+        }
+      ]
+    },
+    "s24_relook_detective_a": {
+      "id": "s24_relook_detective_a",
+      "text": "探偵Aは酔った人の話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_detective_a_heard_drunk_person.expected_value]のはず。実際は[notice_detective_a_heard_drunk_person.actual_value]。探偵Aの違和感は残る。",
+      "choices": [
         {
-          "id": "verify_detective_a",
-          "text": "探偵Aが確かめる 〔蓋然 47%〕",
-          "target": "s14_verify_detective_a",
+          "id": "letGo_drunk_person",
+          "text": "酔った人がそのままにする 〔蓋然 19%〕",
+          "target": "s32_letGo_drunk_person",
           "conditions": [
             {
               "type": "hasEvent",
-              "key": "notice_detective_a",
+              "key": "notice_drunk_person_heard_detective_a",
               "value": true
             }
           ],
           "effects": [
             {
               "type": "createEvent",
-              "id": "verify_detective_a",
-              "name": "探偵Aが確かめた",
+              "id": "letgo_drunk_person_heard_detective_a",
+              "name": "酔った人がそのままにした",
               "properties": {
                 "observer": {
-                  "defaultValue": "detective_a"
+                  "defaultValue": "drunk_person"
                 },
                 "source_entity": {
                   "defaultValue": "someones_cheeseburger"
-                },
-                "primary_property": {
-                  "defaultValue": "weight"
-                },
-                "actual_value": {
-                  "defaultValue": 0.12
                 }
               }
             }
@@ -679,38 +1101,284 @@
         }
       ]
     },
-    "s11_verify_detective_a": {
-      "id": "s11_verify_detective_a",
-      "text": "探偵Aは[someones_cheeseburger]の重さを確かめる。[someones_cheeseburger.weight]。見込みの0.1とは違っていた。\n\n違和感は確かめられ、事実として残った。"
-    },
-    "s12_tell_detective_a_witness_b": {
-      "id": "s12_tell_detective_a_witness_b",
-      "text": "探偵Aは目撃者Bに、[someones_cheeseburger]の重さが思っていたのと違うと話す。目撃者Bも同じ違和感を覚えていた。二人に共通の話題ができる。",
+    "s25_relook_drunk_person": {
+      "id": "s25_relook_drunk_person",
+      "text": "酔った人は探偵Aの話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_drunk_person_heard_detective_a.expected_value]のはず。実際は[notice_drunk_person_heard_detective_a.actual_value]。今度は酔った人も違和感を覚える。",
       "choices": [
         {
-          "id": "tell_detective_a_drunk_person",
-          "text": "探偵Aが酔った人に話す 〔蓋然 52%〕",
-          "target": "s21_tell_detective_a_drunk_person",
+          "id": "letGo_drunk_person",
+          "text": "酔った人がそのままにする 〔蓋然 19%〕",
+          "target": "s32_letGo_drunk_person",
           "conditions": [
             {
               "type": "hasEvent",
-              "key": "notice_detective_a",
+              "key": "notice_drunk_person_heard_detective_a",
               "value": true
-            },
-            {
-              "type": "hasEvent",
-              "key": "notice_drunk_person",
-              "value": false
             }
           ],
           "effects": [
             {
               "type": "createEvent",
-              "id": "tell_detective_a_drunk_person",
-              "name": "探偵Aが酔った人に話した",
+              "id": "letgo_drunk_person_heard_detective_a",
+              "name": "酔った人がそのままにした",
+              "properties": {
+                "observer": {
+                  "defaultValue": "drunk_person"
+                },
+                "source_entity": {
+                  "defaultValue": "someones_cheeseburger"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s26_relook_detective_a": {
+      "id": "s26_relook_detective_a",
+      "text": "探偵Aは酔った人と目撃者Bの話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_detective_a_heard_drunk_person_witness_b.expected_value]のはず。実際は[notice_detective_a_heard_drunk_person_witness_b.actual_value]。探偵Aの違和感は残る。",
+      "choices": [
+        {
+          "id": "relook_drunk_person",
+          "text": "酔った人が見直す 〔蓋然 28%〕",
+          "target": "s33_relook_drunk_person",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "drunk_person",
+              "entity": "someones_cheeseburger",
+              "domain": "general+detective_a",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_drunk_person_heard_detective_a",
+              "eventName": "酔った人の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s27_relook_witness_b": {
+      "id": "s27_relook_witness_b",
+      "text": "目撃者Bは探偵Aの話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_witness_b_heard_detective_a.expected_value]のはず。実際は[notice_witness_b_heard_detective_a.actual_value]。目撃者Bの違和感は残る。",
+      "choices": [
+        {
+          "id": "relook_drunk_person",
+          "text": "酔った人が見直す 〔蓋然 28%〕",
+          "target": "s33_relook_drunk_person",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "drunk_person",
+              "entity": "someones_cheeseburger",
+              "domain": "general+detective_a",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_drunk_person_heard_detective_a",
+              "eventName": "酔った人の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s28_verify_detective_a": {
+      "id": "s28_verify_detective_a",
+      "text": "探偵Aは[someones_cheeseburger]の重さを確かめる。[someones_cheeseburger.weight]。見込みの0.1とは違っていた。\n\n違和感は確かめられ、事実として残った。"
+    },
+    "s29_verify_detective_a": {
+      "id": "s29_verify_detective_a",
+      "text": "探偵Aは[someones_cheeseburger]の重さを確かめる。[someones_cheeseburger.weight]。見込みの0.1とは違っていた。\n\n違和感は確かめられ、事実として残った。"
+    },
+    "s30_verify_detective_a": {
+      "id": "s30_verify_detective_a",
+      "text": "探偵Aは[someones_cheeseburger]の重さを確かめる。[someones_cheeseburger.weight]。見込みの0.1とは違っていた。\n\n違和感は確かめられ、事実として残った。"
+    },
+    "s31_tell_detective_a_witness_b": {
+      "id": "s31_tell_detective_a_witness_b",
+      "text": "探偵Aは目撃者Bに、[someones_cheeseburger]の重さが思っていたのと違うと話す。目撃者Bも同じ違和感を覚えていた。二人に共通の話題ができる。",
+      "choices": [
+        {
+          "id": "relook_witness_b",
+          "text": "目撃者Bが見直す 〔蓋然 30%〕",
+          "target": "s34_relook_witness_b",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "witness_b",
+              "entity": "someones_cheeseburger",
+              "domain": "food_items+detective_a",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_witness_b_heard_detective_a",
+              "eventName": "目撃者Bの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s32_letGo_drunk_person": {
+      "id": "s32_letGo_drunk_person",
+      "text": "酔った人は違和感をそのままにする。",
+      "choices": [
+        {
+          "id": "tell_detective_a_witness_b",
+          "text": "探偵Aが目撃者Bに話す 〔蓋然 22%〕",
+          "target": "s35_tell_detective_a_witness_b",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_detective_a_heard_drunk_person",
+              "value": true
+            },
+            {
+              "type": "hasEvent",
+              "key": "notice_witness_b",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "tell_detective_a_witness_b",
+              "name": "探偵Aが目撃者Bに話した",
               "properties": {
                 "speaker": {
                   "defaultValue": "detective_a"
+                },
+                "listener": {
+                  "defaultValue": "witness_b"
+                },
+                "source_entity": {
+                  "defaultValue": "someones_cheeseburger"
+                },
+                "outcome": {
+                  "defaultValue": "shared"
+                },
+                "severity": {
+                  "defaultValue": 36
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s33_relook_drunk_person": {
+      "id": "s33_relook_drunk_person",
+      "text": "酔った人は探偵Aの話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_drunk_person_heard_detective_a.expected_value]のはず。実際は[notice_drunk_person_heard_detective_a.actual_value]。今度は酔った人も違和感を覚える。",
+      "choices": [
+        {
+          "id": "letGo_drunk_person",
+          "text": "酔った人がそのままにする 〔蓋然 21%〕",
+          "target": "s36_letGo_drunk_person",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_drunk_person_heard_detective_a",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "letgo_drunk_person_heard_detective_a",
+              "name": "酔った人がそのままにした",
+              "properties": {
+                "observer": {
+                  "defaultValue": "drunk_person"
+                },
+                "source_entity": {
+                  "defaultValue": "someones_cheeseburger"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s34_relook_witness_b": {
+      "id": "s34_relook_witness_b",
+      "text": "目撃者Bは探偵Aの話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_witness_b_heard_detective_a.expected_value]のはず。実際は[notice_witness_b_heard_detective_a.actual_value]。目撃者Bの違和感は残る。",
+      "choices": [
+        {
+          "id": "relook_detective_a",
+          "text": "探偵Aが見直す 〔蓋然 34%〕",
+          "target": "s37_relook_detective_a",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "detective_a",
+              "entity": "someones_cheeseburger",
+              "domain": "modern_products+witness_b",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_detective_a_heard_witness_b",
+              "eventName": "探偵Aの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s35_tell_detective_a_witness_b": {
+      "id": "s35_tell_detective_a_witness_b",
+      "text": "探偵Aは目撃者Bに、[someones_cheeseburger]の重さが思っていたのと違うと話す。目撃者Bも同じ違和感を覚えていた。二人に共通の話題ができる。",
+      "choices": [
+        {
+          "id": "relook_detective_a",
+          "text": "探偵Aが見直す 〔蓋然 34%〕",
+          "target": "s38_relook_detective_a",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "detective_a",
+              "entity": "someones_cheeseburger",
+              "domain": "modern_products+drunk_person+witness_b",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_detective_a_heard_drunk_person_witness_b",
+              "eventName": "探偵Aの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s36_letGo_drunk_person": {
+      "id": "s36_letGo_drunk_person",
+      "text": "酔った人は違和感をそのままにする。",
+      "choices": [
+        {
+          "id": "tell_witness_b_drunk_person",
+          "text": "目撃者Bが酔った人に話す 〔蓋然 28%〕",
+          "target": "s39_tell_witness_b_drunk_person",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_witness_b_heard_detective_a",
+              "value": true
+            },
+            {
+              "type": "hasEvent",
+              "key": "notice_drunk_person_heard_detective_a",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "tell_witness_b_drunk_person",
+              "name": "目撃者Bが酔った人に話した",
+              "properties": {
+                "speaker": {
+                  "defaultValue": "witness_b"
                 },
                 "listener": {
                   "defaultValue": "drunk_person"
@@ -719,10 +1387,10 @@
                   "defaultValue": "someones_cheeseburger"
                 },
                 "outcome": {
-                  "defaultValue": "disagreement"
+                  "defaultValue": "shared"
                 },
                 "severity": {
-                  "defaultValue": 80
+                  "defaultValue": 43
                 }
               }
             }
@@ -730,18 +1398,303 @@
         }
       ]
     },
-    "s13_tell_detective_a_witness_b": {
-      "id": "s13_tell_detective_a_witness_b",
-      "text": "探偵Aは目撃者Bに、[someones_cheeseburger]の重さが思っていたのと違うと話す。目撃者Bも同じ違和感を覚えていた。二人に共通の話題ができる。",
+    "s37_relook_detective_a": {
+      "id": "s37_relook_detective_a",
+      "text": "探偵Aは目撃者Bの話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_detective_a_heard_witness_b.expected_value]のはず。実際は[notice_detective_a_heard_witness_b.actual_value]。探偵Aの違和感は残る。",
       "choices": [
         {
-          "id": "verify_detective_a",
-          "text": "探偵Aが確かめる 〔蓋然 97%〕",
-          "target": "s15_verify_detective_a",
+          "id": "letGo_drunk_person",
+          "text": "酔った人がそのままにする 〔蓋然 20%〕",
+          "target": "s40_letGo_drunk_person",
           "conditions": [
             {
               "type": "hasEvent",
-              "key": "notice_detective_a",
+              "key": "notice_drunk_person_heard_detective_a",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "letgo_drunk_person_heard_detective_a",
+              "name": "酔った人がそのままにした",
+              "properties": {
+                "observer": {
+                  "defaultValue": "drunk_person"
+                },
+                "source_entity": {
+                  "defaultValue": "someones_cheeseburger"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s38_relook_detective_a": {
+      "id": "s38_relook_detective_a",
+      "text": "探偵Aは酔った人と目撃者Bの話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_detective_a_heard_drunk_person_witness_b.expected_value]のはず。実際は[notice_detective_a_heard_drunk_person_witness_b.actual_value]。探偵Aの違和感は残る。",
+      "choices": [
+        {
+          "id": "relook_witness_b",
+          "text": "目撃者Bが見直す 〔蓋然 45%〕",
+          "target": "s41_relook_witness_b",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "witness_b",
+              "entity": "someones_cheeseburger",
+              "domain": "food_items+detective_a",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_witness_b_heard_detective_a",
+              "eventName": "目撃者Bの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s39_tell_witness_b_drunk_person": {
+      "id": "s39_tell_witness_b_drunk_person",
+      "text": "目撃者Bは酔った人に、[someones_cheeseburger]の重さが思っていたのと違うと話す。酔った人も同じ違和感を覚えていた。二人に共通の話題ができる。",
+      "choices": [
+        {
+          "id": "relook_witness_b",
+          "text": "目撃者Bが見直す 〔蓋然 40%〕",
+          "target": "s42_relook_witness_b",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "witness_b",
+              "entity": "someones_cheeseburger",
+              "domain": "food_items+detective_a+drunk_person",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_witness_b_heard_detective_a_drunk_person",
+              "eventName": "目撃者Bの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s40_letGo_drunk_person": {
+      "id": "s40_letGo_drunk_person",
+      "text": "酔った人は違和感をそのままにする。",
+      "choices": [
+        {
+          "id": "tell_witness_b_drunk_person",
+          "text": "目撃者Bが酔った人に話す 〔蓋然 26%〕",
+          "target": "s43_tell_witness_b_drunk_person",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_witness_b_heard_detective_a",
+              "value": true
+            },
+            {
+              "type": "hasEvent",
+              "key": "notice_drunk_person_heard_detective_a",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "tell_witness_b_drunk_person",
+              "name": "目撃者Bが酔った人に話した",
+              "properties": {
+                "speaker": {
+                  "defaultValue": "witness_b"
+                },
+                "listener": {
+                  "defaultValue": "drunk_person"
+                },
+                "source_entity": {
+                  "defaultValue": "someones_cheeseburger"
+                },
+                "outcome": {
+                  "defaultValue": "shared"
+                },
+                "severity": {
+                  "defaultValue": 43
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s41_relook_witness_b": {
+      "id": "s41_relook_witness_b",
+      "text": "目撃者Bは探偵Aの話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_witness_b_heard_detective_a.expected_value]のはず。実際は[notice_witness_b_heard_detective_a.actual_value]。目撃者Bの違和感は残る。",
+      "choices": [
+        {
+          "id": "tell_witness_b_drunk_person",
+          "text": "目撃者Bが酔った人に話す 〔蓋然 28%〕",
+          "target": "s39_tell_witness_b_drunk_person",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_witness_b_heard_detective_a",
+              "value": true
+            },
+            {
+              "type": "hasEvent",
+              "key": "notice_drunk_person_heard_detective_a",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "tell_witness_b_drunk_person",
+              "name": "目撃者Bが酔った人に話した",
+              "properties": {
+                "speaker": {
+                  "defaultValue": "witness_b"
+                },
+                "listener": {
+                  "defaultValue": "drunk_person"
+                },
+                "source_entity": {
+                  "defaultValue": "someones_cheeseburger"
+                },
+                "outcome": {
+                  "defaultValue": "shared"
+                },
+                "severity": {
+                  "defaultValue": 43
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s42_relook_witness_b": {
+      "id": "s42_relook_witness_b",
+      "text": "目撃者Bは探偵Aと酔った人の話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_witness_b_heard_detective_a_drunk_person.expected_value]のはず。実際は[notice_witness_b_heard_detective_a_drunk_person.actual_value]。目撃者Bの違和感は残る。",
+      "choices": [
+        {
+          "id": "relook_drunk_person",
+          "text": "酔った人が見直す 〔蓋然 44%〕",
+          "target": "s44_relook_drunk_person",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "drunk_person",
+              "entity": "someones_cheeseburger",
+              "domain": "general+detective_a+witness_b",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_drunk_person_heard_detective_a_witness_b",
+              "eventName": "酔った人の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s43_tell_witness_b_drunk_person": {
+      "id": "s43_tell_witness_b_drunk_person",
+      "text": "目撃者Bは酔った人に、[someones_cheeseburger]の重さが思っていたのと違うと話す。酔った人も同じ違和感を覚えていた。二人に共通の話題ができる。",
+      "choices": [
+        {
+          "id": "relook_witness_b",
+          "text": "目撃者Bが見直す 〔蓋然 39%〕",
+          "target": "s45_relook_witness_b",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "witness_b",
+              "entity": "someones_cheeseburger",
+              "domain": "food_items+detective_a+drunk_person",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_witness_b_heard_detective_a_drunk_person",
+              "eventName": "目撃者Bの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s44_relook_drunk_person": {
+      "id": "s44_relook_drunk_person",
+      "text": "酔った人は探偵Aと目撃者Bの話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_drunk_person_heard_detective_a_witness_b.expected_value]のはず。実際は[notice_drunk_person_heard_detective_a_witness_b.actual_value]。酔った人の違和感は残る。",
+      "choices": [
+        {
+          "id": "letGo_drunk_person",
+          "text": "酔った人がそのままにする 〔蓋然 35%〕",
+          "target": "s46_letGo_drunk_person",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_drunk_person_heard_detective_a_witness_b",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "letgo_drunk_person_heard_detective_a_witness_b",
+              "name": "酔った人がそのままにした",
+              "properties": {
+                "observer": {
+                  "defaultValue": "drunk_person"
+                },
+                "source_entity": {
+                  "defaultValue": "someones_cheeseburger"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s45_relook_witness_b": {
+      "id": "s45_relook_witness_b",
+      "text": "目撃者Bは探偵Aと酔った人の話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_witness_b_heard_detective_a_drunk_person.expected_value]のはず。実際は[notice_witness_b_heard_detective_a_drunk_person.actual_value]。目撃者Bの違和感は残る。",
+      "choices": [
+        {
+          "id": "relook_drunk_person",
+          "text": "酔った人が見直す 〔蓋然 42%〕",
+          "target": "s47_relook_drunk_person",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "drunk_person",
+              "entity": "someones_cheeseburger",
+              "domain": "general+detective_a+witness_b",
+              "expectations": {
+                "weight": 0.1
+              },
+              "eventId": "notice_drunk_person_heard_detective_a_witness_b",
+              "eventName": "酔った人の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s46_letGo_drunk_person": {
+      "id": "s46_letGo_drunk_person",
+      "text": "酔った人は違和感をそのままにする。",
+      "choices": [
+        {
+          "id": "verify_detective_a",
+          "text": "探偵Aが確かめる 〔蓋然 37%〕",
+          "target": "s48_verify_detective_a",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_detective_a_heard_drunk_person_witness_b",
               "value": true
             }
           ],
@@ -769,30 +1722,55 @@
         }
       ]
     },
-    "s14_verify_detective_a": {
-      "id": "s14_verify_detective_a",
-      "text": "探偵Aは[someones_cheeseburger]の重さを確かめる。[someones_cheeseburger.weight]。見込みの0.1とは違っていた。\n\n違和感は確かめられ、事実として残った。"
-    },
-    "s15_verify_detective_a": {
-      "id": "s15_verify_detective_a",
-      "text": "探偵Aは[someones_cheeseburger]の重さを確かめる。[someones_cheeseburger.weight]。見込みの0.1とは違っていた。\n\n違和感は確かめられ、事実として残った。"
-    },
-    "s16_verify_detective_a": {
-      "id": "s16_verify_detective_a",
-      "text": "探偵Aは[someones_cheeseburger]の重さを確かめる。[someones_cheeseburger.weight]。見込みの0.1とは違っていた。\n\n違和感は確かめられ、事実として残った。"
-    },
-    "s17_look_detective_a": {
-      "id": "s17_look_detective_a",
-      "text": "探偵Aは[someones_cheeseburger]を見る。重さは[notice_detective_a.expected_value]のはずだと思っていた。実際は[notice_detective_a.actual_value]。探偵Aは違和感を覚える。",
+    "s47_relook_drunk_person": {
+      "id": "s47_relook_drunk_person",
+      "text": "酔った人は探偵Aと目撃者Bの話を踏まえて、[someones_cheeseburger]をもう一度見る。重さは[notice_drunk_person_heard_detective_a_witness_b.expected_value]のはず。実際は[notice_drunk_person_heard_detective_a_witness_b.actual_value]。酔った人の違和感は残る。",
       "choices": [
         {
-          "id": "verify_detective_a",
-          "text": "探偵Aが確かめる 〔蓋然 32%〕",
-          "target": "s22_verify_detective_a",
+          "id": "letGo_drunk_person",
+          "text": "酔った人がそのままにする 〔蓋然 27%〕",
+          "target": "s49_letGo_drunk_person",
           "conditions": [
             {
               "type": "hasEvent",
-              "key": "notice_detective_a",
+              "key": "notice_drunk_person_heard_detective_a_witness_b",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "letgo_drunk_person_heard_detective_a_witness_b",
+              "name": "酔った人がそのままにした",
+              "properties": {
+                "observer": {
+                  "defaultValue": "drunk_person"
+                },
+                "source_entity": {
+                  "defaultValue": "someones_cheeseburger"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s48_verify_detective_a": {
+      "id": "s48_verify_detective_a",
+      "text": "探偵Aは[someones_cheeseburger]の重さを確かめる。[someones_cheeseburger.weight]。見込みの0.1とは違っていた。\n\n違和感は確かめられ、事実として残った。"
+    },
+    "s49_letGo_drunk_person": {
+      "id": "s49_letGo_drunk_person",
+      "text": "酔った人は違和感をそのままにする。",
+      "choices": [
+        {
+          "id": "verify_detective_a",
+          "text": "探偵Aが確かめる 〔蓋然 44%〕",
+          "target": "s50_verify_detective_a",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_detective_a_heard_witness_b",
               "value": true
             }
           ],
@@ -820,98 +1798,8 @@
         }
       ]
     },
-    "s18_verify_detective_a": {
-      "id": "s18_verify_detective_a",
-      "text": "探偵Aは[someones_cheeseburger]の重さを確かめる。[someones_cheeseburger.weight]。見込みの0.1とは違っていた。\n\n違和感は確かめられ、事実として残った。"
-    },
-    "s19_look_detective_a": {
-      "id": "s19_look_detective_a",
-      "text": "探偵Aは[someones_cheeseburger]を見る。重さは[notice_detective_a.expected_value]のはずだと思っていた。実際は[notice_detective_a.actual_value]。探偵Aは違和感を覚える。",
-      "choices": [
-        {
-          "id": "verify_detective_a",
-          "text": "探偵Aが確かめる 〔蓋然 32%〕",
-          "target": "s23_verify_detective_a",
-          "conditions": [
-            {
-              "type": "hasEvent",
-              "key": "notice_detective_a",
-              "value": true
-            }
-          ],
-          "effects": [
-            {
-              "type": "createEvent",
-              "id": "verify_detective_a",
-              "name": "探偵Aが確かめた",
-              "properties": {
-                "observer": {
-                  "defaultValue": "detective_a"
-                },
-                "source_entity": {
-                  "defaultValue": "someones_cheeseburger"
-                },
-                "primary_property": {
-                  "defaultValue": "weight"
-                },
-                "actual_value": {
-                  "defaultValue": 0.12
-                }
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "s20_verify_detective_a": {
-      "id": "s20_verify_detective_a",
-      "text": "探偵Aは[someones_cheeseburger]の重さを確かめる。[someones_cheeseburger.weight]。見込みの0.1とは違っていた。\n\n違和感は確かめられ、事実として残った。"
-    },
-    "s21_tell_detective_a_drunk_person": {
-      "id": "s21_tell_detective_a_drunk_person",
-      "text": "探偵Aは酔った人に、[someones_cheeseburger]の重さが思っていたのと違うと話す。酔った人は自分で見て何も気に留めなかった。二人の見方は食い違う。",
-      "choices": [
-        {
-          "id": "verify_detective_a",
-          "text": "探偵Aが確かめる 〔蓋然 97%〕",
-          "target": "s15_verify_detective_a",
-          "conditions": [
-            {
-              "type": "hasEvent",
-              "key": "notice_detective_a",
-              "value": true
-            }
-          ],
-          "effects": [
-            {
-              "type": "createEvent",
-              "id": "verify_detective_a",
-              "name": "探偵Aが確かめた",
-              "properties": {
-                "observer": {
-                  "defaultValue": "detective_a"
-                },
-                "source_entity": {
-                  "defaultValue": "someones_cheeseburger"
-                },
-                "primary_property": {
-                  "defaultValue": "weight"
-                },
-                "actual_value": {
-                  "defaultValue": 0.12
-                }
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "s22_verify_detective_a": {
-      "id": "s22_verify_detective_a",
-      "text": "探偵Aは[someones_cheeseburger]の重さを確かめる。[someones_cheeseburger.weight]。見込みの0.1とは違っていた。\n\n違和感は確かめられ、事実として残った。"
-    },
-    "s23_verify_detective_a": {
-      "id": "s23_verify_detective_a",
+    "s50_verify_detective_a": {
+      "id": "s50_verify_detective_a",
       "text": "探偵Aは[someones_cheeseburger]の重さを確かめる。[someones_cheeseburger.weight]。見込みの0.1とは違っていた。\n\n違和感は確かめられ、事実として残った。"
     }
   }
