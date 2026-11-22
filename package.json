@@ -62,6 +62,7 @@
     "test:e2e:sites-adapter": "npm run test:e2e -w @narrativegen/sites-public-studio-adapter",
     "test:watch": "npm run test -w @narrativegen/engine-ts -- --watch",
     "validate": "npm run validate:engine",
+    "generate:story": "npm run build:engine && node packages/engine-ts/dist/tools/generate-story.js",
     "validate:engine": "npm run validate:models -w @narrativegen/engine-ts",
     "format": "npm run format:engine && npm run format:tester",
     "format:engine": "npm run format -w @narrativegen/engine-ts",

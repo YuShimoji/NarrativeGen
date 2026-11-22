@@ -24,6 +24,14 @@ Pick a story at the top, then use 実行 to play while the right column explains
 
 To edit, press 「この場面を編集」 on a scene: the text, speaker, choices, targets (including a new scene), conditions (including knowledge rules, entity properties and nested all/any/not) and effects (including perception) become editable, together with scene-entry perception policies, the characters/entities definitions under 「人物と物」, and scene rename/delete; the right column re-traces on every change. 「保存」 writes a `models/` story back to its own JSON file through the dev server after the engine's schema and integrity check; a dropped file is downloaded instead.
 
+## Story From Premises (prototype)
+
+```powershell
+npm run generate:story -- models/premises/cheeseburger-weight.json
+```
+
+Reads things, characters, beliefs and a scene from a premise file, lets the engine decide who notices a gap, chooses who looks, tells, checks or lets go by premise-derived weights, and writes an ordinary model to `models/generated/` (shown in Studio as 「<name>（前提から生成）」) together with a readable account of why each step was probable. Method, limits and open decisions: [`docs/specs/premise-driven-story.md`](docs/specs/premise-driven-story.md). The whole authoring workflow: [`docs/specs/pipeline-workflow.md`](docs/specs/pipeline-workflow.md).
+
 ## Playable Vertical Slice First
 
 The current canonical playable artifact is:
@@ -71,7 +79,7 @@ This route must stay playable before broader test, lint, CI, schema, or refactor
 - `packages/tests/` - .NET tests for the Unity SDK
 - `apps/studio/` - Studio: engine judgment viewer, whole-story check and in-place editing (primary surface)
 - `apps/web-tester/` - legacy Web Tester UI (editing, export) and Playwright E2E tests; no new features
-- `models/` - schema, example models, and spreadsheet samples
+- `models/` - schema, example models, spreadsheet samples, premise files (`premises/`) and stories generated from them (`generated/`)
 - `docs/` - specs, operations docs, checklists, and governance notes
 
 ## Requirements

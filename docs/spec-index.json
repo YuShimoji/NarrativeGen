@@ -325,12 +325,12 @@
   },
   {
     "id": "SP-PIPE-001",
-    "title": "Designer Pipeline Workflow",
+    "title": "Authoring Workflow",
     "status": "done",
     "pct": 100,
     "cat": "system",
     "file": "docs/specs/pipeline-workflow.md",
-    "summary": "End-to-end workflow for story creation: Design → Author → Validate → Export → Integrate. HUMAN_AUTHORITY 5件反映済み (1人運用/JSON主軸/AI支援スコープ外/AUTHORING_GUIDE拡張)。WritingPage連携は延期 (安定待ち)。"
+    "summary": "2026-11-22体系化。7工程: 前提を置く → 組む（前提から／手で） → 判断を見る → 全体を点検する → 直す・文章を書く → 保存して守る → 出す・つなぐ（凍結中）。人・エンジン（必然）・生成器（蓋然）・AIの決める範囲と、直す場所の決め方を定義。HUMAN_AUTHORITY 5件は変更なし（#4と前提生成の関係はuser判断待ち）。"
   },
   {
     "id": "SP-STUDIO-001",
@@ -340,5 +340,14 @@
     "cat": "core",
     "file": "docs/specs/studio-rebuild.md",
     "summary": "2026-11-21 rebuild: read-only engine trace (traceStart/traceStep/checkModel) and apps/studio that shows engine judgments instead of JSON; game layer frozen. In-place editing with save to models/: text, choices, conditions incl. knowledge rules, property and nested and/or/not, perception effects and scene-entry policies, characters/entities/knowledge-rule definitions, scene rename/delete. Template/lexicon editing and web-tester retirement remain."
+  },
+  {
+    "id": "SP-PREMISE-001",
+    "title": "Premise-Driven Story Construction (Prototype)",
+    "status": "partial",
+    "pct": 30,
+    "cat": "core",
+    "file": "docs/specs/premise-driven-story.md",
+    "summary": "2026-11-22試作。物・人物・思い込み・場（と任意の意図）から物語を組む。違和感はエンジンのperceiveEntityが決め（必然）、見る・話す・確かめる・そのままにするは前提の数値による重みで選ぶ（蓋然）。全展開を数えて結末の割合と意図を満たす主線を出し、通常のモデルと導出の記録を返す。generateStory / describeDerivation、npm run generate:story。行為・重み・意図の語彙・骨子文はuserの採否待ち。"
   }
 ]

@@ -11,9 +11,16 @@ import {
 } from './format.js'
 import * as edit from './edit.js'
 
-const samples = import.meta.glob('../../../models/examples/*.json', { import: 'default' })
+// models/generated holds stories built from models/premises (SP-PREMISE-001); they open like any other story
+const samples = {
+  ...import.meta.glob('../../../models/examples/*.json', { import: 'default' }),
+  ...import.meta.glob('../../../models/generated/*.json', { import: 'default' }),
+}
 const sampleList = Object.keys(samples)
-  .map((p) => ({ path: p, name: p.split('/').pop().replace(/\.json$/, '') }))
+  .map((p) => {
+    const base = p.split('/').pop().replace(/\.json$/, '')
+    return { path: p, name: p.includes('/models/generated/') ? `${base}（前提から生成）` : base }
+  })
   .sort((a, b) => a.name.localeCompare(b.name))
 
 const DEFAULT_SAMPLE = 'originality-spine-probe'

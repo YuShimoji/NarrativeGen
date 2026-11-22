@@ -1,7 +1,7 @@
 # Development Plan
 
 Status: roadmap source of truth
-Last updated: 2026-11-21 (Studio rebuild)
+Last updated: 2026-11-22 (premise-driven story prototype)
 
 This file is the single roadmap document. Agent operating rules live in `docs/REPO_LOCAL_RULES.md`; current state and next resume steps live in the root `HANDOVER.md`; feature/spec status lives in `docs/spec-index.json`; durable decisions live in `docs/governance/decision-log.md`.
 
@@ -21,6 +21,8 @@ This file is the single roadmap document. Agent operating rules live in `docs/RE
      semantics stay unchanged unless a separate decision says otherwise.
    - NarrativeGen remains an independent experimental narrative-generation
      system, not a story supplier (decision log, 2026-09-28).
+
+   - 2026-11-22: the user asked to systematize the workflow, make the story-construction method concrete, and prototype a system that builds a story from a few premises. [SP-PIPE-001](../specs/pipeline-workflow.md) now defines seven steps, and [SP-PREMISE-001](../specs/premise-driven-story.md) adds `generateStory` (engine perception decides who notices; premise-derived weights choose who looks, tells, checks or lets go). The method details are the assistant's provisional choices and wait for the user's adoption decision; a premise screen in Studio comes only after that.
 
 2. **Public Studio private-compatibility gate (frozen during the rebuild)**
    - Frozen with the rest of the game layer on 2026-11-21. The notes below are kept for when it reopens as its own work unit.

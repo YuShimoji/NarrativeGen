@@ -12,7 +12,9 @@ export function esc(value) {
 
 export function num(value) {
   if (typeof value !== 'number' || !Number.isFinite(value)) return String(value ?? '')
-  return Number.isInteger(value) ? String(value) : value.toFixed(1)
+  if (Number.isInteger(value)) return String(value)
+  // three significant digits, so a tolerance like 0.085〜0.115 does not collapse to 0.1〜0.1
+  return Math.abs(value) >= 100 ? value.toFixed(1) : String(Number(value.toPrecision(3)))
 }
 
 /** Names the author wrote in the model, looked up by id. */

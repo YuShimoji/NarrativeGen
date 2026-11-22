@@ -1,219 +1,112 @@
-# SP-PIPE-001: Designer Pipeline Workflow
+# SP-PIPE-001: 制作ワークフロー
 
-**ステータス**: done (100%)
-**作成日**: 2026-03-23
+**ステータス**: done（ワークフローの定義。各工程の道具の状態は下の表）
+**作成日**: 2026-03-23 / **体系化**: 2026-11-22
 **カテゴリ**: system
-
----
 
 ## 目的
 
-NarrativeGen を使ってストーリーを完成させるまでのエンドツーエンドワークフローを定義する。
-「誰が」「何を」「どの順序で」「どのツールで」行うかを明確にし、手動介入と自動化の境界を引く。
+NarrativeGenで物語を作る時に、誰が・何を・どの順で・どの道具で行うかを一つにまとめる。
+2026-11-22のuser依頼「このプロジェクトの構築しようとしている開発ワークフローを体系化したい」に基づき、
+2026-11-21の再構築（Studioが主画面、ゲーム層は凍結）と、前提から物語を組む試作（[SP-PREMISE-001](premise-driven-story.md)）を反映した。
+旧版（Web Tester中心の5ステージ）はGit履歴にある。
 
----
+## 考え方
 
-## 対象ペルソナ
+作者は世界を定義し、エンジンが帰結を導き、作者がその判断を見て直す。場面を一つずつつなぐ作業を減らし、
+「なぜそうなったか」を画面で確かめながら進める。決める主体は4つに分ける。
 
-> **運用実態**: 1人で全ステージを担当する。以下の3分類は設計上の関心分離であり、「帽子の切替」として理解する。
+| 主体 | 決めること | 決めないこと |
+|---|---|---|
+| 人（作者） | 物・人物・思い込み・場・意図、文章、採否、表現 | — |
+| エンジン（必然） | 違和感の有無、出来事、文章の展開、選択肢の開閉、物語全体の点検 | 何を物語にするか |
+| 生成器（蓋然・試作） | 前提から起こりうる展開とその割合、意図に合う主線 | 文章、前提の中身 |
+| AI（開発担当） | 制作システムの実装・検査・文書、比較材料の用意 | 物語の文章、表現の採否 |
 
-### P1: ライター (Writer)
-- 物語の構造・テキスト・分岐を設計する主作業者
-- プログラミング知識は不要
-- Web Tester GUI を主に使用
+1人運用で、ライター／テクニカルデザイナー／インテグレーターは帽子の切替（2026-03-27の確認結果を維持）。
 
-### P2: テクニカルデザイナー (Technical Designer)
-- 条件・効果・推論・エンティティの設計を担当
-- JSON 直接編集も可能
-- エンジンAPIの知識がある
+## 全体の流れ
 
-### P3: インテグレーター (Integrator)
-- NarrativeGen モデルを Unity / 他のランタイムに統合する担当
-- C# SDK / エクスポートフォーマットを使用
-
----
-
-## Pipeline 全体像
-
+```mermaid
+flowchart TD
+  A["1 前提を置く<br/>物・人物・思い込み・場"] --> B{"2 組む"}
+  B -->|"前提から組む（試作）"| C["生成した物語＋導出の記録"]
+  B -->|"手で組む"| D["Studioで場面と選択肢を置く"]
+  C --> E["3 判断を見る<br/>Studio 実行"]
+  D --> E
+  E --> F["4 全体を点検する<br/>Studio 点検"]
+  F -->|"前提がずれている"| A
+  F -->|"場面を直す"| G["5 直す・文章を書く<br/>その場で編集"]
+  G --> E
+  G --> H["6 保存して守る<br/>保存・検査・試験"]
+  H --> I["7 出す・つなぐ<br/>（凍結中）"]
 ```
-[Stage 1]       [Stage 2]        [Stage 3]       [Stage 4]        [Stage 5]
- 構想・設計  →  コンテンツ制作  →  検証・調整  →  エクスポート  →  ランタイム統合
- (Design)      (Author)          (Validate)      (Export)         (Integrate)
-```
 
-### Stage 1: 構想・設計 (Design)
+図は工程の順と戻り先を表す。ひし形は組み方の分岐、点検からの2本の矢印は直す場所の違い（前提か場面か）。
+5から3へ戻る輪が日常の作業で、1へ戻るのは世界の定義を変える時。
 
-**担当**: P1 (ライター) + P2 (テクニカルデザイナー)
-**ツール**: テキストエディタ / ホワイトボード / NarrativeGen Web Tester (NodeGraph タブ)
-**手動介入**: 100% (創造的作業)
+## 工程
 
-| 作業 | 入力 | 出力 | 自動化可能性 |
-|------|------|------|-------------|
-| ストーリー構造設計 (ビート表) | アイデア | ノード構成案 | 低 (スコープ外: Decision #4) |
-| 世界設定定義 | 設定メモ | Entity 定義 | 低 |
-| キャラクター設計 | キャラ設定 | CharacterDef + KnowledgeProfile | 低 |
-| 分岐ロジック設計 | ストーリー構造 | 条件/効果の設計 | 中 (推論エンジンで検証可) |
-| テンプレート設計 | 会話パターン | ConversationTemplate 定義 | 低 |
+| # | 工程 | 人がすること | 機械がすること | 道具・入口 | 成果物 | 状態 |
+|---|---|---|---|---|---|---|
+| 1 | 前提を置く | 物と性質、人物の知識、思い込み、場、（任意で）意図を書く | 形の検査（生成時） | `models/premises/*.json`を手書き。物・人物は既存モデルならStudioの「人物と物」 | 前提ファイル、またはモデル内の定義 | 前提ファイルは試作（画面なし） |
+| 2a | 前提から組む | 生成を実行し、導出の記録を読む | 違和感の判定、展開の列挙、主線の選別、モデルの組み立て | `npm run generate:story -- models/premises/<名前>.json` | `models/generated/<名前>.json`、導出の記録 | 試作 |
+| 2b | 手で組む | 場面・選択肢・行き先・条件・効果を置く | 条件と効果の検査 | Studio「この場面を編集」 | `models/examples/*.json` | 使える |
+| 3 | 判断を見る | 物語を進め、右列の判断を読む | 知覚・状態の変化・本文の組み立て・選択肢の開閉の記録 | `npm run dev:studio` → 実行 | —（確認） | 使える |
+| 4 | 全体を点検する | 結末・行き止まり・開かない選択肢を読み、直す場所を決める | 開いている選択肢をすべて実際に選んで調べる | Studio 点検 | —（確認） | 使える（数値が増え続ける物語は状態数2000で打ち切り） |
+| 5 | 直す・文章を書く | 本文・選択肢・条件・知識ルール・人物と物を直す。骨子文を自分の文章にする | 変更のたびに同じ道筋を再トレース | Studio「その場で編集」 | 編集中のモデル | 本文・条件・定義は使える。会話テンプレート・言い換え辞書・経過数の編集は未対応 |
+| 6 | 保存して守る | 保存を押す。コミットする | `loadModel`の検査、保存前の点検、試験 | Studio 保存、`npm run check:safety`、`npm run test:engine` | 元のJSON | 使える |
+| 7 | 出す・つなぐ | 出力形式を選び、ランタイムへ置く | 変換、SDKでの実行 | 旧Web Testerの出力（JSON/CSV/Yarn/Ink/Twine）、Unity SDK | 各ランタイム用ファイル | 凍結（再構築の区切りでuserが再開を決める） |
 
-**この段階の成果物**: ストーリー構造図 + 世界設定 + キャラクター設計
+### 2aと2bの使い分け
 
-### Stage 2: コンテンツ制作 (Author)
+- 2a（前提から組む）: 世界の定義から何が起こるかを先に見たい時。前提の数値を変えて結末の割合を比べられる。
+  出来上がるのは骨子文の物語で、文章は5で書く。
+- 2b（手で組む）: 決まった筋を書く時、または2aの生成物を土台に育てる時。
+- 生成物を手で直すと、前提からの再生成と食い違う。直して育てる物語は`models/examples/`へ写す運用を想定している（未決。SP-PREMISE-001 6節）。
 
-**担当**: P1 (ライター) が主、P2 (テクニカルデザイナー) が補助
-**ツール**: NarrativeGen Web Tester
-**手動介入**: 80% (テキスト入力) / 20% (ツール支援)
+### 直す場所の決め方
 
-| 作業 | 使用画面/機能 | 手動 vs 自動 |
-|------|-------------|-------------|
-| ノード作成・テキスト入力 | GUI Editor (ビジュアルエディタ) | 手動 |
-| 選択肢作成・接続 | GUI Editor + NodeGraph | 手動 (D&D 対応) |
-| 条件/効果設定 | condition-effect-editor | 半自動 (ドロップダウン選択) |
-| Entity 定義 | Entity パネル (CRUD GUI) | 半自動 |
-| Dynamic Text 記述 | テキストエリア + インラインプレビュー | 手動 (プレビュー自動) |
-| 言い換え辞書編集 | Lexicon UI | 手動 |
-| ConversationTemplate 設定 | Template パネル (CRUD GUI) | 半自動 |
-| CSV/スプレッドシートからのインポート | CSV Import Handler | 自動 (パース) |
-| 自動保存 | Save/Load Handler | 完全自動 (500ms debounce) |
+| 見えたこと | 直す場所 | 戻る工程 |
+|---|---|---|
+| 違和感が起きるはずの人物に起きない／起きないはずなのに起きる | 見込み、許容幅、物の性質 | 1（2aなら組み直し、2bならStudioの知識ルール・人物と物） |
+| 結末の割合が意図と違う（生成） | 人物の知識の正確さ、場にいる人物、意図 | 1 |
+| 行き止まり、開かない選択肢、解決できない参照 | 条件・効果・行き先 | 5 |
+| 文章が骨子のまま、言い回しが合わない | 本文、骨子文の型 | 5 |
 
-**この段階の成果物**: JSON モデルファイル (playthrough.schema.json 準拠)
+## 手動と自動の境界
 
-#### 2a: WritingPage 連携 (延期中)
+- 人だけが行う: 前提の中身を決めること、文章を書くこと、物語と表現の採否、ゲーム層の再開の判断。
+- 機械が行う: 違和感の判定、展開の列挙と割合、点検、検査、試験。
+- 構想（旧Stage 1）へのAI支援はスコープ外という2026-03-27の確認結果は変えていない。2aは規則と前提の数値だけで組み、
+  LLMを使わないが、物語の構造を機械が組む点で「構想は100%手動」とした旧定義と異なる。この扱いはuserの判断待ち。
 
-WritingPage で執筆したテキストを NarrativeGen のノードに流し込む、またはその逆。
-- NarrativeGen → WritingPage: ノードテキストを長文執筆環境で編集
-- WritingPage → NarrativeGen: 執筆済みテキストをノード構造に変換
+## 現在の不足
 
-**ステータス**: DECISION LOG (2026-03-08) で双方向連携を決定。WritingPage (v0.3.32) のフォーマットが不安定なため延期。早期実装コードは stash 退避済み (2026-04-03)。拒否ではなくタイミング調整。WritingPage 側が安定した段階で次スライス候補として再開する。  
-**準備仕様**: `docs/specs/writingpage-io-contract.md`（最小 I/O 契約、versioning、非互換時挙動、着手ゲート）
+| 不足 | 影響 | 次の一手 |
+|---|---|---|
+| 前提を書く画面が無い（JSON手書き） | 1の手間が大きく、数値を変えて比べる往復が遅い | 2aの方式の採否が決まってから、Studioに前提の画面を置くかを決める |
+| 蓋然と理由がStudioの右列に出ない | 3で「なぜこの展開か」を見るのに導出の記録を別に開く | 同上 |
+| 生成物を直した後の扱いが未決 | 2aと5を行き来すると食い違う | userが運用を決める |
+| 会話テンプレート・言い換え辞書を編集できない | 5で差し込み文と言い換えを直せない | Studio編集の受入の後 |
+| 7が凍結中 | 作った物語をゲームへ渡す経路を今は使わない | 再構築の区切りでuserが再開を決める |
+| WritingPage連携は延期中 | 長文の執筆をStudio内で行う | 着手条件は[writingpage-io-contract.md](writingpage-io-contract.md) |
 
-### Stage 3: 検証・調整 (Validate)
-
-**担当**: P1 + P2
-**ツール**: NarrativeGen Web Tester (複数機能)
-**手動介入**: 30% / 70% (ツール支援)
-
-| 作業 | 使用機能 | 手動 vs 自動 |
-|------|---------|-------------|
-| スキーマ検証 | Model Validator (Ajv) | 完全自動 |
-| 構造検証 (循環参照・孤立ノード・未定義参照) | Validation Panel | 完全自動 |
-| 到達可能性分析 | Inference Engine (UC-2) | 完全自動 |
-| パス分析 (全ルート確認) | Inference Engine (UC-1) + Ending Analyzer | 完全自動 |
-| 影響分析 (条件/効果の波及) | Inference Panel (UC-3) | 完全自動 |
-| What-if シミュレーション | Inference Panel (UC-5) | 半自動 (条件設定は手動) |
-| グラフ視覚確認 | NodeGraph + 推論ハイライト | 手動 (目視) |
-| プレイテスト | Story タブ / Play モード | 手動 (操作) |
-| 統計確認 | Stats Panel | 自動 (表示) |
-| テキスト品質確認 | Play モード (段落フェードイン) | 手動 (目視) |
-| 画像/BGM 確認 | Play モード (Phase 2) | 手動 (操作) |
-
-**この段階の成果物**: 検証済みモデルファイル
-
-### Stage 4: エクスポート (Export)
-
-**担当**: P2 (テクニカルデザイナー) / P3 (インテグレーター)
-**ツール**: NarrativeGen Web Tester (Export メニュー)
-**手動介入**: 10% (形式選択のみ)
-
-| 出力形式 | 用途 | 対応状況 |
-|---------|------|---------|
-| JSON (NarrativeGen native) | engine-ts / sdk-unity ランタイム | 実装済み |
-| CSV | スプレッドシート編集 / 外部ツール連携 | 実装済み |
-| Yarn Spinner (.yarn) | Unity Yarn Spinner ランタイム | 実装済み (Dynamic Text 未変換) |
-| Ink (.ink) | Inkle ランタイム | 実装済み |
-| Twine (.html) | Twine ランタイム | 実装済み |
-
-**制限事項**:
-- Dynamic Text 構文 (`[entity.property]`, `{?condition:text}`) は Yarn/Ink/Twine で非互換。変換ルールが未定義
-- Entity-Property / ConversationTemplate / Event はJSON以外のフォーマットでは部分的にしかエクスポートされない
-
-**この段階の成果物**: ターゲットランタイム用ファイル
-
-### Stage 5: ランタイム統合 (Integrate)
-
-**担当**: P3 (インテグレーター)
-**ツール**: Unity Editor + NarrativeGen SDK / 各ランタイムツール
-**手動介入**: 60% (設定・UI接続)
-
-| 作業 | ツール | 手動 vs 自動 |
-|------|-------|-------------|
-| モデルファイル配置 | ファイルコピー | 手動 |
-| SDK セットアップ | Unity Package Manager | 半自動 |
-| UI 接続 (テキスト表示・選択肢ボタン) | Unity C# | 手動 |
-| 条件/効果のランタイム実行 | engine-ts / sdk-unity | 自動 |
-| セーブ/ロード統合 | SDK serialize/deserialize | 半自動 |
-
-**制限事項**:
-- SP-UNITY-001 で定義した runtime scope は完了。Entity 継承プロパティ、Dynamic Text 主要展開/追跡、Event、Description Tracker、ConversationTemplate は C# 経路を持つ
-- TypeScript の authoring/analysis helper である Anomaly Detection と Character Knowledge / Perception Policy は同等の C# API をまだ持たない。Unity runtime 内で直接評価する場合は別 parity slice が必要
-
----
-
-## 手動介入 vs 自動化 マトリクス
-
-| ステージ | 手動率 | 自動化候補 | 実装状況 |
-|---------|--------|-----------|---------|
-| Stage 1: 構想 | 100% | AI によるストーリー構造提案 | スコープ外 (Decision #4) |
-| Stage 2: 制作 | 80% | CSV インポート、テンプレートGUI、自動保存 | 実装済み |
-| Stage 3: 検証 | 30% | スキーマ/構造/到達/パス/影響 全自動 | 実装済み |
-| Stage 4: エクスポート | 10% | 形式選択のみ手動 | 実装済み (DT 変換除く) |
-| Stage 5: 統合 | 60% | SDK 基盤は提供、UI 接続は手動 | SDK core 完了 / project UI 接続は手動 |
-
----
-
-## 現在の Gap と優先課題
-
-### Gap 1: WritingPage 連携 (Stage 2a)
-- **状態**: 延期中 (WritingPage v0.3.32 のフォーマット不安定のため)。早期実装コードは stash 退避済み
-- **着手ゲート判定 (2026-04-09)**: `docs/specs/writingpage-io-contract.md` のログ参照。**No-Go**（外部安定・合意・サンプル未充足）。SP-PLAY-001 はクローズ済みのためゲート項目4のみ充足。
-- **影響**: ライターの長文執筆体験が Web Tester の小さなテキストエリアに制約される
-- **優先度**: 中 (延期: WritingPage 安定待ち。拒否ではない)
-
-### Gap 2: Dynamic Text エクスポート変換 (Stage 4)
-- **状態**: NarrativeGen 独自構文がターゲットフォーマットに変換されない
-- **影響**: JSON 以外のエクスポート時に動的テキスト機能が失われる
-- **優先度**: 低 (Decision #3: JSON 主軸戦略により、DT/Entity/Template は JSON + 独自ランタイムが主要パス。他形式は互換用)
-
-### Gap 3: Unity SDK パリティ (Stage 5)
-- **状態**: TS 側 7 機能が C# 未移植
-- **影響**: Unity ランタイムで原初ビジョン機能が使えない
-- **優先度**: 高 (Unity 統合が主要ユースケース)
-
-### Gap 4: Pipeline 自体の可視化
-- **状態**: AUTHORING_GUIDE.md を全5ステージに拡張して対応 (Decision #5)
-- **影響**: 新規ユーザーの学習コストが高い
-- **優先度**: 対応済み (AUTHORING_GUIDE.md に Stage 1/3/4/5 を追加)
-
-### Gap 5: ステージ間データ同期
-- **状態**: Stage 2→3→4 はWeb Tester内で完結するが、Stage 1→2 (設計→制作) と Stage 4→5 (エクスポート→統合) の接続が手作業
-- **影響**: ステージ遷移で情報が失われるリスク
-- **優先度**: 低 (現時点ではシングルユーザー運用)
-
----
-
-## 関連仕様
-
-- SP-SCHEMA-001: Model Schema (Stage 2-4 のデータフォーマット)
-- SP-ENGINE-001: Engine Core API (Stage 3, 5 のランタイム基盤)
-- SP-ENTITY-001: Entity/Inventory (Stage 2 のエンティティ制作)
-- SP-PROP-001: Entity-Property System (Stage 2 のプロパティ制作)
-- SP-TEXT-001: Dynamic Text Engine (Stage 2 のテキスト制作)
-- SP-DYNAMIC-001: Dynamic Story Expansion (Stage 2 のテンプレート制作)
-- SP-INF-UI-001: Inference UI Integration (Stage 3 の検証ツール)
-- SP-PLAY-001: Play Immersion (Stage 3 のプレイテスト)
-- SP-EXP-YARN-001: Yarn Spinner Export (Stage 4)
-- SP-DTYARN-001: Dynamic Text → Yarn（Stage 4 拡張、[dynamic-text-yarn-export.md](dynamic-text-yarn-export.md)、計画中）
-- SP-UNITY-001: Unity SDK (Stage 5)
-
-**メモ**: Web 依存のメジャー更新は [vite-upgrade-branch-checklist.md](../plans/vite-upgrade-branch-checklist.md)。WritingPage 連携は引き続き外部フォーマット安定待ち。
-
----
-
-## HUMAN_AUTHORITY 確認結果 (2026-03-27)
+## HUMAN_AUTHORITY 確認結果（2026-03-27、変更なし）
 
 | # | 項目 | 決定 | 備考 |
 |---|------|------|------|
-| 1 | ペルソナの妥当性 | **1人運用** | P1/P2/P3 は「帽子の切替」として理解。3分類は設計上の関心分離として維持 |
-| 2 | WritingPage 連携の優先度 | **延期 (WritingPage 安定待ち)** | 次スライス候補として維持。WritingPage v0.3.32 のフォーマット不安定により延期 (2026-04-03) |
-| 3 | エクスポート戦略 | **JSON 主軸** | NarrativeGen 独自機能 (DT/Entity/Template) が活きるのは JSON + 独自ランタイムのみ。他形式は互換用 |
-| 4 | Stage 1 AI 支援 | **スコープ外** | 構想は人間の仕事。AI 支援は当面不要 |
-| 5 | Pipeline ガイドの形態 | **AUTHORING_GUIDE 拡張** | 既存 AUTHORING_GUIDE.md に Stage 1/3/4/5 を追加し、全体像を一箇所で把握可能にする |
+| 1 | ペルソナの妥当性 | **1人運用** | P1/P2/P3 は「帽子の切替」。3分類は設計上の関心分離として維持 |
+| 2 | WritingPage 連携の優先度 | **延期 (WritingPage 安定待ち)** | 次スライス候補として維持 (2026-04-03) |
+| 3 | エクスポート戦略 | **JSON 主軸** | 独自機能が活きるのは JSON + 独自ランタイムのみ。他形式は互換用 |
+| 4 | Stage 1 AI 支援 | **スコープ外** | 構想は人間の仕事。2aの試作との関係はuserの判断待ち（上記） |
+| 5 | Pipeline ガイドの形態 | **AUTHORING_GUIDE 拡張** | `docs/AUTHORING_GUIDE.md`は旧Web Tester中心の記述のまま（未更新） |
+
+## 関連仕様
+
+- [SP-STUDIO-001](studio-rebuild.md): 工程3〜6の画面と判断の記録
+- [SP-PREMISE-001](premise-driven-story.md): 工程1・2aの方法と試作
+- SP-KNOW-001 / SP-KNOW-002 / SP-ANOMALY-001 / SP-EVENT-001: 必然の段（知識・違和感・出来事）
+- SP-TGEN-001 / SP-TEXT-001 / SP-DYNAMIC-001: 文章の展開と差し込み
+- SP-SCHEMA-001 / SP-ENGINE-001: モデルの形と実行
+- SP-EXP-YARN-001 / SP-UNITY-001: 工程7（凍結中）
