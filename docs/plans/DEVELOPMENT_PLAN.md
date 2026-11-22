@@ -1,7 +1,7 @@
 # Development Plan
 
 Status: roadmap source of truth
-Last updated: 2026-11-22 (premise-driven story prototype)
+Last updated: 2026-11-22 (premise-driven story adopted; rules consolidated)
 
 This file is the single roadmap document. Agent operating rules live in `docs/REPO_LOCAL_RULES.md`; current state and next resume steps live in the root `HANDOVER.md`; feature/spec status lives in `docs/spec-index.json`; durable decisions live in `docs/governance/decision-log.md`.
 
@@ -22,7 +22,9 @@ This file is the single roadmap document. Agent operating rules live in `docs/RE
    - NarrativeGen remains an independent experimental narrative-generation
      system, not a story supplier (decision log, 2026-09-28).
 
-   - 2026-11-22: the user asked to systematize the workflow, make the story-construction method concrete, and prototype a system that builds a story from a few premises. [SP-PIPE-001](../specs/pipeline-workflow.md) now defines seven steps, and [SP-PREMISE-001](../specs/premise-driven-story.md) adds `generateStory` (engine perception decides who notices; premise-derived weights choose who looks, tells, checks or lets go). The method details are the assistant's provisional choices and wait for the user's adoption decision; a premise screen in Studio comes only after that.
+   - 2026-11-22: the user asked to systematize the workflow, make the story-construction method concrete, and prototype a system that builds a story from a few premises. [SP-PIPE-001](../specs/pipeline-workflow.md) now defines seven steps, and [SP-PREMISE-001](../specs/premise-driven-story.md) adds `generateStory` (engine perception decides who notices; premise-derived weights choose who looks, tells, checks or lets go).
+   - Same day, the user adopted the weights, the intent vocabulary, the skeleton wording with probability labels, and the `models/generated/` placement; allowed rule-based construction as a product feature; asked to revise the action set (direction asked in Recordinator question `01M81TNDSDKW3DMTH8MN8CXVJ5`); and chose the next increment.
+   - Delivered 2026-11-22: Studio's judgment column shows each scene's possible actions, probabilities and weight breakdown for stories built from a premise; hand-edited stories are copied to `models/examples/` with "写して育てる". Next: revise the action set once the user picks a direction.
 
 2. **Public Studio private-compatibility gate (frozen during the rebuild)**
    - Frozen with the rest of the game layer on 2026-11-21. The notes below are kept for when it reopens as its own work unit.
@@ -47,7 +49,7 @@ This file is the single roadmap document. Agent operating rules live in `docs/RE
 
 6. **Experience-direction exploration before broad UI work**
    - Compare materially different directions for layout/information hierarchy, Japanese/English behavior, visual system, and motion before a broad modernization slice.
-   - Produce low-cost review evidence first. Human direction selection advances the spec/prototype; implementation still requires an explicit `IMPLEMENT` packet unless that packet already names the choice as its final gate. Do not enter a micro-polish loop without a chosen direction and fixed acceptance axes.
+   - Produce low-cost review evidence first. When the user selects a direction whose effect is stated, implement that scope. Do not enter a micro-polish loop without a chosen direction and fixed acceptance axes.
 
 7. **SP-009 UI quality expansion**
    - The primary Story / Graph / Play / Modal checklist is marked complete, while technical debt still names debug and secondary modal surfaces. Reconcile that coverage and name the exact remaining screens before another implementation slice.
@@ -61,7 +63,7 @@ This file is the single roadmap document. Agent operating rules live in `docs/RE
 
 The proposed long-range product image is: a single author defines world objects, character knowledge, and narrative intent once; the deterministic runtime derives meaningful choice availability, events, and text without duplicating route wiring; the author can inspect why a route changed; the same full-fidelity JSON behaves consistently in Web Tester and Unity; and the author can complete author -> validate -> play -> export -> integrate without an improvised transfer step.
 
-This is a dependency-ordered proposal, not an approved implementation queue. A later goal becomes implementation-ready only after its stated gate passes and an `IMPLEMENT` packet approves that slice.
+This is a dependency-ordered proposal written before the 2026-11-21 rebuild, not an approved implementation queue. A later goal becomes implementation-ready after its stated gate passes and the user selects it.
 
 | Gate / target | Purpose and what becomes possible | Completion signal | Requirements / main risk | State, owner, next move |
 |---|---|---|---|---|
@@ -108,7 +110,7 @@ Review sequence: three same-content direction mocks -> one-screen macro contract
 - Keep automated/manual regression ownership clear via `docs/operations/E2E_FLAKE_RUNBOOK.md`.
 - Promote governance checks (`check:spec-index`, `check:models-sync`, `check:encoding-safety`) from maintenance habit to release-readiness criteria.
 - Keep roadmap entries tied to spec IDs, GitHub issues, or concrete operator workflow gaps. Do not add speculative feature batches without a value path.
-- Keep the supervising-AI to development-AI handoff at one outcome per mission packet. Do not split related implementation, verification, current-state synchronization, and git follow-through into separate prompts.
+- Keep one outcome per request. Do not split related implementation, verification, current-state synchronization, and git follow-through into separate prompts.
 - If an external Project Cockpit is approved, generate it from `HANDOVER.md`, this roadmap, and `docs/spec-index.json`; do not maintain a manual Wiki status copy.
 
 ## Long-Term Tracks

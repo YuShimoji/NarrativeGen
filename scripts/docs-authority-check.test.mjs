@@ -31,7 +31,6 @@ test('allows canonical owners and unrelated durable documents', () => {
   const allowed = [
     'HANDOVER.md',
     'docs/project-status.md',
-    'docs/ai/STATUS_AND_HANDOFF.md',
     'docs/governance/decision-log.md',
     'docs/plans/DEVELOPMENT_PLAN.md',
     'docs/specs/session-history.md',

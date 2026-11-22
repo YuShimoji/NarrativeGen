@@ -1,34 +1,33 @@
 # Invariants
 
-破ってはいけない条件・責務境界・UX不変量を保持する正本。
+製品の境界と、破ってはいけない条件の正本。作業の進め方とAIの役割は [REPO_LOCAL_RULES.md](REPO_LOCAL_RULES.md)。
 
-## UX / Algorithmic Invariants
+## 製品の境界
 
-- JSON が主要エクスポートパス。NarrativeGen 独自機能 (Dynamic Text / Entity-Property / ConversationTemplate / Event / Character Knowledge) は JSON + 独自ランタイム (engine-ts / sdk-unity) でのみ完全保存される (Decision #3)
-- Play モードの表示: 段落フェードイン + 選択肢はストーリー内インライン配置 (SP-PLAY-001 設計確定)
-- スキーマバリデーションは Ajv + assertModelIntegrity の二層構造
-- UI はマウス操作主体。キーボードショートカットはフォールバック
-- Stage 1 (構想・設計) に AI 支援機能を導入しない (Decision #4: スコープ外)
+- JSONが主要な出力経路。独自機能（Dynamic Text / Entity-Property / ConversationTemplate / Event / Character Knowledge）は、
+  JSON＋独自ランタイム（engine-ts / sdk-unity）でだけ完全に保存される（Decision #3）。
+  Yarn / Ink / Twine出力でDynamic Textが失われるのは設計上の制約で、不具合ではない
+- TypeScript版（`packages/engine-ts`）が意味論の正本。Unity SDK（`packages/sdk-unity`）はTS版との一致を目標にし、独自に進化させない
+- スキーマ検証はAjv＋`assertModelIntegrity`の二層
+- エンジンとゲーム層（Play演出・BGM・`packages/sdk-unity`・`apps/public-studio`・Sites adapter）の接続は、
+  model JSONとsession API（`startSession` / `getAvailableChoices` / `applyChoice`）だけにする。
+  2026-11-21の再構築中、ゲーム層は凍結し、エンジン・作業場の作業単位でゲーム層を変更しない
+- 作業場（`apps/studio`）はエンジンの判断の記録を描くだけで、意味論を複製しない。画面に生のJSONを出さない
+- 前提から物語を組む生成器は、違和感の判定をエンジンから読むだけで、実行時の意味論を変えない。同じ前提と同じ`seed`からは同じ物語が出る
+- `models/generated/`の物語は前提から再生成できる状態に保つ。手で直して育てる物語は`models/examples/`へ写す（2026-11-22 user）
+- NarrativeGenは独立した実験的な物語生成システムで、他作品への物語供給元にしない（2026-09-28）
 
-## Responsibility Boundaries
+## 操作と体験
 
-- 1人運用前提。P1 (ライター) / P2 (テクニカルデザイナー) / P3 (インテグレーター) は帽子の切替であり、別担当者ではない
-- ライター自身が条件/効果を設定する。条件設計を別担当者に分離するモデルではない (2026-03-08 決定)
-- WritingPage 連携は双方向だが、WritingPage 側のフォーマット安定が前提条件。不安定な状態での連携実装は行わない
-- TypeScript 版 (engine-ts) が SDK の正本。Unity SDK (sdk-unity) は TS 版のパリティを目標とし、独自に進化しない
-- AI は執筆しない。制作システム整備が役割
-- エンジン（`packages/engine-ts`）とゲーム層（Play演出・BGM・`packages/sdk-unity`・`apps/public-studio`・Sites adapter）の接続は model JSON と session API（`startSession` / `getAvailableChoices` / `applyChoice`）だけにする。2026-11-21の再構築中、ゲーム層は凍結し、エンジン・作業場の作業単位でゲーム層を変更しない
-- 作業場（`apps/studio`）はエンジンの判断の記録（`trace`）を描くだけで、意味論を複製しない。画面に生のJSONを出さない
+- UIはマウス操作が主。キーボードショートカットは補助
+- Playモードの表示は、段落フェードイン＋選択肢を本文中に置く形（SP-PLAY-001。ゲーム層で、凍結中）
 
-## Prohibited Interpretations / Shortcuts
+## 役割
 
-- WritingPage 連携延期を「不要」と解釈しない。タイミング調整のみ
-- Yarn / Ink / Twine エクスポートでの Dynamic Text 非互換を「バグ」と解釈しない。JSON 主軸戦略に基づく設計上の制約
-- ユーザー未指定の固有名詞・方式を勝手に採用しない
-- rejected を「工程不要」と解釈しない
-- 振り子判断 (「前回 UI が多かったから次はコンテンツ」) で作業を選ばない
+- 1人運用。ライター／テクニカルデザイナー／インテグレーターは帽子の切替で、別の担当者ではない。
+  条件と効果は書き手自身が設定する（2026-03-08）
+- WritingPage連携は延期中で、不要になったのではない。WritingPage側の形式が安定してから着手する
 
-## 運用ルール
+## 運用
 
-- ユーザーが一度説明した非交渉条件は、同一ブロック内でここへ固定する
-- 長期決定の理由は `docs/governance/decision-log.md` に短く残し、ここには条件そのものを残す
+- userが一度説明した非交渉の条件は、同じ作業の中でここへ書く。理由は`docs/governance/decision-log.md`に短く残す

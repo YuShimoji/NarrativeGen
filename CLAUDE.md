@@ -8,8 +8,8 @@ Minimum route:
 2. `docs/REPO_LOCAL_RULES.md`
 3. `HANDOVER.md`
 
-Read `README.md`, `docs/spec-index.json`, specs, and `docs/ai/*.md` only when
-the current task needs them.
+Read `README.md`, `docs/spec-index.json`, and specs only when the current task
+needs them.
 
 Do not duplicate project state, decisions, commands, hooks, or response style
 rules here.

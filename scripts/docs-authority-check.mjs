@@ -20,10 +20,6 @@ const REQUIRED_AUTHORITIES = [
   ['docs/AUTHORING_GUIDE.md', 'authoring workflow'],
   ['docs/governance/decision-log.md', 'durable decisions'],
   ['docs/plans/DEVELOPMENT_PLAN.md', 'roadmap'],
-  ['docs/ai/CORE_RULESET.md', 'vendor-neutral AI rules'],
-  ['docs/ai/DECISION_GATES.md', 'AI decision gates'],
-  ['docs/ai/STATUS_AND_HANDOFF.md', 'AI handoff rubric'],
-  ['docs/ai/WORKFLOWS_AND_PHASES.md', 'AI workflow rules'],
 ]
 
 const MARKDOWN_ENTRYPOINTS = [
@@ -39,7 +35,6 @@ const MARKDOWN_ENTRYPOINTS = [
 const ALLOWED_CAPSULE_PATHS = new Set([
   'HANDOVER.md',
   'docs/project-status.md',
-  'docs/ai/STATUS_AND_HANDOFF.md',
   'docs/governance/decision-log.md',
   'docs/plans/DEVELOPMENT_PLAN.md',
 ])

@@ -1,73 +1,66 @@
-# REPO_LOCAL_RULES.md - repo-local operating rules
+# REPO_LOCAL_RULES.md — NarrativeGenの作業規則
 
-NarrativeGen の通常再開で読む短い front-door。ここには毎回効く行動ルールだけを置く。事故履歴、報告テンプレート、個別スライスの手順、status snapshot は置かない。
+NarrativeGenで毎回効く規則は、この1ファイルに置く。
 
-詳細の置き場:
+2026-11-22、userが再開にあたり「ここまでの障害になっている規則などは強めに整理して良い」
+「AIへの禁止がブロッカーになっている場合全て推奨で再検討したい。かなり古いルールばかりになっているため」と指示した。
+これを受けて、`docs/ai/`の4文書と各所に重複していた承認の手続きをここへまとめ直した。旧版はGit履歴（commit `4da0f9c`）にある。
 
-- 現在位置 / next action: `HANDOVER.md`
-- プロジェクト概要 / コマンド: `README.md`
-- 仕様と lifecycle state: `docs/spec-index.json`
-- 非交渉の product boundary: `docs/INVARIANTS.md`
-- 継続要求 / backlog delta: `docs/USER_REQUEST_LEDGER.md`
-- human/operator workflow: `docs/OPERATOR_WORKFLOW.md`
-- 対話・報告 failure class: `docs/INTERACTION_NOTES.md`
-- 決定履歴: `docs/governance/decision-log.md`
-- ロードマップ: `docs/plans/DEVELOPMENT_PLAN.md`
+## 読む順と置き場
 
-## Restart Read Budget
+通常の再開で読むのは `AGENTS.md` → この文書 → `HANDOVER.md`。他は、今の作業に必要な節だけ読む。
 
-通常再開で読むのは次の 3 点まで。
+| 知りたいこと | 置き場 |
+|---|---|
+| 現在地・次の作業・人の確認待ち | `HANDOVER.md`（1つの現在形に書き換える。日付つきの経過は積まない） |
+| 仕様と状態 | `docs/spec-index.json`、`docs/specs/` |
+| 製品の境界 | `docs/INVARIANTS.md` |
+| userの依頼の原文 | `docs/USER_REQUEST_LEDGER.md` |
+| 制作の工程と痛点 | `docs/OPERATOR_WORKFLOW.md`、`docs/specs/pipeline-workflow.md` |
+| 質問と報告の形 | `docs/INTERACTION_NOTES.md` |
+| 決定と理由 | `docs/governance/decision-log.md` |
+| 道筋 | `docs/plans/DEVELOPMENT_PLAN.md` |
 
-1. `AGENTS.md`
-2. `docs/REPO_LOCAL_RULES.md`
-3. `HANDOVER.md`
+状態・道筋・決定・概要を写した別ファイルは増やさない（`npm run check:docs-authority`が検査する）。
+参照先のファイルが無い時は古い参照として扱い、近い正本で進める。
 
-追加で読むのは、今の作業を進める根拠が不足している場合だけ。読む範囲は該当節・該当 ID・該当 artifact に限定し、全文読了を progress にしない。
+## 進め方
 
-## Core Rules
+- 依頼は成果の契約として扱う。成果・境界・確かめ方が依頼か正本から分かれば、調査、実装、関連する修正、検査、正本の更新、commit・pushまで続ける。
+- userが効果の書かれた選択肢を選んだら、その効果の範囲を実装まで進める。選択の後に、実装の承認を取り直さない。
+- 可逆で範囲内の判断は止まらずに決め、自明でない仮定は成果物か報告に書く。
+- 止まるのは次の時だけ: 破壊的な操作、新しい依存や大きな依存更新、DB・認証・公開APIの契約変更、外部への公開、
+  不変条件や仕様との衝突、選ぶと体験が大きく分かれる未決の方向。止める時は関係する判断を1回の問いにまとめ、依存しない作業は続ける。
+- 見た目・文章・動き・操作の方向が未決で、作り込みが大きくなる時は、先に異なる2〜4案と最小の比較材料を出す。
+- 進み具合は、物語を作る・再生する体験が動いたかで測る。試験・lint・スキーマ・CIはそれを守る手段で、成果の代わりにしない。
+- 次の作業は現在のボトルネックから選ぶ。
+- このリポジトリの外は、userが範囲を明示した時だけ触る。
 
-- Repo-local authority comes first. Global Codex files and prompt helpers are fallback only.
-- `AGENTS.md` is an entry pointer. Do not add procedures, status, roadmaps, report formats, option menus, or history there.
-- Current state and next work belong in `HANDOVER.md`. Do not create session-state, runtime-state, restart-roadmap, output-style, or context-cache files.
-- Rewrite `HANDOVER.md` as one current snapshot after a material slice. Do not append dated work history; Git already owns that history.
-- For development slices, default to Playable first, then green. Tests, lint, schema, CI, doctor, and refactors are guards for the story-making/playback experience, not the primary progress signal.
-- If a referenced file is missing, treat that reference as stale, not as a blocker.
-- Stay inside this repo unless the user explicitly names a cross-project scope. If cross-project scope is explicit, touch only that scope.
-- Selection of a proposed item means evaluate or specify it next. It is not implementation approval.
-- Human-owned creative/manual work does not become assistant-owned by default.
-- Read-only phases are read-only only when the user explicitly declares that phase in the current block. If the user asks for mutation in the same block, mutate only within that requested scope.
-- Do not ask broad questions when repo evidence can decide the next move. If a question is necessary, ask only the decision that changes the bottleneck.
+## AIがしてよいこと、userが決めること
 
-## Development Autonomy
+- 開発担当のAIは、制作システムの実装・検査・文書に加えて、見本や試験に使う物語、骨子文、比較用の文章案を書いてよい。
+  見本・仮と分かる場所と表記に置く。
+- 作品として採る文章と表現、方式・語彙・数値の採否はuserが決める。AIが置いた未採用の案は「仮」と書いて採否を聞き、
+  採否を待たずに進められる範囲は進める。
+- 規則と数値で物語を組む機能（生成器）は、製品の機能として作ってよい（2026-11-22 user）。
+- LLMによる構想支援は製品に入れていない（2026-03-27決定、2026-11-22維持）。入れる案は、方式・再現性・費用を示してuserが決める。
+- 名前・固有名詞を、userの指定なしに正式名にしない。
 
-- Treat a development prompt as an outcome contract, not as a sequence of permissions. When outcome, boundaries, and success signals are available from the prompt or canonical docs, continue through remote sync, inspection, implementation, related fixes, proportionate validation, canonical-doc updates, and git follow-through.
-- Make reversible, in-scope implementation choices without stopping. Record non-obvious assumptions in the resulting artifact or closeout, and revise them when evidence disproves them.
-- Stop only when proceeding would require a destructive operation, a new dependency or material dependency upgrade, a DB/auth/public API contract change, a conflict with a spec or invariant, external publication, or an unresolved product direction whose alternatives would produce materially different user experiences.
-- Batch related blockers into one decision request. Do not ask for permission to continue, run routine checks, fix directly related regressions, update the owning canonical doc, commit, or push a validated in-scope slice.
-- If multiple small prompts clearly describe one outcome, reconstruct and execute one coherent slice. Ask only when combining them would change scope or erase a real product decision.
-- For subjective UI, visual, language, motion, or content direction that is not already approved, present 2-4 materially different directions before large implementation. A selection authorizes implementation only when the current `IMPLEMENT` packet explicitly says that this choice is its final direction gate; otherwise freeze the selected direction in a spec or prototype and request one high-level `IMPLEMENT` approval. After approval, deliver one reviewable slice instead of reopening micro-decisions after every small change.
+## 検査とGit
 
-## Git And Tests
+- 検査は変えた範囲から行う。`packages/`・`apps/`・`scripts/`は狭い検査を先に行い、影響が広い時だけ広げる。
+  文書だけの変更は`npm run check:safety`と読み戻し。
+- 画面を変えたら実画面で確かめる。
+- 検査して読み戻したら、確認を求めずにcommitしてpushする。止めるのは、破壊的な操作、pushした履歴の書き換え、
+  意図しない大きな削除の疑い、userが禁じた時。
+- 試験の件数や同期の状態は、今回の実行結果で書く。文書にある古い数字を現在の事実として写さない。
+- 書き込みに失敗した時、読み戻しが合わない時は、commitもpushもせずに直す。
 
-- Git follow-through is assistant-owned after a validated implementation or docs slice unless the user forbids it. Stop before destructive operations, pushed-history rewrites, ambiguous large deletions, cross-repo publication, or any explicitly prohibited action.
-- Commit/push are follow-through actions, not primary next-direction choices.
-- For docs-only or agent-instruction edits, run `git diff --check` and targeted readback. Do not run the full test suite unless an executable contract changed.
-- For `packages/`, `apps/`, `scripts/`, or CLI/API contract changes, run the narrow relevant check first, then widen only when the blast radius justifies it.
-- Use current command output for test counts, branch state, and sync state. Do not copy old numbers from docs into reports as live facts.
+## 報告と質問
 
-## Reporting Rule
-
-Reports should make the work usable without forcing the user to open files. State what changed, why it matters, what remains uncertain, and what the next concrete move is.
-
-Do not emit fixed closeout labels such as `summary`, `evidence`, `risk`, `next owner`, `assistant status`, or `assistant next` unless the user asks for that structure. Those concepts are internal checks, not output fields.
-
-When listing residual work, include each item's purpose, effect, requirements, state, owner, and next move. Avoid path lists or test names as the explanation.
-
-If the next step requires user input, include the executable details in normal language: exact path or artifact, required versus optional inputs, success signal, what to return on failure, and what the assistant will verify after receiving it.
-
-## Ask Hygiene
-
-- Ask only high-level decisions with real tradeoffs.
-- Offer 2-4 options only when they solve different bottlenecks.
-- Do not include unrelated repos, memories, or tools as options unless the user made that scope explicit.
-- When corrected, verify the claim against repo evidence, then proceed with the smallest safe fix in the same block.
+- 何が動くようになったか、なぜ効くか、未確認、次に誰が何をするかを、ファイルを開かなくても分かるように書く。
+  ファイル名や試験名の列挙を説明にしない。
+- 残っている作業は、目的・効果・必要なもの・状態・担当・次の操作で書く。
+- userの操作が要る時は、開くもの・手順・成功の見え方・うまくいかない時に返すものを書く。
+- 聞くのは体験が分かれる判断だけ。正本で分かることは聞き直さない。手動確認の依頼と次の方向の選択を、同じ問いに混ぜない。
+- 訂正されたら、リポジトリの事実で確かめ、同じ作業の中で直す。

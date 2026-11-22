@@ -9,8 +9,10 @@ manual, status snapshot, closeout template, roadmap, or handoff log.
 2. `HANDOVER.md`
 3. `README.md` when project overview or commands are needed
 4. `docs/spec-index.json` and relevant spec files when behavior changes
-5. `docs/ai/*.md` only when the task touches agent workflow or decision gates
-6. `docs/CLOUD_CODEX.md` when preparing or using a Cloud Codex environment
+5. `docs/CLOUD_CODEX.md` when preparing or using a Cloud Codex environment
+
+There is no `docs/ai/` ruleset in this repo. All operating rules, including what
+the AI may do and what the user decides, live in `docs/REPO_LOCAL_RULES.md`.
 
 If a referenced file is missing, treat that reference as stale and continue
 with the nearest available project doc.
@@ -19,8 +21,8 @@ with the nearest available project doc.
 
 - User and developer instructions override this file.
 - Repo-local docs override global Codex fallback rules and global prompt helpers.
-- `docs/REPO_LOCAL_RULES.md` owns restart budget, core behavior, ask hygiene,
-  reporting intent, and git/test follow-through.
+- `docs/REPO_LOCAL_RULES.md` owns how work proceeds, the AI's role, ask and
+  reporting behavior, and git/test follow-through.
 - `HANDOVER.md` owns current state and next work.
 - `docs/spec-index.json` owns feature/spec lifecycle state.
 - `docs/INVARIANTS.md` owns non-negotiable product boundaries.

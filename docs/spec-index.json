@@ -343,11 +343,11 @@
   },
   {
     "id": "SP-PREMISE-001",
-    "title": "Premise-Driven Story Construction (Prototype)",
+    "title": "Premise-Driven Story Construction",
     "status": "partial",
-    "pct": 30,
+    "pct": 45,
     "cat": "core",
     "file": "docs/specs/premise-driven-story.md",
-    "summary": "2026-11-22試作。物・人物・思い込み・場（と任意の意図）から物語を組む。違和感はエンジンのperceiveEntityが決め（必然）、見る・話す・確かめる・そのままにするは前提の数値による重みで選ぶ（蓋然）。全展開を数えて結末の割合と意図を満たす主線を出し、通常のモデルと導出の記録を返す。generateStory / describeDerivation、npm run generate:story。行為・重み・意図の語彙・骨子文はuserの採否待ち。"
+    "summary": "物・人物・思い込み・場（と任意の意図）から物語を組む。違和感はエンジンのperceiveEntityが決め（必然）、見る・話す・確かめる・そのままにするは前提の数値による重みで選ぶ（蓋然）。全展開を数えて結末の割合と意図を満たす主線を出し、通常のモデルと導出の記録を返す。generateStory / describeDerivation、npm run generate:story。2026-11-22にuserが重み・意図の語彙・骨子文・置き場を採用し、規則と数値による組み立てを認めた。行為の種類は直す向きの回答待ち。場面ごとの蓋然と理由をStudioの右列に出す。"
   }
 ]
