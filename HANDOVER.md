@@ -24,7 +24,7 @@
 | エンジンの判断の記録 | `packages/engine-ts/src/trace.ts`（`traceStart`・`traceStep`・`checkModel`ほか）。読み取り専用で意味論は変えない | `npm run test:engine`（29ファイル・375件、2026-11-23） |
 | 旧Web Tester | 編集・グラフ・export等。置き換えまで残し、新機能は足さない | `npm run dev`（port 5173が他projectと衝突する時は下の注意） |
 | サンプル | `originality-spine-probe.json`、`procedural-choice-spine-probe.json`、`vertical-slice.json` | Studioの物語選択 |
-| ゲーム層（凍結） | Play演出・BGM、Unity SDK、Public Studio、Sites adapter。再構築中は変更しない | 再開は別の作業単位 |
+| ゲーム層 | UnityChatNovelGame接続のためUnity SDKの互換修正を再開。Play演出・BGM、Public Studio、Sites adapterは作業場再構築中の凍結を継続 | Unity SDKの.NET試験35件。既存のチーズバーガー2モデルから知覚イベント・条件付き選択肢・動的本文をTypeScript版と照合（2026-11-25） |
 
 点検の既知の限界: 数値が増え続ける物語（`full_integration`・`inventory_test`・`trading`・`tutorial`など8件）は
 状態数2000で打ち切る。画面に打ち切りを明示し、「問題なし」は調べた範囲だけの結果と表示する。

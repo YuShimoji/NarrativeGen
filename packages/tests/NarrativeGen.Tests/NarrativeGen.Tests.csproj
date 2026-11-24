@@ -11,6 +11,10 @@
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="../../../models/generated/cheeseburger-weight*.json"
+          Link="GeneratedModels/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\sdk-unity\NarrativeGen.Unity.csproj" />
   </ItemGroup>
 </Project>

@@ -45,6 +45,15 @@ namespace NarrativeGen
         [JsonProperty("conversationTemplates")]
         public List<ConversationTemplate>? ConversationTemplates { get; set; }
 
+        [JsonProperty("variables")]
+        internal Dictionary<string, object>? InitialVariables { get; set; }
+
+        [JsonProperty("characters")]
+        internal Dictionary<string, NarrativeCharacter>? Characters { get; set; }
+
+        [JsonProperty("knowledgeRules")]
+        internal Dictionary<string, KnowledgeRuleData>? KnowledgeRules { get; set; }
+
         [JsonProperty("nodes")]
         public Dictionary<string, Node> Nodes { get; set; } = new();
 

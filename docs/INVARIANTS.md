@@ -11,11 +11,11 @@
 - スキーマ検証はAjv＋`assertModelIntegrity`の二層
 - エンジンとゲーム層（Play演出・BGM・`packages/sdk-unity`・`apps/public-studio`・Sites adapter）の接続は、
   model JSONとsession API（`startSession` / `getAvailableChoices` / `applyChoice`）だけにする。
-  2026-11-21の再構築中、ゲーム層は凍結し、エンジン・作業場の作業単位でゲーム層を変更しない
+  エンジン・作業場の再構築ではゲーム層を凍結する。2026-11-25の本人依頼で、UnityChatNovelGameとの接続に必要なUnity SDK互換修正を別作業として再開する
 - 作業場（`apps/studio`）はエンジンの判断の記録を描くだけで、意味論を複製しない。画面に生のJSONを出さない
 - 前提から物語を組む生成器は、違和感の判定をエンジンから読むだけで、実行時の意味論を変えない。同じ前提と同じ`seed`からは同じ物語が出る
 - `models/generated/`の物語は前提から再生成できる状態に保つ。手で直して育てる物語は`models/examples/`へ写す（2026-11-22 user）
-- NarrativeGenは独立した実験的な物語生成システムで、他作品への物語供給元にしない（2026-09-28）
+- NarrativeGenは独立した物語生成システムとして維持する。2026-11-25の本人依頼により、生成したゲームプレイのUnityChatNovelGameでの再生を認める
 
 ## 操作と体験
 

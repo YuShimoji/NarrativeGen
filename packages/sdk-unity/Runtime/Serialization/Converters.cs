@@ -47,6 +47,7 @@ namespace NarrativeGen.Serialization
                 "hasItem" => new HasItemCondition(),
                 "hasEvent" => new HasEventCondition(),
                 "timeWindow" => new TimeWindowCondition(),
+                "knowledgeRule" => new KnowledgeRuleCondition(),
                 "and" => new AndCondition(),
                 "or" => new OrCondition(),
                 "not" => new NotCondition(),
@@ -91,6 +92,7 @@ namespace NarrativeGen.Serialization
                 "removeItem" => new RemoveItemEffect(),
                 "goto" => new GotoEffect(),
                 "createEvent" => new CreateEventEffect(),
+                "perceiveEntity" => new PerceiveEntityEffect(),
                 _ => throw new JsonSerializationException($"Unknown effect type '{type}'")
             };
             serializer.Populate(jo.CreateReader(), result);
