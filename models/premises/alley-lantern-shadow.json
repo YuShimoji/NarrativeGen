@@ -1,0 +1,46 @@
+{
+  "title": "朝市の灯りが落とす影",
+  "entities": {
+    "shadow": {
+      "id": "shadow",
+      "name": "軒先のランタンが落とす影",
+      "properties": {
+        "length": { "key": "length", "type": "number", "defaultValue": 24 }
+      }
+    }
+  },
+  "characters": {
+    "basket_carrier": {
+      "id": "basket_carrier",
+      "name": "籠を運ぶ人",
+      "knowledgeProfiles": [{ "domain": "market", "accuracy": 0.25, "tolerance": 0.06 }]
+    },
+    "stall_keeper": {
+      "id": "stall_keeper",
+      "name": "露店の主人",
+      "knowledgeProfiles": [{ "domain": "market", "accuracy": 0.46, "tolerance": 0.15 }]
+    }
+  },
+  "beliefs": [
+    { "character": "basket_carrier", "entity": "shadow", "domain": "market", "expectations": { "length": 22 } },
+    { "character": "stall_keeper", "entity": "shadow", "domain": "market", "expectations": { "length": 24 } }
+  ],
+  "scene": { "present": ["basket_carrier", "stall_keeper"], "focus": "shadow" },
+  "intent": { "include": ["letGo"], "ending": "faded" },
+  "wording": {
+    "propertyNames": { "length": "影の長さ" },
+    "patterns": {
+      "start": "朝市の品出しが始まる。{present}の足元には、[{focus}]が敷石を一本横切っている。",
+      "lookNoticed": "{actor}は足を止めた。影の先が、見慣れた敷石の継ぎ目から少し出ている。",
+      "lookMissed": "{actor}は敷石に落ちる影を見る。見慣れた朝の路地に見えた。",
+      "tellDisagreement": "{actor}が影の先を指す。「いつも、あそこまで伸びていたっけ」{target}は敷石に目を落とした。「毎朝このくらいじゃないかな」",
+      "relookRealized": "{actor}は{heardFrom}に言われて、敷石の継ぎ目に目を戻した。影の先を追うと、たしかにいつもと少し違って見える。",
+      "relookDissolved": "{actor}は{heardFrom}の話を聞いて、敷石の継ぎ目を見直した。ほんの少しの違いに思えてきた。",
+      "relookConfirmed": "{actor}は{heardFrom}の話を踏まえて影を見直す。やはり、見慣れた継ぎ目の先まで伸びている。",
+      "relookUnmoved": "{actor}は{heardFrom}の話を踏まえて影を見直す。敷石の上には、朝によく見る影がある。",
+      "letGo": "{actor}は屈みかけて、足を戻した。向こうで店の戸が開く音がする。「まあ、いいか」",
+      "verify": "{actor}は敷石に巻尺を当てる。影の先まで、[{focus}.{propertyKey}]センチあった。",
+      "endFaded": "品出しの足音が重なり、敷石の継ぎ目は籠の陰に隠れた。影の長さは測られなかった。"
+    }
+  }
+}

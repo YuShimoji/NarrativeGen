@@ -1,0 +1,48 @@
+{
+  "title": "印刷所の紙帯がはみ出す",
+  "entities": {
+    "paper_strip": {
+      "id": "paper_strip",
+      "name": "次に通す紙帯",
+      "properties": {
+        "width": { "key": "width", "type": "number", "defaultValue": 102 }
+      }
+    }
+  },
+  "characters": {
+    "printer": {
+      "id": "printer",
+      "name": "刷り手",
+      "knowledgeProfiles": [{ "domain": "printing", "accuracy": 0.82, "tolerance": 0.01 }]
+    },
+    "cutter": {
+      "id": "cutter",
+      "name": "裁ち手",
+      "knowledgeProfiles": [{ "domain": "cutting", "accuracy": 0.72, "tolerance": 0.02 }]
+    }
+  },
+  "beliefs": [
+    { "character": "printer", "entity": "paper_strip", "domain": "printing", "expectations": { "width": 100 } },
+    { "character": "cutter", "entity": "paper_strip", "domain": "cutting", "expectations": { "width": 98 } }
+  ],
+  "scene": { "present": ["printer", "cutter"], "focus": "paper_strip" },
+  "intent": { "include": ["shared"], "ending": "verified" },
+  "wording": {
+    "propertyNames": { "width": "幅" },
+    "patterns": {
+      "start": "印刷機が止まった。{present}は受け台に[{focus}]を置く。台には、紙の端を合わせるための線が引いてある。",
+      "lookNoticed": "{actor}が[{focus}]の片側を線に合わせる。反対側だけが線の外に出た。もう一度、端を押さえ直す。",
+      "lookMissed": "{actor}は[{focus}]を受け台に沿わせる。そのまま手を離した。",
+      "tellHeard": "「こっちの端、見てくれる？」{actor}は[{focus}]を動かさないよう、指で留めた。{target}は受け台をのぞき込む。",
+      "tellShared": "「ずれてるのは、こっちだけ？」{actor}が紙の片側を指す。{target}はうなずき、反対側の線に指を置いた。",
+      "tellDisagreement": "{actor}が紙の端と線を指す。{target}は首を振った。「さっきは、これで合ってると思ったけど」",
+      "relookRealized": "{actor}は{heardFrom}に言われたほうの端を見る。指で押さえても、紙は線の外に出ている。",
+      "relookDissolved": "{actor}は{heardFrom}の話を聞き、紙と線をもう一度見比べる。さっきほど気にならない。",
+      "relookConfirmed": "{actor}は{heardFrom}の話を聞いてから紙を見直す。やはり、一方の端だけが線の外に出ている。",
+      "relookUnmoved": "{actor}は紙の端へ目を戻す。受け台の線と見比べても、気になるところはなかった。",
+      "verify": "{actor}は[{focus}]を押さえ、定規を端から渡す。「[{focus}.{propertyKey}]ミリ。線の引き方じゃなかったんだ」",
+      "endVerified": "定規は紙の上に置いたままだ。二人の目は、同じ目盛りで止まった。",
+      "endFaded": "紙帯は受け台に残った。定規は机の端にある。幅を測る人はいなかった。"
+    }
+  }
+}

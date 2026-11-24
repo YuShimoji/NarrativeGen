@@ -1,0 +1,465 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "start",
+  "flags": {},
+  "resources": {},
+  "variables": {},
+  "entities": {
+    "shadow": {
+      "id": "shadow",
+      "name": "軒先のランタンが落とす影",
+      "properties": {
+        "length": {
+          "key": "length",
+          "type": "number",
+          "defaultValue": 24
+        }
+      }
+    }
+  },
+  "characters": {
+    "basket_carrier": {
+      "id": "basket_carrier",
+      "name": "籠を運ぶ人",
+      "knowledgeProfiles": [
+        {
+          "domain": "market",
+          "accuracy": 0.25,
+          "tolerance": 0.06
+        },
+        {
+          "domain": "market+stall_keeper",
+          "accuracy": 0.25,
+          "tolerance": 0.11831
+        }
+      ]
+    },
+    "stall_keeper": {
+      "id": "stall_keeper",
+      "name": "露店の主人",
+      "knowledgeProfiles": [
+        {
+          "domain": "market",
+          "accuracy": 0.46,
+          "tolerance": 0.15
+        },
+        {
+          "domain": "market+basket_carrier",
+          "accuracy": 0.46,
+          "tolerance": 0.11831
+        }
+      ]
+    }
+  },
+  "knowledgeRules": {
+    "belief_basket_carrier_shadow": {
+      "character": "basket_carrier",
+      "entity": "shadow",
+      "domain": "market",
+      "expectations": {
+        "length": 22
+      }
+    },
+    "belief_stall_keeper_shadow": {
+      "character": "stall_keeper",
+      "entity": "shadow",
+      "domain": "market",
+      "expectations": {
+        "length": 24
+      }
+    }
+  },
+  "nodes": {
+    "start": {
+      "id": "start",
+      "text": "朝市の品出しが始まる。籠を運ぶ人、露店の主人の足元には、[shadow]が敷石を一本横切っている。",
+      "choices": [
+        {
+          "id": "look_stall_keeper",
+          "text": "露店の主人が見る 〔蓋然 65%〕",
+          "target": "s1_look_stall_keeper",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "stall_keeper",
+              "entity": "shadow",
+              "domain": "market",
+              "expectations": {
+                "length": 24
+              },
+              "eventId": "notice_stall_keeper",
+              "eventName": "露店の主人の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        },
+        {
+          "id": "look_basket_carrier",
+          "text": "籠を運ぶ人が見る 〔蓋然 35%〕",
+          "target": "s2_look_basket_carrier",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "basket_carrier",
+              "entity": "shadow",
+              "domain": "market",
+              "expectations": {
+                "length": 22
+              },
+              "eventId": "notice_basket_carrier",
+              "eventName": "籠を運ぶ人の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s1_look_stall_keeper": {
+      "id": "s1_look_stall_keeper",
+      "text": "露店の主人は敷石に落ちる影を見る。見慣れた朝の路地に見えた。",
+      "choices": [
+        {
+          "id": "look_basket_carrier",
+          "text": "籠を運ぶ人が見る 〔蓋然 100%〕",
+          "target": "s3_look_basket_carrier",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "basket_carrier",
+              "entity": "shadow",
+              "domain": "market",
+              "expectations": {
+                "length": 22
+              },
+              "eventId": "notice_basket_carrier",
+              "eventName": "籠を運ぶ人の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s2_look_basket_carrier": {
+      "id": "s2_look_basket_carrier",
+      "text": "籠を運ぶ人は足を止めた。影の先が、見慣れた敷石の継ぎ目から少し出ている。",
+      "choices": [
+        {
+          "id": "letGo_basket_carrier",
+          "text": "籠を運ぶ人がそのままにする 〔蓋然 34%〕",
+          "target": "s7_letGo_basket_carrier",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_basket_carrier",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "letgo_basket_carrier",
+              "name": "籠を運ぶ人がそのままにした",
+              "properties": {
+                "observer": {
+                  "defaultValue": "basket_carrier"
+                },
+                "source_entity": {
+                  "defaultValue": "shadow"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s3_look_basket_carrier": {
+      "id": "s3_look_basket_carrier",
+      "text": "籠を運ぶ人は足を止めた。影の先が、見慣れた敷石の継ぎ目から少し出ている。",
+      "choices": [
+        {
+          "id": "letGo_basket_carrier",
+          "text": "籠を運ぶ人がそのままにする 〔蓋然 49%〕",
+          "target": "s4_letGo_basket_carrier",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_basket_carrier",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "letgo_basket_carrier",
+              "name": "籠を運ぶ人がそのままにした",
+              "properties": {
+                "observer": {
+                  "defaultValue": "basket_carrier"
+                },
+                "source_entity": {
+                  "defaultValue": "shadow"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "tell_basket_carrier_stall_keeper",
+          "text": "籠を運ぶ人が露店の主人に話す 〔蓋然 28%〕",
+          "target": "s5_tell_basket_carrier_stall_keeper",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_basket_carrier",
+              "value": true
+            },
+            {
+              "type": "hasEvent",
+              "key": "notice_stall_keeper",
+              "value": false
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "tell_basket_carrier_stall_keeper",
+              "name": "籠を運ぶ人が露店の主人に話した",
+              "properties": {
+                "speaker": {
+                  "defaultValue": "basket_carrier"
+                },
+                "listener": {
+                  "defaultValue": "stall_keeper"
+                },
+                "source_entity": {
+                  "defaultValue": "shadow"
+                },
+                "outcome": {
+                  "defaultValue": "disagreement"
+                },
+                "severity": {
+                  "defaultValue": 30
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "ask_stall_keeper_basket_carrier",
+          "text": "露店の主人が籠を運ぶ人に尋ねる 〔蓋然 15%〕",
+          "target": "s6_ask_stall_keeper_basket_carrier",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_basket_carrier",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "ask_stall_keeper_basket_carrier",
+              "name": "露店の主人が籠を運ぶ人に尋ねた",
+              "properties": {
+                "asker": {
+                  "defaultValue": "stall_keeper"
+                },
+                "answerer": {
+                  "defaultValue": "basket_carrier"
+                },
+                "source_entity": {
+                  "defaultValue": "shadow"
+                },
+                "severity": {
+                  "defaultValue": 30
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s4_letGo_basket_carrier": {
+      "id": "s4_letGo_basket_carrier",
+      "text": "籠を運ぶ人は屈みかけて、足を戻した。向こうで店の戸が開く音がする。「まあ、いいか」\n\n品出しの足音が重なり、敷石の継ぎ目は籠の陰に隠れた。影の長さは測られなかった。"
+    },
+    "s5_tell_basket_carrier_stall_keeper": {
+      "id": "s5_tell_basket_carrier_stall_keeper",
+      "text": "籠を運ぶ人が影の先を指す。「いつも、あそこまで伸びていたっけ」露店の主人は敷石に目を落とした。「毎朝このくらいじゃないかな」",
+      "choices": [
+        {
+          "id": "relook_stall_keeper",
+          "text": "露店の主人が見直す 〔蓋然 47%〕",
+          "target": "s8_relook_stall_keeper",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "stall_keeper",
+              "entity": "shadow",
+              "domain": "market+basket_carrier",
+              "expectations": {
+                "length": 23.295775
+              },
+              "eventId": "notice_stall_keeper_heard_basket_carrier",
+              "eventName": "露店の主人の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s6_ask_stall_keeper_basket_carrier": {
+      "id": "s6_ask_stall_keeper_basket_carrier",
+      "text": "露店の主人は籠を運ぶ人に、[shadow]のどこが気になるのかを尋ねる。籠を運ぶ人は、影の長さが思っていたのと違うと答える。",
+      "choices": [
+        {
+          "id": "relook_stall_keeper",
+          "text": "露店の主人が見直す 〔蓋然 56%〕",
+          "target": "s9_relook_stall_keeper",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "stall_keeper",
+              "entity": "shadow",
+              "domain": "market+basket_carrier",
+              "expectations": {
+                "length": 23.295775
+              },
+              "eventId": "notice_stall_keeper_heard_basket_carrier",
+              "eventName": "露店の主人の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s7_letGo_basket_carrier": {
+      "id": "s7_letGo_basket_carrier",
+      "text": "籠を運ぶ人は屈みかけて、足を戻した。向こうで店の戸が開く音がする。「まあ、いいか」",
+      "choices": [
+        {
+          "id": "look_stall_keeper",
+          "text": "露店の主人が見る 〔蓋然 100%〕",
+          "target": "s10_look_stall_keeper",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "stall_keeper",
+              "entity": "shadow",
+              "domain": "market",
+              "expectations": {
+                "length": 24
+              },
+              "eventId": "notice_stall_keeper",
+              "eventName": "露店の主人の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s8_relook_stall_keeper": {
+      "id": "s8_relook_stall_keeper",
+      "text": "露店の主人は籠を運ぶ人の話を踏まえて影を見直す。敷石の上には、朝によく見る影がある。",
+      "choices": [
+        {
+          "id": "letGo_basket_carrier",
+          "text": "籠を運ぶ人がそのままにする 〔蓋然 62%〕",
+          "target": "s11_letGo_basket_carrier",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_basket_carrier",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "letgo_basket_carrier",
+              "name": "籠を運ぶ人がそのままにした",
+              "properties": {
+                "observer": {
+                  "defaultValue": "basket_carrier"
+                },
+                "source_entity": {
+                  "defaultValue": "shadow"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s9_relook_stall_keeper": {
+      "id": "s9_relook_stall_keeper",
+      "text": "露店の主人は籠を運ぶ人の話を踏まえて影を見直す。敷石の上には、朝によく見る影がある。",
+      "choices": [
+        {
+          "id": "letGo_basket_carrier",
+          "text": "籠を運ぶ人がそのままにする 〔蓋然 88%〕",
+          "target": "s12_letGo_basket_carrier",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_basket_carrier",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "letgo_basket_carrier",
+              "name": "籠を運ぶ人がそのままにした",
+              "properties": {
+                "observer": {
+                  "defaultValue": "basket_carrier"
+                },
+                "source_entity": {
+                  "defaultValue": "shadow"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s10_look_stall_keeper": {
+      "id": "s10_look_stall_keeper",
+      "text": "露店の主人は敷石に落ちる影を見る。見慣れた朝の路地に見えた。\n\n品出しの足音が重なり、敷石の継ぎ目は籠の陰に隠れた。影の長さは測られなかった。"
+    },
+    "s11_letGo_basket_carrier": {
+      "id": "s11_letGo_basket_carrier",
+      "text": "籠を運ぶ人は屈みかけて、足を戻した。向こうで店の戸が開く音がする。「まあ、いいか」",
+      "choices": [
+        {
+          "id": "relook_basket_carrier",
+          "text": "籠を運ぶ人が見直す 〔蓋然 100%〕",
+          "target": "s13_relook_basket_carrier",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "basket_carrier",
+              "entity": "shadow",
+              "domain": "market+stall_keeper",
+              "expectations": {
+                "length": 23.295775
+              },
+              "eventId": "notice_basket_carrier_heard_stall_keeper",
+              "eventName": "籠を運ぶ人の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s12_letGo_basket_carrier": {
+      "id": "s12_letGo_basket_carrier",
+      "text": "籠を運ぶ人は屈みかけて、足を戻した。向こうで店の戸が開く音がする。「まあ、いいか」\n\n品出しの足音が重なり、敷石の継ぎ目は籠の陰に隠れた。影の長さは測られなかった。"
+    },
+    "s13_relook_basket_carrier": {
+      "id": "s13_relook_basket_carrier",
+      "text": "籠を運ぶ人は露店の主人の話を聞いて、敷石の継ぎ目を見直した。ほんの少しの違いに思えてきた。\n\n品出しの足音が重なり、敷石の継ぎ目は籠の陰に隠れた。影の長さは測られなかった。"
+    }
+  }
+}

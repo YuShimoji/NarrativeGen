@@ -18,7 +18,8 @@ import type { StoryPremise } from '../src/index.js'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(__dirname, '../../..')
 const premisePath = path.join(repoRoot, 'models/premises/cheeseburger-weight.json')
-const SAMPLES = ['cheeseburger-weight', 'cheeseburger-weight-hearsay']
+const BURGER_SAMPLES = ['cheeseburger-weight', 'cheeseburger-weight-hearsay']
+const SAMPLES = [...BURGER_SAMPLES, 'print-shop-paper-guide', 'closing-bell-echo', 'alley-lantern-shadow']
 
 function readPremise(name = 'cheeseburger-weight'): StoryPremise {
   const file = name === 'cheeseburger-weight' ? premisePath : path.join(repoRoot, `models/premises/${name}.json`)
@@ -101,10 +102,11 @@ describe('premise-story (SP-PREMISE-001)', { timeout: 30_000 }, () => {
       expect(shown).not.toMatch(/[[\]{}]/)
     }
     expect(getAvailableChoices(session, model)).toEqual([])
-    expect(session.events.notice_detective_a.properties?.severity.defaultValue).toBe(80)
-
-    const last = model.nodes[session.nodeId].text ?? ''
-    expect(resolveNarrativeDisplayText(last, model, session)).toContain('0.12')
+    if (BURGER_SAMPLES.includes(sample)) {
+      expect(session.events.notice_detective_a.properties?.severity.defaultValue).toBe(80)
+      const last = model.nodes[session.nodeId].text ?? ''
+      expect(resolveNarrativeDisplayText(last, model, session)).toContain('0.12')
+    }
   })
 
   it('lets what a person heard change what they expect: the listener notices, the speaker is talked out of it', () => {

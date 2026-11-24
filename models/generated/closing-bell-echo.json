@@ -1,0 +1,733 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "start",
+  "flags": {},
+  "resources": {},
+  "variables": {},
+  "entities": {
+    "bell": {
+      "id": "bell",
+      "name": "資料館の閉館の鐘",
+      "properties": {
+        "duration": {
+          "key": "duration",
+          "type": "number",
+          "defaultValue": 6
+        }
+      }
+    }
+  },
+  "characters": {
+    "attendant": {
+      "id": "attendant",
+      "name": "係員",
+      "knowledgeProfiles": [
+        {
+          "domain": "bell",
+          "accuracy": 0.85,
+          "tolerance": 0.17
+        },
+        {
+          "domain": "bell+visitor",
+          "accuracy": 0.85,
+          "tolerance": 0.158889
+        }
+      ]
+    },
+    "visitor": {
+      "id": "visitor",
+      "name": "見学者",
+      "knowledgeProfiles": [
+        {
+          "domain": "bell",
+          "accuracy": 0.5,
+          "tolerance": 0.14
+        },
+        {
+          "domain": "bell+attendant",
+          "accuracy": 0.5,
+          "tolerance": 0.158889
+        }
+      ]
+    }
+  },
+  "knowledgeRules": {
+    "belief_attendant_bell": {
+      "character": "attendant",
+      "entity": "bell",
+      "domain": "bell",
+      "expectations": {
+        "duration": 4
+      }
+    },
+    "belief_visitor_bell": {
+      "character": "visitor",
+      "entity": "bell",
+      "domain": "bell",
+      "expectations": {
+        "duration": 6
+      }
+    }
+  },
+  "nodes": {
+    "start": {
+      "id": "start",
+      "text": "資料館の展示室。閉館の鐘が一打ずつ、間を置いて鳴っている。係員、見学者は出口の近くにいる。",
+      "choices": [
+        {
+          "id": "look_visitor",
+          "text": "見学者が鐘を聞く 〔蓋然 37%〕",
+          "target": "s1_look_visitor",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "visitor",
+              "entity": "bell",
+              "domain": "bell",
+              "expectations": {
+                "duration": 6
+              },
+              "eventId": "notice_visitor",
+              "eventName": "見学者の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        },
+        {
+          "id": "look_attendant",
+          "text": "係員が鐘を聞く 〔蓋然 63%〕",
+          "target": "s2_look_attendant",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "attendant",
+              "entity": "bell",
+              "domain": "bell",
+              "expectations": {
+                "duration": 4
+              },
+              "eventId": "notice_attendant",
+              "eventName": "係員の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s1_look_visitor": {
+      "id": "s1_look_visitor",
+      "text": "見学者は鐘を聞き流した。余韻が消えるところまで、いつもの閉館の音に聞こえる。",
+      "choices": [
+        {
+          "id": "look_attendant",
+          "text": "係員が鐘を聞く 〔蓋然 100%〕",
+          "target": "s3_look_attendant",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "attendant",
+              "entity": "bell",
+              "domain": "bell",
+              "expectations": {
+                "duration": 4
+              },
+              "eventId": "notice_attendant",
+              "eventName": "係員の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s2_look_attendant": {
+      "id": "s2_look_attendant",
+      "text": "係員は鐘に耳を澄ます。いつもならもう静かになっているところで、まだ細い音が残っている。",
+      "choices": [
+        {
+          "id": "tell_attendant_visitor",
+          "text": "係員が見学者に話す 〔蓋然 30%〕",
+          "target": "s12_tell_attendant_visitor",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_attendant",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "tell_attendant_visitor",
+              "name": "係員が見学者に話した",
+              "properties": {
+                "speaker": {
+                  "defaultValue": "attendant"
+                },
+                "listener": {
+                  "defaultValue": "visitor"
+                },
+                "source_entity": {
+                  "defaultValue": "bell"
+                },
+                "outcome": {
+                  "defaultValue": "heard"
+                },
+                "severity": {
+                  "defaultValue": 59
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s3_look_attendant": {
+      "id": "s3_look_attendant",
+      "text": "係員は鐘に耳を澄ます。いつもならもう静かになっているところで、まだ細い音が残っている。",
+      "choices": [
+        {
+          "id": "ask_visitor_attendant",
+          "text": "見学者が係員に尋ねる 〔蓋然 20%〕",
+          "target": "s4_ask_visitor_attendant",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_attendant",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "ask_visitor_attendant",
+              "name": "見学者が係員に尋ねた",
+              "properties": {
+                "asker": {
+                  "defaultValue": "visitor"
+                },
+                "answerer": {
+                  "defaultValue": "attendant"
+                },
+                "source_entity": {
+                  "defaultValue": "bell"
+                },
+                "severity": {
+                  "defaultValue": 59
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "tell_attendant_visitor",
+          "text": "係員が見学者に話す 〔蓋然 41%〕",
+          "target": "s5_tell_attendant_visitor",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_attendant",
+              "value": true
+            },
+            {
+              "type": "hasEvent",
+              "key": "notice_visitor",
+              "value": false
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "tell_attendant_visitor",
+              "name": "係員が見学者に話した",
+              "properties": {
+                "speaker": {
+                  "defaultValue": "attendant"
+                },
+                "listener": {
+                  "defaultValue": "visitor"
+                },
+                "source_entity": {
+                  "defaultValue": "bell"
+                },
+                "outcome": {
+                  "defaultValue": "disagreement"
+                },
+                "severity": {
+                  "defaultValue": 59
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "verify_attendant",
+          "text": "係員が時計で確かめる 〔蓋然 35%〕",
+          "target": "s6_verify_attendant",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_attendant",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_attendant",
+              "name": "係員が確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "attendant"
+                },
+                "source_entity": {
+                  "defaultValue": "bell"
+                },
+                "primary_property": {
+                  "defaultValue": "duration"
+                },
+                "actual_value": {
+                  "defaultValue": 6
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s4_ask_visitor_attendant": {
+      "id": "s4_ask_visitor_attendant",
+      "text": "「何か聞こえましたか」見学者が尋ねる。係員は通路の奥を指した。「次の一打で、音がいつ消えるか聞いてみてください」",
+      "choices": [
+        {
+          "id": "relook_visitor",
+          "text": "見学者がもう一度聞く 〔蓋然 66%〕",
+          "target": "s7_relook_visitor",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "visitor",
+              "entity": "bell",
+              "domain": "bell+attendant",
+              "expectations": {
+                "duration": 4.740741
+              },
+              "eventId": "notice_visitor_heard_attendant",
+              "eventName": "見学者の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        },
+        {
+          "id": "verify_attendant",
+          "text": "係員が時計で確かめる 〔蓋然 30%〕",
+          "target": "s8_verify_attendant",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_attendant",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_attendant",
+              "name": "係員が確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "attendant"
+                },
+                "source_entity": {
+                  "defaultValue": "bell"
+                },
+                "primary_property": {
+                  "defaultValue": "duration"
+                },
+                "actual_value": {
+                  "defaultValue": 6
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s5_tell_attendant_visitor": {
+      "id": "s5_tell_attendant_visitor",
+      "text": "「まだ鳴っていたでしょう」係員が言う。見学者は鐘のほうへ向き直った。「あれでいつも通りだと思いました」",
+      "choices": [
+        {
+          "id": "relook_visitor",
+          "text": "見学者がもう一度聞く 〔蓋然 44%〕",
+          "target": "s13_relook_visitor",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "visitor",
+              "entity": "bell",
+              "domain": "bell+attendant",
+              "expectations": {
+                "duration": 4.740741
+              },
+              "eventId": "notice_visitor_heard_attendant",
+              "eventName": "見学者の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s6_verify_attendant": {
+      "id": "s6_verify_attendant",
+      "text": "係員は次の一打で時計を見た。細い音が消えるまで、[bell.duration]秒あった。\n\n次の一打が鳴る。今度は、どこまで聞けばいいか分かっている。"
+    },
+    "s7_relook_visitor": {
+      "id": "s7_relook_visitor",
+      "text": "見学者は係員の言葉を思い出し、次の一打を聞く。消えたと思ったあとに、細い音がまだ続く。言われたのはこれか、と顔を上げた。",
+      "choices": [
+        {
+          "id": "verify_attendant",
+          "text": "係員が時計で確かめる 〔蓋然 36%〕",
+          "target": "s9_verify_attendant",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_attendant",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_attendant",
+              "name": "係員が確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "attendant"
+                },
+                "source_entity": {
+                  "defaultValue": "bell"
+                },
+                "primary_property": {
+                  "defaultValue": "duration"
+                },
+                "actual_value": {
+                  "defaultValue": 6
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "letGo_visitor",
+          "text": "見学者がそのままにする 〔蓋然 24%〕",
+          "target": "s10_letGo_visitor",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_visitor_heard_attendant",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "letgo_visitor_heard_attendant",
+              "name": "見学者がそのままにした",
+              "properties": {
+                "observer": {
+                  "defaultValue": "visitor"
+                },
+                "source_entity": {
+                  "defaultValue": "bell"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "tell_visitor_attendant",
+          "text": "見学者が係員に話す 〔蓋然 24%〕",
+          "target": "s11_tell_visitor_attendant",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_visitor_heard_attendant",
+              "value": true
+            },
+            {
+              "type": "hasEvent",
+              "key": "notice_attendant",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "tell_visitor_attendant",
+              "name": "見学者が係員に話した",
+              "properties": {
+                "speaker": {
+                  "defaultValue": "visitor"
+                },
+                "listener": {
+                  "defaultValue": "attendant"
+                },
+                "source_entity": {
+                  "defaultValue": "bell"
+                },
+                "outcome": {
+                  "defaultValue": "shared"
+                },
+                "severity": {
+                  "defaultValue": 33
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s8_verify_attendant": {
+      "id": "s8_verify_attendant",
+      "text": "係員は次の一打で時計を見た。細い音が消えるまで、[bell.duration]秒あった。\n\n次の一打が鳴る。今度は、どこまで聞けばいいか分かっている。"
+    },
+    "s9_verify_attendant": {
+      "id": "s9_verify_attendant",
+      "text": "係員は次の一打で時計を見た。細い音が消えるまで、[bell.duration]秒あった。\n\n次の一打が鳴る。今度は、どこまで聞けばいいか分かっている。"
+    },
+    "s10_letGo_visitor": {
+      "id": "s10_letGo_visitor",
+      "text": "見学者は違和感をそのままにする。",
+      "choices": [
+        {
+          "id": "verify_attendant",
+          "text": "係員が時計で確かめる 〔蓋然 89%〕",
+          "target": "s14_verify_attendant",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_attendant",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_attendant",
+              "name": "係員が確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "attendant"
+                },
+                "source_entity": {
+                  "defaultValue": "bell"
+                },
+                "primary_property": {
+                  "defaultValue": "duration"
+                },
+                "actual_value": {
+                  "defaultValue": 6
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s11_tell_visitor_attendant": {
+      "id": "s11_tell_visitor_attendant",
+      "text": "見学者は係員に、[bell]の余韻の長さが思っていたのと違うと話す。係員も同じ違和感を覚えていた。二人に共通の話題ができる。",
+      "choices": [
+        {
+          "id": "relook_attendant",
+          "text": "係員がもう一度聞く 〔蓋然 53%〕",
+          "target": "s15_relook_attendant",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "attendant",
+              "entity": "bell",
+              "domain": "bell+visitor",
+              "expectations": {
+                "duration": 4.740741
+              },
+              "eventId": "notice_attendant_heard_visitor",
+              "eventName": "係員の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s12_tell_attendant_visitor": {
+      "id": "s12_tell_attendant_visitor",
+      "text": "係員が見学者に声を掛ける。「次の一打、音の終わりを聞いてみて」",
+      "choices": [
+        {
+          "id": "look_visitor",
+          "text": "見学者が鐘を聞く 〔蓋然 66%〕",
+          "target": "s16_look_visitor",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "visitor",
+              "entity": "bell",
+              "domain": "bell+attendant",
+              "expectations": {
+                "duration": 4.740741
+              },
+              "eventId": "notice_visitor_heard_attendant",
+              "eventName": "見学者の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s13_relook_visitor": {
+      "id": "s13_relook_visitor",
+      "text": "見学者は係員の言葉を思い出し、次の一打を聞く。消えたと思ったあとに、細い音がまだ続く。言われたのはこれか、と顔を上げた。",
+      "choices": [
+        {
+          "id": "relook_attendant",
+          "text": "係員がもう一度聞く 〔蓋然 53%〕",
+          "target": "s15_relook_attendant",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "attendant",
+              "entity": "bell",
+              "domain": "bell+visitor",
+              "expectations": {
+                "duration": 4.740741
+              },
+              "eventId": "notice_attendant_heard_visitor",
+              "eventName": "係員の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s14_verify_attendant": {
+      "id": "s14_verify_attendant",
+      "text": "係員は次の一打で時計を見た。細い音が消えるまで、[bell.duration]秒あった。\n\n次の一打が鳴る。今度は、どこまで聞けばいいか分かっている。"
+    },
+    "s15_relook_attendant": {
+      "id": "s15_relook_attendant",
+      "text": "係員は見学者の話を踏まえて聞き直す。やはり、終わったと思った先に細い音が残る。",
+      "choices": [
+        {
+          "id": "letGo_visitor",
+          "text": "見学者がそのままにする 〔蓋然 38%〕",
+          "target": "s17_letGo_visitor",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_visitor_heard_attendant",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "letgo_visitor_heard_attendant",
+              "name": "見学者がそのままにした",
+              "properties": {
+                "observer": {
+                  "defaultValue": "visitor"
+                },
+                "source_entity": {
+                  "defaultValue": "bell"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s16_look_visitor": {
+      "id": "s16_look_visitor",
+      "text": "見学者は鐘に耳を澄ます。いつもならもう静かになっているところで、まだ細い音が残っている。",
+      "choices": [
+        {
+          "id": "verify_attendant",
+          "text": "係員が時計で確かめる 〔蓋然 36%〕",
+          "target": "s9_verify_attendant",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_attendant",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_attendant",
+              "name": "係員が確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "attendant"
+                },
+                "source_entity": {
+                  "defaultValue": "bell"
+                },
+                "primary_property": {
+                  "defaultValue": "duration"
+                },
+                "actual_value": {
+                  "defaultValue": 6
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s17_letGo_visitor": {
+      "id": "s17_letGo_visitor",
+      "text": "見学者は違和感をそのままにする。",
+      "choices": [
+        {
+          "id": "verify_attendant",
+          "text": "係員が時計で確かめる 〔蓋然 74%〕",
+          "target": "s18_verify_attendant",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_attendant_heard_visitor",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_attendant",
+              "name": "係員が確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "attendant"
+                },
+                "source_entity": {
+                  "defaultValue": "bell"
+                },
+                "primary_property": {
+                  "defaultValue": "duration"
+                },
+                "actual_value": {
+                  "defaultValue": 6
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s18_verify_attendant": {
+      "id": "s18_verify_attendant",
+      "text": "係員は次の一打で時計を見た。細い音が消えるまで、[bell.duration]秒あった。\n\n次の一打が鳴る。今度は、どこまで聞けばいいか分かっている。"
+    }
+  }
+}

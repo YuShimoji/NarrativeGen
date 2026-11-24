@@ -1,0 +1,51 @@
+{
+  "title": "閉館の鐘が消えるまで",
+  "entities": {
+    "bell": {
+      "id": "bell",
+      "name": "資料館の閉館の鐘",
+      "properties": {
+        "duration": { "key": "duration", "type": "number", "defaultValue": 6 }
+      }
+    }
+  },
+  "characters": {
+    "attendant": {
+      "id": "attendant",
+      "name": "係員",
+      "knowledgeProfiles": [{ "domain": "bell", "accuracy": 0.85, "tolerance": 0.17 }]
+    },
+    "visitor": {
+      "id": "visitor",
+      "name": "見学者",
+      "knowledgeProfiles": [{ "domain": "bell", "accuracy": 0.5, "tolerance": 0.14 }]
+    }
+  },
+  "beliefs": [
+    { "character": "attendant", "entity": "bell", "domain": "bell", "expectations": { "duration": 4 } },
+    { "character": "visitor", "entity": "bell", "domain": "bell", "expectations": { "duration": 6 } }
+  ],
+  "scene": { "present": ["attendant", "visitor"], "focus": "bell" },
+  "intent": { "include": ["asked", "realized"] },
+  "wording": {
+    "propertyNames": { "duration": "余韻の長さ" },
+    "patterns": {
+      "start": "資料館の展示室。閉館の鐘が一打ずつ、間を置いて鳴っている。{present}は出口の近くにいる。",
+      "lookNoticed": "{actor}は鐘に耳を澄ます。いつもならもう静かになっているところで、まだ細い音が残っている。",
+      "lookMissed": "{actor}は鐘を聞き流した。余韻が消えるところまで、いつもの閉館の音に聞こえる。",
+      "ask": "「何か聞こえましたか」{actor}が尋ねる。{target}は通路の奥を指した。「次の一打で、音がいつ消えるか聞いてみてください」",
+      "tellHeard": "{actor}が{target}に声を掛ける。「次の一打、音の終わりを聞いてみて」",
+      "tellDisagreement": "「まだ鳴っていたでしょう」{actor}が言う。{target}は鐘のほうへ向き直った。「あれでいつも通りだと思いました」",
+      "relookRealized": "{actor}は{heardFrom}の言葉を思い出し、次の一打を聞く。消えたと思ったあとに、細い音がまだ続く。言われたのはこれか、と顔を上げた。",
+      "relookDissolved": "{actor}は{heardFrom}の話を聞いてから、次の一打に耳を澄ます。今度は、音が消えるまでの間が自然に思えた。",
+      "relookConfirmed": "{actor}は{heardFrom}の話を踏まえて聞き直す。やはり、終わったと思った先に細い音が残る。",
+      "relookUnmoved": "{actor}は{heardFrom}の言葉を思い出して聞き直す。今度も、音の終わりに気になるところはなかった。",
+      "verify": "{actor}は次の一打で時計を見た。細い音が消えるまで、[{focus}.{propertyKey}]秒あった。",
+      "endVerified": "次の一打が鳴る。今度は、どこまで聞けばいいか分かっている。",
+      "endFaded": "鐘の音はまた聞こえなくなった。最後まで何秒あったかを数える人はいなかった。",
+      "choiceLook": "{actor}が鐘を聞く",
+      "choiceRelook": "{actor}がもう一度聞く",
+      "choiceVerify": "{actor}が時計で確かめる"
+    }
+  }
+}

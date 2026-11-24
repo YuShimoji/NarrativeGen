@@ -1,0 +1,856 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "start",
+  "flags": {},
+  "resources": {},
+  "variables": {},
+  "entities": {
+    "paper_strip": {
+      "id": "paper_strip",
+      "name": "次に通す紙帯",
+      "properties": {
+        "width": {
+          "key": "width",
+          "type": "number",
+          "defaultValue": 102
+        }
+      }
+    }
+  },
+  "characters": {
+    "printer": {
+      "id": "printer",
+      "name": "刷り手",
+      "knowledgeProfiles": [
+        {
+          "domain": "printing",
+          "accuracy": 0.82,
+          "tolerance": 0.01
+        },
+        {
+          "domain": "printing+cutter",
+          "accuracy": 0.82,
+          "tolerance": 0.014675
+        }
+      ]
+    },
+    "cutter": {
+      "id": "cutter",
+      "name": "裁ち手",
+      "knowledgeProfiles": [
+        {
+          "domain": "cutting",
+          "accuracy": 0.72,
+          "tolerance": 0.02
+        },
+        {
+          "domain": "cutting+printer",
+          "accuracy": 0.72,
+          "tolerance": 0.014675
+        }
+      ]
+    }
+  },
+  "knowledgeRules": {
+    "belief_printer_paper_strip": {
+      "character": "printer",
+      "entity": "paper_strip",
+      "domain": "printing",
+      "expectations": {
+        "width": 100
+      }
+    },
+    "belief_cutter_paper_strip": {
+      "character": "cutter",
+      "entity": "paper_strip",
+      "domain": "cutting",
+      "expectations": {
+        "width": 98
+      }
+    }
+  },
+  "nodes": {
+    "start": {
+      "id": "start",
+      "text": "印刷機が止まった。刷り手、裁ち手は受け台に[paper_strip]を置く。台には、紙の端を合わせるための線が引いてある。",
+      "choices": [
+        {
+          "id": "look_printer",
+          "text": "刷り手が見る 〔蓋然 53%〕",
+          "target": "s1_look_printer",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "printer",
+              "entity": "paper_strip",
+              "domain": "printing",
+              "expectations": {
+                "width": 100
+              },
+              "eventId": "notice_printer",
+              "eventName": "刷り手の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        },
+        {
+          "id": "look_cutter",
+          "text": "裁ち手が見る 〔蓋然 47%〕",
+          "target": "s2_look_cutter",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "cutter",
+              "entity": "paper_strip",
+              "domain": "cutting",
+              "expectations": {
+                "width": 98
+              },
+              "eventId": "notice_cutter",
+              "eventName": "裁ち手の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s1_look_printer": {
+      "id": "s1_look_printer",
+      "text": "刷り手が[paper_strip]の片側を線に合わせる。反対側だけが線の外に出た。もう一度、端を押さえ直す。",
+      "choices": [
+        {
+          "id": "tell_printer_cutter",
+          "text": "刷り手が裁ち手に話す 〔蓋然 24%〕",
+          "target": "s3_tell_printer_cutter",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_printer",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "tell_printer_cutter",
+              "name": "刷り手が裁ち手に話した",
+              "properties": {
+                "speaker": {
+                  "defaultValue": "printer"
+                },
+                "listener": {
+                  "defaultValue": "cutter"
+                },
+                "source_entity": {
+                  "defaultValue": "paper_strip"
+                },
+                "outcome": {
+                  "defaultValue": "heard"
+                },
+                "severity": {
+                  "defaultValue": 40
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "look_cutter",
+          "text": "裁ち手が見る 〔蓋然 43%〕",
+          "target": "s4_look_cutter",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "cutter",
+              "entity": "paper_strip",
+              "domain": "cutting",
+              "expectations": {
+                "width": 98
+              },
+              "eventId": "notice_cutter",
+              "eventName": "裁ち手の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        },
+        {
+          "id": "verify_printer",
+          "text": "刷り手が確かめる 〔蓋然 20%〕",
+          "target": "s5_verify_printer",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_printer",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_printer",
+              "name": "刷り手が確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "printer"
+                },
+                "source_entity": {
+                  "defaultValue": "paper_strip"
+                },
+                "primary_property": {
+                  "defaultValue": "width"
+                },
+                "actual_value": {
+                  "defaultValue": 102
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s2_look_cutter": {
+      "id": "s2_look_cutter",
+      "text": "裁ち手が[paper_strip]の片側を線に合わせる。反対側だけが線の外に出た。もう一度、端を押さえ直す。",
+      "choices": [
+        {
+          "id": "look_printer",
+          "text": "刷り手が見る 〔蓋然 46%〕",
+          "target": "s17_look_printer",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "printer",
+              "entity": "paper_strip",
+              "domain": "printing",
+              "expectations": {
+                "width": 100
+              },
+              "eventId": "notice_printer",
+              "eventName": "刷り手の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s3_tell_printer_cutter": {
+      "id": "s3_tell_printer_cutter",
+      "text": "「こっちの端、見てくれる？」刷り手は[paper_strip]を動かさないよう、指で留めた。裁ち手は受け台をのぞき込む。",
+      "choices": [
+        {
+          "id": "look_cutter",
+          "text": "裁ち手が見る 〔蓋然 72%〕",
+          "target": "s6_look_cutter",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "cutter",
+              "entity": "paper_strip",
+              "domain": "cutting+printer",
+              "expectations": {
+                "width": 99.064935
+              },
+              "eventId": "notice_cutter_heard_printer",
+              "eventName": "裁ち手の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        },
+        {
+          "id": "verify_printer",
+          "text": "刷り手が確かめる 〔蓋然 21%〕",
+          "target": "s7_verify_printer",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_printer",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_printer",
+              "name": "刷り手が確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "printer"
+                },
+                "source_entity": {
+                  "defaultValue": "paper_strip"
+                },
+                "primary_property": {
+                  "defaultValue": "width"
+                },
+                "actual_value": {
+                  "defaultValue": 102
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s4_look_cutter": {
+      "id": "s4_look_cutter",
+      "text": "裁ち手が[paper_strip]の片側を線に合わせる。反対側だけが線の外に出た。もう一度、端を押さえ直す。",
+      "choices": [
+        {
+          "id": "tell_cutter_printer",
+          "text": "裁ち手が刷り手に話す 〔蓋然 24%〕",
+          "target": "s18_tell_cutter_printer",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_cutter",
+              "value": true
+            },
+            {
+              "type": "hasEvent",
+              "key": "notice_printer",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "tell_cutter_printer",
+              "name": "裁ち手が刷り手に話した",
+              "properties": {
+                "speaker": {
+                  "defaultValue": "cutter"
+                },
+                "listener": {
+                  "defaultValue": "printer"
+                },
+                "source_entity": {
+                  "defaultValue": "paper_strip"
+                },
+                "outcome": {
+                  "defaultValue": "shared"
+                },
+                "severity": {
+                  "defaultValue": 41
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s5_verify_printer": {
+      "id": "s5_verify_printer",
+      "text": "刷り手は[paper_strip]を押さえ、定規を端から渡す。「[paper_strip.width]ミリ。線の引き方じゃなかったんだ」\n\n定規は紙の上に置いたままだ。二人の目は、同じ目盛りで止まった。"
+    },
+    "s6_look_cutter": {
+      "id": "s6_look_cutter",
+      "text": "裁ち手が[paper_strip]の片側を線に合わせる。反対側だけが線の外に出た。もう一度、端を押さえ直す。",
+      "choices": [
+        {
+          "id": "tell_cutter_printer",
+          "text": "裁ち手が刷り手に話す 〔蓋然 31%〕",
+          "target": "s8_tell_cutter_printer",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_cutter_heard_printer",
+              "value": true
+            },
+            {
+              "type": "hasEvent",
+              "key": "notice_printer",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "tell_cutter_printer",
+              "name": "裁ち手が刷り手に話した",
+              "properties": {
+                "speaker": {
+                  "defaultValue": "cutter"
+                },
+                "listener": {
+                  "defaultValue": "printer"
+                },
+                "source_entity": {
+                  "defaultValue": "paper_strip"
+                },
+                "outcome": {
+                  "defaultValue": "shared"
+                },
+                "severity": {
+                  "defaultValue": 40
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "verify_printer",
+          "text": "刷り手が確かめる 〔蓋然 25%〕",
+          "target": "s9_verify_printer",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_printer",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_printer",
+              "name": "刷り手が確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "printer"
+                },
+                "source_entity": {
+                  "defaultValue": "paper_strip"
+                },
+                "primary_property": {
+                  "defaultValue": "width"
+                },
+                "actual_value": {
+                  "defaultValue": 102
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "verify_cutter",
+          "text": "裁ち手が確かめる 〔蓋然 22%〕",
+          "target": "s10_verify_cutter",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_cutter_heard_printer",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_cutter",
+              "name": "裁ち手が確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "cutter"
+                },
+                "source_entity": {
+                  "defaultValue": "paper_strip"
+                },
+                "primary_property": {
+                  "defaultValue": "width"
+                },
+                "actual_value": {
+                  "defaultValue": 102
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s7_verify_printer": {
+      "id": "s7_verify_printer",
+      "text": "刷り手は[paper_strip]を押さえ、定規を端から渡す。「[paper_strip.width]ミリ。線の引き方じゃなかったんだ」\n\n定規は紙の上に置いたままだ。二人の目は、同じ目盛りで止まった。"
+    },
+    "s8_tell_cutter_printer": {
+      "id": "s8_tell_cutter_printer",
+      "text": "「ずれてるのは、こっちだけ？」裁ち手が紙の片側を指す。刷り手はうなずき、反対側の線に指を置いた。",
+      "choices": [
+        {
+          "id": "relook_printer",
+          "text": "刷り手が見直す 〔蓋然 58%〕",
+          "target": "s11_relook_printer",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "printer",
+              "entity": "paper_strip",
+              "domain": "printing+cutter",
+              "expectations": {
+                "width": 99.064935
+              },
+              "eventId": "notice_printer_heard_cutter",
+              "eventName": "刷り手の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        },
+        {
+          "id": "verify_printer",
+          "text": "刷り手が確かめる 〔蓋然 16%〕",
+          "target": "s12_verify_printer",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_printer",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_printer",
+              "name": "刷り手が確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "printer"
+                },
+                "source_entity": {
+                  "defaultValue": "paper_strip"
+                },
+                "primary_property": {
+                  "defaultValue": "width"
+                },
+                "actual_value": {
+                  "defaultValue": 102
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "verify_cutter",
+          "text": "裁ち手が確かめる 〔蓋然 14%〕",
+          "target": "s13_verify_cutter",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_cutter_heard_printer",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_cutter",
+              "name": "裁ち手が確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "cutter"
+                },
+                "source_entity": {
+                  "defaultValue": "paper_strip"
+                },
+                "primary_property": {
+                  "defaultValue": "width"
+                },
+                "actual_value": {
+                  "defaultValue": 102
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s9_verify_printer": {
+      "id": "s9_verify_printer",
+      "text": "刷り手は[paper_strip]を押さえ、定規を端から渡す。「[paper_strip.width]ミリ。線の引き方じゃなかったんだ」\n\n定規は紙の上に置いたままだ。二人の目は、同じ目盛りで止まった。"
+    },
+    "s10_verify_cutter": {
+      "id": "s10_verify_cutter",
+      "text": "裁ち手は[paper_strip]を押さえ、定規を端から渡す。「[paper_strip.width]ミリ。線の引き方じゃなかったんだ」\n\n定規は紙の上に置いたままだ。二人の目は、同じ目盛りで止まった。"
+    },
+    "s11_relook_printer": {
+      "id": "s11_relook_printer",
+      "text": "刷り手は裁ち手の話を聞いてから紙を見直す。やはり、一方の端だけが線の外に出ている。",
+      "choices": [
+        {
+          "id": "verify_printer",
+          "text": "刷り手が確かめる 〔蓋然 37%〕",
+          "target": "s14_verify_printer",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_printer_heard_cutter",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_printer",
+              "name": "刷り手が確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "printer"
+                },
+                "source_entity": {
+                  "defaultValue": "paper_strip"
+                },
+                "primary_property": {
+                  "defaultValue": "width"
+                },
+                "actual_value": {
+                  "defaultValue": 102
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "verify_cutter",
+          "text": "裁ち手が確かめる 〔蓋然 32%〕",
+          "target": "s15_verify_cutter",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_cutter_heard_printer",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_cutter",
+              "name": "裁ち手が確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "cutter"
+                },
+                "source_entity": {
+                  "defaultValue": "paper_strip"
+                },
+                "primary_property": {
+                  "defaultValue": "width"
+                },
+                "actual_value": {
+                  "defaultValue": 102
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "letGo_cutter",
+          "text": "裁ち手がそのままにする 〔蓋然 19%〕",
+          "target": "s16_letGo_cutter",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_cutter_heard_printer",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "letgo_cutter_heard_printer",
+              "name": "裁ち手がそのままにした",
+              "properties": {
+                "observer": {
+                  "defaultValue": "cutter"
+                },
+                "source_entity": {
+                  "defaultValue": "paper_strip"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s12_verify_printer": {
+      "id": "s12_verify_printer",
+      "text": "刷り手は[paper_strip]を押さえ、定規を端から渡す。「[paper_strip.width]ミリ。線の引き方じゃなかったんだ」\n\n定規は紙の上に置いたままだ。二人の目は、同じ目盛りで止まった。"
+    },
+    "s13_verify_cutter": {
+      "id": "s13_verify_cutter",
+      "text": "裁ち手は[paper_strip]を押さえ、定規を端から渡す。「[paper_strip.width]ミリ。線の引き方じゃなかったんだ」\n\n定規は紙の上に置いたままだ。二人の目は、同じ目盛りで止まった。"
+    },
+    "s14_verify_printer": {
+      "id": "s14_verify_printer",
+      "text": "刷り手は[paper_strip]を押さえ、定規を端から渡す。「[paper_strip.width]ミリ。線の引き方じゃなかったんだ」\n\n定規は紙の上に置いたままだ。二人の目は、同じ目盛りで止まった。"
+    },
+    "s15_verify_cutter": {
+      "id": "s15_verify_cutter",
+      "text": "裁ち手は[paper_strip]を押さえ、定規を端から渡す。「[paper_strip.width]ミリ。線の引き方じゃなかったんだ」\n\n定規は紙の上に置いたままだ。二人の目は、同じ目盛りで止まった。"
+    },
+    "s16_letGo_cutter": {
+      "id": "s16_letGo_cutter",
+      "text": "裁ち手は違和感をそのままにする。",
+      "choices": [
+        {
+          "id": "verify_printer",
+          "text": "刷り手が確かめる 〔蓋然 75%〕",
+          "target": "s19_verify_printer",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_printer_heard_cutter",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_printer",
+              "name": "刷り手が確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "printer"
+                },
+                "source_entity": {
+                  "defaultValue": "paper_strip"
+                },
+                "primary_property": {
+                  "defaultValue": "width"
+                },
+                "actual_value": {
+                  "defaultValue": 102
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s17_look_printer": {
+      "id": "s17_look_printer",
+      "text": "刷り手が[paper_strip]の片側を線に合わせる。反対側だけが線の外に出た。もう一度、端を押さえ直す。",
+      "choices": [
+        {
+          "id": "tell_cutter_printer",
+          "text": "裁ち手が刷り手に話す 〔蓋然 24%〕",
+          "target": "s18_tell_cutter_printer",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_cutter",
+              "value": true
+            },
+            {
+              "type": "hasEvent",
+              "key": "notice_printer",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "tell_cutter_printer",
+              "name": "裁ち手が刷り手に話した",
+              "properties": {
+                "speaker": {
+                  "defaultValue": "cutter"
+                },
+                "listener": {
+                  "defaultValue": "printer"
+                },
+                "source_entity": {
+                  "defaultValue": "paper_strip"
+                },
+                "outcome": {
+                  "defaultValue": "shared"
+                },
+                "severity": {
+                  "defaultValue": 41
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s18_tell_cutter_printer": {
+      "id": "s18_tell_cutter_printer",
+      "text": "「ずれてるのは、こっちだけ？」裁ち手が紙の片側を指す。刷り手はうなずき、反対側の線に指を置いた。",
+      "choices": [
+        {
+          "id": "relook_printer",
+          "text": "刷り手が見直す 〔蓋然 38%〕",
+          "target": "s20_relook_printer",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "printer",
+              "entity": "paper_strip",
+              "domain": "printing+cutter",
+              "expectations": {
+                "width": 99.064935
+              },
+              "eventId": "notice_printer_heard_cutter",
+              "eventName": "刷り手の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s19_verify_printer": {
+      "id": "s19_verify_printer",
+      "text": "刷り手は[paper_strip]を押さえ、定規を端から渡す。「[paper_strip.width]ミリ。線の引き方じゃなかったんだ」\n\n定規は紙の上に置いたままだ。二人の目は、同じ目盛りで止まった。"
+    },
+    "s20_relook_printer": {
+      "id": "s20_relook_printer",
+      "text": "刷り手は裁ち手の話を聞いてから紙を見直す。やはり、一方の端だけが線の外に出ている。",
+      "choices": [
+        {
+          "id": "relook_cutter",
+          "text": "裁ち手が見直す 〔蓋然 56%〕",
+          "target": "s21_relook_cutter",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "cutter",
+              "entity": "paper_strip",
+              "domain": "cutting+printer",
+              "expectations": {
+                "width": 99.064935
+              },
+              "eventId": "notice_cutter_heard_printer",
+              "eventName": "裁ち手の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s21_relook_cutter": {
+      "id": "s21_relook_cutter",
+      "text": "裁ち手は刷り手の話を聞いてから紙を見直す。やはり、一方の端だけが線の外に出ている。",
+      "choices": [
+        {
+          "id": "verify_printer",
+          "text": "刷り手が確かめる 〔蓋然 37%〕",
+          "target": "s14_verify_printer",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_printer_heard_cutter",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_printer",
+              "name": "刷り手が確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "printer"
+                },
+                "source_entity": {
+                  "defaultValue": "paper_strip"
+                },
+                "primary_property": {
+                  "defaultValue": "width"
+                },
+                "actual_value": {
+                  "defaultValue": 102
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
