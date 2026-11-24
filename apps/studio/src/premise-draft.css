@@ -1,6 +1,6 @@
 .draft-back { margin-left: auto; color: var(--accent); }
 .premise-draft { max-width: 1360px; }
-.draft-heading, .draft-result-head, .draft-judgment > div {
+.draft-heading, .draft-result-head, .draft-judgment-head, .draft-ending-changes li {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -39,8 +39,20 @@
 .draft-judgments { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 6px; }
 .draft-judgment { padding: 7px 9px; border-radius: 6px; background: var(--surface-2); }
 .draft-judgment p { margin: 1px 0 0; }
-.draft-outcome { padding: 1px 7px; border-radius: 4px; background: var(--ok-bg); color: var(--ok); font-size: 12px; }
+.draft-judgment.is-changed { border-inline-start: 3px solid var(--accent); }
+.draft-judgment-head { flex-wrap: wrap; gap: 3px 8px; }
+.draft-transition { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-block: 3px; }
+.draft-transition > div { display: grid; justify-items: start; }
+.draft-transition .sub { margin: 0; }
+.draft-outcome { display: inline-block; padding: 1px 7px; border-radius: 4px; background: var(--ok-bg); color: var(--ok); font-size: 12px; }
 .draft-outcome.is-noticed { background: var(--hot-bg); color: var(--hot); }
+.draft-no-change { margin: 8px 0; }
+.draft-details { margin-top: 8px; }
+.draft-details summary { width: fit-content; color: var(--accent); }
+.draft-ending-changes { list-style: none; padding: 0; margin: 0; }
+.draft-ending-changes li { align-items: baseline; padding: 6px 0; }
+.draft-ending-changes li + li { border-top: 1px solid var(--line); }
+.draft-direction { flex: none; color: var(--accent); font-weight: 600; }
 .draft-shares { border-collapse: collapse; width: 100%; font-size: 13px; }
 .draft-shares th, .draft-shares td { padding: 5px 4px; border-bottom: 1px solid var(--line); }
 .draft-shares th:first-child { text-align: left; }

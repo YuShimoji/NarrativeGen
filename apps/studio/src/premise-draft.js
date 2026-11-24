@@ -1,12 +1,12 @@
 import { endingLabel, generateStory } from '@narrativegen/engine-ts/browser'
 import sample from '../../../models/premises/cheeseburger-weight-hearsay.json'
-import { esc, num } from './format.js'
+import { esc } from './format.js'
 
 const form = document.getElementById('draft-form')
 const status = document.getElementById('draft-status')
 const output = document.getElementById('draft-output')
 const focus = sample.scene.focus
-const percent = new Intl.NumberFormat('ja-JP', { style: 'percent', maximumFractionDigits: 1 })
+const percent = new Intl.NumberFormat('ja-JP', { style: 'percent', maximumFractionDigits: 2 })
 
 document.getElementById('draft-sample').textContent = `見本　${sample.title}`
 form.elements.namedItem('thing-name').defaultValue = sample.entities[focus].name
@@ -63,31 +63,83 @@ function readPremise() {
 }
 
 const baseline = generateStory(structuredClone(sample)).derivation
+const baselineJudgments = new Map(baseline.perceptions.map((fact) => [fact.character, fact.noticed]))
 const shares = (derivation) => new Map(derivation.endings.map(({ ending, probability }) => [ending, probability]))
+const baselineShares = shares(baseline)
+const baselineWeight = sample.entities[focus].properties.weight.defaultValue
+
+function outcome(noticed) {
+  return `<span class="draft-outcome${noticed ? ' is-noticed' : ''}">${noticed ? '違和感あり' : '気に留めない'}</span>`
+}
+
+function judgmentRow(premise, fact, changed) {
+  const result = changed
+    ? `<div class="draft-transition">
+        <div><span class="sub">見本</span>${outcome(baselineJudgments.get(fact.character))}</div>
+        <span aria-hidden="true">→</span>
+        <div><span class="sub">試算</span>${outcome(fact.noticed)}</div>
+      </div>`
+    : outcome(fact.noticed)
+  return `<li class="draft-judgment${changed ? ' is-changed' : ''}">
+    <div class="draft-judgment-head"><strong>${esc(premise.characters[fact.character].name)}</strong>${changed ? '' : result}</div>
+    ${changed ? result : ''}
+    <p class="sub">見込み ${fact.expected}　許容範囲 ${fact.rangeMin}〜${fact.rangeMax}</p>
+  </li>`
+}
+
+function judgmentsHtml(premise, derivation) {
+  const changed = []
+  const same = []
+  for (const fact of derivation.perceptions) {
+    const differs = baselineJudgments.get(fact.character) !== fact.noticed
+    const rows = differs ? changed : same
+    rows.push(judgmentRow(premise, fact, differs))
+  }
+  const { name, properties } = premise.entities[focus]
+  const weight = properties.weight.defaultValue
+  return `<h3>最初に見たときの判断</h3>
+    <p class="sub">${esc(name)}の重さ　${weight === baselineWeight ? weight : `見本 ${baselineWeight} → 試算 ${weight}`}</p>
+    ${changed.length ? `<ul class="draft-judgments">${changed.join('')}</ul>` : '<p class="draft-no-change">見本と同じ判断です。</p>'}
+    ${same.length ? `<details class="draft-details">
+      <summary>${changed.length ? 'ほかの人物の判断' : 'すべての人物の判断'}</summary>
+      <ul class="draft-judgments">${same.join('')}</ul>
+    </details>` : ''}`
+}
+
+function shareText(value) {
+  // The engine includes only reachable endings, even if their share rounds to zero.
+  return value === 0 ? '0.01%未満' : percent.format(value ?? 0)
+}
+
+function endingsHtml(derivation) {
+  const trial = shares(derivation)
+  const changes = []
+  const numbers = []
+  for (const ending of new Set([...baselineShares.keys(), ...trial.keys()])) {
+    const label = esc(endingLabel(ending))
+    const before = baselineShares.get(ending)
+    const after = trial.get(ending)
+    numbers.push(`<tr><th scope="row">${label}</th><td>${shareText(before)}</td><td>${shareText(after)}</td></tr>`)
+    if (before === after) continue
+    const rises = after !== undefined && (before === undefined || after > before)
+    changes.push(`<li><strong>${label}</strong><span class="draft-direction"><span aria-hidden="true">${rises ? '↑' : '↓'}</span> ${rises ? '増える' : '減る'}</span></li>`)
+  }
+  return `<h3 id="draft-endings">結末の変化</h3>
+    ${derivation.truncated ? '<p class="sub">試算は上限までに調べた範囲の割合です。</p>' : ''}
+    ${changes.length ? `<ul class="draft-ending-changes">${changes.join('')}</ul>` : '<p class="draft-no-change">見本と同じ割合です。</p>'}
+    <details class="draft-details">
+      <summary>数値を見る</summary>
+      <table class="draft-shares" aria-labelledby="draft-endings">
+        <thead><tr><th scope="col">結末</th><th scope="col">見本</th><th scope="col">試算</th></tr></thead>
+        <tbody>${numbers.join('')}</tbody>
+      </table>
+    </details>`
+}
 
 function renderResult(premise, derivation) {
-  const facts = derivation.perceptions.map((fact) => `<li class="draft-judgment">
-    <div><strong>${esc(premise.characters[fact.character].name)}</strong>
-      <span class="draft-outcome ${fact.noticed ? 'is-noticed' : ''}">${fact.noticed ? '違和感あり' : '気に留めない'}</span></div>
-    <p class="sub">見込み ${num(fact.expected)}　許容範囲 ${num(fact.rangeMin)}〜${num(fact.rangeMax)}</p>
-  </li>`).join('')
-  const before = shares(baseline)
-  const after = shares(derivation)
-  const rows = [...new Set([...before.keys(), ...after.keys()])].map((ending) => `<tr>
-    <th scope="row">${esc(endingLabel(ending))}</th>
-    <td>${percent.format(before.get(ending) ?? 0)}</td>
-    <td>${percent.format(after.get(ending) ?? 0)}</td>
-  </tr>`).join('')
   output.innerHTML = `
-    <h3>最初に見たときの判断</h3>
-    <p class="sub">${esc(premise.entities[focus].name)}の重さ ${num(premise.entities[focus].properties.weight.defaultValue)}</p>
-    <ul class="draft-judgments">${facts}</ul>
-    <h3 id="draft-endings">結末の割合</h3>
-    ${derivation.truncated ? '<p class="sub">上限までに調べた範囲の割合です。</p>' : ''}
-    <table class="draft-shares" aria-labelledby="draft-endings">
-      <thead><tr><th scope="col">結末</th><th scope="col">見本</th><th scope="col">試算</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+    ${judgmentsHtml(premise, derivation)}
+    ${endingsHtml(derivation)}
     ${derivation.warnings.map((warning) => `<p class="sub">${esc(warning)}</p>`).join('')}`
 }
 
