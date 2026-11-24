@@ -20,6 +20,7 @@
         </div>
         <div class="draft-heading-actions">
           <button type="button" id="draft-new" class="btn">自分の前提を作る</button>
+          <button type="button" id="draft-load-premise" class="btn">前提を開く</button>
           <button type="button" id="draft-reset" class="btn">見本に戻す</button>
         </div>
       </div>
@@ -27,6 +28,7 @@
         <form id="draft-form" class="draft-form">
           <section class="card draft-card" aria-labelledby="draft-thing">
             <h2 id="draft-thing">場の物</h2>
+            <label id="draft-title-field" class="draft-title-field" hidden>物語の名前（任意）<input name="story-title" type="text" disabled /></label>
             <div class="draft-thing-fields">
               <label>物の名前<input name="thing-name" type="text" required /></label>
               <label id="draft-property-field" hidden>性質の名前<input name="property-name" type="text" placeholder="長さなど" required disabled /></label>
@@ -42,6 +44,15 @@
             <div id="draft-person-fields"></div>
             <button type="button" id="draft-add-person" class="btn draft-add-person" hidden>＋ 人物を追加</button>
           </section>
+          <details id="draft-intent" class="card draft-card draft-intent" hidden>
+            <summary>作者の意図（任意）</summary>
+            <fieldset>
+              <legend>入れたい出来事</legend>
+              <div id="draft-beats" class="draft-intent-options"></div>
+            </fieldset>
+            <label>望む結末<select name="intent-ending" id="draft-intent-ending"></select></label>
+          </details>
+          <button type="button" id="draft-save-premise" class="btn draft-save-premise" hidden>前提を保存</button>
         </form>
         <aside class="card draft-card draft-result" aria-labelledby="draft-result-title">
           <div class="draft-result-head">
@@ -49,10 +60,12 @@
             <button type="submit" id="draft-submit" form="draft-form" class="btn btn-primary">試算する</button>
           </div>
           <p id="draft-status" class="sub draft-status" role="status">見本の結果を表示しています。</p>
+          <button type="button" id="draft-open-story" class="btn" hidden>この物語を開く</button>
           <div id="draft-output"></div>
         </aside>
       </div>
-      <p class="sub draft-footnote">入力はこのページ内だけです。「見本に戻す」か再読み込みで入力は消えます。</p>
+      <p class="sub draft-footnote">入力を次回も使うには「前提を保存」でファイルに残せます。</p>
+      <input type="file" id="draft-premise-file" accept=".json,application/json" hidden />
     </main>
     <script type="module" src="./src/premise-draft.js"></script>
   </body>

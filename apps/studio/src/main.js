@@ -10,6 +10,7 @@ import {
   num,
 } from './format.js'
 import * as edit from './edit.js'
+import { downloadJson, takeTrial } from './studio-files.js'
 
 // models/generated holds stories built from models/premises (SP-PREMISE-001); they open like any other story
 const samples = {
@@ -40,7 +41,7 @@ const state = {
   error: '',
   focusSeg: null,
   // editing
-  source: null, // { kind: 'sample', file } | { kind: 'file', fileName }
+  source: null, // { kind: 'sample', file } | { kind: 'file' } | { kind: 'trial' }
   editing: false,
   dirty: new Set(),
   notice: '',
@@ -66,9 +67,11 @@ function pref(key, value) {
 // ---------------------------------------------------------------------------
 // loading
 
-function fillPicker(extraName) {
+function fillPicker(extraName, extraLabel = '読み込んだファイル') {
   const opts = sampleList.map((s) => `<option value="${esc(s.path)}">${esc(s.name)}</option>`)
-  if (extraName) opts.unshift(`<option value="__file">${esc(extraName)}（読み込んだファイル）</option>`)
+  if (extraName) opts.unshift(`<option value="__file">${esc(extraName)}（${extraLabel}）</option>`)
+  opts.push('<option value="__open">物語のファイルを開く…</option>')
+  if (import.meta.env.DEV) opts.push('<option value="__premise">前提入力を開く…</option>')
   picker.innerHTML = opts.join('')
 }
 
@@ -108,22 +111,24 @@ function isGenerated() {
 }
 
 function openModel(model, name, source, story = null) {
+  if (!model || typeof model !== 'object' || !model.nodes || !model.startNode || !model.nodes[model.startNode]) {
+    state.error = `「${name}」は物語モデルとして読めません（nodes と startNode が必要です）。`
+    render()
+    return false
+  }
   state.error = ''
   state.story = story
   state.source = source ?? null
   state.dirty = new Set()
   state.notice = ''
-  if (!model || typeof model !== 'object' || !model.nodes || !model.startNode || !model.nodes[model.startNode]) {
-    state.error = `「${name}」は物語モデルとして読めません（nodes と startNode が必要です）。`
-    render()
-    return
-  }
+  if (source?.kind === 'file') state.editing = false
   state.name = name
   state.model = model
   state.names = createNames(model)
   state.check = null
   restart()
   updateSaveArea()
+  return true
 }
 
 function restart() {
@@ -330,7 +335,7 @@ const pct = (p) => `${(p * 100).toFixed((p > 0 && p < 0.1) || (p > 0.9 && p < 1)
 
 function storyInStep() {
   const s = state.story
-  return !!s && (state.dirty.size ? canon(state.model) === s.baseline : s.fresh)
+  return !!s && (state.dirty.size || state.source?.kind === 'trial' ? canon(state.model) === s.baseline : s.fresh)
 }
 
 function shareRow(label, p, extra = '', cls = '') {
@@ -354,7 +359,9 @@ function probabilityCard(step) {
   const story = state.story
   if (!story) return ''
   if (!storyInStep()) {
-    const why = state.dirty.size
+    const why = state.source?.kind === 'trial'
+      ? '試算した物語を編集したため、試算時の蓋然と理由は表示していません。'
+      : state.dirty.size
       ? 'この物語を手で直したので、前提から組んだ時の蓋然と理由は出せません。直した物語を残す時は「写して育てる」を使います。'
       : '保存されている物語が、今の前提から組んだものと違います。<span class="term">npm run generate:story</span> で組み直すと、蓋然と理由が出ます。'
     return `<section class="card card-prob"><h3><span class="tag">蓋然</span>前提から組んだ物語と違っています</h3><p class="sub">${why}</p></section>`
@@ -1065,12 +1072,15 @@ function updateSaveArea() {
       <button type="button" id="grow" class="btn ${n ? 'btn-primary' : ''}" title="models/examples/ へ写しを作り、以後はその写しを編集します。生成した物語は前提から組み直せるまま残ります。">写して育てる</button>`
     return
   }
-  if (!n) {
+  const trial = state.source?.kind === 'trial'
+  if (!n && !trial) {
     saveArea.innerHTML = state.notice ? `<span class="notice">${state.notice}</span>` : ''
     return
   }
-  const label = state.source?.kind === 'sample' ? '保存' : 'JSONを書き出す'
-  saveArea.innerHTML = `<span class="dirty">未保存の変更 ${n} か所</span><button type="button" id="save" class="btn btn-primary">${label}</button>`
+  const label = trial ? '物語を保存' : state.source?.kind === 'sample' ? '保存' : 'JSONを書き出す'
+  const notice = !n && state.notice ? `<span class="notice">${state.notice}</span>` : ''
+  const dirty = n ? `<span class="dirty">未保存の変更 ${n} か所</span>` : ''
+  saveArea.innerHTML = `${notice}${dirty}<button type="button" id="save" class="btn btn-primary">${label}</button>`
 }
 
 function checkSummary() {
@@ -1123,17 +1133,12 @@ async function grow() {
 }
 
 async function save() {
-  if (!state.dirty.size || !state.model) return
+  if (!state.model || (!state.dirty.size && state.source?.kind !== 'trial')) return
   const summary = checkSummary()
   if (state.source?.kind !== 'sample') {
-    const blob = new Blob([JSON.stringify(state.model, null, 2) + '\n'], { type: 'application/json' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = `${state.name}.json`
-    a.click()
-    URL.revokeObjectURL(a.href)
+    const filename = downloadJson(state.name, state.model)
     state.dirty = new Set()
-    state.notice = `${esc(state.name)}.json を書き出しました。${summary}`
+    state.notice = `${esc(filename)} を書き出しました。${summary}`
     updateSaveArea()
     return
   }
@@ -1303,13 +1308,22 @@ app.addEventListener('click', (event) => {
 })
 
 let pickerValue = ''
+const storyFile = document.getElementById('story-file')
 picker.addEventListener('focus', () => { pickerValue = picker.value })
 picker.addEventListener('change', () => {
+  if (picker.value === '__open' || picker.value === '__premise') {
+    const action = picker.value
+    picker.value = pickerValue
+    if (action === '__open') storyFile.click()
+    else window.open('./premise-draft.html', '_blank', 'noopener')
+    return
+  }
   if (!confirmDiscard()) {
     picker.value = pickerValue
     return
   }
   if (picker.value !== '__file') openSample(picker.value)
+  pickerValue = picker.value
 })
 saveArea.addEventListener('click', (event) => {
   if (event.target.closest('#save')) save()
@@ -1334,31 +1348,63 @@ window.addEventListener('dragover', (e) => {
 window.addEventListener('dragleave', (e) => {
   if (!e.relatedTarget) hint.hidden = true
 })
-window.addEventListener('drop', async (e) => {
-  e.preventDefault()
-  hint.hidden = true
-  const file = e.dataTransfer?.files?.[0]
+
+async function openFile(file) {
   if (!file || !confirmDiscard()) return
   try {
     const model = JSON.parse(await file.text())
     const name = file.name.replace(/\.json$/i, '')
+    if (!openModel(model, name, { kind: 'file' })) return
     fillPicker(name)
     picker.value = '__file'
-    openModel(model, name, { kind: 'file', fileName: file.name })
+    pickerValue = picker.value
+    setView('run')
   } catch {
     state.error = `「${file.name}」はJSONとして読めません。`
     render()
   }
+}
+
+window.addEventListener('drop', (e) => {
+  e.preventDefault()
+  hint.hidden = true
+  openFile(e.dataTransfer?.files?.[0])
+})
+storyFile.addEventListener('change', () => {
+  const file = storyFile.files?.[0]
+  storyFile.value = ''
+  openFile(file)
 })
 
-fillPicker()
-const savedView = pref('view')
-if (savedView === 'check' || savedView === 'run') state.view = savedView
-const savedSample = pref('sample')
-const initial = sampleList.find((s) => s.path === savedSample) ?? sampleList.find((s) => s.name === DEFAULT_SAMPLE) ?? sampleList[0]
-const resume = takeResume()
-openSample(initial.path).then(() => {
-  // a remembered place belongs to one story; never replay it onto another
+async function init() {
+  let trialError = ''
+  try {
+    const trial = takeTrial()
+    if (trial) {
+      const { premise, story: { model, derivation } } = trial
+      const name = premise.title || '試算した物語'
+      edit.stripGeneratedChoiceLabels(model)
+      if (!openModel(model, name, { kind: 'trial' }, { premise, derivation, baseline: canon(model), fresh: true })) {
+        throw new Error('試算した物語を読み込めませんでした。')
+      }
+      fillPicker(name, '試算した物語')
+      picker.value = '__file'
+      pickerValue = picker.value
+      setView('run')
+      return
+    }
+  } catch (error) {
+    trialError = error.message
+  }
+  fillPicker()
+  const savedView = pref('view')
+  if (savedView === 'check' || savedView === 'run') state.view = savedView
+  const savedSample = pref('sample')
+  const initial = sampleList.find((s) => s.path === savedSample) ?? sampleList.find((s) => s.name === DEFAULT_SAMPLE) ?? sampleList[0]
+  const resume = takeResume()
+  await openSample(initial.path)
+  pickerValue = picker.value
+  // A remembered place belongs to one story; never replay it onto another.
   if (resume && (!resume.sample || resume.sample === initial.path)) {
     replayQuiet(resume.path ?? [])
     state.cursor = Math.min(resume.cursor ?? 0, state.steps.length - 1)
@@ -1366,5 +1412,8 @@ openSample(initial.path).then(() => {
     state.notice = resume.notice ?? ''
     updateSaveArea()
   }
+  state.error = trialError
   setView(state.view)
-})
+}
+
+init()

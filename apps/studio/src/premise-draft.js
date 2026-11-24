@@ -1,6 +1,8 @@
-import { endingLabel, explainAction, generateStory } from '@narrativegen/engine-ts/browser'
+import { beatLabel, endingLabel, explainAction, generateStory } from '@narrativegen/engine-ts/browser'
 import sample from '../../../models/premises/cheeseburger-weight-hearsay.json'
 import { esc, num } from './format.js'
+import { customFocus, customProperty, intentBeats, intentEndings, makePremise, readPremiseFile } from './premise-form.js'
+import { downloadJson, openTrialTab } from './studio-files.js'
 
 const form = document.getElementById('draft-form')
 const status = document.getElementById('draft-status')
@@ -10,17 +12,29 @@ const addPerson = document.getElementById('draft-add-person')
 const newPremise = document.getElementById('draft-new')
 const submit = document.getElementById('draft-submit')
 const propertyField = document.getElementById('draft-property-field')
+const titleField = document.getElementById('draft-title-field')
+const title = form.elements.namedItem('story-title')
+const intentField = document.getElementById('draft-intent')
+const intentEnding = document.getElementById('draft-intent-ending')
+const savePremise = document.getElementById('draft-save-premise')
+const openStory = document.getElementById('draft-open-story')
+const premiseFile = document.getElementById('draft-premise-file')
 const thingName = form.elements.namedItem('thing-name')
 const propertyName = form.elements.namedItem('property-name')
 const actualValue = form.elements.namedItem('actual')
 const percent = new Intl.NumberFormat('ja-JP', { style: 'percent', maximumFractionDigits: 2 })
-const customFocus = 'thing'
-const customProperty = 'value'
 
 const sampleResult = { premise: sample, story: generateStory(structuredClone(sample)), label: '見本' }
 let firstTrial
 let nextPerson = 0
 let trialWorker
+let latestTrial
+
+document.getElementById('draft-beats').innerHTML = intentBeats.map((beat) =>
+  `<label><input type="checkbox" name="intent-beat" value="${beat}" />${esc(beatLabel(beat))}</label>`).join('')
+intentEnding.innerHTML = '<option value="">指定しない</option>' + intentEndings.map((ending) =>
+  `<option value="${ending}">${esc(endingLabel(ending))}</option>`).join('')
+const intentChecks = Array.from(form.querySelectorAll('input[name="intent-beat"]'))
 
 function field(id, personLabel, key, label, value, attributes, className = '') {
   return `<label class="${className}">
@@ -79,32 +93,23 @@ function readSample(fields) {
 }
 
 function readCustom(fields) {
-  const name = readText(fields, 'thing-name', '物の名前')
+  const thing = readText(fields, 'thing-name', '物の名前')
   const property = readText(fields, 'property-name', '性質の名前')
-  const premise = {
-    title: `${name}の${property}`,
-    entities: { [customFocus]: {
-      id: customFocus,
-      name,
-      properties: { [customProperty]: { key: customProperty, type: 'number', defaultValue: Number(fields.get('actual')) } },
-    } },
-    characters: {},
-    beliefs: [],
-    scene: { focus: customFocus, present: [] },
-    wording: { propertyNames: { [customProperty]: property } },
-  }
-  for (const row of personFields.children) {
+  const people = Array.from(personFields.children, (row) => {
     const id = row.dataset.personId
     const name = readText(fields, `${id}-name`, `${row.getAttribute('aria-label')}の名前`)
     const domain = readText(fields, `${id}-domain`, `${name}の知識の分野`)
     const accuracy = Number(fields.get(`${id}-accuracy`))
     const tolerance = Number(fields.get(`${id}-tolerance`))
     const expected = Number(fields.get(`${id}-expected`))
-    premise.characters[id] = { id, name, knowledgeProfiles: [{ domain, accuracy, tolerance }] }
-    premise.beliefs.push({ character: id, entity: customFocus, domain, expectations: { [customProperty]: expected } })
-    premise.scene.present.push(id)
-  }
-  return premise
+    return { id, name, domain, accuracy, tolerance, expected }
+  })
+  return makePremise({
+    title: fields.get('story-title').trim(),
+    thing, property, actual: Number(fields.get('actual')), people,
+    include: fields.getAll('intent-beat'),
+    ending: fields.get('intent-ending'),
+  })
 }
 
 function focusValue(premise) {
@@ -276,11 +281,19 @@ function actionsHtml(result, reference) {
 
 function renderResult(result, reference) {
   const { derivation } = result.story
+  const intent = derivation.intent
+  const requested = intent ? [
+    ...(intent.include ?? []).map(beatLabel),
+    ...(intent.ending ? [`結末「${endingLabel(intent.ending)}」`] : []),
+  ] : []
   output.innerHTML = `
+    ${requested.length ? `<p class="sub">作者の意図　${requested.map(esc).join('、')}</p><p class="sub">意図を満たす展開　${percent.format(derivation.intentShare)}${derivation.truncated ? '（調べた範囲）' : ''}</p>` : ''}
+    ${derivation.warnings.map((warning) => `<p class="sub">${esc(warning)}</p>`).join('')}
     ${judgmentsHtml(result, reference)}
     ${endingsHtml(result, reference)}
-    ${actionsHtml(result, reference)}
-    ${derivation.warnings.map((warning) => `<p class="sub">${esc(warning)}</p>`).join('')}`
+    ${actionsHtml(result, reference)}`
+  latestTrial = result
+  openStory.hidden = false
 }
 
 function stopTrial() {
@@ -292,10 +305,16 @@ function stopTrial() {
 function setMode(mode) {
   stopTrial()
   firstTrial = undefined
+  latestTrial = undefined
+  openStory.hidden = true
   form.dataset.mode = mode
   const custom = mode === 'custom'
   propertyField.hidden = !custom
   propertyName.disabled = !custom
+  titleField.hidden = !custom
+  title.disabled = !custom
+  intentField.hidden = !custom
+  savePremise.hidden = !custom
   newPremise.hidden = custom
   addPerson.hidden = !custom
   document.getElementById('draft-actual-label').textContent = custom ? '実際の値' : '重さの実際の値'
@@ -323,10 +342,14 @@ function showSample(message) {
 function showCustom() {
   setMode('custom')
   document.getElementById('draft-sample').textContent = '自分の前提'
+  title.value = ''
   thingName.value = ''
   propertyName.value = ''
   actualValue.removeAttribute('min')
   actualValue.value = ''
+  for (const check of intentChecks) check.checked = false
+  intentEnding.value = ''
+  intentField.open = false
   personFields.replaceChildren()
   nextPerson = 0
   appendPerson()
@@ -337,6 +360,8 @@ function showCustom() {
 
 function markStale() {
   stopTrial()
+  latestTrial = undefined
+  openStory.hidden = true
   status.textContent = output.hasChildNodes()
     ? '入力が変わりました。下の結果は前回の試算です。'
     : '物と人物の前提を入力すると試算できます。'
@@ -344,6 +369,48 @@ function markStale() {
 
 newPremise.addEventListener('click', showCustom)
 document.getElementById('draft-reset').addEventListener('click', () => showSample('見本の入力と結果に戻しました。'))
+document.getElementById('draft-load-premise').addEventListener('click', () => premiseFile.click())
+premiseFile.addEventListener('change', async () => {
+  const file = premiseFile.files?.[0]
+  premiseFile.value = ''
+  if (!file) return
+  try {
+    const fields = readPremiseFile(JSON.parse(await file.text()))
+    showCustom()
+    title.value = fields.title
+    thingName.value = fields.thing
+    propertyName.value = fields.property
+    actualValue.value = fields.actual
+    personFields.innerHTML = fields.people.map((person) =>
+      personRow(person.id, `人物${person.id.slice(7)}`, person, true)).join('')
+    nextPerson = Math.max(...fields.people.map(({ id }) => Number(id.slice(7))))
+    updateRemoveButtons()
+    for (const check of intentChecks) check.checked = fields.include.includes(check.value)
+    intentEnding.value = fields.ending ?? ''
+    intentField.open = fields.include.length > 0 || Boolean(fields.ending)
+    status.textContent = '前提を開きました。内容を確認して試算できます。'
+  } catch (error) {
+    status.textContent = `前提を開けませんでした。${error.message}`
+  }
+})
+savePremise.addEventListener('click', () => {
+  if (!form.reportValidity()) return
+  try {
+    const premise = readCustom(new FormData(form))
+    const filename = downloadJson(`${premise.title}-前提`, premise)
+    status.textContent = `「${filename}」に前提を保存しました。`
+  } catch (error) {
+    status.textContent = `前提を保存できませんでした。${error.message}`
+  }
+})
+openStory.addEventListener('click', () => {
+  if (!latestTrial) return
+  try {
+    openTrialTab(latestTrial)
+  } catch (error) {
+    status.textContent = `物語を開けませんでした。${error.message}`
+  }
+})
 addPerson.addEventListener('click', () => {
   const row = appendPerson()
   markStale()
@@ -382,6 +449,8 @@ function showTrial(premise, story, custom) {
 
 function showError(message) {
   stopTrial()
+  latestTrial = undefined
+  openStory.hidden = true
   status.textContent = `試算できませんでした。${message}`
   output.replaceChildren()
 }
@@ -395,6 +464,8 @@ form.addEventListener('submit', (event) => {
     const premise = custom ? readCustom(fields) : readSample(fields)
     const worker = new Worker(new URL('./premise-worker.js', import.meta.url), { type: 'module' })
     trialWorker = worker
+    latestTrial = undefined
+    openStory.hidden = true
     submit.setAttribute('aria-disabled', 'true')
     status.textContent = output.hasChildNodes()
       ? '試算中です。下は前回の結果です。'

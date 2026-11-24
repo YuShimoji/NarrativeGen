@@ -450,3 +450,11 @@ export function textSnippets(model) {
   const conditional = keys.flag.map((k) => ({ label: `${k} がオンの時だけ`, text: `{?${k}:ここに文}` }))
   return { entityProps, values, conditional }
 }
+
+export function stripGeneratedChoiceLabels(model) {
+  for (const node of Object.values(model.nodes ?? {})) {
+    for (const choice of node.choices ?? []) {
+      choice.text = String(choice.text).replace(/\s*〔蓋然 [0-9.]+%〕$/, '')
+    }
+  }
+}

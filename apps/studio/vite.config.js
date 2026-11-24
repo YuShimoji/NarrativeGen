@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { stripGeneratedChoiceLabels } from './src/edit.js'
 
 const rootDir = fileURLToPath(new URL('.', import.meta.url))
 const repoRoot = path.resolve(rootDir, '../../')
@@ -96,9 +97,7 @@ function studioGrow() {
           let name = base
           for (let n = 2; fs.existsSync(path.resolve(examples, `${name}.json`)); n += 1) name = `${base}-${n}`
           // the copy will be edited by hand, so the generator's probability labels would go stale
-          for (const node of Object.values(model.nodes ?? {})) {
-            for (const choice of node.choices ?? []) choice.text = String(choice.text).replace(/\s*〔蓋然 [0-9.]+%〕$/, '')
-          }
+          stripGeneratedChoiceLabels(model)
           const text = JSON.stringify(model, null, 2) + '\n'
           fs.writeFileSync(path.resolve(examples, `${name}.json`), text, 'utf8')
           const mirror = path.resolve(repoRoot, 'apps/web-tester/models/examples')
