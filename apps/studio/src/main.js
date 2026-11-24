@@ -393,9 +393,12 @@ function probabilityCard(step) {
   const whole = step.scene.nodeId === state.model.startNode
     ? `<details><summary>この前提から起こりうる結末</summary>${wholeStoryHtml(d)}</details>`
     : ''
+  const premiseDraft = import.meta.env.DEV && whole && state.name === 'cheeseburger-weight-hearsay'
+    ? '<p class="sub"><a href="./premise-draft.html" target="_blank" rel="noopener">前提入力のラフを開く（別タブ）</a></p>'
+    : ''
   return `<section class="card card-prob"><h3><span class="tag">蓋然</span>この場面で起こりうること</h3>${arrived}
     <p class="sub">割合は、行為の重みを、この場面で可能な行為の重みの合計で割った値。重みは前提の数値から作る。</p>
-    <ul class="shares">${rows}</ul>${leftOut}${whole}</section>`
+    <ul class="shares">${rows}</ul>${leftOut}${whole}${premiseDraft}</section>`
 }
 
 function changesCard(step) {
