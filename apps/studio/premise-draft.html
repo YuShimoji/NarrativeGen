@@ -18,7 +18,10 @@
           <h1>前提入力（ラフ）</h1>
           <p id="draft-sample" class="sub"></p>
         </div>
-        <button type="reset" form="draft-form" class="btn">見本に戻す</button>
+        <div class="draft-heading-actions">
+          <button type="button" id="draft-new" class="btn">自分の前提を作る</button>
+          <button type="button" id="draft-reset" class="btn">見本に戻す</button>
+        </div>
       </div>
       <div class="draft-layout">
         <form id="draft-form" class="draft-form">
@@ -26,28 +29,30 @@
             <h2 id="draft-thing">場の物</h2>
             <div class="draft-thing-fields">
               <label>物の名前<input name="thing-name" type="text" required /></label>
-              <label>重さの実際の値<input name="actual" type="number" min="0" step="any" required /></label>
+              <label id="draft-property-field" hidden>性質の名前<input name="property-name" type="text" placeholder="長さなど" required disabled /></label>
+              <label><span id="draft-actual-label">重さの実際の値</span><input name="actual" type="number" min="0" step="any" required /></label>
             </div>
           </section>
           <section class="card draft-card" aria-labelledby="draft-people">
             <h2 id="draft-people">人物の知識</h2>
-            <p class="sub draft-section-detail">分野ごとの正確さと許容幅、重さをいくつと見込むかを入力します。許容幅は見込みに対する割合です（0.05 は 5%）。</p>
+            <p class="sub draft-section-detail">正確さは0〜1で入力します。許容幅は見込みに対する割合です（0.05 は 5%）。</p>
             <div class="draft-people-head" aria-hidden="true">
-              <span>人物</span><span>知識の分野</span><span>正確さ</span><span>許容幅</span><span>重さの見込み</span>
+              <span>人物</span><span>知識の分野</span><span>正確さ</span><span>許容幅</span><span id="draft-expected-label">重さの見込み</span>
             </div>
             <div id="draft-person-fields"></div>
+            <button type="button" id="draft-add-person" class="btn draft-add-person" hidden>＋ 人物を追加</button>
           </section>
         </form>
         <aside class="card draft-card draft-result" aria-labelledby="draft-result-title">
           <div class="draft-result-head">
             <h2 id="draft-result-title">前提を試算</h2>
-            <button type="submit" form="draft-form" class="btn btn-primary">試算する</button>
+            <button type="submit" id="draft-submit" form="draft-form" class="btn btn-primary">試算する</button>
           </div>
           <p id="draft-status" class="sub draft-status" role="status">見本の結果を表示しています。</p>
           <div id="draft-output"></div>
         </aside>
       </div>
-      <p class="sub draft-footnote">入力はこのページ内に残ります。再読み込みすると見本に戻ります。</p>
+      <p class="sub draft-footnote">入力はこのページ内だけです。「見本に戻す」か再読み込みで入力は消えます。</p>
     </main>
     <script type="module" src="./src/premise-draft.js"></script>
   </body>
