@@ -6,14 +6,14 @@
       "id": "start",
       "text": "You wake up.",
       "choices": [
-        { "id": "c1", "text": "Get up", "target": "scene1" }
+        { "id": "c1", "text": "起き上がる", "target": "scene1" }
       ]
     },
     "scene1": {
       "id": "scene1",
       "text": "You see the door.",
       "choices": [
-        { "id": "c2", "text": "Open door", "target": "end" }
+        { "id": "c2", "text": "扉を開ける", "target": "end" }
       ]
     },
     "end": {

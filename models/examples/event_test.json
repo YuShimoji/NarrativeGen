@@ -20,7 +20,7 @@
       "choices": [
         {
           "id": "c_help",
-          "text": "Help Alice",
+          "text": "アリスを助ける",
           "target": "helped",
           "effects": [
             {
@@ -38,7 +38,7 @@
         },
         {
           "id": "c_ignore",
-          "text": "Ignore Alice",
+          "text": "アリスを素通りする",
           "target": "ignored",
           "effects": [
             {
@@ -60,7 +60,7 @@
       "choices": [
         {
           "id": "c_continue_helped",
-          "text": "Continue together",
+          "text": "一緒に進む",
           "target": "reunion",
           "conditions": [
             { "type": "hasEvent", "key": "event_helped_alice", "value": true }
@@ -74,12 +74,12 @@
       "choices": [
         {
           "id": "c_continue_ignored",
-          "text": "Continue alone",
+          "text": "一人で進む",
           "target": "reunion"
         },
         {
           "id": "c_blocked",
-          "text": "This should not appear",
+          "text": "この選択肢は表示されない",
           "target": "reunion",
           "conditions": [
             { "type": "hasEvent", "key": "event_helped_alice", "value": true }

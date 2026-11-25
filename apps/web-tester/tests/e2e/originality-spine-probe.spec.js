@@ -56,7 +56,7 @@ test.describe('Originality Spine Probe', () => {
     await expect(page.locator('[data-dashboard-field="originality-character-knowledge-state"]')).toContainText('0 direct perceiveEntity');
 
     await page.locator('#storyTab').click();
-    await page.locator('.play-choice-btn:has-text("Ask Mira to test the receipt")').click();
+    await page.locator('.play-choice-btn:has-text("ミラに書庫の記憶と照合してもらう")').click();
     await page.waitForFunction(
       () => window.__NARRATIVEGEN_DEVTOOLS__?.getState().currentNodeId === 'memory_reframed',
       undefined,
@@ -82,7 +82,7 @@ test.describe('Originality Spine Probe', () => {
     await openPage(page);
     await loadVerticalSlice(page);
 
-    await page.locator('.play-choice-btn:has-text("Open the old notebook")').click();
+    await page.locator('.play-choice-btn:has-text("古いノートを開く")').click();
     await page.waitForFunction(
       () => window.__NARRATIVEGEN_DEVTOOLS__?.getState().currentNodeId === 'notebook',
       undefined,
@@ -94,10 +94,10 @@ test.describe('Originality Spine Probe', () => {
     await expect(page.locator('#storyView')).toContainText('ミラはレシート片を机に置く');
     await expect(page.locator('#storyView')).not.toContainText('Mira heard it first');
     await expect(page.locator('#storyView')).not.toContainText('ミラは南書庫の記録と照合し');
-    await expect(page.locator('#storyView')).not.toContainText('Follow the semantic contradiction');
+    await expect(page.locator('#storyView')).not.toContainText('記録の矛盾を追って台帳へ進む');
     await expect(page.locator('#storyView')).not.toContainText('perceptionPolicy:mira_receipt_contradiction_policy');
 
-    await page.locator('.play-choice-btn:has-text("Treat it as a conventional clue")').click();
+    await page.locator('.play-choice-btn:has-text("古い手掛かりとして扱い、調査を終える")').click();
     await page.waitForFunction(
       () => window.__NARRATIVEGEN_DEVTOOLS__?.getState().currentNodeId === 'old_adv_end',
       undefined,
@@ -107,7 +107,7 @@ test.describe('Originality Spine Probe', () => {
     await expect(page.locator('#storyView')).not.toContainText('結末は、ミラの書庫知識');
 
     await loadProbe(page);
-    await page.locator('.play-choice-btn:has-text("Ask Mira to test the receipt")').click();
+    await page.locator('.play-choice-btn:has-text("ミラに書庫の記憶と照合してもらう")').click();
     await page.waitForFunction(
       () => window.__NARRATIVEGEN_DEVTOOLS__?.getState().currentNodeId === 'memory_reframed',
       undefined,
@@ -115,7 +115,7 @@ test.describe('Originality Spine Probe', () => {
     );
     await expect(page.locator('#storyView')).toContainText('ミラは南書庫の記録と照合し');
 
-    await page.locator('.play-choice-btn:has-text("Follow the semantic contradiction")').click();
+    await page.locator('.play-choice-btn:has-text("記録の矛盾を追って台帳へ進む")').click();
     await page.waitForFunction(
       () => window.__NARRATIVEGEN_DEVTOOLS__?.getState().currentNodeId === 'semantic_end',
       undefined,

@@ -24,7 +24,7 @@ Vite が表示した URL を開く。通常は `http://localhost:5173/`。
 
 ## 手動観察メモ
 
-- `Open the old notebook` を選んだ後、現在ノードが `notebook` に更新されるか。
+- `古いノートを開く` を選んだ後、現在ノードが `notebook` に更新されるか。
 - `found_hook`、`focus`、`evidence`、`lead_name` などの state keys が見えるか。
 - 生成証跡は deterministic / procedural / rule-based evidence として読めるか。
 - AI品質、本番承認、公開準備の完了を示す表示になっていないか。

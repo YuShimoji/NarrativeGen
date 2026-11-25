@@ -14,17 +14,17 @@
       "id": "market",
       "text": "The bustling market square stretches before you. Merchants call out their wares. A tavern stands to the west, and a mysterious merchant beckons from a shadowy stall.",
       "choices": [
-        { "id": "go_tavern", "text": "Enter the tavern", "target": "tavern" },
-        { "id": "mysterious_merchant", "text": "Approach the mysterious merchant", "target": "merchant" },
+        { "id": "go_tavern", "text": "酒場に入る", "target": "tavern" },
+        { "id": "mysterious_merchant", "text": "謎めいた商人に声をかける", "target": "merchant" },
         {
           "id": "go_guild",
-          "text": "Visit the trader's guild",
+          "text": "商人ギルドを訪ねる",
           "target": "guild",
           "conditions": [{ "type": "resource", "key": "reputation", "op": ">=", "value": 3 }]
         },
         {
           "id": "buy_map",
-          "text": "Buy a treasure map (15 gold)",
+          "text": "宝の地図を買う（金貨15枚）",
           "target": "bought_map",
           "conditions": [
             { "type": "resource", "key": "gold", "op": ">=", "value": 15 },
@@ -37,7 +37,7 @@
         },
         {
           "id": "follow_map",
-          "text": "Follow the treasure map",
+          "text": "宝の地図をたどる",
           "target": "treasure_hunt",
           "conditions": [{ "type": "flag", "key": "has_map", "value": true }]
         }
@@ -49,7 +49,7 @@
       "choices": [
         {
           "id": "accept_delivery",
-          "text": "Accept the delivery job",
+          "text": "配達の仕事を引き受ける",
           "target": "delivery_done",
           "effects": [
             { "type": "addResource", "key": "gold", "delta": 8 },
@@ -58,19 +58,19 @@
         },
         {
           "id": "gamble",
-          "text": "Gamble at dice (costs 5 gold)",
+          "text": "さいころ賭博に参加する（金貨5枚）",
           "target": "gamble_result",
           "conditions": [{ "type": "resource", "key": "gold", "op": ">=", "value": 5 }],
           "effects": [{ "type": "addResource", "key": "gold", "delta": -5 }]
         },
-        { "id": "leave_tavern", "text": "Leave", "target": "market" }
+        { "id": "leave_tavern", "text": "立ち去る", "target": "market" }
       ]
     },
     "delivery_done": {
       "id": "delivery_done",
       "text": "You deliver the package across town and return with your pay. The innkeeper smiles.",
       "choices": [
-        { "id": "back_market_delivery", "text": "Return to the market", "target": "market" }
+        { "id": "back_market_delivery", "text": "市場に戻る", "target": "market" }
       ]
     },
     "gamble_result": {
@@ -79,7 +79,7 @@
       "choices": [
         {
           "id": "collect_winnings",
-          "text": "Collect your winnings",
+          "text": "勝ち金を受け取る",
           "target": "tavern",
           "effects": [{ "type": "addResource", "key": "gold", "delta": 10 }]
         }
@@ -91,7 +91,7 @@
       "choices": [
         {
           "id": "bribe_merchant",
-          "text": "Offer 10 gold as a gift",
+          "text": "贈り物として金貨10枚を渡す",
           "target": "merchant_pleased",
           "conditions": [{ "type": "resource", "key": "gold", "op": ">=", "value": 10 }],
           "effects": [
@@ -102,21 +102,21 @@
         },
         {
           "id": "haggle",
-          "text": "Try to haggle",
+          "text": "値切ってみる",
           "target": "haggle_result",
           "effects": [
             { "type": "setVariable", "key": "haggle_attempts", "value": 1 },
             { "type": "addResource", "key": "reputation", "delta": 1 }
           ]
         },
-        { "id": "leave_merchant", "text": "Walk away", "target": "market" }
+        { "id": "leave_merchant", "text": "立ち去る", "target": "market" }
       ]
     },
     "merchant_pleased": {
       "id": "merchant_pleased",
       "text": "The merchant smiles beneath the hood. 'You are generous. I shall remember this.'",
       "choices": [
-        { "id": "back_market_merchant", "text": "Return to the market", "target": "market" }
+        { "id": "back_market_merchant", "text": "市場に戻る", "target": "market" }
       ]
     },
     "haggle_result": {
@@ -125,13 +125,13 @@
       "choices": [
         {
           "id": "haggle_again",
-          "text": "Press harder",
+          "text": "さらに値切る",
           "target": "haggle_success",
           "effects": [
             { "type": "modifyVariable", "key": "haggle_attempts", "op": "+", "value": 1 }
           ]
         },
-        { "id": "give_up_haggle", "text": "Accept the price", "target": "market" }
+        { "id": "give_up_haggle", "text": "その値段で買う", "target": "market" }
       ]
     },
     "haggle_success": {
@@ -140,7 +140,7 @@
       "choices": [
         {
           "id": "take_deal",
-          "text": "Accept the deal",
+          "text": "取引に応じる",
           "target": "market",
           "effects": [
             { "type": "setFlag", "key": "merchant_friendly", "value": true },
@@ -153,7 +153,7 @@
       "id": "bought_map",
       "text": "The cartographer hands you a yellowed parchment. 'Follow the old road east,' she says.",
       "choices": [
-        { "id": "study_map", "text": "Study the map and return", "target": "market" }
+        { "id": "study_map", "text": "地図をよく見てから戻る", "target": "market" }
       ]
     },
     "guild": {
@@ -162,7 +162,7 @@
       "choices": [
         {
           "id": "join_guild",
-          "text": "Pay 20 gold to join",
+          "text": "金貨20枚を払って加入する",
           "target": "guild_member",
           "conditions": [{ "type": "resource", "key": "gold", "op": ">=", "value": 20 }],
           "effects": [
@@ -170,7 +170,7 @@
             { "type": "addResource", "key": "reputation", "delta": 5 }
           ]
         },
-        { "id": "leave_guild", "text": "Not yet", "target": "market" }
+        { "id": "leave_guild", "text": "今はやめておく", "target": "market" }
       ]
     },
     "guild_member": {
@@ -179,7 +179,7 @@
       "choices": [
         {
           "id": "celebrate",
-          "text": "Celebrate at the tavern",
+          "text": "酒場で祝う",
           "target": "ending_guild",
           "effects": [{ "type": "modifyVariable", "key": "haggle_attempts", "op": "*", "value": 0 }]
         }
@@ -191,7 +191,7 @@
       "choices": [
         {
           "id": "open_chest",
-          "text": "Open the chest",
+          "text": "宝箱を開ける",
           "target": "ending_treasure",
           "effects": [{ "type": "addResource", "key": "gold", "delta": 50 }]
         }

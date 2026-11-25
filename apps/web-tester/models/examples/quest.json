@@ -15,17 +15,17 @@
       "id": "village",
       "text": "You stand in a small village square. An elder sits on a bench. A shop is to the east, and a forest path leads north.",
       "choices": [
-        { "id": "talk_elder", "text": "Talk to the elder", "target": "elder_dialog" },
-        { "id": "go_shop", "text": "Visit the shop", "target": "shop" },
+        { "id": "talk_elder", "text": "長老と話す", "target": "elder_dialog" },
+        { "id": "go_shop", "text": "店に立ち寄る", "target": "shop" },
         {
           "id": "go_forest",
-          "text": "Head into the forest",
+          "text": "森へ向かう",
           "target": "forest",
           "conditions": [{ "type": "flag", "key": "talked_to_elder", "value": true }]
         },
         {
           "id": "go_bridge",
-          "text": "Cross the bridge",
+          "text": "橋を渡る",
           "target": "bridge",
           "conditions": [{ "type": "flag", "key": "talked_to_elder", "value": true }]
         }
@@ -37,7 +37,7 @@
       "choices": [
         {
           "id": "accept_quest",
-          "text": "Accept the quest",
+          "text": "依頼を引き受ける",
           "target": "village",
           "effects": [{ "type": "setFlag", "key": "talked_to_elder", "value": true }]
         }
@@ -49,7 +49,7 @@
       "choices": [
         {
           "id": "buy_axe",
-          "text": "Buy the axe (5 gold)",
+          "text": "斧を買う（金貨5枚）",
           "target": "shop_bought",
           "conditions": [{ "type": "resource", "key": "gold", "op": ">=", "value": 5 }],
           "effects": [
@@ -57,14 +57,14 @@
             { "type": "setFlag", "key": "has_axe", "value": true }
           ]
         },
-        { "id": "leave_shop", "text": "Leave", "target": "village" }
+        { "id": "leave_shop", "text": "立ち去る", "target": "village" }
       ]
     },
     "shop_bought": {
       "id": "shop_bought",
       "text": "You purchase the axe. The shopkeeper nods approvingly.",
       "choices": [
-        { "id": "back_village", "text": "Return to the village", "target": "village" }
+        { "id": "back_village", "text": "村に戻る", "target": "village" }
       ]
     },
     "forest": {
@@ -73,20 +73,20 @@
       "choices": [
         {
           "id": "search_tree",
-          "text": "Search the hollow tree",
+          "text": "うろのある木を調べる",
           "target": "found_key",
           "conditions": [{ "type": "flag", "key": "has_key", "value": false }]
         },
         {
           "id": "chop_wood",
-          "text": "Chop wood with the axe",
+          "text": "斧で木を切る",
           "target": "chopped_wood",
           "conditions": [
             { "type": "flag", "key": "has_axe", "value": true },
             { "type": "resource", "key": "wood", "op": "<", "value": 3 }
           ]
         },
-        { "id": "back_from_forest", "text": "Return to the village", "target": "village" }
+        { "id": "back_from_forest", "text": "村に戻る", "target": "village" }
       ]
     },
     "found_key": {
@@ -95,7 +95,7 @@
       "choices": [
         {
           "id": "take_key",
-          "text": "Take the key",
+          "text": "鍵を取る",
           "target": "forest",
           "effects": [{ "type": "setFlag", "key": "has_key", "value": true }]
         }
@@ -107,7 +107,7 @@
       "choices": [
         {
           "id": "continue_forest",
-          "text": "Continue exploring",
+          "text": "探索を続ける",
           "target": "forest",
           "effects": [{ "type": "addResource", "key": "wood", "delta": 1 }]
         }
@@ -119,7 +119,7 @@
       "choices": [
         {
           "id": "repair_bridge",
-          "text": "Repair the bridge (requires 3 wood)",
+          "text": "橋を修理する（木材3つが必要）",
           "target": "bridge_fixed",
           "conditions": [
             { "type": "resource", "key": "wood", "op": ">=", "value": 3 },
@@ -130,7 +130,7 @@
             { "type": "setFlag", "key": "bridge_repaired", "value": true }
           ]
         },
-        { "id": "back_bridge", "text": "Go back to the village", "target": "village" }
+        { "id": "back_bridge", "text": "村に戻る", "target": "village" }
       ]
     },
     "bridge_fixed": {
@@ -139,7 +139,7 @@
       "choices": [
         {
           "id": "cross_bridge",
-          "text": "Cross the bridge",
+          "text": "橋を渡る",
           "target": "mountain",
           "conditions": [{ "type": "flag", "key": "bridge_repaired", "value": true }]
         }
@@ -151,11 +151,11 @@
       "choices": [
         {
           "id": "use_key",
-          "text": "Use the ancient key",
+          "text": "古代の鍵を使う",
           "target": "victory",
           "conditions": [{ "type": "flag", "key": "has_key", "value": true }]
         },
-        { "id": "retreat", "text": "Retreat to the village", "target": "village" }
+        { "id": "retreat", "text": "村へ引き返す", "target": "village" }
       ]
     },
     "victory": {

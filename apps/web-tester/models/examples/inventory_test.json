@@ -34,17 +34,17 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Search the garden",
+          "text": "庭を調べる",
           "target": "garden"
         },
         {
           "id": "c2",
-          "text": "Try the front door",
+          "text": "玄関の扉を開けてみる",
           "target": "front_door"
         },
         {
           "id": "c3",
-          "text": "Use the rusty key on the door",
+          "text": "さびた鍵で扉を開ける",
           "target": "door_unlocked",
           "conditions": [
             { "type": "hasItem", "key": "rusty_key", "value": true }
@@ -61,7 +61,7 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Pick up the rusty key",
+          "text": "さびた鍵を拾う",
           "target": "entrance",
           "conditions": [
             { "type": "hasItem", "key": "rusty_key", "value": false }
@@ -72,12 +72,12 @@
         },
         {
           "id": "c2",
-          "text": "Search further",
+          "text": "さらに探す",
           "target": "garden_deep"
         },
         {
           "id": "c3",
-          "text": "Go back",
+          "text": "戻る",
           "target": "entrance"
         }
       ]
@@ -88,7 +88,7 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Take the torch",
+          "text": "たいまつを取る",
           "target": "garden",
           "conditions": [
             { "type": "hasItem", "key": "torch", "value": false }
@@ -99,7 +99,7 @@
         },
         {
           "id": "c2",
-          "text": "Take the health potion",
+          "text": "回復薬を取る",
           "target": "garden",
           "conditions": [
             { "type": "hasItem", "key": "health_potion", "value": false }
@@ -110,7 +110,7 @@
         },
         {
           "id": "c3",
-          "text": "Go back to the garden",
+          "text": "庭に戻る",
           "target": "garden"
         }
       ]
@@ -121,7 +121,7 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Go back",
+          "text": "戻る",
           "target": "entrance"
         }
       ]
@@ -132,7 +132,7 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Enter the dark hallway",
+          "text": "暗い廊下に入る",
           "target": "dark_hallway"
         }
       ]
@@ -143,7 +143,7 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Use the torch to light the way",
+          "text": "たいまつで足元を照らす",
           "target": "lit_hallway",
           "conditions": [
             { "type": "hasItem", "key": "torch", "value": true }
@@ -154,7 +154,7 @@
         },
         {
           "id": "c2",
-          "text": "Stumble forward in the dark",
+          "text": "暗闇の中を手探りで進む",
           "target": "trap",
           "effects": [
             { "type": "addResource", "key": "health", "delta": -30 }
@@ -162,7 +162,7 @@
         },
         {
           "id": "c3",
-          "text": "Go back outside",
+          "text": "外に戻る",
           "target": "entrance"
         }
       ]
@@ -173,7 +173,7 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Climb the stairs",
+          "text": "階段を上る",
           "target": "victory"
         }
       ]
@@ -184,7 +184,7 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Drink a health potion",
+          "text": "回復薬を飲む",
           "target": "dark_hallway",
           "conditions": [
             { "type": "hasItem", "key": "health_potion", "value": true }
@@ -196,7 +196,7 @@
         },
         {
           "id": "c2",
-          "text": "Press on despite the injury",
+          "text": "けがをしたまま先へ進む",
           "target": "lit_hallway",
           "conditions": [
             { "type": "resource", "key": "health", "op": ">", "value": 0 }
@@ -204,7 +204,7 @@
         },
         {
           "id": "c3",
-          "text": "Retreat outside",
+          "text": "外へ引き返す",
           "target": "entrance"
         }
       ]

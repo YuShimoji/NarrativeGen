@@ -6,21 +6,21 @@
       "id": "start",
       "text": "It's dawn at the village square.",
       "choices": [
-        { "id": "visitMarket", "text": "Visit night market", "target": "market", "conditions": [ { "type": "timeWindow", "start": 5, "end": 8 } ] },
-        { "id": "train", "text": "Train at the yard", "target": "yard" }
+        { "id": "visitMarket", "text": "夜市に行く", "target": "market", "conditions": [ { "type": "timeWindow", "start": 5, "end": 8 } ] },
+        { "id": "train", "text": "訓練場で鍛える", "target": "yard" }
       ]
     },
     "market": {
       "id": "market",
       "text": "The night market is lively.",
       "choices": [
-        { "id": "back", "text": "Return", "target": "start" }
+        { "id": "back", "text": "戻る", "target": "start" }
       ]
     },
     "yard": {
       "id": "yard",
       "text": "You swing your sword.",
-      "choices": [ { "id": "finish", "text": "Finish", "target": "start" } ]
+      "choices": [ { "id": "finish", "text": "終わる", "target": "start" } ]
     }
   }
 }

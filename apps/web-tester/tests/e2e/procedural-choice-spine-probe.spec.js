@@ -36,7 +36,7 @@ async function loadSample(page, sampleId) {
 
 async function chooseMiraReframe(page) {
   await page.locator('#storyTab').click();
-  await page.locator('.play-choice-btn:has-text("Ask Mira to test the receipt")').click();
+  await page.locator('.play-choice-btn:has-text("ミラに書庫の記憶と照合してもらう")').click();
   await page.waitForFunction(
     () => window.__NARRATIVEGEN_DEVTOOLS__?.getState().currentNodeId === 'memory_reframed',
     undefined,
@@ -67,7 +67,7 @@ test.describe('Procedural Choice Spine Probe', () => {
 
     await expect(page.locator('#storyView')).toContainText('ミラは南書庫の記録と照合し');
     await expect(page.locator('#storyView')).toContainText('ミラの補足:');
-    await expect(page.locator('.play-choice-btn:has-text("Follow the semantic contradiction")')).toBeVisible();
+    await expect(page.locator('.play-choice-btn:has-text("記録の矛盾を追って台帳へ進む")')).toBeVisible();
     for (const diagnosticToken of [
       RULE_ID,
       PERCEPTION_EVENT_ID,
@@ -91,7 +91,7 @@ test.describe('Procedural Choice Spine Probe', () => {
     await expect(page.locator('[data-dashboard-field="knowledge-rule-perception-event"]')).toContainText('0 policy-derived');
 
     await page.locator('#storyTab').click();
-    await page.locator('.play-choice-btn:has-text("Follow the semantic contradiction")').click();
+    await page.locator('.play-choice-btn:has-text("記録の矛盾を追って台帳へ進む")').click();
     await page.waitForFunction(
       () => window.__NARRATIVEGEN_DEVTOOLS__?.getState().currentNodeId === 'semantic_end',
       undefined,
@@ -115,7 +115,7 @@ test.describe('Procedural Choice Spine Probe', () => {
     await loadSample(page, PROCEDURAL_PROBE);
     await expect(page.locator('#storyView')).toContainText('ミラはレシート片を机に置く');
     await expect(page.locator('#storyView')).not.toContainText('ミラは南書庫の記録と照合し');
-    await expect(page.locator('#storyView')).not.toContainText('Follow the semantic contradiction');
+    await expect(page.locator('#storyView')).not.toContainText('記録の矛盾を追って台帳へ進む');
 
     await page.locator('#designerDashboardTab').click();
     await expect(page.locator('[data-dashboard-field="knowledge-rule-count"]')).toHaveText('1 rules');
@@ -137,7 +137,7 @@ test.describe('Procedural Choice Spine Probe', () => {
 
     await loadSample(page, PROCEDURAL_PROBE);
     await chooseMiraReframe(page);
-    await expect(page.locator('.play-choice-btn:has-text("Follow the semantic contradiction")')).toBeVisible();
+    await expect(page.locator('.play-choice-btn:has-text("記録の矛盾を追って台帳へ進む")')).toBeVisible();
     await page.locator('#designerDashboardTab').click();
     await expect(page.locator('[data-dashboard-field="knowledge-rule-result"]')).toContainText(`${RULE_ID}: 気づいた (noticed)`);
     await expect(page.locator('[data-dashboard-field="knowledge-rule-perception-event"]')).toContainText('0 policy-derived');

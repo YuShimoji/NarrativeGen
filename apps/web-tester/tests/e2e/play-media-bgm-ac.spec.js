@@ -22,7 +22,7 @@ async function startMediaModel(page) {
 }
 
 async function navigateToScene2(page) {
-  await page.locator('.play-choice-btn:has-text("Investigate")').click();
+  await page.locator('.play-choice-btn:has-text("調べる")').click();
   await page.waitForFunction(
     () => {
       const content = document.querySelector('#storyView .play-content');
@@ -73,7 +73,7 @@ test.describe('SP-PLAY-001 AC-9〜12 (BGM 機械検証)', () => {
     await startMediaModel(page);
     expect(pageErrors, `errors before gesture: ${pageErrors.join('; ')}`).toEqual([]);
 
-    await page.locator('.play-choice-btn:has-text("Investigate")').click();
+    await page.locator('.play-choice-btn:has-text("調べる")').click();
     await page.waitForFunction(
       () => (window.__ngAudioPlayLog || []).length > 0,
       { timeout: 10000 }
@@ -84,7 +84,7 @@ test.describe('SP-PLAY-001 AC-9〜12 (BGM 機械検証)', () => {
   test('AC-9: 初回ジェスチャ後に defaultBgm の URL で play が走る', async ({ page }) => {
     await openPage(page);
     await startMediaModel(page);
-    await page.locator('.play-choice-btn:has-text("Investigate")').click();
+    await page.locator('.play-choice-btn:has-text("調べる")').click();
     await page.waitForFunction(
       () => (window.__ngAudioPlayLog || []).some((e) => e.src.includes('test-bgm')),
       { timeout: 10000 }
@@ -96,7 +96,7 @@ test.describe('SP-PLAY-001 AC-9〜12 (BGM 機械検証)', () => {
   }) => {
     await openPage(page);
     await startMediaModel(page);
-    await page.locator('.play-choice-btn:has-text("Investigate")').click();
+    await page.locator('.play-choice-btn:has-text("調べる")').click();
     await page.waitForFunction(
       () => {
         const log = window.__ngAudioPlayLog || [];
@@ -114,7 +114,7 @@ test.describe('SP-PLAY-001 AC-9〜12 (BGM 機械検証)', () => {
     await navigateToScene2(page);
     const pausesBefore = await page.evaluate(() => (window.__ngAudioPauseLog || []).length);
 
-    await page.locator('.play-choice-btn:has-text("Enter silence")').click();
+    await page.locator('.play-choice-btn:has-text("音のしない場所へ進む")').click();
     await page.waitForSelector('.play-ending', { timeout: 10000 });
 
     await page.waitForFunction(

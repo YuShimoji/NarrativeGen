@@ -57,10 +57,10 @@ async function loadVerticalSlice(page) {
 async function navigateToDrafting(page) {
   const storyView = page.locator('#storyView');
 
-  await page.locator('.play-choice-btn:has-text("Open the old notebook")').click();
+  await page.locator('.play-choice-btn:has-text("古いノートを開く")').click();
   await expect(storyView).toContainText('The story finally has a spine', { timeout: 10000 });
 
-  await page.locator('.play-choice-btn:has-text("Draft a brave scene")').click();
+  await page.locator('.play-choice-btn:has-text("勇気を見せる場面の下書きを作る")').click();
   await expect(storyView).toContainText('The scene is still thin', { timeout: 10000 });
   await page.waitForFunction(
     () => window.__NARRATIVEGEN_DEVTOOLS__?.getState().currentNodeId === 'drafting',
@@ -153,19 +153,19 @@ test.describe('Vertical slice AI mock adoption', () => {
     await loadVerticalSlice(page);
 
     const storyView = page.locator('#storyView');
-    await page.locator('.play-choice-btn:has-text("Open the old notebook")').click();
+    await page.locator('.play-choice-btn:has-text("古いノートを開く")').click();
     await expect(storyView).toContainText('The story finally has a spine', { timeout: 10000 });
 
-    await page.locator('.play-choice-btn:has-text("Interview Mira")').click();
-    await expect(page.locator('.play-choice-btn:has-text("Ask Mira for the archive key")')).toBeVisible({ timeout: 10000 });
+    await page.locator('.play-choice-btn:has-text("ミラに話を聞く")').click();
+    await expect(page.locator('.play-choice-btn:has-text("ミラに書庫の鍵を頼む")')).toBeVisible({ timeout: 10000 });
 
-    await page.locator('.play-choice-btn:has-text("Ask Mira for the archive key")').click();
-    await expect(page.locator('.play-choice-btn:has-text("Spend focus to decode the ledger")')).toBeVisible({ timeout: 10000 });
+    await page.locator('.play-choice-btn:has-text("ミラに書庫の鍵を頼む")').click();
+    await expect(page.locator('.play-choice-btn:has-text("集中力を使って台帳を解読する")')).toBeVisible({ timeout: 10000 });
 
-    await page.locator('.play-choice-btn:has-text("Spend focus to decode the ledger")').click();
+    await page.locator('.play-choice-btn:has-text("集中力を使って台帳を解読する")').click();
     await expect(storyView).toContainText('You have enough proof to publish', { timeout: 10000 });
 
-    await page.locator('.play-choice-btn:has-text("Publish with proof")').click();
+    await page.locator('.play-choice-btn:has-text("証拠を添えて公表する")').click();
     await expect(storyView).toContainText('Ending: the story runs with receipts', { timeout: 10000 });
     await page.waitForFunction(
       () => window.__NARRATIVEGEN_DEVTOOLS__?.getState().currentNodeId === 'truth_end',

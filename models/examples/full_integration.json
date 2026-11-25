@@ -119,7 +119,7 @@
       "choices": [
         {
           "id": "talk_herbalist",
-          "text": "Approach the herbalist",
+          "text": "薬草売りに声をかける",
           "target": "herbalist_stall",
           "conditions": [
             { "type": "flag", "key": "met_herbalist", "value": false }
@@ -131,7 +131,7 @@
         },
         {
           "id": "examine_remedy",
-          "text": "Examine the remedy closely",
+          "text": "薬を詳しく調べる",
           "target": "examine_remedy",
           "conditions": [
             { "type": "flag", "key": "met_herbalist", "value": true }
@@ -139,12 +139,12 @@
         },
         {
           "id": "visit_scholar",
-          "text": "Visit the scholar's library",
+          "text": "学者の書庫を訪ねる",
           "target": "scholar_library"
         },
         {
           "id": "check_evidence",
-          "text": "Review what you know",
+          "text": "分かったことを整理する",
           "target": "evidence_review",
           "conditions": [
             { "type": "hasEvent", "key": "toxicity_anomaly", "value": true }
@@ -158,7 +158,7 @@
       "choices": [
         {
           "id": "buy_remedy",
-          "text": "Buy the remedy",
+          "text": "薬を買う",
           "target": "bought_remedy",
           "effects": [
             { "type": "addItem", "key": "suspect_remedy" },
@@ -167,7 +167,7 @@
         },
         {
           "id": "decline",
-          "text": "Decline and look around",
+          "text": "断って辺りを見て回る",
           "target": "market_entrance"
         }
       ]
@@ -178,7 +178,7 @@
       "choices": [
         {
           "id": "return_market",
-          "text": "Return to the market",
+          "text": "市場に戻る",
           "target": "market_entrance"
         }
       ]
@@ -189,7 +189,7 @@
       "choices": [
         {
           "id": "test_toxicity",
-          "text": "Test the toxicity level",
+          "text": "毒性の強さを調べる",
           "target": "test_result",
           "conditions": [
             { "type": "hasEvent", "key": "toxicity_anomaly", "value": false }
@@ -212,7 +212,7 @@
         },
         {
           "id": "smell_test",
-          "text": "Note the unusual smell",
+          "text": "変わったにおいを覚えておく",
           "target": "smell_analysis",
           "effects": [
             { "type": "addResource", "key": "knowledge", "delta": 10 },
@@ -221,7 +221,7 @@
         },
         {
           "id": "back_to_market",
-          "text": "Step back",
+          "text": "一歩下がる",
           "target": "market_entrance"
         }
       ]
@@ -232,7 +232,7 @@
       "choices": [
         {
           "id": "confront",
-          "text": "Confront the herbalist",
+          "text": "薬草売りを問い詰める",
           "target": "confrontation",
           "conditions": [
             { "type": "resource", "key": "knowledge", "op": ">=", "value": 30 }
@@ -240,7 +240,7 @@
         },
         {
           "id": "gather_more",
-          "text": "Gather more evidence first",
+          "text": "先に証拠を集める",
           "target": "market_entrance"
         }
       ]
@@ -251,7 +251,7 @@
       "choices": [
         {
           "id": "continue",
-          "text": "Continue investigating",
+          "text": "調査を続ける",
           "target": "market_entrance"
         }
       ]
@@ -262,7 +262,7 @@
       "choices": [
         {
           "id": "ask_poisons",
-          "text": "Ask about common poisons",
+          "text": "よく使われる毒について聞く",
           "target": "poison_lecture",
           "effects": [
             { "type": "setFlag", "key": "consulted_scholar", "value": true },
@@ -272,7 +272,7 @@
         },
         {
           "id": "ask_antidote",
-          "text": "Ask about the silverleaf herb",
+          "text": "シルバーリーフという薬草について聞く",
           "target": "antidote_info",
           "conditions": [
             { "type": "hasEvent", "key": "toxicity_anomaly", "value": true }
@@ -283,7 +283,7 @@
         },
         {
           "id": "leave_library",
-          "text": "Leave the library",
+          "text": "書庫を出る",
           "target": "market_entrance"
         }
       ]
@@ -294,7 +294,7 @@
       "choices": [
         {
           "id": "thank_scholar",
-          "text": "Thank her and return to the market",
+          "text": "学者に礼を言って市場に戻る",
           "target": "market_entrance"
         }
       ]
@@ -305,7 +305,7 @@
       "choices": [
         {
           "id": "buy_antidote",
-          "text": "Buy silverleaf at the apothecary",
+          "text": "薬屋でシルバーリーフを買う",
           "target": "got_antidote",
           "effects": [
             { "type": "addItem", "key": "antidote_herb" },
@@ -314,7 +314,7 @@
         },
         {
           "id": "return",
-          "text": "Return to the market",
+          "text": "市場に戻る",
           "target": "market_entrance"
         }
       ]
@@ -325,7 +325,7 @@
       "choices": [
         {
           "id": "to_confrontation",
-          "text": "Time to confront the herbalist",
+          "text": "薬草売りを問い詰めに行く",
           "target": "confrontation",
           "conditions": [
             { "type": "resource", "key": "knowledge", "op": ">=", "value": 30 }
@@ -333,7 +333,7 @@
         },
         {
           "id": "more_prep",
-          "text": "Prepare more evidence",
+          "text": "さらに証拠をそろえる",
           "target": "market_entrance"
         }
       ]
@@ -344,7 +344,7 @@
       "choices": [
         {
           "id": "confront_now",
-          "text": "Confront the herbalist with evidence",
+          "text": "証拠を示して薬草売りを問い詰める",
           "target": "confrontation",
           "conditions": [
             { "type": "and", "conditions": [
@@ -355,7 +355,7 @@
         },
         {
           "id": "confront_partial",
-          "text": "Confront with partial evidence",
+          "text": "手元にある証拠で問い詰める",
           "target": "confrontation",
           "conditions": [
             { "type": "resource", "key": "knowledge", "op": ">=", "value": 30 }
@@ -363,7 +363,7 @@
         },
         {
           "id": "keep_investigating",
-          "text": "Keep investigating",
+          "text": "調査を続ける",
           "target": "market_entrance"
         }
       ]
@@ -374,7 +374,7 @@
       "choices": [
         {
           "id": "full_accusation",
-          "text": "Present full evidence (toxicity + antidote + scholar's testimony)",
+          "text": "そろえた証拠を示す（毒性・解毒剤・学者の証言）",
           "target": "resolution_full",
           "conditions": [
             { "type": "and", "conditions": [
@@ -398,7 +398,7 @@
         },
         {
           "id": "partial_accusation",
-          "text": "Accuse with partial evidence",
+          "text": "手元にある証拠で告発する",
           "target": "resolution_partial",
           "effects": [
             { "type": "addResource", "key": "reputation", "delta": 10 },

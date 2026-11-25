@@ -135,7 +135,7 @@
       "choices": [
         {
           "id": "ask_mira_reframe",
-          "text": "Ask Mira to test the receipt against her archive memory",
+          "text": "ミラに書庫の記憶と照合してもらう",
           "target": "memory_reframed",
           "effects": [
             {
@@ -177,7 +177,7 @@
         },
         {
           "id": "treat_as_old_clue",
-          "text": "Treat it as a conventional clue and stop",
+          "text": "古い手掛かりとして扱い、調査を終える",
           "target": "old_adv_end"
         }
       ]
@@ -189,7 +189,7 @@
       "choices": [
         {
           "id": "follow_semantic_change",
-          "text": "Follow the semantic contradiction to the archive ledger",
+          "text": "記録の矛盾を追って台帳へ進む",
           "target": "semantic_end",
           "conditions": [
             {

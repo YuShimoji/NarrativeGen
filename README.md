@@ -66,7 +66,7 @@ npm run dev
 The proof route is:
 
 ```text
-Open the old notebook -> Interview Mira -> Ask Mira for the archive key -> Spend focus to decode the ledger -> Publish with proof
+古いノートを開く -> ミラに話を聞く -> ミラに書庫の鍵を頼む -> 集中力を使って台帳を解読する -> 証拠を添えて公表する
 ```
 
 This route must stay playable before broader test, lint, CI, schema, or refactor work is treated as the main progress signal.

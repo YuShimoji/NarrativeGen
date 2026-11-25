@@ -19,10 +19,34 @@ const samples = {
 }
 // the premise a generated story was built from, by the same file name
 const premises = import.meta.glob('../../../models/premises/*.json', { import: 'default' })
+const premiseTitles = import.meta.glob('../../../models/premises/*.json', { import: 'title', eager: true })
+const exampleTitles = {
+  branching_flags: 'フラグで分かれる扉',
+  event_test: 'アリスを助ける',
+  full_integration: '薬草売りの調査',
+  integration_test: '探偵とチーズバーガー',
+  inventory_test: '持ち物を使う屋敷の探索',
+  linear: '起きて扉を開ける',
+  'media-test': '音のある場面と無音の場面',
+  multiple_endings: '複数の結末',
+  'originality-spine-probe': 'レシートの矛盾（独自性の検証）',
+  'procedural-choice-spine-probe': 'レシートの矛盾（選択肢の開閉）',
+  property_test: '食べ物と道具の性質',
+  quest: '村と森の探索',
+  resource_management: 'コインとリンゴ',
+  time_gated: '夜市が開くまで',
+  trading: '市場での取引',
+  tutorial: '基本チュートリアル',
+  'vertical-slice': 'ミラと鐘楼の台帳',
+  writer_tutorial: '作者向けチュートリアル（404号室の手紙）',
+}
 const sampleList = Object.keys(samples)
-  .map((p) => {
-    const base = p.split('/').pop().replace(/\.json$/, '')
-    return { path: p, name: p.includes('/models/generated/') ? `${base}（前提から生成）` : base }
+  .map((path) => {
+    const name = path.split('/').pop().replace(/\.json$/, '')
+    const generated = path.includes('/models/generated/')
+    const title = generated ? premiseTitles[path.replace('/models/generated/', '/models/premises/')] : exampleTitles[name]
+    const label = generated ? `${title || name}（前提から生成）` : title || name
+    return { path, name, label }
   })
   .sort((a, b) => a.name.localeCompare(b.name))
 
@@ -68,7 +92,7 @@ function pref(key, value) {
 // loading
 
 function fillPicker(extraName, extraLabel = '読み込んだファイル') {
-  const opts = sampleList.map((s) => `<option value="${esc(s.path)}">${esc(s.name)}</option>`)
+  const opts = sampleList.map((s) => `<option value="${esc(s.path)}">${esc(s.label ?? s.name)}</option>`)
   if (extraName) opts.unshift(`<option value="__file">${esc(extraName)}（${extraLabel}）</option>`)
   opts.push('<option value="__open">物語のファイルを開く…</option>')
   if (import.meta.env.DEV) opts.push('<option value="__premise">前提入力を開く…</option>')

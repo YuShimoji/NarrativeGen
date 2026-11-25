@@ -21,7 +21,7 @@
       "choices": [
         {
           "id": "open_notebook",
-          "text": "Open the old notebook",
+          "text": "古いノートを開く",
           "target": "notebook",
           "effects": [
             { "type": "setFlag", "key": "found_hook", "value": true },
@@ -31,7 +31,7 @@
         },
         {
           "id": "listen_alley",
-          "text": "Listen to the alley outside",
+          "text": "外の路地に耳を澄ます",
           "target": "alley",
           "effects": [
             { "type": "addResource", "key": "focus", "delta": -1 },
@@ -46,7 +46,7 @@
       "choices": [
         {
           "id": "interview_mira",
-          "text": "Interview Mira",
+          "text": "ミラに話を聞く",
           "target": "mira",
           "effects": [
             { "type": "setFlag", "key": "trusted_mira", "value": true },
@@ -55,7 +55,7 @@
         },
         {
           "id": "draft_scene",
-          "text": "Draft a brave scene",
+          "text": "勇気を見せる場面の下書きを作る",
           "target": "drafting",
           "effects": [
             { "type": "addResource", "key": "focus", "delta": -1 }
@@ -69,7 +69,7 @@
       "choices": [
         {
           "id": "follow_footprints",
-          "text": "Follow the wet footprints",
+          "text": "濡れた足跡をたどる",
           "target": "archive",
           "effects": [
             { "type": "addResource", "key": "evidence", "delta": 1 }
@@ -77,7 +77,7 @@
         },
         {
           "id": "return_to_notebook",
-          "text": "Return to the notebook",
+          "text": "ノートに戻る",
           "target": "notebook"
         }
       ]
@@ -89,7 +89,7 @@
       "choices": [
         {
           "id": "ask_key",
-          "text": "Ask Mira for the archive key",
+          "text": "ミラに書庫の鍵を頼む",
           "target": "archive",
           "conditions": [
             { "type": "flag", "key": "found_hook", "value": true }
@@ -100,7 +100,7 @@
         },
         {
           "id": "promise_discretion",
-          "text": "Promise to keep her name out",
+          "text": "ミラの名を伏せると約束する",
           "target": "quiet_room",
           "effects": [
             { "type": "setFlag", "key": "trusted_mira", "value": true },
@@ -115,7 +115,7 @@
       "choices": [
         {
           "id": "use_mock_ai",
-          "text": "Use the mock AI continuation",
+          "text": "試験用に生成した続きを使う",
           "target": "ai_mock_scene",
           "effects": [
             { "type": "setFlag", "key": "ai_draft_adopted", "value": true },
@@ -124,7 +124,7 @@
         },
         {
           "id": "cut_short",
-          "text": "Cut the scene short",
+          "text": "場面を早めに切り上げる",
           "target": "rushed_end"
         }
       ]
@@ -135,7 +135,7 @@
       "choices": [
         {
           "id": "connect_ai_archive",
-          "text": "Connect the generated clue to the archive",
+          "text": "生成された手掛かりを書庫と結びつける",
           "target": "archive",
           "effects": [
             { "type": "addResource", "key": "evidence", "delta": 2 }
@@ -149,7 +149,7 @@
       "choices": [
         {
           "id": "decode_ledger",
-          "text": "Spend focus to decode the ledger",
+          "text": "集中力を使って台帳を解読する",
           "target": "reveal",
           "conditions": [
             { "type": "resource", "key": "evidence", "op": ">=", "value": 2 },
@@ -161,7 +161,7 @@
         },
         {
           "id": "take_obvious_answer",
-          "text": "Take the obvious answer",
+          "text": "一見もっともらしい答えを選ぶ",
           "target": "false_end"
         }
       ]
@@ -172,7 +172,7 @@
       "choices": [
         {
           "id": "call_mira_back",
-          "text": "Call Mira back into the story",
+          "text": "ミラを物語に呼び戻す",
           "target": "reveal",
           "conditions": [
             { "type": "flag", "key": "trusted_mira", "value": true }
@@ -183,7 +183,7 @@
         },
         {
           "id": "leave_quiet",
-          "text": "Leave the quiet room unresolved",
+          "text": "静かな部屋の謎を残して立ち去る",
           "target": "rushed_end"
         }
       ]
@@ -194,7 +194,7 @@
       "choices": [
         {
           "id": "publish_with_proof",
-          "text": "Publish with proof",
+          "text": "証拠を添えて公表する",
           "target": "truth_end",
           "conditions": [
             { "type": "resource", "key": "evidence", "op": ">=", "value": 3 }
@@ -202,7 +202,7 @@
         },
         {
           "id": "publish_as_rumor",
-          "text": "Publish as rumor",
+          "text": "うわさとして公表する",
           "target": "false_end"
         }
       ]

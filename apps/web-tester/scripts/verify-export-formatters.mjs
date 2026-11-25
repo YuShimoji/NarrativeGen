@@ -22,8 +22,8 @@ function testTwineFormatter() {
 
   assert.match(output, /^:: StoryTitle/m)
   assert.match(output, /:: start/m)
-  assert.match(output, /\[\[Search for a key->hall\]\]/)
-  assert.match(output, /\[\[Force the door->bruise\]\]/)
+  assert.match(output, /\[\[鍵を探す->hall\]\]/)
+  assert.match(output, /\[\[扉をこじ開ける->bruise\]\]/)
 }
 
 function testInkFormatter() {
@@ -32,8 +32,8 @@ function testInkFormatter() {
 
   assert.match(output, /^-> start/m)
   assert.match(output, /^=== start ===/m)
-  assert.match(output, /\* \[Search for a key\] -> hall/)
-  assert.match(output, /\* \[Force the door\] -> bruise/)
+  assert.match(output, /\* \[鍵を探す\] -> hall/)
+  assert.match(output, /\* \[扉をこじ開ける\] -> bruise/)
   assert.match(output, /-> END/)
 }
 
@@ -116,8 +116,8 @@ function testYarnFormatter() {
   assert.match(output, /^===$/m)
 
   // Choices with -> syntax
-  assert.match(output, /-> Search for a key/)
-  assert.match(output, /-> Force the door/)
+  assert.match(output, /-> 鍵を探す/)
+  assert.match(output, /-> 扉をこじ開ける/)
 
   // Effects mapped to <<set>>
   assert.match(output, /<<set \$hasKey to true>>/)

@@ -22,7 +22,7 @@
 | Studio（主画面） | 実行（本文＋判断の列＋道筋）、点検、その場で編集（範囲は[SP-STUDIO-001](docs/specs/studio-rebuild.md) 4節）。`models/`の物語は「保存」で元のJSONへ書き戻し。`models/generated/`の物語は保存の代わりに「写して育てる」で`models/examples/`へ写す。小さい数値は有効3桁で表示。幅1440px・768pxで確認（2026-11-22、生成した物語の実行画面と蓋然の欄） | `npm run dev:studio` → `http://127.0.0.1:5185/`、編集関数の試験は`npm test -w @narrativegen/studio`（7件） |
 | エンジンの判断の記録 | `packages/engine-ts/src/trace.ts`（`traceStart`・`traceStep`・`checkModel`ほか）。読み取り専用で意味論は変えない | `npm run test:engine`（29ファイル・375件、2026-11-23） |
 | 旧Web Tester | 編集・グラフ・export等。置き換えまで残し、新機能は足さない | `npm run dev`（port 5173が他projectと衝突する時は下の注意） |
-| サンプル | `originality-spine-probe.json`、`procedural-choice-spine-probe.json`、`vertical-slice.json`。前提から生成したチーズバーガー2本・印刷所・閉館の鐘・朝市の影 | Studioの物語選択。[前提から生成した見本](docs/specs/premise-driven-story.md#3-試作の契約) |
+| サンプル | Studioの見本は題名と再生中の選択肢を日本語で表示。前提から生成した見本では、題名に「前提から生成」が付き、右欄に蓋然が出る | Studioの物語選択。[前提から生成した見本](docs/specs/premise-driven-story.md#3-試作の契約) |
 | ゲーム層（凍結） | Play演出・BGM、Unity SDK、Public Studio、Sites adapter。再構築中は変更しない | 再開は別の作業単位 |
 
 点検の既知の限界: 数値が増え続ける物語（`full_integration`・`inventory_test`・`trading`・`tutorial`など8件）は
@@ -34,14 +34,14 @@
 |---|---|---|---|
 | **蓋然の欄と「写して育てる」の受入** | 物語を進めながら蓋然と理由を読めるか。写した後の編集で困らないか | 下の「前提から組んだ物語の確認手順」 | 近い／一部違う／違う。読みにくい所、足りない情報 |
 | **Studio編集の受入** | その場で編集で物語を直せるか。旧Web Testerを退役できるか | 下の「Studio編集の確認手順」 | 近い／一部違う／違う。足りない編集と、引っかかった操作 |
-| G0 独自性の基準確認 | 試作が旧来のflag ADVと違うroute差を物語として伝えているか | Studioで`originality-spine-probe`の2つの結末を再生して比べる | pass、または具体的な欠陥 |
+| G0 独自性の基準確認 | 試作が旧来のflag ADVと違うroute差を物語として伝えているか | Studioで「レシートの矛盾（独自性の検証）」の2つの結末を再生して比べる | pass、または具体的な欠陥 |
 
 前提から組んだ物語の確認手順:
 
-1. `npm run dev:studio`で「cheeseburger-weight-hearsay（前提から生成）」を選ぶ。右列の先頭の「蓋然」に、この場面で可能な行為・割合・重みの内訳が出る。
+1. `npm run dev:studio`で「チーズバーガーの重さ（聞いた話で見方が変わる）（前提から生成）」を選ぶ。右列の先頭の「蓋然」に、この場面で可能な行為・割合・重みの内訳が出る。
 2. 「主線」の印が付いた行為の選択肢を進める。目撃者Bは酔った人と話して見直すと違和感が消え、酔った人は探偵Aに尋ねて見直すと違和感を覚える。
    「ここへ来た行為」の下に、見込みと許容幅がどう変わったかが出る。同じ内容の文章版は[導出の記録](docs/samples/premise-story-cheeseburger-weight-hearsay-review-ja.md)。
-3. 「cheeseburger-weight（前提から生成）」は、採用済みの意図（共通の話題・食い違い）のまま組み直した物語。尋ねる・見直すは主線の脇の行為として出る。
+3. 「チーズバーガーの重さ（前提から生成）」は、採用済みの意図（共通の話題・食い違い）のまま組み直した物語。尋ねる・見直すは主線の脇の行為として出る。
 4. 「この場面を編集」で本文を直すと、蓋然の欄が「前提から組んだ物語と違っています」に変わる。「写して育てる」を押すと
    `models/examples/<名前>.json`へ写り、以後は写しを「保存」で直す
    （試した写しを消す時は`models/examples/`と`apps/web-tester/models/examples/`の同名ファイルを削除する）。
@@ -50,7 +50,7 @@
 
 Studio編集の確認手順:
 
-1. `npm run dev:studio`→`procedural-choice-spine-probe`→「Ask Mira…」を選ぶ→「この場面を編集」。
+1. `npm run dev:studio`→「レシートの矛盾（選択肢の開閉）」→「ミラに書庫の記憶と照合してもらう」を選ぶ→「この場面を編集」。
 2. 条件の知識ルールで`credibility`の予想を50→70にし、右列が「気づいた✓」→「気づいていない✗」に変わって選択肢が閉じるのを見る。
 3. 「人物と物」を開いてMiraの許容幅を変える→「＋効果」で知覚を足す→「保存」→`git diff models/`
    （戻す時は`git checkout -- models/examples/procedural-choice-spine-probe.json`）。

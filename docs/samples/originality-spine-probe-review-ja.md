@@ -2,7 +2,7 @@
 
 ## Perception Policy v0 review note
 
-After selecting `Ask Mira to test the receipt against her archive memory`, the
+After selecting `ミラに書庫の記憶と照合してもらう`, the
 Story text should stay human-readable and Japanese-first. Raw policy/debug
 tokens such as `perceptionPolicy:mira_receipt_contradiction_policy`,
 `trigger=memory_reframed`, and `noticed=true` are diagnostics, not player copy.
@@ -25,7 +25,7 @@ Vite が表示した URL を開く。通常は `http://localhost:5173/`。
 1. `originality-spine-probe.json` を選ぶ。
 2. `実行` を押す。
 3. 最初の画面で `レシート片` の出所 / 持ち主 / 矛盾 / 信用度が、点数や debug tag ではなく自然な説明として本文に展開されることを見る。
-4. `Ask Mira to test the receipt against her archive memory` を選ぶ。
+4. `ミラに書庫の記憶と照合してもらう` を選ぶ。
 5. 本文が、ミラの書庫知識によってレシート片の意味が変わったことを自然に説明することを見る。
 6. `設計ダッシュボード` を開き、`NarrativeGen独自プリミティブ` を見る。
 
@@ -33,9 +33,9 @@ Vite が表示した URL を開く。通常は `http://localhost:5173/`。
 
 ```text
 desk
-  -> Ask Mira to test the receipt against her archive memory
+  -> ミラに書庫の記憶と照合してもらう
 memory_reframed
-  -> Follow the semantic contradiction to the archive ledger
+  -> 記録の矛盾を追って台帳へ進む
 semantic_end
 ```
 

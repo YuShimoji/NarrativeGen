@@ -24,9 +24,9 @@ async function startMediaModel(page) {
   await page.waitForSelector('.play-content', { timeout: 10000 });
 }
 
-/** Navigate from start to scene2 by clicking "Investigate" */
+/** Navigate from start to scene2 by clicking "調べる" */
 async function navigateToScene2(page) {
-  await page.locator('.play-choice-btn:has-text("Investigate")').click();
+  await page.locator('.play-choice-btn:has-text("調べる")').click();
   await page.waitForFunction(
     () => {
       const content = document.querySelector('#storyView .play-content');
@@ -115,7 +115,7 @@ test.describe('SP-PLAY-001 Phase 2: Image / BGM', () => {
     await openPage(page);
     await startMediaModel(page);
 
-    await page.locator('.play-choice-btn:has-text("Investigate")').click();
+    await page.locator('.play-choice-btn:has-text("調べる")').click();
     await page.waitForFunction(
       () => {
         const pr = window.__narrativeGenE2E?.getPlayRenderer?.();
@@ -139,7 +139,7 @@ test.describe('SP-PLAY-001 Phase 2: Image / BGM', () => {
     });
     expect(before).toBe(false);
 
-    await page.locator('.play-choice-btn:has-text("Investigate")').click();
+    await page.locator('.play-choice-btn:has-text("調べる")').click();
     await page.waitForFunction(
       () => window.__narrativeGenE2E?.getPlayRenderer?.()?.getBgmDiagnostics?.()?.unlocked === true,
       { timeout: 10000 }
@@ -156,7 +156,7 @@ test.describe('SP-PLAY-001 Phase 2: Image / BGM', () => {
     await navigateToScene2(page);
 
     // scene2 → end
-    await page.locator('.play-choice-btn:has-text("Enter silence")').click();
+    await page.locator('.play-choice-btn:has-text("音のしない場所へ進む")').click();
     await page.waitForSelector('.play-ending', { timeout: 10000 });
 
     // Verify the end node has bgm: null in model (explicit stop)

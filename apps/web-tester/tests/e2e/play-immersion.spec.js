@@ -62,17 +62,17 @@ test.describe('SP-PLAY-001: Play Immersion MVP', () => {
     const choiceBtns = storyView.locator('.play-choice-btn');
     await expect(choiceBtns.first()).toBeVisible({ timeout: 3000 });
 
-    // Should have "Get up" choice
+    // Should have "起き上がる" choice
     const btnText = await choiceBtns.first().textContent();
-    expect(btnText).toContain('Get up');
+    expect(btnText).toContain('起き上がる');
   });
 
   test('AC-3: crossfade transition — clicking choice replaces content', async ({ page }) => {
     await openPage(page);
     await startLinearModel(page);
 
-    // Click "Get up" choice
-    await page.locator('.play-choice-btn:has-text("Get up")').click();
+    // Click "起き上がる" choice
+    await page.locator('.play-choice-btn:has-text("起き上がる")').click();
 
     // Locator + toContainText（waitForFunction よりタイムアウトとリトライが安定）
     const latestPlay = page.locator('#storyView .play-content').last();
@@ -122,11 +122,11 @@ test.describe('SP-PLAY-001: Play Immersion MVP', () => {
     await startLinearModel(page);
 
     // Navigate to end: start → scene1 → end
-    await page.locator('.play-choice-btn:has-text("Get up")').click();
-    await expect(page.locator('.play-choice-btn:has-text("Open door")')).toBeVisible({
+    await page.locator('.play-choice-btn:has-text("起き上がる")').click();
+    await expect(page.locator('.play-choice-btn:has-text("扉を開ける")')).toBeVisible({
       timeout: PLAY_CONTENT_TIMEOUT,
     });
-    await page.locator('.play-choice-btn:has-text("Open door")').click();
+    await page.locator('.play-choice-btn:has-text("扉を開ける")').click();
 
     // Wait for ending to appear
     await page.waitForSelector('.play-ending', { timeout: PLAY_CONTENT_TIMEOUT });
@@ -147,11 +147,11 @@ test.describe('SP-PLAY-001: Play Immersion MVP', () => {
     await startLinearModel(page);
 
     // Navigate to end
-    await page.locator('.play-choice-btn:has-text("Get up")').click();
-    await expect(page.locator('.play-choice-btn:has-text("Open door")')).toBeVisible({
+    await page.locator('.play-choice-btn:has-text("起き上がる")').click();
+    await expect(page.locator('.play-choice-btn:has-text("扉を開ける")')).toBeVisible({
       timeout: PLAY_CONTENT_TIMEOUT,
     });
-    await page.locator('.play-choice-btn:has-text("Open door")').click();
+    await page.locator('.play-choice-btn:has-text("扉を開ける")').click();
     await page.waitForSelector('.play-ending', { timeout: PLAY_CONTENT_TIMEOUT });
 
     // Click restart
@@ -171,7 +171,7 @@ test.describe('SP-PLAY-001: Play Immersion MVP', () => {
     await page.locator('.play-mode-toggle').click();
 
     // Click choice
-    await page.locator('.play-choice-btn:has-text("Get up")').click();
+    await page.locator('.play-choice-btn:has-text("起き上がる")').click();
 
     // Wait for new content
     await page.waitForFunction(

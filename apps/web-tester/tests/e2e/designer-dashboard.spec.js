@@ -44,7 +44,7 @@ test.describe('Designer Dashboard', () => {
     await expect(page.locator('.designer-dashboard-panel--boundary')).toContainText('deterministic / procedural / rule-based');
 
     await page.locator('#storyTab').click();
-    await page.locator('.play-choice-btn:has-text("Open the old notebook")').click();
+    await page.locator('.play-choice-btn:has-text("古いノートを開く")').click();
     await page.waitForFunction(
       () => window.__NARRATIVEGEN_DEVTOOLS__?.getState().currentNodeId === 'notebook',
       undefined,

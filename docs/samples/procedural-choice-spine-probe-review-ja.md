@@ -18,8 +18,8 @@ npm run dev
 1. `procedural-choice-spine-probe.json` を選び、`実行` を押す。
 2. `設計ダッシュボード` の `NarrativeGen独自プリミティブ` を開く。
 3. `Knowledge Rule 定義` が `1 rules`、`現在のルール使用` が `0 uses`、知識由来 event が `0 policy-derived` であることを見る。
-4. Story に戻り、`Ask Mira to test the receipt against her archive memory` を選ぶ。
-5. `Follow the semantic contradiction to the archive ledger` が表示されることを見る。
+4. Story に戻り、`ミラに書庫の記憶と照合してもらう` を選ぶ。
+5. `記録の矛盾を追って台帳へ進む` が表示されることを見る。
 6. Dashboard で `mira_receipt_contradiction`、`noticed`、`archive_records → archive_records`、`exact`、欠損理由 `なし`、choice attribution を確認する。
 7. Dashboard の知識由来 event が `0 policy-derived` のままであることを見る。exact event ID の不在は readback と engine test が確認する。
 8. Story に戻り `follow_semantic_change` を選び、`semantic_end` へ到達する。

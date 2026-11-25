@@ -91,7 +91,7 @@
       "choices": [
         {
           "id": "pick_up_letter",
-          "text": "Pick up the letter",
+          "text": "手紙を拾う",
           "target": "examine_letter",
           "effects": [
             { "type": "setFlag", "key": "found_letter", "value": true },
@@ -100,7 +100,7 @@
         },
         {
           "id": "ignore_letter",
-          "text": "Ignore it and go to work",
+          "text": "手紙をそのままにして仕事へ行く",
           "target": "work_regret"
         }
       ]
@@ -111,7 +111,7 @@
       "choices": [
         {
           "id": "finally_pick_up",
-          "text": "Pick up the letter",
+          "text": "手紙を拾う",
           "target": "examine_letter",
           "effects": [
             { "type": "setFlag", "key": "found_letter", "value": true },
@@ -126,7 +126,7 @@
       "choices": [
         {
           "id": "examine_envelope",
-          "text": "Examine the envelope closely",
+          "text": "封筒をよく調べる",
           "target": "envelope_details",
           "effects": [
             { "type": "setFlag", "key": "examined_envelope", "value": true },
@@ -136,12 +136,12 @@
         },
         {
           "id": "visit_room_404",
-          "text": "Go to Room 404 immediately",
+          "text": "すぐに404号室へ行く",
           "target": "hallway"
         },
         {
           "id": "ask_manager",
-          "text": "Ask the building manager about Room 404",
+          "text": "管理人に404号室のことを聞く",
           "target": "manager_office"
         }
       ]
@@ -152,12 +152,12 @@
       "choices": [
         {
           "id": "to_hallway",
-          "text": "Head to Room 404",
+          "text": "404号室へ向かう",
           "target": "hallway"
         },
         {
           "id": "to_manager",
-          "text": "Talk to the building manager",
+          "text": "管理人と話す",
           "target": "manager_office"
         }
       ]
@@ -168,7 +168,7 @@
       "choices": [
         {
           "id": "ask_politely",
-          "text": "Ask politely about Room 404",
+          "text": "404号室について丁寧に尋ねる",
           "target": "manager_response_polite",
           "effects": [
             { "type": "setFlag", "key": "talked_to_manager", "value": true },
@@ -178,7 +178,7 @@
         },
         {
           "id": "show_letter",
-          "text": "Show the letter and demand answers",
+          "text": "手紙を見せて説明を求める",
           "target": "manager_response_confronted",
           "conditions": [
             { "type": "hasItem", "key": "letter", "value": true }
@@ -191,7 +191,7 @@
         },
         {
           "id": "leave_manager",
-          "text": "Leave without asking",
+          "text": "何も聞かずに立ち去る",
           "target": "hallway"
         }
       ]
@@ -203,7 +203,7 @@
       "choices": [
         {
           "id": "press_further",
-          "text": "Press for more details",
+          "text": "もっと詳しく聞く",
           "target": "manager_reveals",
           "conditions": [
             { "type": "and", "conditions": [
@@ -218,7 +218,7 @@
         },
         {
           "id": "accept_answer",
-          "text": "Accept his answer and investigate on your own",
+          "text": "答えを受け入れ、自分で調べる",
           "target": "hallway"
         }
       ]
@@ -229,7 +229,7 @@
       "choices": [
         {
           "id": "demand_letter_back",
-          "text": "Demand the letter back",
+          "text": "手紙を返すよう求める",
           "target": "manager_reveals",
           "effects": [
             { "type": "addResource", "key": "clues", "delta": 2 },
@@ -244,7 +244,7 @@
         },
         {
           "id": "let_him_keep",
-          "text": "Let him keep it — you've seen enough",
+          "text": "手紙は預ける。もう十分に見た",
           "target": "hallway",
           "effects": [
             { "type": "removeItem", "key": "letter" },
@@ -264,7 +264,7 @@
       "choices": [
         {
           "id": "investigate_room",
-          "text": "Ask for the key to Room 404",
+          "text": "404号室の鍵を貸してもらう",
           "target": "room_404",
           "effects": [
             { "type": "addItem", "key": "room_key" },
@@ -279,7 +279,7 @@
       "choices": [
         {
           "id": "enter_room_key",
-          "text": "Unlock Room 404",
+          "text": "404号室の鍵を開ける",
           "target": "room_404",
           "conditions": [
             { "type": "hasItem", "key": "room_key", "value": true }
@@ -287,7 +287,7 @@
         },
         {
           "id": "knock_door",
-          "text": "Knock on the door",
+          "text": "扉をノックする",
           "target": "room_404_locked",
           "conditions": [
             { "type": "not", "condition": { "type": "hasItem", "key": "room_key", "value": true } }
@@ -295,7 +295,7 @@
         },
         {
           "id": "go_back_manager",
-          "text": "Go back to the manager's office",
+          "text": "管理人室に戻る",
           "target": "manager_office",
           "conditions": [
             { "type": "not", "condition": { "type": "hasItem", "key": "room_key", "value": true } }
@@ -309,7 +309,7 @@
       "choices": [
         {
           "id": "back_to_hallway",
-          "text": "Go back to the hallway",
+          "text": "廊下に戻る",
           "target": "hallway"
         }
       ]
@@ -320,7 +320,7 @@
       "choices": [
         {
           "id": "read_papers",
-          "text": "Read the scattered papers",
+          "text": "散らばった書類を読む",
           "target": "conclusion",
           "conditions": [
             { "type": "resource", "key": "clues", "op": ">=", "value": 4 }
@@ -338,7 +338,7 @@
         },
         {
           "id": "take_pen",
-          "text": "Take the pen as evidence",
+          "text": "証拠としてペンを持っていく",
           "target": "hallway",
           "effects": [
             { "type": "addItem", "key": "pen" },
@@ -347,7 +347,7 @@
         },
         {
           "id": "leave_room",
-          "text": "Leave the room",
+          "text": "部屋を出る",
           "target": "hallway"
         }
       ]

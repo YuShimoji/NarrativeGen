@@ -83,7 +83,7 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Talk to the detective",
+          "text": "探偵と話す",
           "target": "meet_detective",
           "conditions": [
             { "type": "flag", "key": "met_detective", "value": false }
@@ -94,12 +94,12 @@
         },
         {
           "id": "c2",
-          "text": "Examine the cheeseburger",
+          "text": "チーズバーガーを調べる",
           "target": "examine_burger"
         },
         {
           "id": "c3",
-          "text": "Check your badge",
+          "text": "自分のバッジを確かめる",
           "target": "check_badge",
           "conditions": [
             { "type": "hasItem", "key": "detective_badge", "value": true }
@@ -107,7 +107,7 @@
         },
         {
           "id": "c4",
-          "text": "Review the evidence",
+          "text": "証拠を見直す",
           "target": "review_evidence",
           "conditions": [
             { "type": "hasEvent", "key": "weight_anomaly", "value": true }
@@ -121,7 +121,7 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Take the badge and examine the scene",
+          "text": "バッジを手に取り、現場を調べる",
           "target": "scene_start",
           "effects": [
             { "type": "addItem", "key": "detective_badge" }
@@ -135,7 +135,7 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Weigh it carefully (creates anomaly event)",
+          "text": "重さを正確に量る（異常が見つかる）",
           "target": "weigh_burger",
           "conditions": [
             { "type": "hasEvent", "key": "weight_anomaly", "value": false }
@@ -157,7 +157,7 @@
         },
         {
           "id": "c2",
-          "text": "Put it back",
+          "text": "元の場所に戻す",
           "target": "scene_start"
         }
       ]
@@ -168,7 +168,7 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Return to the scene",
+          "text": "現場に戻る",
           "target": "scene_start"
         }
       ]
@@ -179,7 +179,7 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Back to the scene",
+          "text": "現場に戻る",
           "target": "scene_start"
         }
       ]
@@ -190,7 +190,7 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Make the arrest",
+          "text": "容疑者を逮捕する",
           "target": "conclusion",
           "conditions": [
             { "type": "resource", "key": "suspicion", "op": ">=", "value": 30 }
@@ -198,7 +198,7 @@
         },
         {
           "id": "c2",
-          "text": "Keep investigating",
+          "text": "調査を続ける",
           "target": "scene_start"
         }
       ]

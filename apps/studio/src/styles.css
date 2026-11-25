@@ -81,10 +81,11 @@ button { font: inherit; color: inherit; }
 }
 .brand { font-weight: 600; letter-spacing: 0.01em; margin-right: 8px; }
 .brand span { color: var(--text-3); font-weight: 400; }
+.picker { min-width: 0; }
 .picker select {
-  height: 34px; min-width: 240px; padding: 0 10px;
+  height: 34px; min-width: min(240px, 100%); max-width: 100%; padding: 0 10px;
   border: 1px solid var(--line-strong); border-radius: var(--radius);
-  background: var(--surface); color: var(--text); font: inherit;
+  background: var(--surface); color: var(--text); font: inherit; text-overflow: ellipsis;
 }
 .btn {
   height: 34px; padding: 0 14px; cursor: pointer;
@@ -319,7 +320,6 @@ summary { cursor: pointer; }
 .topbar .btn, .view-tab, .brand { white-space: nowrap; flex: none; }
 @media (max-width: 900px) {
   .topbar { flex-wrap: wrap; row-gap: 8px; padding: 10px 16px; }
-  .picker select { min-width: 0; max-width: 52vw; }
 }
 
 /* probability of each action in a story built from a premise */

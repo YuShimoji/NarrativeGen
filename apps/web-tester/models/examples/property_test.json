@@ -70,7 +70,7 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Eat the cheeseburger",
+          "text": "チーズバーガーを食べる",
           "target": "ate_burger",
           "effects": [
             { "type": "addItem", "key": "cheeseburger" },
@@ -80,7 +80,7 @@
         },
         {
           "id": "c2",
-          "text": "Eat the apple",
+          "text": "リンゴを食べる",
           "target": "ate_apple",
           "effects": [
             { "type": "addItem", "key": "apple" },
@@ -89,7 +89,7 @@
         },
         {
           "id": "c3",
-          "text": "Pick up the knife",
+          "text": "ナイフを拾う",
           "target": "took_knife",
           "conditions": [
             { "type": "hasItem", "key": "kitchen_knife", "value": false }
@@ -106,7 +106,7 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Go back",
+          "text": "戻る",
           "target": "kitchen"
         }
       ]
@@ -117,7 +117,7 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Go back",
+          "text": "戻る",
           "target": "kitchen"
         }
       ]
@@ -128,7 +128,7 @@
       "choices": [
         {
           "id": "c1",
-          "text": "Go back",
+          "text": "戻る",
           "target": "kitchen"
         }
       ]

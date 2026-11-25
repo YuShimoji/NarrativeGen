@@ -16,7 +16,7 @@
         "image": "media/test-scene.png"
       },
       "choices": [
-        { "id": "c1", "text": "Investigate", "target": "scene2" }
+        { "id": "c1", "text": "調べる", "target": "scene2" }
       ]
     },
     "scene2": {
@@ -27,7 +27,7 @@
         "bgm": "media/test-bgm2.mp3"
       },
       "choices": [
-        { "id": "c2", "text": "Enter silence", "target": "end" }
+        { "id": "c2", "text": "音のしない場所へ進む", "target": "end" }
       ]
     },
     "end": {
