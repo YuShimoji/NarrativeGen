@@ -1,33 +1,132 @@
 {
   "modelType": "adventure-playthrough",
   "startNode": "arrival",
+  "flags": { "銅板を見直した": false },
   "variables": {
     "依頼名": "七人目の渡し賃",
-    "依頼": "七枚目の銅貨は、誰の渡し賃だったのか。日暮れまでに聞き出し、検札小屋のイサに報告する。"
+    "依頼": "七枚目の銅貨は、誰の渡し賃だったのか。日暮れまでに聞き出し、検札小屋のイサに報告する。",
+    "照合する証言": ""
   },
   "entities": {
     "夜舟": {
       "id": "夜舟",
-      "name": "昨夜の渡し舟",
+      "name": "昨夜の舟灯を刻んだ銅板",
       "properties": {
         "灯の数": { "key": "灯の数", "type": "number", "defaultValue": 2 }
       }
     }
   },
   "characters": {
-    "nagi": {
-      "id": "nagi",
-      "name": "灯台守のナギ",
+    "traveller": {
+      "id": "traveller",
+      "name": "旅人",
       "knowledgeProfiles": [
         { "domain": "灯火信号", "accuracy": 1, "tolerance": 0.1 }
       ]
     }
   },
+  "perceptionPolicies": [
+    {
+      "id": "first_look",
+      "trigger": { "node": "arrival" },
+      "character": "traveller",
+      "entity": "夜舟",
+      "domain": "灯火信号",
+      "expectations": { "灯の数": 2 },
+      "eventId": "最初の読み",
+      "eventName": "イサから銅板を預かった。行きと帰りの灯を一緒に刻んだものだろうか。",
+      "onlyIfNoticed": false
+    },
+    {
+      "id": "reread_plate_ferry",
+      "trigger": { "node": "plate_ferry" },
+      "character": "traveller",
+      "entity": "夜舟",
+      "domain": "灯火信号",
+      "expectations": { "灯の数": 1 },
+      "eventId": "row_light",
+      "eventName": "ロウは昨夜、片道しか漕いでいない。いつもの船灯だけでは銅板の穴が余る。",
+      "onlyIfNoticed": true
+    },
+    {
+      "id": "reread_plate_watch",
+      "trigger": { "node": "plate_watch" },
+      "character": "traveller",
+      "entity": "夜舟",
+      "domain": "灯火信号",
+      "expectations": { "灯の数": 1 },
+      "eventId": "wake_lights",
+      "eventName": "ナギの読み方では、この段はひと便。いつもの船灯だけでは銅板の穴が余る。",
+      "onlyIfNoticed": true
+    }
+  ],
+  "conversationTemplates": [
+    {
+      "id": "read_plate_ferry",
+      "trigger": {
+        "sessionConditions": [
+          { "type": "variable", "key": "照合する証言", "op": "==", "value": "ロウ" },
+          { "type": "hasEvent", "key": "row_light", "value": true },
+          { "type": "property", "entity": "夜舟", "key": "灯の数", "op": "==", "value": 2 }
+        ]
+      },
+      "text": "\n\nへさきの船灯を親指で隠しても、もう一つ光が残る。帰りの灯ではない。ロウが見た、壺の隣の小皿にも火が入っていたのだ。貝殻窯のセナに「壺の隣の灯皿」の持ち主を訊こう。"
+    },
+    {
+      "id": "plain_plate_ferry",
+      "trigger": {
+        "sessionConditions": [
+          { "type": "variable", "key": "照合する証言", "op": "==", "value": "ロウ" },
+          {
+            "type": "not",
+            "condition": {
+              "type": "and",
+              "conditions": [
+                { "type": "hasEvent", "key": "row_light", "value": true },
+                { "type": "property", "entity": "夜舟", "key": "灯の数", "op": "==", "value": 2 }
+              ]
+            }
+          }
+        ]
+      },
+      "text": "\n\nこの並びを二つの送り灯とは読めない。けれど、ロウは七枚目の銭をセナが青い糸からほどくのを見た。窯場で「銭を結んだ壺の持ち主」を訊いてみよう。"
+    },
+    {
+      "id": "read_plate_watch",
+      "trigger": {
+        "sessionConditions": [
+          { "type": "variable", "key": "照合する証言", "op": "==", "value": "ナギ" },
+          { "type": "hasEvent", "key": "wake_lights", "value": true },
+          { "type": "property", "entity": "夜舟", "key": "灯の数", "op": "==", "value": 2 }
+        ]
+      },
+      "text": "\n\n二つの穴は切れ目をまたいでいない。どちらも同じ舟だ。へさきに一つ、舟尾にもう一つ。ナギのいう送り灯が、昨夜の段にそろっている。貝殻窯のセナなら「二つの灯で送った人」の名を知っている。"
+    },
+    {
+      "id": "plain_plate_watch",
+      "trigger": {
+        "sessionConditions": [
+          { "type": "variable", "key": "照合する証言", "op": "==", "value": "ナギ" },
+          {
+            "type": "not",
+            "condition": {
+              "type": "and",
+              "conditions": [
+                { "type": "hasEvent", "key": "wake_lights", "value": true },
+                { "type": "property", "entity": "夜舟", "key": "灯の数", "op": "==", "value": 2 }
+              ]
+            }
+          }
+        ]
+      },
+      "text": "\n\nこの並びを二つの送り灯とは読めない。夕べの客が銭をどう渡したかは、下の桟橋のロウが知っている。"
+    }
+  ],
   "nodes": {
     "arrival": {
       "id": "arrival",
       "speaker": "検札小屋｜帳付けのイサ",
-      "text": "イサは帳面の上に銅貨を並べた。六枚までは指ではじき、最後の一枚だけ爪で裏返した。\n\n「昨夜の客は六人。渡し賃は七人分。日が沈むと、次の舟が出る。この一枚をどの欄に入れるか、それまでに決めたい」\n\n「七人目の客を捜してくれないか。下の桟橋に舟番がいる。岬の灯台からも舟は見えるよ」",
+      "text": "イサは銅貨を七枚、帳面に並べた。「昨夜の客は六人。じゃあ七枚目は誰の分だろうね」\n\n銭の下から薄い銅板を引き出し、戸口の光に透かす。昨夜の段に針の穴が[最初の読み.actual_value]つ。イサは上の段を手で隠す。「これに、帰りの分も入ってるんだろうかね」\n\n「持っていきな。昨日何回漕いだかは下の桟橋のロウに、穴の打ち方は岬の灯台のナギに訊くといい。日暮れまでには、その銭を帳面に入れたいんだ」",
       "choices": [
         { "id": "fare", "text": "七人目の客", "target": "account" },
         {
@@ -121,11 +220,23 @@
       "text": "ロウは舟板から灰を掃き落としている。岸に近い席だけ、丸く灰が残っていない。\n\n「七人目の客？　昨日、そこの段で俺の手を借りて下りたのは六人だ。荷物にまで手を差し出すほど、お上品な渡しじゃないよ」",
       "choices": [
         {
+          "id": "reread",
+          "text": "預かった銅板を見直す",
+          "target": "plate_ferry",
+          "conditions": [
+            { "type": "hasEvent", "key": "blue_cord", "value": true }
+          ],
+          "effects": [
+            { "type": "setVariable", "key": "照合する証言", "value": "ロウ" },
+            { "type": "setFlag", "key": "銅板を見直した", "value": true }
+          ]
+        },
+        {
           "id": "fare",
           "text": "七人目の客",
           "target": "cord",
           "effects": [
-            { "type": "createEvent", "id": "blue_cord", "name": "ロウは七枚目の銭に青い結び糸を見た。貝殻窯で壺の口を縛る糸だ。" }
+            { "type": "createEvent", "id": "blue_cord", "name": "ロウは昨夜、片道しか漕いでいない。普段の船灯は一つ。セナの壺には青い結び糸があり、隣に小皿があった。" }
           ]
         },
         {
@@ -133,7 +244,14 @@
           "text": "二つの灯",
           "target": "boat_wake",
           "conditions": [
-            { "type": "hasEvent", "key": "wake_lights", "value": true }
+            { "type": "property", "entity": "夜舟", "key": "灯の数", "op": "==", "value": 2 },
+            {
+              "type": "or",
+              "conditions": [
+                { "type": "hasEvent", "key": "wake_lights", "value": true },
+                { "type": "hasEvent", "key": "row_light", "value": true }
+              ]
+            }
           ]
         },
         { "id": "go_office", "text": "検札小屋", "target": "office" },
@@ -144,14 +262,30 @@
     "cord": {
       "id": "cord",
       "speaker": "下の桟橋｜舟番のロウ",
-      "text": "「七枚目は、セナが歯で青い結び糸をちぎって置いたやつだ。銭は壺の首にくくってあった。あの子は自分の席に立ったまま、壺の方を座らせた」\n\nロウは掃く手を止める。「あの糸なら貝殻窯で焼き手に訊きな。俺の口で荷物とは呼びたくない」",
+      "text": "「帰りの便？　今朝だよ。昨夜は潮が引いて、舟も俺も対岸で一晩待った。片道に要る灯はへさきの一つ。夜のうちに戻ったと言う奴がいるのか？」\n\nロウは爪に残った青い糸を抜いた。「セナが壺の首からこれをほどいて、七枚目の銭を置いた。壺の隣には小皿もあったよ。何の皿かって？　暗くてね」\n\n懐の銅板が指に触れる。イサのところで帰りの分だと思った穴は、何を刻んだのだろう。",
       "choices": [
+        {
+          "id": "reread",
+          "text": "預かった銅板を見直す",
+          "target": "plate_ferry",
+          "effects": [
+            { "type": "setVariable", "key": "照合する証言", "value": "ロウ" },
+            { "type": "setFlag", "key": "銅板を見直した", "value": true }
+          ]
+        },
         {
           "id": "lamps",
           "text": "二つの灯",
           "target": "boat_wake",
           "conditions": [
-            { "type": "hasEvent", "key": "wake_lights", "value": true }
+            { "type": "property", "entity": "夜舟", "key": "灯の数", "op": "==", "value": 2 },
+            {
+              "type": "or",
+              "conditions": [
+                { "type": "hasEvent", "key": "wake_lights", "value": true },
+                { "type": "hasEvent", "key": "row_light", "value": true }
+              ]
+            }
           ]
         },
         { "id": "go_office", "text": "検札小屋", "target": "office" },
@@ -165,11 +299,23 @@
       "text": "「舟尾の方は俺の灯じゃない。セナが、こぼれないよう塩を詰めた小皿に芯を入れてきた。向こう岸まで一度も消えなかったよ」",
       "choices": [
         {
+          "id": "reread",
+          "text": "預かった銅板を見直す",
+          "target": "plate_ferry",
+          "conditions": [
+            { "type": "hasEvent", "key": "blue_cord", "value": true }
+          ],
+          "effects": [
+            { "type": "setVariable", "key": "照合する証言", "value": "ロウ" },
+            { "type": "setFlag", "key": "銅板を見直した", "value": true }
+          ]
+        },
+        {
           "id": "fare",
           "text": "七人目の客",
           "target": "cord",
           "effects": [
-            { "type": "createEvent", "id": "blue_cord", "name": "ロウは七枚目の銭に青い結び糸を見た。貝殻窯で壺の口を縛る糸だ。" }
+            { "type": "createEvent", "id": "blue_cord", "name": "ロウは昨夜、片道しか漕いでいない。普段の船灯は一つ。セナの壺には青い結び糸があり、隣に小皿があった。" }
           ]
         },
         { "id": "go_office", "text": "検札小屋", "target": "office" },
@@ -180,23 +326,26 @@
     "watch": {
       "id": "watch",
       "speaker": "岬の灯台｜灯台守のナギ",
-      "text": "ナギの指は煤で黒い。卓の上には、夜ごとに舟の灯を針先で打ち抜いた薄い銅板がある。\n\n「昨夜の渡し舟なら、自分で見るかい。板を夕日に透かしてごらん」",
+      "text": "ナギの指は煤で黒い。腰に提げた針の先が、イサから預かった銅板の穴にぴたりと入る。\n\n「昨夜の渡し舟か。板は持ったままでいい。まず、打ち方を教えようか」",
       "choices": [
+        {
+          "id": "reread",
+          "text": "預かった銅板を見直す",
+          "target": "plate_watch",
+          "conditions": [
+            { "type": "hasEvent", "key": "lamp_account", "value": true }
+          ],
+          "effects": [
+            { "type": "setVariable", "key": "照合する証言", "value": "ナギ" },
+            { "type": "setFlag", "key": "銅板を見直した", "value": true }
+          ]
+        },
         {
           "id": "lights",
           "text": "昨夜の渡し舟",
           "target": "lights",
           "effects": [
-            {
-              "type": "perceiveEntity",
-              "character": "nagi",
-              "entity": "夜舟",
-              "domain": "灯火信号",
-              "expectations": { "灯の数": 1 },
-              "eventId": "wake_lights",
-              "eventName": "ナギによれば、へさきと舟尾に灯が一つずつ。二つの灯は骨壺を運ぶ舟の合図だ。",
-              "onlyIfNoticed": true
-            }
+            { "type": "createEvent", "id": "lamp_account", "name": "ナギに銅板の読み方を教わった。一段が片道一便。普段はへさきの一灯、骨を渡す便だけは舟尾にも灯を出す。" }
           ]
         },
         {
@@ -215,8 +364,17 @@
     "lights": {
       "id": "lights",
       "speaker": "岬の灯台｜灯台守のナギ",
-      "text": "昨夜の渡し舟の欄には、小さな穴が[夜舟.灯の数]つある。ナギは板の端を爪でなぞった。\n\n「へさきの灯が一つなら普段の便。へさきと舟尾に一つずつなら、骨を故郷へ渡す舟。もう櫂を握れない人に、帰る岸が見えるようにね」\n\n「灯の油皿を借りに来たのは貝殻窯のセナだ。持ち主のことは、あの子が話すさ」",
+      "text": "「板の左端を触ってごらん。深い切れ目が一便の始まり。帰りの便はひとつ下の段から打つ。普段はへさきの灯が一つだから、一段に穴も一つさ」\n\n「骨を故郷へ渡す晩だけは舟尾にも灯を出す。昨日、うちへ油皿を借りに来たのは窯のセナだったよ」\n\n銅板はまだ裏返したまま、あなたの手の中にある。",
       "choices": [
+        {
+          "id": "reread",
+          "text": "預かった銅板を見直す",
+          "target": "plate_watch",
+          "effects": [
+            { "type": "setVariable", "key": "照合する証言", "value": "ナギ" },
+            { "type": "setFlag", "key": "銅板を見直した", "value": true }
+          ]
+        },
         {
           "id": "cord",
           "text": "青い結び糸",
@@ -236,20 +394,23 @@
       "text": "「青い結び糸を張ると灰の中でも青だけがよく見える。だから窯場の連中はあれで自分の壺を見分けるんだ。糸の話なら、貝殻窯の方が早かろうよ」",
       "choices": [
         {
+          "id": "reread",
+          "text": "預かった銅板を見直す",
+          "target": "plate_watch",
+          "conditions": [
+            { "type": "hasEvent", "key": "lamp_account", "value": true }
+          ],
+          "effects": [
+            { "type": "setVariable", "key": "照合する証言", "value": "ナギ" },
+            { "type": "setFlag", "key": "銅板を見直した", "value": true }
+          ]
+        },
+        {
           "id": "lights",
           "text": "昨夜の渡し舟",
           "target": "lights",
           "effects": [
-            {
-              "type": "perceiveEntity",
-              "character": "nagi",
-              "entity": "夜舟",
-              "domain": "灯火信号",
-              "expectations": { "灯の数": 1 },
-              "eventId": "wake_lights",
-              "eventName": "ナギによれば、へさきと舟尾に灯が一つずつ。二つの灯は骨壺を運ぶ舟の合図だ。",
-              "onlyIfNoticed": true
-            }
+            { "type": "createEvent", "id": "lamp_account", "name": "ナギに銅板の読み方を教わった。一段が片道一便。普段はへさきの一灯、骨を渡す便だけは舟尾にも灯を出す。" }
           ]
         },
         { "id": "go_office", "text": "検札小屋", "target": "office" },
@@ -264,11 +425,24 @@
       "choices": [
         { "id": "work", "text": "貝殻窯の仕事", "target": "pots" },
         {
+          "id": "fare_cord",
+          "text": "銭を結んだ壺の持ち主",
+          "target": "daughter_jar",
+          "conditions": [
+            { "type": "hasEvent", "key": "blue_cord", "value": true },
+            { "type": "flag", "key": "銅板を見直した", "value": true }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
+          ]
+        },
+        {
           "id": "cord",
-          "text": "青い結び糸",
+          "text": "壺の隣の灯皿",
           "target": "daughter_cord",
           "conditions": [
-            { "type": "hasEvent", "key": "blue_cord", "value": true }
+            { "type": "hasEvent", "key": "row_light", "value": true },
+            { "type": "property", "entity": "夜舟", "key": "灯の数", "op": "==", "value": 2 }
           ],
           "effects": [
             { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
@@ -276,10 +450,11 @@
         },
         {
           "id": "lamps",
-          "text": "二つの灯",
+          "text": "二つの灯で送った人",
           "target": "daughter_lights",
           "conditions": [
-            { "type": "hasEvent", "key": "wake_lights", "value": true }
+            { "type": "hasEvent", "key": "wake_lights", "value": true },
+            { "type": "property", "entity": "夜舟", "key": "灯の数", "op": "==", "value": 2 }
           ],
           "effects": [
             { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
@@ -298,7 +473,31 @@
         },
         { "id": "go_office", "text": "検札小屋", "target": "office" },
         { "id": "go_ferry", "text": "下の桟橋", "target": "ferry" },
-        { "id": "go_watch", "text": "岬の灯台", "target": "watch" }
+        { "id": "go_watch", "text": "岬の灯台", "target": "watch" },
+        {
+          "id": "reread_row",
+          "text": "ロウの話で銅板を見直す",
+          "target": "plate_ferry",
+          "conditions": [
+            { "type": "hasEvent", "key": "blue_cord", "value": true }
+          ],
+          "effects": [
+            { "type": "setVariable", "key": "照合する証言", "value": "ロウ" },
+            { "type": "setFlag", "key": "銅板を見直した", "value": true }
+          ]
+        },
+        {
+          "id": "reread_nagi",
+          "text": "ナギの話で銅板を見直す",
+          "target": "plate_watch",
+          "conditions": [
+            { "type": "hasEvent", "key": "lamp_account", "value": true }
+          ],
+          "effects": [
+            { "type": "setVariable", "key": "照合する証言", "value": "ナギ" },
+            { "type": "setFlag", "key": "銅板を見直した", "value": true }
+          ]
+        }
       ]
     },
     "pots": {
@@ -308,10 +507,23 @@
       "choices": [
         {
           "id": "cord",
-          "text": "青い結び糸",
+          "text": "壺の隣の灯皿",
           "target": "daughter_cord",
           "conditions": [
-            { "type": "hasEvent", "key": "blue_cord", "value": true }
+            { "type": "hasEvent", "key": "row_light", "value": true },
+            { "type": "property", "entity": "夜舟", "key": "灯の数", "op": "==", "value": 2 }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
+          ]
+        },
+        {
+          "id": "fare_cord",
+          "text": "銭を結んだ壺の持ち主",
+          "target": "daughter_jar",
+          "conditions": [
+            { "type": "hasEvent", "key": "blue_cord", "value": true },
+            { "type": "flag", "key": "銅板を見直した", "value": true }
           ],
           "effects": [
             { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
@@ -319,10 +531,11 @@
         },
         {
           "id": "lamps",
-          "text": "二つの灯",
+          "text": "二つの灯で送った人",
           "target": "daughter_lights",
           "conditions": [
-            { "type": "hasEvent", "key": "wake_lights", "value": true }
+            { "type": "hasEvent", "key": "wake_lights", "value": true },
+            { "type": "property", "entity": "夜舟", "key": "灯の数", "op": "==", "value": 2 }
           ],
           "effects": [
             { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
@@ -347,15 +560,28 @@
     "daughter_cord": {
       "id": "daughter_cord",
       "speaker": "貝殻窯｜焼き手のセナ",
-      "text": "セナは作業台の下から青い結び糸の残りを出した。片端にきれいな歯形がある。\n\n「そう、銭をほどいたのはわたし。あれは父さんの席の分。父さん、自分で焼いた壺で帰りたいって。その底にも親指をぎゅっと押してね」\n\n「名はウル。向こう岸の生まれだよ」",
+      "text": "「壺の隣の灯皿……ああ、ロウは皿まで見ていたのか。あれは父さんの手だよ」\n\nセナは掌を丸めた。「風で火が消えないように、父さんが自分の手を型にして焼いた。灯すのは一回きりだって。壺に父さんを入れて、その手に火をともして、一緒に渡ったの」\n\n「父さんはウル。七枚目は父さんが取っておいた、自分の席の分だよ」",
       "choices": [
         { "id": "work", "text": "貝殻窯の仕事", "target": "pots" },
         {
+          "id": "fare_cord",
+          "text": "銭を結んだ壺の持ち主",
+          "target": "daughter_jar",
+          "conditions": [
+            { "type": "hasEvent", "key": "blue_cord", "value": true },
+            { "type": "flag", "key": "銅板を見直した", "value": true }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
+          ]
+        },
+        {
           "id": "lamps",
-          "text": "二つの灯",
+          "text": "二つの灯で送った人",
           "target": "daughter_lights",
           "conditions": [
-            { "type": "hasEvent", "key": "wake_lights", "value": true }
+            { "type": "hasEvent", "key": "wake_lights", "value": true },
+            { "type": "property", "entity": "夜舟", "key": "灯の数", "op": "==", "value": 2 }
           ],
           "effects": [
             { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
@@ -380,15 +606,28 @@
     "daughter_lights": {
       "id": "daughter_lights",
       "speaker": "貝殻窯｜焼き手のセナ",
-      "text": "「二つの灯が見えたんだね。わたしは向こう岸が見えるまで、ずっと舟尾の皿を押さえてた。壺の中の父さんは手を貸せないもの」\n\n「ウルっていうの。生まれた岸に着いたら、自分の足で降りるつもりだったのかな。ご丁寧に一席分の銭まで残してさ」",
+      "text": "「ナギの銅板に二つとも残ったんだね。わたしは向こう岸が見えるまで、ずっと舟尾の皿を押さえてた。壺の中の父さんは手を貸せないもの」\n\n「ウルっていうの。生まれた岸に着いたら、自分の足で降りるつもりだったのかな。ご丁寧に一席分の銭まで残してさ」",
       "choices": [
         { "id": "work", "text": "貝殻窯の仕事", "target": "pots" },
         {
+          "id": "fare_cord",
+          "text": "銭を結んだ壺の持ち主",
+          "target": "daughter_jar",
+          "conditions": [
+            { "type": "hasEvent", "key": "blue_cord", "value": true },
+            { "type": "flag", "key": "銅板を見直した", "value": true }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
+          ]
+        },
+        {
           "id": "cord",
-          "text": "青い結び糸",
+          "text": "壺の隣の灯皿",
           "target": "daughter_cord",
           "conditions": [
-            { "type": "hasEvent", "key": "blue_cord", "value": true }
+            { "type": "hasEvent", "key": "row_light", "value": true },
+            { "type": "property", "entity": "夜舟", "key": "灯の数", "op": "==", "value": 2 }
           ],
           "effects": [
             { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
@@ -417,11 +656,24 @@
       "choices": [
         { "id": "work", "text": "貝殻窯の仕事", "target": "pots" },
         {
+          "id": "fare_cord",
+          "text": "銭を結んだ壺の持ち主",
+          "target": "daughter_jar",
+          "conditions": [
+            { "type": "hasEvent", "key": "blue_cord", "value": true },
+            { "type": "flag", "key": "銅板を見直した", "value": true }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
+          ]
+        },
+        {
           "id": "cord",
-          "text": "青い結び糸",
+          "text": "壺の隣の灯皿",
           "target": "daughter_cord",
           "conditions": [
-            { "type": "hasEvent", "key": "blue_cord", "value": true }
+            { "type": "hasEvent", "key": "row_light", "value": true },
+            { "type": "property", "entity": "夜舟", "key": "灯の数", "op": "==", "value": 2 }
           ],
           "effects": [
             { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
@@ -429,10 +681,11 @@
         },
         {
           "id": "lamps",
-          "text": "二つの灯",
+          "text": "二つの灯で送った人",
           "target": "daughter_lights",
           "conditions": [
-            { "type": "hasEvent", "key": "wake_lights", "value": true }
+            { "type": "hasEvent", "key": "wake_lights", "value": true },
+            { "type": "property", "entity": "夜舟", "key": "灯の数", "op": "==", "value": 2 }
           ],
           "effects": [
             { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
@@ -476,6 +729,130 @@
       "id": "lamp_end",
       "speaker": "岬の灯台｜名を伏せた灯",
       "text": "イサは油帳に銅貨を置いた。名を訊く欄はなかった。セナの窯には炭が届き、次の窯焚きには新しい壺がひと窯ぶん焼き上がった。\n\nその晩、ナギが舟尾の灯をともしにいくと、油皿が新しくなっていた。底には職人の親指の跡。その隣に、ひと回り小さな親指の跡があった。"
+    },
+    "daughter_jar": {
+      "id": "daughter_jar",
+      "speaker": "貝殻窯｜焼き手のセナ",
+      "text": "セナは壺の首に残った糸を、銭の縁に当てた。「歯で切ったんだ。ほら、ぴったりだろう。あの壺は父さんが自分で焼いた。向こう岸へ骨を渡すときに使ってくれって」\n\n「父さんはウル。銭をもう一枚結んでおいたのは、自分も客だって言いたかったんだよ」",
+      "choices": [
+        { "id": "work", "text": "貝殻窯の仕事", "target": "pots" },
+        {
+          "id": "cord",
+          "text": "壺の隣の灯皿",
+          "target": "daughter_cord",
+          "conditions": [
+            { "type": "hasEvent", "key": "row_light", "value": true },
+            { "type": "property", "entity": "夜舟", "key": "灯の数", "op": "==", "value": 2 }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
+          ]
+        },
+        {
+          "id": "lamps",
+          "text": "二つの灯で送った人",
+          "target": "daughter_lights",
+          "conditions": [
+            { "type": "hasEvent", "key": "wake_lights", "value": true },
+            { "type": "property", "entity": "夜舟", "key": "灯の数", "op": "==", "value": 2 }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
+          ]
+        },
+        {
+          "id": "name",
+          "text": "ウルの名",
+          "target": "daughter_word",
+          "conditions": [
+            { "type": "hasEvent", "key": "last_fare", "value": true }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "daughters_word", "name": "セナに帳面のことを託された。イサに事情を話し、七枚目の銭の納め先を決めよう。" }
+          ]
+        },
+        { "id": "go_office", "text": "検札小屋", "target": "office" },
+        { "id": "go_ferry", "text": "下の桟橋", "target": "ferry" },
+        { "id": "go_watch", "text": "岬の灯台", "target": "watch" }
+      ]
+    },
+    "plate_ferry": {
+      "id": "plate_ferry",
+      "speaker": "灰渡りの港｜灯台の銅板",
+      "text": "イサから預かった銅板を、もう一度光にかざす。昨夜の段の穴は[夜舟.灯の数]つ。最初に透かしたときと同じだ。\n\nロウの舟は対岸で一夜を明かした。昨夜の段に帰りの灯があるはずはない。",
+      "choices": [
+        {
+          "id": "go_kiln",
+          "text": "貝殻窯",
+          "target": "kiln",
+          "effects": [
+            { "type": "setVariable", "key": "照合する証言", "value": "" }
+          ]
+        },
+        {
+          "id": "go_ferry",
+          "text": "下の桟橋",
+          "target": "ferry",
+          "effects": [
+            { "type": "setVariable", "key": "照合する証言", "value": "" }
+          ]
+        },
+        {
+          "id": "go_watch",
+          "text": "岬の灯台",
+          "target": "watch",
+          "effects": [
+            { "type": "setVariable", "key": "照合する証言", "value": "" }
+          ]
+        },
+        {
+          "id": "go_office",
+          "text": "検札小屋",
+          "target": "office",
+          "effects": [
+            { "type": "setVariable", "key": "照合する証言", "value": "" }
+          ]
+        }
+      ]
+    },
+    "plate_watch": {
+      "id": "plate_watch",
+      "speaker": "灰渡りの港｜灯台の銅板",
+      "text": "イサから預かった銅板を、もう一度光にかざす。昨夜の段の穴は[夜舟.灯の数]つ。最初に透かしたときと同じだ。\n\nナギに教わったとおり、板の左の切れ目から横に指を滑らせる。ひと続きの段が、ひと便の記録だ。",
+      "choices": [
+        {
+          "id": "go_kiln",
+          "text": "貝殻窯",
+          "target": "kiln",
+          "effects": [
+            { "type": "setVariable", "key": "照合する証言", "value": "" }
+          ]
+        },
+        {
+          "id": "go_ferry",
+          "text": "下の桟橋",
+          "target": "ferry",
+          "effects": [
+            { "type": "setVariable", "key": "照合する証言", "value": "" }
+          ]
+        },
+        {
+          "id": "go_watch",
+          "text": "岬の灯台",
+          "target": "watch",
+          "effects": [
+            { "type": "setVariable", "key": "照合する証言", "value": "" }
+          ]
+        },
+        {
+          "id": "go_office",
+          "text": "検札小屋",
+          "target": "office",
+          "effects": [
+            { "type": "setVariable", "key": "照合する証言", "value": "" }
+          ]
+        }
+      ]
     }
   }
 }

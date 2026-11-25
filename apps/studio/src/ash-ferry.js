@@ -42,7 +42,8 @@ export function ferryWindow(model, step, route) {
   const topics = choices.filter((c) => !c.id.startsWith('go_'))
   const travel = choices.filter((c) => c.id.startsWith('go_'))
   const notes = route.flatMap((s) => s.changes.filter((c) => c.kind === 'event').map((c) => ({
-    source: speakerAt(model, s.fromNodeId || s.scene.nodeId).name, text: c.name,
+    source: s.perceptions.find((p) => p.eventId === c.key)?.characterName ?? speakerAt(model, s.fromNodeId || s.scene.nodeId).name,
+    text: c.name,
   })))
   const newNote = step.changes.some((c) => c.kind === 'event')
   const journalTitle = scene.ending ? '完了した依頼' : '依頼'
