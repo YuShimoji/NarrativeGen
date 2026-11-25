@@ -1,0 +1,144 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "start",
+  "flags": {},
+  "resources": {},
+  "variables": {},
+  "entities": {
+    "key_box": {
+      "id": "key_box",
+      "name": "鍵の返却箱",
+      "properties": {
+        "key_count": {
+          "key": "key_count",
+          "type": "number",
+          "defaultValue": 18
+        }
+      }
+    }
+  },
+  "characters": {
+    "attendant": {
+      "id": "attendant",
+      "name": "受付係",
+      "knowledgeProfiles": [
+        {
+          "domain": "key_return",
+          "accuracy": 0.75,
+          "tolerance": 0.05
+        }
+      ]
+    }
+  },
+  "knowledgeRules": {
+    "belief_attendant_key_box": {
+      "character": "attendant",
+      "entity": "key_box",
+      "domain": "key_return",
+      "expectations": {
+        "key_count": 20
+      }
+    }
+  },
+  "nodes": {
+    "start": {
+      "id": "start",
+      "text": "閉館の放送が流れた。受付係は、翌朝の貸し出しに備えて[key_box]を引き寄せた。いつもなら、貸出用の鍵が全部戻っている時間だ。",
+      "choices": [
+        {
+          "id": "look_attendant",
+          "text": "受付係が見る 〔蓋然 100%〕",
+          "target": "s1_look_attendant",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "attendant",
+              "entity": "key_box",
+              "domain": "key_return",
+              "expectations": {
+                "key_count": 20
+              },
+              "eventId": "notice_attendant",
+              "eventName": "受付係の違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s1_look_attendant": {
+      "id": "s1_look_attendant",
+      "text": "受付係がふたを開けると、鍵の並びがいつもと違って見えた。数えるなら、閉館までまだ間に合う。",
+      "choices": [
+        {
+          "id": "verify_attendant",
+          "text": "受付係が確かめる 〔蓋然 67%〕",
+          "target": "s2_verify_attendant",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_attendant",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_attendant",
+              "name": "受付係が確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "attendant"
+                },
+                "source_entity": {
+                  "defaultValue": "key_box"
+                },
+                "primary_property": {
+                  "defaultValue": "key_count"
+                },
+                "actual_value": {
+                  "defaultValue": 18
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "letGo_attendant",
+          "text": "受付係がそのままにする 〔蓋然 33%〕",
+          "target": "s3_letGo_attendant",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_attendant",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "letgo_attendant",
+              "name": "受付係がそのままにした",
+              "properties": {
+                "observer": {
+                  "defaultValue": "attendant"
+                },
+                "source_entity": {
+                  "defaultValue": "key_box"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s2_verify_attendant": {
+      "id": "s2_verify_attendant",
+      "text": "受付係は鍵を端から一本ずつ数えた。「[key_box.key_count]本。20本のはずだった」\n\n本数が合わないことを貸出台帳に書き添えた。翌朝の当番は、貸し出す前に返却記録を調べられる。"
+    },
+    "s3_letGo_attendant": {
+      "id": "s3_letGo_attendant",
+      "text": "受付係は時計を見て、ふたを閉じた。鍵は数え直さなかった。\n\n返却箱は台帳の横の棚に戻された。翌朝の当番への書き置きはなかった。"
+    }
+  }
+}

@@ -139,6 +139,7 @@ npm run generate:story -- models/premises/cheeseburger-weight.json --report docs
 [導出の記録](../samples/premise-story-cheeseburger-weight-hearsay-review-ja.md)。酔った人の許容幅を0.5、意図を「聞いて気づく」「違和感が消える」にした。
 目撃者Bが酔った人と話して見直すと違和感が消え、酔った人が探偵Aに尋ねて見直すと違和感を覚える。assistantが書いた見本で、作品として採るかはuserが決める。
 追加の見本は[印刷所](../../models/generated/print-shop-paper-guide.json)（二人が同じずれに気づき、測る）、[閉館の鐘](../../models/generated/closing-bell-echo.json)（尋ねた人が聞き直して気づく）、[朝市の影](../../models/generated/alley-lantern-shadow.json)（気づいた人がそのままにする）。対応する同名の前提は`models/premises/`にあり、Studioの物語選択から開ける。
+[閉館前の返却箱](../../models/generated/closing-time-key-box.json)では、見込み20本・実際18本の差に受付係が気づき、同じ場面から「確かめる」「そのままにする」の二つの結末を選べる。[前提](../../models/premises/closing-time-key-box.json)の実際の本数を20にすると、見た時点で違和感が生まれず、二択は出ない。
 試験は`packages/engine-ts/test/premise-story.spec.ts`（生成物を実行時に再生し、聞いた後の判定も予測と一致することを含む）。
 
 ## 4. 採否（2026-11-22、userの回答）

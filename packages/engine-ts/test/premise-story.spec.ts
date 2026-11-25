@@ -19,7 +19,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(__dirname, '../../..')
 const premisePath = path.join(repoRoot, 'models/premises/cheeseburger-weight.json')
 const BURGER_SAMPLES = ['cheeseburger-weight', 'cheeseburger-weight-hearsay']
-const SAMPLES = [...BURGER_SAMPLES, 'print-shop-paper-guide', 'closing-bell-echo', 'alley-lantern-shadow']
+const SAMPLES = [
+  ...BURGER_SAMPLES, 'print-shop-paper-guide', 'closing-bell-echo', 'alley-lantern-shadow', 'closing-time-key-box',
+]
 
 function readPremise(name = 'cheeseburger-weight'): StoryPremise {
   const file = name === 'cheeseburger-weight' ? premisePath : path.join(repoRoot, `models/premises/${name}.json`)
@@ -178,6 +180,27 @@ describe('premise-story (SP-PREMISE-001)', { timeout: 30_000 }, () => {
     expect(derivation.mainLine.every((s) => s.action.result === 'missed')).toBe(true)
     clearSessionCaches()
     loadModel(structuredClone(model))
+  })
+
+  it('gives the key box two playable endings only when the count is outside the expected range', () => {
+    const premise = readPremise('closing-time-key-box')
+    const { model, derivation } = generateStory(premise)
+    const start = startSession(model)
+    const noticed = applyChoice(start, model, 'look_attendant')
+    const choices = getAvailableChoices(noticed, model)
+    expect(choices.map((choice) => choice.id)).toEqual(['verify_attendant', 'letGo_attendant'])
+    const endings = choices.map((choice) => {
+      const end = applyChoice(noticed, model, choice.id)
+      return derivation.scenes[end.nodeId].ending
+    })
+    expect(endings).toEqual(['verified', 'faded'])
+
+    premise.entities.key_box.properties!.key_count.defaultValue = 20
+    const matching = generateStory(premise)
+    const looked = applyChoice(startSession(matching.model), matching.model, 'look_attendant')
+    expect(getAvailableChoices(looked, matching.model)).toEqual([])
+    expect(matching.derivation.scenes[looked.nodeId].ending).toBe('nothing')
+    expect(checkModel(matching.model).unresolvedRefs).toEqual([])
   })
 
   it('says so when the premise cannot give what the author asked for', () => {

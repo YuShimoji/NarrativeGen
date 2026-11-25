@@ -1,0 +1,36 @@
+{
+  "title": "閉館前の返却箱",
+  "entities": {
+    "key_box": {
+      "id": "key_box",
+      "name": "鍵の返却箱",
+      "properties": {
+        "key_count": { "key": "key_count", "type": "number", "defaultValue": 18 }
+      }
+    }
+  },
+  "characters": {
+    "attendant": {
+      "id": "attendant",
+      "name": "受付係",
+      "knowledgeProfiles": [{ "domain": "key_return", "accuracy": 0.75, "tolerance": 0.05 }]
+    }
+  },
+  "beliefs": [
+    { "character": "attendant", "entity": "key_box", "domain": "key_return", "expectations": { "key_count": 20 } }
+  ],
+  "scene": { "present": ["attendant"], "focus": "key_box" },
+  "wording": {
+    "propertyNames": { "key_count": "鍵の本数" },
+    "patterns": {
+      "start": "閉館の放送が流れた。{present}は、翌朝の貸し出しに備えて[{focus}]を引き寄せた。いつもなら、貸出用の鍵が全部戻っている時間だ。",
+      "lookNoticed": "{actor}がふたを開けると、鍵の並びがいつもと違って見えた。数えるなら、閉館までまだ間に合う。",
+      "lookMissed": "{actor}はふたを開け、鍵の列を見渡した。いつもの本数に見えた。",
+      "verify": "{actor}は鍵を端から一本ずつ数えた。「[{focus}.{propertyKey}]本。{expected}本のはずだった」",
+      "endVerified": "本数が合わないことを貸出台帳に書き添えた。翌朝の当番は、貸し出す前に返却記録を調べられる。",
+      "letGo": "{actor}は時計を見て、ふたを閉じた。鍵は数え直さなかった。",
+      "endFaded": "返却箱は台帳の横の棚に戻された。翌朝の当番への書き置きはなかった。",
+      "endNothing": "返却箱のふたが閉じられ、棚に戻された。"
+    }
+  }
+}
