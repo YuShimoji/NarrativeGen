@@ -1,0 +1,789 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "start",
+  "flags": {},
+  "resources": {},
+  "variables": {
+    "表示形式": "聞き込み",
+    "地域": "灰渡りの港",
+    "依頼名": "六目の分銅",
+    "依頼": "配給所とパン窯で同じ粉袋の重さが合わない。欠け耳の分銅を二人に渡し、今日の配給を量り直すか決める。"
+  },
+  "entities": {
+    "weight": {
+      "id": "weight",
+      "name": "欠け耳の分銅",
+      "properties": {
+        "marks": {
+          "key": "marks",
+          "type": "number",
+          "defaultValue": 6
+        }
+      }
+    }
+  },
+  "characters": {
+    "baker": {
+      "id": "baker",
+      "name": "パン焼きのナミ",
+      "knowledgeProfiles": [
+        {
+          "domain": "scale",
+          "accuracy": 0.85,
+          "tolerance": 0.17
+        },
+        {
+          "domain": "scale+clerk",
+          "accuracy": 0.85,
+          "tolerance": 0.158889
+        }
+      ]
+    },
+    "clerk": {
+      "id": "clerk",
+      "name": "配給係のオリ",
+      "knowledgeProfiles": [
+        {
+          "domain": "scale",
+          "accuracy": 0.5,
+          "tolerance": 0.14
+        },
+        {
+          "domain": "scale+baker",
+          "accuracy": 0.5,
+          "tolerance": 0.158889
+        }
+      ]
+    }
+  },
+  "knowledgeRules": {
+    "belief_baker_weight": {
+      "character": "baker",
+      "entity": "weight",
+      "domain": "scale",
+      "expectations": {
+        "marks": 4
+      }
+    },
+    "belief_clerk_weight": {
+      "character": "clerk",
+      "entity": "weight",
+      "domain": "scale",
+      "expectations": {
+        "marks": 6
+      }
+    }
+  },
+  "nodes": {
+    "start": {
+      "id": "start",
+      "text": "配給所で粉を受け取った客が、袋の紐を引いた。「窯で四目ぶん買う時は、これで口を結べるんだけど」\n\n配給係のオリは欠け耳の分銅を出した。パン焼きのナミは、窯から持ってきた天秤の上皿を拭う。どちらの手に先に載せよう。",
+      "speaker": "配給所の秤台｜欠け耳の分銅",
+      "choices": [
+        {
+          "id": "look_clerk",
+          "text": "配給係のオリに分銅を渡す 〔蓋然 37%〕",
+          "target": "s1_look_clerk",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "clerk",
+              "entity": "weight",
+              "domain": "scale",
+              "expectations": {
+                "marks": 6
+              },
+              "eventId": "notice_clerk",
+              "eventName": "配給係のオリの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        },
+        {
+          "id": "look_baker",
+          "text": "パン焼きのナミに分銅を渡す 〔蓋然 63%〕",
+          "target": "s2_look_baker",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "baker",
+              "entity": "weight",
+              "domain": "scale",
+              "expectations": {
+                "marks": 4
+              },
+              "eventId": "notice_baker",
+              "eventName": "パン焼きのナミの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s1_look_clerk": {
+      "id": "s1_look_clerk",
+      "text": "配給係のオリは針を指で押さえた。「目は6つ。昨日ここで量ったときと同じだよ」分銅を元の皿に戻す。",
+      "speaker": "配給所の秤台｜配給係のオリ",
+      "choices": [
+        {
+          "id": "look_baker",
+          "text": "パン焼きのナミに分銅を渡す 〔蓋然 100%〕",
+          "target": "s3_look_baker",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "baker",
+              "entity": "weight",
+              "domain": "scale",
+              "expectations": {
+                "marks": 4
+              },
+              "eventId": "notice_baker",
+              "eventName": "パン焼きのナミの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s2_look_baker": {
+      "id": "s2_look_baker",
+      "text": "パン焼きのナミは分銅を上皿に置いた。「待って。私なら目を4つ数えたところで手を離す」針はその先へ振れた。\n\n台の下に、粉をまだ受け取っていない客の札が重なっている。",
+      "speaker": "配給所の秤台｜パン焼きのナミ",
+      "choices": [
+        {
+          "id": "tell_baker_clerk",
+          "text": "パン焼きのナミの読みを配給係のオリに伝える 〔蓋然 30%〕",
+          "target": "s14_tell_baker_clerk",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_baker",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "tell_baker_clerk",
+              "name": "パン焼きのナミが配給係のオリに話した",
+              "properties": {
+                "speaker": {
+                  "defaultValue": "baker"
+                },
+                "listener": {
+                  "defaultValue": "clerk"
+                },
+                "source_entity": {
+                  "defaultValue": "weight"
+                },
+                "outcome": {
+                  "defaultValue": "heard"
+                },
+                "severity": {
+                  "defaultValue": 59
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s3_look_baker": {
+      "id": "s3_look_baker",
+      "text": "パン焼きのナミは分銅を上皿に置いた。「待って。私なら目を4つ数えたところで手を離す」針はその先へ振れた。\n\n台の下に、粉をまだ受け取っていない客の札が重なっている。",
+      "speaker": "配給所の秤台｜パン焼きのナミ",
+      "choices": [
+        {
+          "id": "ask_clerk_baker",
+          "text": "パン焼きのナミに針の読み方を訊く 〔蓋然 20%〕",
+          "target": "s4_ask_clerk_baker",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_baker",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "ask_clerk_baker",
+              "name": "配給係のオリがパン焼きのナミに尋ねた",
+              "properties": {
+                "asker": {
+                  "defaultValue": "clerk"
+                },
+                "answerer": {
+                  "defaultValue": "baker"
+                },
+                "source_entity": {
+                  "defaultValue": "weight"
+                },
+                "severity": {
+                  "defaultValue": 59
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "tell_baker_clerk",
+          "text": "パン焼きのナミの読みを配給係のオリに伝える 〔蓋然 41%〕",
+          "target": "s5_tell_baker_clerk",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_baker",
+              "value": true
+            },
+            {
+              "type": "hasEvent",
+              "key": "notice_clerk",
+              "value": false
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "tell_baker_clerk",
+              "name": "パン焼きのナミが配給係のオリに話した",
+              "properties": {
+                "speaker": {
+                  "defaultValue": "baker"
+                },
+                "listener": {
+                  "defaultValue": "clerk"
+                },
+                "source_entity": {
+                  "defaultValue": "weight"
+                },
+                "outcome": {
+                  "defaultValue": "disagreement"
+                },
+                "severity": {
+                  "defaultValue": 59
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "verify_baker",
+          "text": "パン焼きのナミと親秤に掛ける 〔蓋然 35%〕",
+          "target": "s6_verify_baker",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_baker",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_baker",
+              "name": "パン焼きのナミが確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "baker"
+                },
+                "source_entity": {
+                  "defaultValue": "weight"
+                },
+                "primary_property": {
+                  "defaultValue": "marks"
+                },
+                "actual_value": {
+                  "defaultValue": 6
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s4_ask_clerk_baker": {
+      "id": "s4_ask_clerk_baker",
+      "text": "「どこで手を離すの？」配給係のオリが上皿を空ける。パン焼きのナミは秤の支点を布で拭い、いつも針を止める刻みを爪でたたいた。",
+      "speaker": "配給所の秤台｜配給係のオリ",
+      "choices": [
+        {
+          "id": "relook_clerk",
+          "text": "配給係のオリにもう一度量ってもらう 〔蓋然 66%〕",
+          "target": "s7_relook_clerk",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "clerk",
+              "entity": "weight",
+              "domain": "scale+baker",
+              "expectations": {
+                "marks": 4.740741
+              },
+              "eventId": "notice_clerk_heard_baker",
+              "eventName": "配給係のオリの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        },
+        {
+          "id": "verify_baker",
+          "text": "パン焼きのナミと親秤に掛ける 〔蓋然 30%〕",
+          "target": "s8_verify_baker",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_baker",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_baker",
+              "name": "パン焼きのナミが確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "baker"
+                },
+                "source_entity": {
+                  "defaultValue": "weight"
+                },
+                "primary_property": {
+                  "defaultValue": "marks"
+                },
+                "actual_value": {
+                  "defaultValue": 6
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s5_tell_baker_clerk": {
+      "id": "s5_tell_baker_clerk",
+      "text": "パン焼きのナミは針の先、配給係のオリは分銅の欠け耳を指す。「針が行きすぎる」「でも、昨日使ったのと同じ分銅だよ」二人は上皿を空けた。",
+      "speaker": "配給所の秤台｜パン焼きのナミ",
+      "choices": [
+        {
+          "id": "relook_clerk",
+          "text": "配給係のオリにもう一度量ってもらう 〔蓋然 44%〕",
+          "target": "s15_relook_clerk",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "clerk",
+              "entity": "weight",
+              "domain": "scale+baker",
+              "expectations": {
+                "marks": 4.740741
+              },
+              "eventId": "notice_clerk_heard_baker",
+              "eventName": "配給係のオリの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s6_verify_baker": {
+      "id": "s6_verify_baker",
+      "text": "パン焼きのナミは港の親秤を持ち出した。欠け耳の分銅を掛けると、針は[weight.marks]目で止まった。その刻みを客にも見える向きにして札を掛けた。\n\n粉を受け取った客が袋の口をほどく。二人は親秤を戸口へ据え、渡した分から量り直した。",
+      "speaker": "配給所の秤台｜パン焼きのナミ"
+    },
+    "s7_relook_clerk": {
+      "id": "s7_relook_clerk",
+      "text": "配給係のオリはパン焼きのナミの指があった刻みに爪を立て、もう一度分銅を置く。針は爪を越えて止まった。「昨日と同じだから、合っていると思ってた」",
+      "speaker": "配給所の秤台｜配給係のオリ",
+      "choices": [
+        {
+          "id": "letGo_clerk",
+          "text": "配給係のオリと配給を続ける 〔蓋然 24%〕",
+          "target": "s9_letGo_clerk",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_clerk_heard_baker",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "letgo_clerk_heard_baker",
+              "name": "配給係のオリがそのままにした",
+              "properties": {
+                "observer": {
+                  "defaultValue": "clerk"
+                },
+                "source_entity": {
+                  "defaultValue": "weight"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "verify_baker",
+          "text": "パン焼きのナミと親秤に掛ける 〔蓋然 36%〕",
+          "target": "s10_verify_baker",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_baker",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_baker",
+              "name": "パン焼きのナミが確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "baker"
+                },
+                "source_entity": {
+                  "defaultValue": "weight"
+                },
+                "primary_property": {
+                  "defaultValue": "marks"
+                },
+                "actual_value": {
+                  "defaultValue": 6
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "tell_clerk_baker",
+          "text": "配給係のオリの読みをパン焼きのナミに伝える 〔蓋然 24%〕",
+          "target": "s11_tell_clerk_baker",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_clerk_heard_baker",
+              "value": true
+            },
+            {
+              "type": "hasEvent",
+              "key": "notice_baker",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "tell_clerk_baker",
+              "name": "配給係のオリがパン焼きのナミに話した",
+              "properties": {
+                "speaker": {
+                  "defaultValue": "clerk"
+                },
+                "listener": {
+                  "defaultValue": "baker"
+                },
+                "source_entity": {
+                  "defaultValue": "weight"
+                },
+                "outcome": {
+                  "defaultValue": "shared"
+                },
+                "severity": {
+                  "defaultValue": 33
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s8_verify_baker": {
+      "id": "s8_verify_baker",
+      "text": "パン焼きのナミは港の親秤を持ち出した。欠け耳の分銅を掛けると、針は[weight.marks]目で止まった。その刻みを客にも見える向きにして札を掛けた。\n\n粉を受け取った客が袋の口をほどく。二人は親秤を戸口へ据え、渡した分から量り直した。",
+      "speaker": "配給所の秤台｜パン焼きのナミ"
+    },
+    "s9_letGo_clerk": {
+      "id": "s9_letGo_clerk",
+      "text": "配給係のオリは分銅を元の箱にしまった。戸口の列で、次の客が自分の札を差し出す。",
+      "speaker": "配給所の秤台｜配給係のオリ",
+      "choices": [
+        {
+          "id": "letGo_baker",
+          "text": "パン焼きのナミと配給を続ける 〔蓋然 11%〕",
+          "target": "s12_letGo_baker",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_baker",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "letgo_baker",
+              "name": "パン焼きのナミがそのままにした",
+              "properties": {
+                "observer": {
+                  "defaultValue": "baker"
+                },
+                "source_entity": {
+                  "defaultValue": "weight"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "verify_baker",
+          "text": "パン焼きのナミと親秤に掛ける 〔蓋然 89%〕",
+          "target": "s13_verify_baker",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_baker",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_baker",
+              "name": "パン焼きのナミが確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "baker"
+                },
+                "source_entity": {
+                  "defaultValue": "weight"
+                },
+                "primary_property": {
+                  "defaultValue": "marks"
+                },
+                "actual_value": {
+                  "defaultValue": 6
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s10_verify_baker": {
+      "id": "s10_verify_baker",
+      "text": "パン焼きのナミは港の親秤を持ち出した。欠け耳の分銅を掛けると、針は[weight.marks]目で止まった。その刻みを客にも見える向きにして札を掛けた。\n\n粉を受け取った客が袋の口をほどく。二人は親秤を戸口へ据え、渡した分から量り直した。",
+      "speaker": "配給所の秤台｜パン焼きのナミ"
+    },
+    "s11_tell_clerk_baker": {
+      "id": "s11_tell_clerk_baker",
+      "text": "配給係のオリとパン焼きのナミは、動きすぎた針のところにそろって指を置いた。",
+      "speaker": "配給所の秤台｜配給係のオリ",
+      "choices": [
+        {
+          "id": "relook_baker",
+          "text": "パン焼きのナミにもう一度量ってもらう 〔蓋然 53%〕",
+          "target": "s16_relook_baker",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "baker",
+              "entity": "weight",
+              "domain": "scale+clerk",
+              "expectations": {
+                "marks": 4.740741
+              },
+              "eventId": "notice_baker_heard_clerk",
+              "eventName": "パン焼きのナミの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s12_letGo_baker": {
+      "id": "s12_letGo_baker",
+      "text": "パン焼きのナミは分銅を元の箱にしまった。戸口の列で、次の客が自分の札を差し出す。\n\n窯では今日の粉でこねられるだけの生地を丸めた。配給札には昨日と同じ判が並ぶ。",
+      "speaker": "配給所の秤台｜パン焼きのナミ"
+    },
+    "s13_verify_baker": {
+      "id": "s13_verify_baker",
+      "text": "パン焼きのナミは港の親秤を持ち出した。欠け耳の分銅を掛けると、針は[weight.marks]目で止まった。その刻みを客にも見える向きにして札を掛けた。\n\n粉を受け取った客が袋の口をほどく。二人は親秤を戸口へ据え、渡した分から量り直した。",
+      "speaker": "配給所の秤台｜パン焼きのナミ"
+    },
+    "s14_tell_baker_clerk": {
+      "id": "s14_tell_baker_clerk",
+      "text": "パン焼きのナミは秤を配給係のオリのほうへ押した。「持った感じで済ませずに、針が止まるところを見て」",
+      "speaker": "配給所の秤台｜パン焼きのナミ",
+      "choices": [
+        {
+          "id": "look_clerk",
+          "text": "配給係のオリに分銅を渡す 〔蓋然 66%〕",
+          "target": "s17_look_clerk",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "clerk",
+              "entity": "weight",
+              "domain": "scale+baker",
+              "expectations": {
+                "marks": 4.740741
+              },
+              "eventId": "notice_clerk_heard_baker",
+              "eventName": "配給係のオリの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s15_relook_clerk": {
+      "id": "s15_relook_clerk",
+      "text": "配給係のオリはパン焼きのナミの指があった刻みに爪を立て、もう一度分銅を置く。針は爪を越えて止まった。「昨日と同じだから、合っていると思ってた」",
+      "speaker": "配給所の秤台｜配給係のオリ",
+      "choices": [
+        {
+          "id": "relook_baker",
+          "text": "パン焼きのナミにもう一度量ってもらう 〔蓋然 53%〕",
+          "target": "s16_relook_baker",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "baker",
+              "entity": "weight",
+              "domain": "scale+clerk",
+              "expectations": {
+                "marks": 4.740741
+              },
+              "eventId": "notice_baker_heard_clerk",
+              "eventName": "パン焼きのナミの違和感",
+              "onlyIfNoticed": true
+            }
+          ]
+        }
+      ]
+    },
+    "s16_relook_baker": {
+      "id": "s16_relook_baker",
+      "text": "パン焼きのナミは配給係のオリの言葉を思い返し、分銅を置き直す。針は同じ刻みをもう一度越えた。",
+      "speaker": "配給所の秤台｜パン焼きのナミ",
+      "choices": [
+        {
+          "id": "letGo_clerk",
+          "text": "配給係のオリと配給を続ける 〔蓋然 38%〕",
+          "target": "s18_letGo_clerk",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_clerk_heard_baker",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "letgo_clerk_heard_baker",
+              "name": "配給係のオリがそのままにした",
+              "properties": {
+                "observer": {
+                  "defaultValue": "clerk"
+                },
+                "source_entity": {
+                  "defaultValue": "weight"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s17_look_clerk": {
+      "id": "s17_look_clerk",
+      "text": "配給係のオリは分銅を上皿に置いた。「待って。私なら目を4.740741つ数えたところで手を離す」針はその先へ振れた。\n\n台の下に、粉をまだ受け取っていない客の札が重なっている。",
+      "speaker": "配給所の秤台｜配給係のオリ",
+      "choices": [
+        {
+          "id": "verify_baker",
+          "text": "パン焼きのナミと親秤に掛ける 〔蓋然 36%〕",
+          "target": "s10_verify_baker",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_baker",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_baker",
+              "name": "パン焼きのナミが確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "baker"
+                },
+                "source_entity": {
+                  "defaultValue": "weight"
+                },
+                "primary_property": {
+                  "defaultValue": "marks"
+                },
+                "actual_value": {
+                  "defaultValue": 6
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s18_letGo_clerk": {
+      "id": "s18_letGo_clerk",
+      "text": "配給係のオリは分銅を元の箱にしまった。戸口の列で、次の客が自分の札を差し出す。",
+      "speaker": "配給所の秤台｜配給係のオリ",
+      "choices": [
+        {
+          "id": "verify_baker",
+          "text": "パン焼きのナミと親秤に掛ける 〔蓋然 74%〕",
+          "target": "s19_verify_baker",
+          "conditions": [
+            {
+              "type": "hasEvent",
+              "key": "notice_baker_heard_clerk",
+              "value": true
+            }
+          ],
+          "effects": [
+            {
+              "type": "createEvent",
+              "id": "verify_baker",
+              "name": "パン焼きのナミが確かめた",
+              "properties": {
+                "observer": {
+                  "defaultValue": "baker"
+                },
+                "source_entity": {
+                  "defaultValue": "weight"
+                },
+                "primary_property": {
+                  "defaultValue": "marks"
+                },
+                "actual_value": {
+                  "defaultValue": 6
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "s19_verify_baker": {
+      "id": "s19_verify_baker",
+      "text": "パン焼きのナミは港の親秤を持ち出した。欠け耳の分銅を掛けると、針は[weight.marks]目で止まった。その刻みを客にも見える向きにして札を掛けた。\n\n粉を受け取った客が袋の口をほどく。二人は親秤を戸口へ据え、渡した分から量り直した。",
+      "speaker": "配給所の秤台｜パン焼きのナミ"
+    }
+  }
+}

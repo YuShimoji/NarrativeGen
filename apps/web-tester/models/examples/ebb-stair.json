@@ -1,0 +1,232 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "lock",
+  "flags": {"石段にいる": false},
+  "variables": {"表示形式": "聞き込み", "地域": "灰渡りの港", "依頼名": "潮待ちの石段", "依頼": "粉倉へ荷を上げる道を決める。引き潮にだけ出る古い敷石を確かめるか、荷車を堤へ回す。"},
+  "conversationTemplates": [
+    {
+      "id": "rising_mark",
+      "trigger": {
+        "sessionConditions": [
+          {"type": "flag", "key": "石段にいる", "value": true},
+          {"type": "timeWindow", "start": 0, "end": 1}
+        ]
+      },
+      "text": "\n\n水が下がり始めた。欠けた段鼻が泡の下に透けている。あと一息待てば、底まで見えそうだ。"
+    },
+    {
+      "id": "bare_mark",
+      "trigger": {
+        "sessionConditions": [
+          {"type": "flag", "key": "石段にいる", "value": true},
+          {"type": "timeWindow", "start": 2, "end": 3}
+        ]
+      },
+      "text": "\n\n水が切れた。濡れた石の上に、白い三角がひとつ光る。いまなら三角の先をたどれる。"
+    },
+    {
+      "id": "flooded_mark",
+      "trigger": {
+        "sessionConditions": [
+          {"type": "flag", "key": "石段にいる", "value": true},
+          {
+            "type": "not",
+            "condition": {"type": "timeWindow", "start": 0, "end": 3}
+          }
+        ]
+      },
+      "text": "\n\n上げ潮が戻り、一番上の石まで波が洗っている。もう川底の印は読めない。堤の粉倉には、荷車の硬い車輪の音がする。"
+    }
+  ],
+  "nodes": {
+    "lock": {
+      "id": "lock",
+      "speaker": "舟便詰所｜水先案内のエナ",
+      "text": "軒下には粉袋が八つ。引き潮に川底の石道を渡せば、朝のパンに間に合う。エナは車輪の小さい荷車を指した。「あれを泥に入れたら、袋ごと沈むよ」\n\n「旧水門の石段に白い印が出る。見逃したら堤から回せるけど、窯を一度落とすことになる」{?ford: 手帳には、白い印から対岸まで敷石が続いていたとある。}",
+      "choices": [
+        {
+          "id": "launch",
+          "text": "石道へ荷車を出す",
+          "target": "crossed",
+          "conditions": [
+            {"type": "hasEvent", "key": "ford", "value": true},
+            {"type": "timeWindow", "start": 0, "end": 4}
+          ],
+          "effects": [
+            {"type": "createEvent", "id": "decision", "name": "白い敷石を渡して、朝の窯へ粉を届けた。"}
+          ]
+        },
+        {
+          "id": "go_steps",
+          "text": "旧水門の石段",
+          "target": "steps",
+          "effects": [
+            {"type": "setFlag", "key": "石段にいる", "value": true}
+          ]
+        },
+        {
+          "id": "go_store",
+          "text": "堤の粉倉",
+          "target": "store",
+          "effects": [
+            {"type": "setFlag", "key": "石段にいる", "value": false}
+          ]
+        }
+      ]
+    },
+    "steps": {
+      "id": "steps",
+      "speaker": "旧水門｜量水石",
+      "text": "段の脇の鉄環に、水売りの柄杓がぶら下がっている。川面を見るには、ここがいちばん低い。{?ford: 水の下の敷石は、もう手帳に写してある。}",
+      "choices": [
+        {
+          "id": "wait",
+          "text": "石段で潮を待つ",
+          "target": "steps",
+          "conditions": [
+            {"type": "timeWindow", "start": 0, "end": 3}
+          ]
+        },
+        {
+          "id": "read",
+          "text": "三角の先をたどる",
+          "target": "read",
+          "conditions": [
+            {"type": "timeWindow", "start": 2, "end": 3}
+          ],
+          "effects": [
+            {"type": "setFlag", "key": "石段にいる", "value": false},
+            {"type": "createEvent", "id": "ford", "name": "白い三角の先に、対岸の粉倉まで続く敷石が現れた。"}
+          ]
+        },
+        {
+          "id": "go_lock",
+          "text": "舟便詰所",
+          "target": "lock",
+          "effects": [
+            {"type": "setFlag", "key": "石段にいる", "value": false}
+          ]
+        },
+        {
+          "id": "go_store",
+          "text": "堤の粉倉",
+          "target": "store",
+          "effects": [
+            {"type": "setFlag", "key": "石段にいる", "value": false}
+          ]
+        }
+      ]
+    },
+    "read": {
+      "id": "read",
+      "speaker": "旧水門｜量水石",
+      "text": "三角の尖った先に、次の石。その先にも一つ。柄杓の柄で突くと、どれも硬く鳴った。戻ってエナに合図するなら今だ。堤の荷車をそのまま使うこともできる。",
+      "choices": [
+        {
+          "id": "signal",
+          "text": "柄杓を振って石道へ呼ぶ",
+          "target": "crossed",
+          "effects": [
+            {"type": "createEvent", "id": "decision", "name": "石段から柄杓を振った。エナは白い敷石に車輪を乗せた。"}
+          ]
+        },
+        {
+          "id": "go_lock",
+          "text": "舟便詰所",
+          "target": "lock",
+          "effects": [
+            {"type": "setFlag", "key": "石段にいる", "value": false}
+          ]
+        },
+        {
+          "id": "go_store",
+          "text": "堤の粉倉",
+          "target": "store",
+          "effects": [
+            {"type": "setFlag", "key": "石段にいる", "value": false}
+          ]
+        }
+      ]
+    },
+    "store": {
+      "id": "store",
+      "speaker": "堤の粉倉｜粉番のハル",
+      "text": "ハルは牛の首に手をやった。「堤道は遠いけど車輪は濡れない。今からなら昼の生地にはなる。細い石段に袋を落とすのだけは勘弁してくれ」",
+      "choices": [
+        {
+          "id": "ask_cart",
+          "text": "堤道の運び賃",
+          "target": "cart",
+          "effects": [
+            {"type": "createEvent", "id": "cart_word", "name": "堤道なら粉は乾いたまま。朝の火を落として、昼から焼くことになる。"}
+          ]
+        },
+        {
+          "id": "send_cart",
+          "text": "牛車を堤道へ回す",
+          "target": "dike",
+          "effects": [
+            {"type": "createEvent", "id": "decision", "name": "牛車で堤道を回った。粉袋はすべて乾いたまま届く。"}
+          ]
+        },
+        {
+          "id": "go_steps",
+          "text": "旧水門の石段",
+          "target": "steps",
+          "effects": [
+            {"type": "setFlag", "key": "石段にいる", "value": true}
+          ]
+        },
+        {
+          "id": "go_lock",
+          "text": "舟便詰所",
+          "target": "lock",
+          "effects": [
+            {"type": "setFlag", "key": "石段にいる", "value": false}
+          ]
+        }
+      ]
+    },
+    "cart": {
+      "id": "cart",
+      "speaker": "堤の粉倉｜粉番のハル",
+      "text": "「賃は帰りのパンを一個でいい。困るのは、今朝の客に何と言うかだ」牛はもう道を覚えていて、堤のほうへ首を曲げている。",
+      "choices": [
+        {
+          "id": "send_cart",
+          "text": "牛車を堤道へ回す",
+          "target": "dike",
+          "effects": [
+            {"type": "createEvent", "id": "decision", "name": "牛車で堤道を回った。粉袋はすべて乾いたまま届く。"}
+          ]
+        },
+        {
+          "id": "go_steps",
+          "text": "旧水門の石段",
+          "target": "steps",
+          "effects": [
+            {"type": "setFlag", "key": "石段にいる", "value": true}
+          ]
+        },
+        {
+          "id": "go_lock",
+          "text": "舟便詰所",
+          "target": "lock",
+          "effects": [
+            {"type": "setFlag", "key": "石段にいる", "value": false}
+          ]
+        }
+      ]
+    },
+    "crossed": {
+      "id": "crossed",
+      "speaker": "舟便詰所｜水先案内のエナ",
+      "text": "八袋目が向こう岸へ上がるころ、石道の白い印は水に消えた。粉番が向こうから柄杓を振り返す。最初の舟に、焼きたての丸パンが四つ積まれた。"
+    },
+    "dike": {
+      "id": "dike",
+      "speaker": "堤の粉倉｜粉番のハル",
+      "text": "牛車は岸から離れ、乾いた堤を上がった。粉袋には泥ひとつ付いていない。朝の客には昨日の堅パンを割って出し、昼の鐘でようやく窯の戸が開いた。"
+    }
+  }
+}

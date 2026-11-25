@@ -114,7 +114,22 @@ function studioGrow() {
 export default defineConfig({
   root: rootDir,
   base: './',
-  plugins: [studioSave(), studioGrow()],
+  plugins: [
+    studioSave(), studioGrow(),
+    {
+      name: 'studio-story-titles',
+      enforce: 'pre',
+      load(id) {
+        const [file, query] = id.split('?')
+        if (!file.endsWith('.json') || !new URLSearchParams(query).has('studio-title')) return
+        const folder = path.dirname(path.resolve(file))
+        if (folder !== path.join(modelsRoot, 'examples') && folder !== path.join(modelsRoot, 'premises')) return
+        this.addWatchFile(file)
+        const story = JSON.parse(fs.readFileSync(file, 'utf8'))
+        return `export const title = ${JSON.stringify(story.variables?.依頼名 ?? story.title ?? '')}`
+      },
+    },
+  ],
   resolve: {
     alias: {
       // use the engine source directly so the Studio always shows current semantics

@@ -451,10 +451,14 @@ export function textSnippets(model) {
   return { entityProps, values, conditional }
 }
 
+export function choiceWording(text) {
+  return String(text).replace(/\s*〔蓋然 [0-9.]+%〕$/, '')
+}
+
 export function stripGeneratedChoiceLabels(model) {
   for (const node of Object.values(model.nodes ?? {})) {
     for (const choice of node.choices ?? []) {
-      choice.text = String(choice.text).replace(/\s*〔蓋然 [0-9.]+%〕$/, '')
+      choice.text = choiceWording(choice.text)
     }
   }
 }

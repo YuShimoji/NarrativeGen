@@ -1,0 +1,163 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "desk",
+  "variables": {"表示形式": "聞き込み", "地域": "灰渡りの港", "依頼名": "藍布の耳", "依頼": "一反の藍布に、織場と帆縫い場の札が付いている。布の縁と札を調べ、引き渡し先を決める。"},
+  "entities": {
+    "cloth": {
+      "id": "cloth",
+      "name": "桟に掛かった藍布",
+      "properties": {
+        "耳の白糸": {"key": "耳の白糸", "type": "number", "defaultValue": 3}
+      }
+    }
+  },
+  "nodes": {
+    "desk": {
+      "id": "desk",
+      "speaker": "布改め小屋｜荷改めのユノ",
+      "text": "ユノは一反の布を挟んで、木札を二枚置いた。「メイに渡せば今市の売り物。トマに渡せば明朝の帆。どっちの札にも同じ布幅が書いてある」\n\n戸口から、干し場の藍布が風にふくらむのが見える。{?maker: メイから預かった糸巻きが机の端に載っている。}{?seam: トマの型紙には、布から写した針穴がぴたりと重なる。}",
+      "choices": [
+        {
+          "id": "give_maker",
+          "text": "織り手に布を返す",
+          "target": "market",
+          "conditions": [
+            {"type": "hasEvent", "key": "maker", "value": true}
+          ],
+          "effects": [
+            {"type": "createEvent", "id": "settled", "name": "メイに一反を引き渡した。市の布代は織り手の手へ入る。"}
+          ]
+        },
+        {
+          "id": "give_sail",
+          "text": "帆の修繕に布を回す",
+          "target": "sail",
+          "conditions": [
+            {"type": "hasEvent", "key": "seam", "value": true}
+          ],
+          "effects": [
+            {"type": "createEvent", "id": "settled", "name": "トマに布を預けた。潮舟は明朝の便に間に合う。"}
+          ]
+        },
+        {"id": "go_cloth", "text": "干し場の藍布", "target": "cloth"},
+        {"id": "go_loom", "text": "川べりの織場", "target": "loom"},
+        {"id": "go_loft", "text": "帆縫い場", "target": "loft"}
+      ]
+    },
+    "cloth": {
+      "id": "cloth",
+      "speaker": "干し場｜桟に掛かった藍布",
+      "text": "藍の縁に、白糸が[cloth.耳の白糸]本走っている。布を返すと、同じ端に小さな針穴が並ぶ。\n\n{?!loom_word:白糸は模様にも見える。}{?loom_word:メイは、端の白糸が機ごとの署名になると言った。}{?!sail_word:針穴に縫い糸は残っていない。}{?sail_word:トマに借りた型紙を穴に当てられそうだ。}",
+      "choices": [
+        {
+          "id": "match_thread",
+          "text": "糸巻きの三本線を合わせる",
+          "target": "thread",
+          "conditions": [
+            {"type": "hasEvent", "key": "loom_word", "value": true},
+            {"type": "property", "entity": "cloth", "key": "耳の白糸", "op": "==", "value": 3}
+          ],
+          "effects": [
+            {"type": "createEvent", "id": "maker", "name": "藍布の耳の白糸三本がメイの糸巻きと合った。"}
+          ]
+        },
+        {
+          "id": "match_holes",
+          "text": "型紙を針穴に当てる",
+          "target": "holes",
+          "conditions": [
+            {"type": "hasEvent", "key": "sail_word", "value": true}
+          ],
+          "effects": [
+            {"type": "createEvent", "id": "seam", "name": "針穴は帆の裂け目を挟む二列に重なる。トマがこの布で仮縫いした跡だ。"}
+          ]
+        },
+        {"id": "go_loom", "text": "川べりの織場", "target": "loom"},
+        {"id": "go_loft", "text": "帆縫い場", "target": "loft"},
+        {"id": "go_desk", "text": "布改め小屋", "target": "desk"}
+      ]
+    },
+    "loom": {
+      "id": "loom",
+      "speaker": "織場｜織り手のメイ",
+      "text": "メイは膝の糸巻きに白糸を三筋残している。「布を切っても、耳まで切る人はいないよ。白糸の署名って、そういうものさ」",
+      "choices": [
+        {
+          "id": "ask_thread",
+          "text": "白糸の署名",
+          "target": "thread_word",
+          "effects": [
+            {"type": "createEvent", "id": "loom_word", "name": "メイの機は耳に三筋の白を残す。糸巻きを借りた。"}
+          ]
+        },
+        {"id": "go_cloth", "text": "干し場の藍布", "target": "cloth"},
+        {"id": "go_desk", "text": "布改め小屋", "target": "desk"}
+      ]
+    },
+    "thread_word": {
+      "id": "thread_word",
+      "speaker": "織場｜織り手のメイ",
+      "text": "「母の機は二本。私のは三本。幅なら誰でも真似できるけどね」メイは糸巻きをほどいて手渡した。「売れたら、藍甕の冬蓋を買うんだ」",
+      "choices": [
+        {"id": "go_cloth", "text": "干し場の藍布", "target": "cloth"},
+        {"id": "go_loft", "text": "帆縫い場", "target": "loft"},
+        {"id": "go_desk", "text": "布改め小屋", "target": "desk"}
+      ]
+    },
+    "loft": {
+      "id": "loft",
+      "speaker": "帆縫い場｜帆縫いのトマ",
+      "text": "トマは破れた帆に紙を当て、二列の穴をなぞっている。「仮縫いの跡が残ってるはずだ。一晩だけ寸法を取って、借り賃は後で決めるつもりだった」",
+      "choices": [
+        {
+          "id": "ask_holes",
+          "text": "仮縫いの跡",
+          "target": "holes_word",
+          "effects": [
+            {"type": "createEvent", "id": "sail_word", "name": "トマから二列の穴を写した型紙を預かった。"}
+          ]
+        },
+        {"id": "go_cloth", "text": "干し場の藍布", "target": "cloth"},
+        {"id": "go_desk", "text": "布改め小屋", "target": "desk"}
+      ]
+    },
+    "holes_word": {
+      "id": "holes_word",
+      "speaker": "帆縫い場｜帆縫いのトマ",
+      "text": "「舟を出せれば貝買いの子らが帰ってこられる。布の持ち主には、初荷から払うよ」トマが型紙を筒にして差し出した。",
+      "choices": [
+        {"id": "go_cloth", "text": "干し場の藍布", "target": "cloth"},
+        {"id": "go_loom", "text": "川べりの織場", "target": "loom"},
+        {"id": "go_desk", "text": "布改め小屋", "target": "desk"}
+      ]
+    },
+    "thread": {
+      "id": "thread",
+      "speaker": "干し場｜桟に掛かった藍布",
+      "text": "三本の白が端から端まで途切れず重なった。糸巻きを持ち上げると、メイが最後の一筋だけ逆に撚った癖までそろっている。これなら布改め小屋で持ち主を言える。",
+      "choices": [
+        {"id": "go_desk", "text": "布改め小屋", "target": "desk"},
+        {"id": "go_loft", "text": "帆縫い場", "target": "loft"}
+      ]
+    },
+    "holes": {
+      "id": "holes",
+      "speaker": "干し場｜桟に掛かった藍布",
+      "text": "型紙の角を折ると、二列の針穴が同時に透けた。布は売りに出す前に、一度あの帆に留められている。ユノに修繕の手配を頼める。",
+      "choices": [
+        {"id": "go_desk", "text": "布改め小屋", "target": "desk"},
+        {"id": "go_loom", "text": "川べりの織場", "target": "loom"}
+      ]
+    },
+    "market": {
+      "id": "market",
+      "speaker": "布改め小屋｜荷改めのユノ",
+      "text": "メイは藍布を肩に担ぎ、市の坂を上がった。トマは裂けた帆を外し、明朝の便を知らせる札を裏返す。夕方、織場の前には新しい甕の蓋が干してあった。"
+    },
+    "sail": {
+      "id": "sail",
+      "speaker": "布改め小屋｜荷改めのユノ",
+      "text": "ユノは木札に「初荷から布代」と削ってメイに渡した。夜のうちに帆に藍の継ぎが入り、朝の舟が出る。メイは空いた反物台に腰を掛け、沖から戻る初荷を待った。"
+    }
+  }
+}

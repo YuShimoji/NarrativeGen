@@ -21,6 +21,11 @@
       </div>
     </header>
     <main id="app" aria-live="polite"></main>
+    <dialog id="story-archive" aria-labelledby="archive-title">
+      <header><h2 id="archive-title">レガシー</h2><form method="dialog"><button class="btn" autofocus>閉じる</button></form></header>
+      <ul id="archive-stories"></ul>
+      <a href="./testimony-scene.html" target="_blank" rel="noopener">見本場面｜証言への反応を比べる ↗</a>
+    </dialog>
     <div id="drop-hint" class="drop-hint" hidden>JSONを離すと、その物語を開きます</div>
     <input type="file" id="story-file" accept=".json,application/json" hidden />
     <script type="module" src="./src/main.js"></script>

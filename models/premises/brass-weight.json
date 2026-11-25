@@ -1,0 +1,78 @@
+{
+  "title": "六目の分銅",
+  "entities": {
+    "weight": {
+      "id": "weight",
+      "name": "欠け耳の分銅",
+      "properties": {
+        "marks": {"key": "marks", "type": "number", "defaultValue": 6}
+      }
+    }
+  },
+  "characters": {
+    "baker": {
+      "id": "baker",
+      "name": "パン焼きのナミ",
+      "knowledgeProfiles": [
+        {"domain": "scale", "accuracy": 0.85, "tolerance": 0.17}
+      ]
+    },
+    "clerk": {
+      "id": "clerk",
+      "name": "配給係のオリ",
+      "knowledgeProfiles": [
+        {"domain": "scale", "accuracy": 0.5, "tolerance": 0.14}
+      ]
+    }
+  },
+  "beliefs": [
+    {
+      "character": "baker",
+      "entity": "weight",
+      "domain": "scale",
+      "expectations": {"marks": 4}
+    },
+    {
+      "character": "clerk",
+      "entity": "weight",
+      "domain": "scale",
+      "expectations": {"marks": 6}
+    }
+  ],
+  "scene": {
+    "present": ["baker", "clerk"],
+    "focus": "weight"
+  },
+  "intent": {
+    "include": ["asked", "realized"],
+    "ending": "faded"
+  },
+  "wording": {
+    "inquiry": {"region": "灰渡りの港", "place": "配給所の秤台", "goal": "配給所とパン窯で同じ粉袋の重さが合わない。欠け耳の分銅を二人に渡し、今日の配給を量り直すか決める。"},
+    "propertyNames": {"marks": "上皿の目盛り"},
+    "patterns": {
+      "start": "配給所で粉を受け取った客が、袋の紐を引いた。「窯で四目ぶん買う時は、これで口を結べるんだけど」\n\n配給係のオリは欠け耳の分銅を出した。パン焼きのナミは、窯から持ってきた天秤の上皿を拭う。どちらの手に先に載せよう。",
+      "lookNoticed": "{actor}は分銅を上皿に置いた。「待って。私なら目を{expected}つ数えたところで手を離す」針はその先へ振れた。\n\n台の下に、粉をまだ受け取っていない客の札が重なっている。",
+      "lookMissed": "{actor}は針を指で押さえた。「目は{expected}つ。昨日ここで量ったときと同じだよ」分銅を元の皿に戻す。",
+      "ask": "「どこで手を離すの？」{actor}が上皿を空ける。{target}は秤の支点を布で拭い、いつも針を止める刻みを爪でたたいた。",
+      "tellHeard": "{actor}は秤を{target}のほうへ押した。「持った感じで済ませずに、針が止まるところを見て」",
+      "tellShared": "{actor}と{target}は、動きすぎた針のところにそろって指を置いた。",
+      "tellDisagreement": "{actor}は針の先、{target}は分銅の欠け耳を指す。「針が行きすぎる」「でも、昨日使ったのと同じ分銅だよ」二人は上皿を空けた。",
+      "relookRealized": "{actor}は{heardFrom}の指があった刻みに爪を立て、もう一度分銅を置く。針は爪を越えて止まった。「昨日と同じだから、合っていると思ってた」",
+      "relookDissolved": "{actor}は{heardFrom}に教わった位置から測り直した。その見方なら針の振れは収まる。分銅を布の上へ戻した。",
+      "relookConfirmed": "{actor}は{heardFrom}の言葉を思い返し、分銅を置き直す。針は同じ刻みをもう一度越えた。",
+      "relookUnmoved": "{actor}は{heardFrom}の話を聞いてから手を離す。針の止まる場所は、見慣れたところだった。",
+      "verify": "{actor}は港の親秤を持ち出した。欠け耳の分銅を掛けると、針は[{focus}.{propertyKey}]目で止まった。その刻みを客にも見える向きにして札を掛けた。",
+      "letGo": "{actor}は分銅を元の箱にしまった。戸口の列で、次の客が自分の札を差し出す。",
+      "endVerified": "粉を受け取った客が袋の口をほどく。二人は親秤を戸口へ据え、渡した分から量り直した。",
+      "endFaded": "窯では今日の粉でこねられるだけの生地を丸めた。配給札には昨日と同じ判が並ぶ。",
+      "endNothing": "二人は分銅をしまい、次の袋を開けた。客は袋の口を両手で押さえて帰っていった。",
+      "choiceLook": "{actor}に分銅を渡す",
+      "choiceTell": "{actor}の読みを{target}に伝える",
+      "choiceAsk": "{target}に針の読み方を訊く",
+      "choiceRelook": "{actor}にもう一度量ってもらう",
+      "choiceVerify": "{actor}と親秤に掛ける",
+      "choiceLetGo": "{actor}と配給を続ける"
+    }
+  }
+}

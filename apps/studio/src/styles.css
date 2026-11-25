@@ -1,3 +1,17 @@
+#story-archive {
+  width: min(42rem, 90vw);
+  max-height: 78vh;
+  padding: 1.25rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+}
+#story-archive::backdrop { background: rgb(0 0 0 / 55%); }
+#story-archive header { display: flex; align-items: center; justify-content: space-between; }
+#archive-title { margin: 0; font-size: 1.25rem; }
+#archive-stories { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr)); gap: .4rem; padding: 0; list-style: none; }
+#archive-stories button { width: 100%; height: auto; min-height: 34px; padding-block: .35rem; text-align: left; white-space: normal; }
+#story-archive a { color: var(--text); }
 :root {
   color-scheme: light;
   --bg: #f6f5f1;

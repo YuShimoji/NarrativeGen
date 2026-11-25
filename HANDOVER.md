@@ -4,7 +4,7 @@
 
 - 開発目標: 作者が物と人物の知識を一度定義すれば、エンジンが違和感・出来事・文章・選択肢の開閉を決定論で導き、
   作者がその判断を画面で確かめられる実験的な物語生成システム（原初設計「Entity中心のプロパティ駆動型ナラティブ生成」）。
-- 聞き込みの見本[「七人目の渡し賃」を開く](http://127.0.0.1:5185/?story=ash-ferry)（`npm run dev:studio`）。舟番・灯台守のどちらからでも窯場の話題を開ける。会話窓はエンジンの実行結果から話題と手帳を表示し、同じ場面のままStudioの判断表示へ戻れる。両方の結末をブラウザで確認した。[物語JSON](models/examples/ash-ferry.json)
+- Studioの現行サンプルは[藍布の耳](http://127.0.0.1:5185/?story=blue-selvedge)（証言と布の照合）、[潮待ちの石段](http://127.0.0.1:5185/?story=ebb-stair)（引き潮と運び道）、[六目の分銅](http://127.0.0.1:5185/?story=brass-weight)（人物の見込みから生成）。以前の25作は物語選択の「レガシーを開く…」にまとまり、[七人目の渡し賃](http://127.0.0.1:5185/?story=ash-ferry)などの直リンクも使える。
 - 制作画面の開発順: ①同じ試算を再生・編集 → ②物語を保存・再読込 → ③作者の意図と前提を保存・再読込。Codexが自作前提1本で確認済み。次は作者が実作品で操作と物語のつながりを確認する。
 
 2026-11-22、userが再開時に3点を依頼した（原文は[要求台帳](docs/USER_REQUEST_LEDGER.md)）: 開発ワークフローの体系化、
@@ -18,11 +18,11 @@
 
 | 対象 | 状態 | 起動・確認 |
 |---|---|---|
-| 前提から物語を組む | 前提ファイル → 物語のモデル＋導出の記録。違和感はエンジンが決め、行為（見る・見直す・話す・尋ねる・確かめる・そのままにする）は前提の数値による重みで選ぶ。聞いた話で人物の見込みと許容幅が変わる。結末の割合と、意図を満たす最も蓋然な主線を出す。Studioの右列の先頭に、場面ごとの蓋然と理由が出る（方法は[SP-PREMISE-001](docs/specs/premise-driven-story.md)） | `npm run generate:story -- models/premises/cheeseburger-weight.json` → Studioの物語選択「cheeseburger-weight（前提から生成）」。[導出の記録の見本](docs/samples/premise-story-cheeseburger-weight-review-ja.md) |
+| 前提から物語を組む | 前提ファイル → 物語のモデル＋導出の記録。違和感はエンジンが決め、行為（見る・見直す・話す・尋ねる・確かめる・そのままにする）は前提の数値による重みで選ぶ。聞いた話で人物の見込みと許容幅が変わる。結末の割合と、意図を満たす最も蓋然な主線を出す。Studioの右列の先頭に、場面ごとの蓋然と理由が出る（方法は[SP-PREMISE-001](docs/specs/premise-driven-story.md)） | `npm run generate:story -- models/premises/brass-weight.json` → Studioの物語選択「六目の分銅（前提から生成）」。[導出の記録の見本](docs/samples/premise-story-cheeseburger-weight-review-ja.md) |
 | Studio（主画面） | 実行（本文＋判断の列＋道筋）、点検、その場で編集（範囲は[SP-STUDIO-001](docs/specs/studio-rebuild.md) 4節）。`models/`の物語は「保存」で元のJSONへ書き戻し。`models/generated/`の物語は保存の代わりに「写して育てる」で`models/examples/`へ写す。小さい数値は有効3桁で表示。幅1440px・768pxで確認（2026-11-22、生成した物語の実行画面と蓋然の欄） | `npm run dev:studio` → `http://127.0.0.1:5185/`、編集関数の試験は`npm test -w @narrativegen/studio`（7件） |
 | エンジンの判断の記録 | 物の性質で選択肢が開閉し、証言などの出来事で条件付きの本文が変わる。Studioの判断欄には条件が変わった手数と操作、更新された出来事の値が出る。点検は待つ操作や証言の更新を含む道筋をたどる | [レシートの矛盾](http://127.0.0.1:5185/?story=originality-spine-probe)でミラに照合を頼み、台帳へ進む条件の出所を見る。[判断の仕様](docs/specs/studio-rebuild.md) |
 | 旧Web Tester | 編集・グラフ・export等。置き換えまで残し、新機能は足さない | `npm run dev`（port 5173が他projectと衝突する時は下の注意） |
-| サンプル | 「閉館前の返却箱」は鍵の本数から生まれる二択と結末を比べられる。「舞台の暗転」と「搬入口の荷箱」は、三人が同じ証言を聞く前後の実測との差と違和感を比べられる | Studioの物語選択。「見本場面｜証言への反応を比べる…」で暗転を開く。[見本の仕様](docs/specs/premise-driven-story.md#3-試作の契約) |
+| レガシー | 「閉館前の返却箱」は鍵の本数から生まれる選択を比べられる。「舞台の暗転」と「搬入口の荷箱」は三人が同じ証言を聞く前後を比べられる | 「レガシーを開く…」で物語か「見本場面｜証言への反応を比べる」を選ぶ。[見本の仕様](docs/specs/premise-driven-story.md#3-試作の契約) |
 | ゲーム層（凍結） | Play演出・BGM、Unity SDK、Public Studio、Sites adapter。再構築中は変更しない | 再開は別の作業単位 |
 
 点検の既知の限界: 数値が増え続ける物語（`full_integration`・`inventory_test`・`trading`・`tutorial`など8件）は

@@ -21,7 +21,7 @@ const repoRoot = path.resolve(__dirname, '../../..')
 const premisePath = path.join(repoRoot, 'models/premises/cheeseburger-weight.json')
 const BURGER_SAMPLES = ['cheeseburger-weight', 'cheeseburger-weight-hearsay']
 const SAMPLES = [
-  ...BURGER_SAMPLES, 'print-shop-paper-guide', 'closing-bell-echo', 'alley-lantern-shadow', 'closing-time-key-box',
+  ...BURGER_SAMPLES, 'print-shop-paper-guide', 'closing-bell-echo', 'alley-lantern-shadow', 'closing-time-key-box', 'brass-weight',
 ]
 
 function readPremise(name = 'cheeseburger-weight'): StoryPremise {
@@ -42,6 +42,13 @@ describe('premise-story (SP-PREMISE-001)', { timeout: 30_000 }, () => {
   it('is deterministic, with or without a seed', () => {
     expect(generateStory(readPremise())).toEqual(generateStory(readPremise()))
     expect(generateStory(readPremise(), { seed: 3 })).toEqual(generateStory(readPremise(), { seed: 3 }))
+  })
+
+  it('keeps both the reweighing and the unverified ration playable in the inquiry', () => {
+    const { model, derivation } = generateStory(readPremise('brass-weight'))
+    const endings = Object.values(derivation.scenes).flatMap((s) => s.ending ? [s.ending] : [])
+    expect(new Set(endings)).toEqual(new Set(['verified', 'faded']))
+    expect(model.variables).toMatchObject({ 表示形式: '聞き込み', 依頼名: '六目の分銅' })
   })
 
   it('gives every state probabilities that sum to one', () => {

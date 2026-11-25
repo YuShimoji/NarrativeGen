@@ -1,8 +1,9 @@
 import { esc } from './format.js'
+import { choiceWording } from './edit.js'
 import './ash-ferry.css'
 
-export function isFerrySample(source) {
-  return source?.kind === 'sample' && source.file === 'models/examples/ash-ferry.json'
+export function isInquiry(model, source) {
+  return model?.variables?.表示形式 === '聞き込み' || (source?.kind === 'sample' && source.file === 'models/examples/ash-ferry.json')
 }
 
 function choiceButton(choice, label, cls) {
@@ -38,20 +39,23 @@ export function ferryWindow(model, step, route) {
   const { scene } = step
   const { place, name } = speakerAt(model, scene.nodeId)
   const visited = new Set(route.map((s) => s.scene.nodeId))
-  const choices = scene.choices.filter((c) => c.available).map((c) => c.choice)
+  const choices = scene.choices.filter((c) => c.available).map(({ choice }) => ({ ...choice, text: choiceWording(choice.text) }))
   const topics = choices.filter((c) => !c.id.startsWith('go_'))
   const travel = choices.filter((c) => c.id.startsWith('go_'))
-  const notes = route.flatMap((s) => s.changes.filter((c) => c.kind === 'event').map((c) => ({
-    source: s.perceptions.find((p) => p.eventId === c.key)?.characterName ?? speakerAt(model, s.fromNodeId || s.scene.nodeId).name,
-    text: c.name,
-  })))
-  const newNote = step.changes.some((c) => c.kind === 'event')
+  const isNote = (c) => c.kind === 'event' || c.kind === 'eventUpdate'
+  const notes = route.flatMap((s) => s.changes.filter(isNote).map((c) => {
+    const props = s.session.events[c.key]?.properties
+    const actor = (props?.asker ?? props?.speaker ?? props?.observer)?.defaultValue
+    const source = s.perceptions.find((p) => p.eventId === c.key)?.characterName ?? model.characters?.[actor]?.name ?? speakerAt(model, s.fromNodeId || s.scene.nodeId).name
+    return { source, text: c.name }
+  }))
+  const newNote = step.changes.some(isNote)
   const journalTitle = scene.ending ? '完了した依頼' : '依頼'
   const goal = esc(step.session.variables?.依頼)
   return `<article class="ferry-window">
     <header class="ferry-hero">
       <div class="ferry-titles">
-        <p class="ferry-region"><i aria-hidden="true"></i>灰渡りの港</p>
+        <p class="ferry-region"><i aria-hidden="true"></i>${esc(step.session.variables?.地域 ?? '灰渡りの港')}</p>
         <h1>${esc(step.session.variables?.依頼名)}</h1>
       </div>
       <button class="ferry-book" type="button" data-ferry="journal" aria-haspopup="dialog"><i aria-hidden="true"></i>旅の手帳<span>${notes.length + 1}</span></button>

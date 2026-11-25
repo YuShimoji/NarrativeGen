@@ -23,6 +23,8 @@ export interface PremiseBelief {
 }
 
 export interface PremiseWording {
+  /** Display a generated scene as an inquiry in Studio; the action weights and gates stay premise-driven. */
+  inquiry?: { region: string; place: string; goal: string }
   /** display names for property keys, e.g. { weight: '重さ' } */
   propertyNames?: Record<string, string>
   /** overrides for the skeleton sentence patterns, keyed by pattern id */
@@ -844,6 +846,9 @@ export function generateStory(premise: StoryPremise, options: GenerateStoryOptio
     const id = arriving ? `s${nodeIds.size}_${arriving.kind}_${arriving.actor}${arriving.target ? `_${arriving.target}` : ''}` : 'start'
     nodeIds.set(key, id)
     nodes[id] = { id, text: arrivalText(arriving, s) }
+    if (premise.wording?.inquiry) {
+      nodes[id].speaker = `${premise.wording.inquiry.place}｜${arriving ? name(arriving.actor) : focusName}`
+    }
     pending.push({ id, state: s, onMain })
     return id
   }
@@ -1008,7 +1013,9 @@ export function generateStory(premise: StoryPremise, options: GenerateStoryOptio
     startNode: 'start',
     flags: {},
     resources: {},
-    variables: {},
+    variables: premise.wording?.inquiry ? {
+      表示形式: '聞き込み', 地域: premise.wording.inquiry.region, 依頼名: premise.title ?? focus, 依頼: premise.wording.inquiry.goal,
+    } : {},
     entities: premise.entities,
     characters,
     knowledgeRules,

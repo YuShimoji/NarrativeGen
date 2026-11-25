@@ -11,7 +11,7 @@ import {
 } from './format.js'
 import * as edit from './edit.js'
 import { downloadJson, takeTrial } from './studio-files.js'
-import { ferryWindow, isFerrySample } from './ash-ferry.js'
+import { ferryWindow, isInquiry } from './ash-ferry.js'
 
 // models/generated holds stories built from models/premises (SP-PREMISE-001); they open like any other story
 const samples = {
@@ -20,8 +20,9 @@ const samples = {
 }
 // the premise a generated story was built from, by the same file name
 const premises = import.meta.glob('../../../models/premises/*.json', { import: 'default' })
-const premiseTitles = import.meta.glob('../../../models/premises/*.json', { import: 'title', eager: true })
-const exampleTitles = {
+const storyTitles = import.meta.glob('../../../models/{examples,premises}/*.json', { query: '?raw&studio-title', import: 'title', eager: true })
+// This shelf is a snapshot. New stories and copies appear on the current shelf by default.
+const legacyExampleTitles = {
   'ash-ferry': '七人目の渡し賃（聞き込みクエスト）',
   branching_flags: 'フラグで分かれる扉',
   event_test: 'アリスを助ける',
@@ -42,17 +43,20 @@ const exampleTitles = {
   'vertical-slice': 'ミラと鐘楼の台帳',
   writer_tutorial: '作者向けチュートリアル（404号室の手紙）',
 }
+const legacyGenerated = new Set(['alley-lantern-shadow', 'cheeseburger-weight', 'cheeseburger-weight-hearsay',
+  'closing-bell-echo', 'closing-time-key-box', 'print-shop-paper-guide'])
 const sampleList = Object.keys(samples)
   .map((path) => {
     const name = path.split('/').pop().replace(/\.json$/, '')
     const generated = path.includes('/models/generated/')
-    const title = generated ? premiseTitles[path.replace('/models/generated/', '/models/premises/')] : exampleTitles[name]
+    const legacy = generated ? legacyGenerated.has(name) : Object.hasOwn(legacyExampleTitles, name)
+    const title = generated ? storyTitles[path.replace('/models/generated/', '/models/premises/')] : legacyExampleTitles[name] ?? storyTitles[path]
     const label = generated ? `${title || name}（前提から生成）` : title || name
-    return { path, name, label }
+    return { path, name, label, legacy }
   })
   .sort((a, b) => a.name.localeCompare(b.name))
 
-const DEFAULT_SAMPLE = 'originality-spine-probe'
+const DEFAULT_SAMPLE = 'blue-selvedge'
 const app = document.getElementById('app')
 const picker = document.getElementById('story-picker')
 
@@ -94,13 +98,18 @@ function pref(key, value) {
 // ---------------------------------------------------------------------------
 // loading
 
+const archive = document.getElementById('story-archive')
+function sampleOption(s) {
+  return `<option value="${esc(s.path)}">${esc(s.label ?? s.name)}</option>`
+}
 function fillPicker(extraName, extraLabel = '読み込んだファイル') {
-  const opts = sampleList.map((s) => `<option value="${esc(s.path)}">${esc(s.label ?? s.name)}</option>`)
-  if (extraName) opts.unshift(`<option value="__file">${esc(extraName)}（${extraLabel}）</option>`)
-  opts.push('<option value="__open">物語のファイルを開く…</option>')
-  if (import.meta.env.DEV) opts.push('<option value="__premise">前提入力を開く…</option>')
-  opts.push('<option value="__testimony">見本場面｜証言への反応を比べる…</option>')
-  picker.innerHTML = opts.join('')
+  const loaded = extraName ? `<option value="__file">${esc(extraName)}（${extraLabel}）</option>` : ''
+  const current = sampleList.filter((s) => !s.legacy).map(sampleOption).join('')
+  const selected = sampleList.find((s) => s.legacy && state.source?.file === s.path.replace(/^(\.\.\/)+/, ''))
+  picker.innerHTML = `${loaded}<optgroup label="現行サンプル">${current}</optgroup>
+    <optgroup label="レガシー">${selected ? sampleOption(selected) : ''}<option value="__archive">レガシーを開く…</option></optgroup>
+    <optgroup label="ファイル"><option value="__open">物語のファイルを開く…</option>
+    ${import.meta.env.DEV ? '<option value="__premise">前提入力を開く…</option>' : ''}</optgroup>`
 }
 
 async function openSample(path) {
@@ -109,7 +118,9 @@ async function openSample(path) {
   const model = await loader()
   const name = path.split('/').pop().replace(/\.json$/, '')
   openModel(structuredClone(model), name, { kind: 'sample', file: path.replace(/^(\.\.\/)+/, '') }, await storyFor(path, model))
+  fillPicker()
   picker.value = path
+  pickerValue = path
   pref('sample', path)
   const url = new URL(location.href)
   if (url.searchParams.has('story') && url.searchParams.get('story') !== name) {
@@ -155,7 +166,7 @@ function openModel(model, name, source, story = null) {
   state.ferryReading = true
   state.dirty = new Set()
   state.notice = ''
-  if (source?.kind === 'file' || isFerrySample(source)) state.editing = false
+  if (source?.kind === 'file' || isInquiry(model, source)) state.editing = false
   state.name = name
   state.model = model
   state.names = createNames(model)
@@ -569,7 +580,7 @@ function timelineHtml() {
 function runHtml() {
   const step = current()
   if (!step) return ''
-  const ferry = isFerrySample(state.source)
+  const ferry = isInquiry(state.model, state.source)
   if (ferry && state.ferryReading && !state.editing) {
     return ferryWindow(state.model, step, state.steps.slice(0, state.cursor + 1))
   }
@@ -1163,13 +1174,14 @@ async function grow() {
     remember(notice, path)
     if (!sampleList.some((s) => s.path === path)) {
       samples[path] = async () => data.model
-      sampleList.push({ path, name })
+      sampleList.push({ path, name, label: data.model.variables?.依頼名 || name })
       sampleList.sort((a, b) => a.name.localeCompare(b.name))
-      fillPicker()
     }
     state.saving = false
     openModel(structuredClone(data.model), name, { kind: 'sample', file: data.file })
+    fillPicker()
     picker.value = path
+    pickerValue = path
     replayQuiet(keep.path)
     state.cursor = Math.min(keep.cursor, state.steps.length - 1)
     state.editing = keep.editing
@@ -1304,7 +1316,7 @@ function checkHtml() {
 // render and events
 
 function render() {
-  document.body.classList.toggle('ferry-reading', isFerrySample(state.source) && state.ferryReading && !state.editing && state.view === 'run')
+  document.body.classList.toggle('ferry-reading', isInquiry(state.model, state.source) && state.ferryReading && !state.editing && state.view === 'run')
   if (state.error && !state.steps.length) {
     app.innerHTML = `<p class="error">${esc(state.error)}</p>`
     return
@@ -1376,13 +1388,26 @@ app.addEventListener('click', (event) => {
 
 let pickerValue = ''
 const storyFile = document.getElementById('story-file')
+document.getElementById('archive-stories').innerHTML = sampleList.filter((s) => s.legacy)
+  .map((s) => `<li><button type="button" class="btn" data-story="${esc(s.path)}">${esc(s.label)}</button></li>`).join('')
+archive.addEventListener('click', (e) => {
+  const button = e.target.closest('button[data-story]')
+  if (!button || !confirmDiscard()) return
+  archive.close()
+  openSample(button.dataset.story)
+})
 picker.addEventListener('focus', () => { pickerValue = picker.value })
 picker.addEventListener('change', () => {
-  if (['__open', '__premise', '__testimony'].includes(picker.value)) {
+  if (picker.value === '__archive') {
+    picker.value = pickerValue
+    archive.showModal()
+    return
+  }
+  if (['__open', '__premise'].includes(picker.value)) {
     const action = picker.value
     picker.value = pickerValue
     if (action === '__open') storyFile.click()
-    else window.open(action === '__premise' ? './premise-draft.html' : './testimony-scene.html', '_blank', 'noopener')
+    else window.open('./premise-draft.html', '_blank', 'noopener')
     return
   }
   if (!confirmDiscard()) {
