@@ -140,6 +140,7 @@ npm run generate:story -- models/premises/cheeseburger-weight.json --report docs
 目撃者Bが酔った人と話して見直すと違和感が消え、酔った人が探偵Aに尋ねて見直すと違和感を覚える。assistantが書いた見本で、作品として採るかはuserが決める。
 追加の見本は[印刷所](../../models/generated/print-shop-paper-guide.json)（二人が同じずれに気づき、測る）、[閉館の鐘](../../models/generated/closing-bell-echo.json)（尋ねた人が聞き直して気づく）、[朝市の影](../../models/generated/alley-lantern-shadow.json)（気づいた人がそのままにする）。対応する同名の前提は`models/premises/`にあり、Studioの物語選択から開ける。
 [閉館前の返却箱](../../models/generated/closing-time-key-box.json)では、見込み20本・実際18本の差に受付係が気づき、同じ場面から「確かめる」「そのままにする」の二つの結末を選べる。[前提](../../models/premises/closing-time-key-box.json)の実際の本数を20にすると、見た時点で違和感が生まれず、二択は出ない。
+[搬入口の荷箱](../../apps/studio/testimony-scene.html)は一場面の比較見本。二人から同じ証言を聞く前後で三人の見込みと反応を見比べ、目測した人の知識の正確さを切り替えられる。物語の探索を挟まず、2.2節と同じ計算で判定する。
 試験は`packages/engine-ts/test/premise-story.spec.ts`（生成物を実行時に再生し、聞いた後の判定も予測と一致することを含む）。
 
 ## 4. 採否（2026-11-22、userの回答）

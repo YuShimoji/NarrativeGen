@@ -14,6 +14,7 @@ import {
   startSession,
 } from '../src/index.js'
 import type { StoryPremise } from '../src/index.js'
+import { comparePremiseReactions } from '../src/premise-story.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(__dirname, '../../..')
@@ -154,6 +155,24 @@ describe('premise-story (SP-PREMISE-001)', { timeout: 30_000 }, () => {
     expect(derivation.perceptions.find((p) => p.character === 'drunk_person')!.noticed).toBe(false)
     expect([...kindsOf('drunk_person')].sort()).toEqual(['ask', 'letGo', 'look', 'relook', 'tell', 'verify'])
     expect(kindsOf('detective_a').has('ask')).toBe(true)
+  })
+
+  it('compares both witnesses using their accuracy, independent of the order heard', () => {
+    const premise = readPremise('cheeseburger-weight-hearsay')
+    const witnesses = ['detective_a', 'drunk_person']
+    const initial = comparePremiseReactions(premise, witnesses)
+    expect(initial).toEqual(comparePremiseReactions(premise, [...witnesses].reverse()))
+    expect(initial).toHaveLength(1)
+    expect(initial[0]).toMatchObject({
+      character: 'witness_b',
+      before: { noticed: true },
+      after: { heardFrom: witnesses, tolerance: expect.closeTo(0.157895, 5), noticed: true },
+    })
+
+    premise.characters.drunk_person.knowledgeProfiles[0].accuracy = 0.9
+    const [adjusted] = comparePremiseReactions(premise, witnesses)
+    expect(adjusted.before).toEqual(initial[0].before)
+    expect(adjusted.after).toMatchObject({ heardFrom: witnesses, tolerance: 0.24, noticed: false })
   })
 
   it('lets a person with no expectation of their own pick one up by asking', () => {

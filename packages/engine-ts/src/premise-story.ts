@@ -119,6 +119,12 @@ export interface PerceptionFact {
   ownTolerance?: number
 }
 
+export interface PremiseReaction {
+  character: string
+  before: PerceptionFact | null
+  after: PerceptionFact | null
+}
+
 export interface StoryStep {
   /** node the step starts from */
   from: string
@@ -414,6 +420,47 @@ function createWorld(premise: StoryPremise, people: Participant[]): World {
   return { people, view: (person, sources) => viewAt(person, keyOf(sources)), viewAt, actions: new Map(), next: new Map() }
 }
 
+function collectParticipants(premise: StoryPremise, warnings?: string[]): Participant[] {
+  const { focus, present } = premise.scene
+  if (!premise.entities[focus]) throw new Error(`場の物「${focus}」が物の定義にありません`)
+
+  const people: Participant[] = []
+  for (const id of present) {
+    const character = premise.characters[id]
+    if (!character) {
+      warnings?.push(`場にいる「${id}」が人物の定義にありません`)
+      continue
+    }
+    const belief = premise.beliefs.find((b) => b.character === id && b.entity === focus)
+    const profile = findKnowledgeProfile(character, belief?.domain ?? 'general')
+    people.push({
+      id,
+      name: character.name,
+      character,
+      belief,
+      profile,
+      profileMatch: !profile ? 'none' : belief && profile.domain === belief.domain ? 'exact' : 'general',
+      accuracy: profile?.accuracy ?? 0,
+    })
+  }
+  return people
+}
+
+/** Compare each listener's view before and after hearing the same people in the scene. */
+export function comparePremiseReactions(premise: StoryPremise, witnesses: readonly string[]): PremiseReaction[] {
+  const people = collectParticipants(premise)
+  const sources = [...new Set(witnesses)].sort()
+  for (const id of sources) {
+    if (!people.some((p) => p.id === id)) throw new Error(`証言者「${id}」が場にいません`)
+  }
+  const world = createWorld(premise, people)
+  return people.filter((person) => !sources.includes(person.id)).map(({ id }) => ({
+    character: id,
+    before: world.view(id, [])?.fact ?? null,
+    after: world.view(id, sources)?.fact ?? null,
+  }))
+}
+
 function stateKey(s: State, people: Participant[]): string {
   const each = people.map((p) => `${s.looked[p.id] ?? '-'}/${keyOf(s.sources[p.id] ?? [])}/${s.letGo[p.id] ?? '-'}`)
   return `${each.join(',')}|${s.verifiedBy ?? ''}|${s.felt ? 1 : 0}`
@@ -612,28 +659,8 @@ export function generateStory(premise: StoryPremise, options: GenerateStoryOptio
   const focus = premise.scene.focus
   const patterns = { ...DEFAULT_PATTERNS, ...(premise.wording?.patterns ?? {}) }
 
-  if (!premise.entities[focus]) throw new Error(`場の物「${focus}」が物の定義にありません`)
-
-  const people: Participant[] = []
+  const people = collectParticipants(premise, warnings)
   const focusName = premise.entities[focus].name
-  for (const id of premise.scene.present) {
-    const character = premise.characters[id]
-    if (!character) {
-      warnings.push(`場にいる「${id}」が人物の定義にありません`)
-      continue
-    }
-    const belief = premise.beliefs.find((b) => b.character === id && b.entity === focus)
-    const profile = findKnowledgeProfile(character, belief?.domain ?? 'general')
-    people.push({
-      id,
-      name: character.name,
-      character,
-      belief,
-      profile,
-      profileMatch: !profile ? 'none' : belief && profile.domain === belief.domain ? 'exact' : 'general',
-      accuracy: profile?.accuracy ?? 0,
-    })
-  }
   const world = createWorld(premise, people)
   const perceptions: PerceptionFact[] = []
   for (const p of people) {

@@ -122,6 +122,16 @@ export default defineConfig({
     },
   },
   server: { fs: { allow: [repoRoot] } },
-  build: { outDir: 'dist', emptyOutDir: true, target: 'es2022' },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    target: 'es2022',
+    rolldownOptions: {
+      input: [
+        path.join(rootDir, 'index.html'),
+        path.join(rootDir, 'testimony-scene.html'),
+      ],
+    },
+  },
   publicDir: false,
 })

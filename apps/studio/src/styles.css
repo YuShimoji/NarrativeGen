@@ -71,6 +71,26 @@ body {
 button { font: inherit; color: inherit; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
+.testimony-back { margin-left: auto; color: var(--accent); }
+.testimony-scene { max-width: 960px; }
+.testimony-scene h1 { margin: 0; font-size: 26px; }
+.testimony-scene h2 { margin: 0; font-size: 17px; }
+.testimony-accounts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.testimony-accounts p { margin-block: 6px; }
+.testimony-accounts fieldset { min-inline-size: 0; border: 0; margin: 0; padding: 0; }
+.testimony-accounts legend { padding: 0; color: var(--text-2); font-size: 13px; }
+.testimony-accounts label { display: inline-flex; align-items: center; min-height: 34px; margin-inline-end: 12px; gap: 4px; cursor: pointer; }
+.testimony-accounts input { margin: 0; accent-color: var(--accent); }
+.testimony-results table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-block: 8px; font-variant-numeric: tabular-nums; }
+.testimony-results :is(th, td) { border-bottom: 1px solid var(--line); padding: 8px; text-align: start; vertical-align: top; }
+.testimony-results th:first-child { width: 26%; }
+.testimony-results td .sub { margin: 0; }
+.testimony-range { white-space: nowrap; }
+@media (max-width: 640px) {
+  .testimony-accounts { grid-template-columns: 1fr; }
+  .testimony-results :is(th, td) { padding: 6px 3px; font-size: 13px; }
+}
+
 /* top bar: three controls only */
 .topbar {
   position: sticky; top: 0; z-index: 2;

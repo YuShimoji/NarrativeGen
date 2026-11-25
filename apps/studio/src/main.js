@@ -96,6 +96,7 @@ function fillPicker(extraName, extraLabel = '読み込んだファイル') {
   if (extraName) opts.unshift(`<option value="__file">${esc(extraName)}（${extraLabel}）</option>`)
   opts.push('<option value="__open">物語のファイルを開く…</option>')
   if (import.meta.env.DEV) opts.push('<option value="__premise">前提入力を開く…</option>')
+  opts.push('<option value="__testimony">見本場面｜証言への反応を比べる…</option>')
   picker.innerHTML = opts.join('')
 }
 
@@ -1335,11 +1336,11 @@ let pickerValue = ''
 const storyFile = document.getElementById('story-file')
 picker.addEventListener('focus', () => { pickerValue = picker.value })
 picker.addEventListener('change', () => {
-  if (picker.value === '__open' || picker.value === '__premise') {
+  if (['__open', '__premise', '__testimony'].includes(picker.value)) {
     const action = picker.value
     picker.value = pickerValue
     if (action === '__open') storyFile.click()
-    else window.open('./premise-draft.html', '_blank', 'noopener')
+    else window.open(action === '__premise' ? './premise-draft.html' : './testimony-scene.html', '_blank', 'noopener')
     return
   }
   if (!confirmDiscard()) {
