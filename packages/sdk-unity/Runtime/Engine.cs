@@ -43,7 +43,7 @@ namespace NarrativeGen
                 model.StartNode,
                 model.InitialFlags ?? new Dictionary<string, bool>(),
                 model.InitialResources ?? new Dictionary<string, double>(),
-                variables: new Dictionary<string, object>(),
+                variables: model.InitialVariables,
                 inventory: new List<string>(),
                 time: 0,
                 events: null
@@ -58,7 +58,7 @@ namespace NarrativeGen
             EnsureInitialized();
             var node = model.Nodes[session.CurrentNodeId];
             var choices = node.Choices ?? new List<Choice>();
-            var context = EvaluationContext.FromSession(session);
+            var context = EvaluationContext.FromSession(session, model);
             return choices.Where(c => EvaluateConditions(c.Conditions, context)).ToList();
         }
 
@@ -72,7 +72,7 @@ namespace NarrativeGen
             var choice = (node.Choices ?? new List<Choice>()).FirstOrDefault(c => c.Id == choiceId)
                          ?? throw new ArgumentException($"Choice '{choiceId}' not found at node '{node.Id}'");
 
-            var context = EvaluationContext.FromSession(session);
+            var context = EvaluationContext.FromSession(session, model);
             if (!EvaluateConditions(choice.Conditions, context))
                 throw new InvalidOperationException($"Choice '{choiceId}' is not available in current session");
 
@@ -83,7 +83,7 @@ namespace NarrativeGen
             {
                 foreach (var eff in choice.Effects)
                 {
-                    current = registry.ApplyEffect(eff, current);
+                    current = registry.ApplyEffect(eff, current, model);
                 }
             }
 

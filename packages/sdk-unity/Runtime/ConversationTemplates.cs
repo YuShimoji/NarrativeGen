@@ -80,7 +80,7 @@ namespace NarrativeGen
             var usage = usageState ?? new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             var results = new List<ExpandedTemplate>();
             var sorted = templates.OrderByDescending(t => t.Priority ?? 0).ToList();
-            var ctx = EvaluationContext.FromSession(session);
+            var ctx = EvaluationContext.FromSession(session, model);
 
             foreach (var template in sorted)
             {

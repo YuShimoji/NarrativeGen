@@ -23,7 +23,7 @@
 | エンジンの判断の記録 | 物の性質で選択肢が開閉し、証言などの出来事で条件付きの本文が変わる。Studioの判断欄には条件が変わった手数と操作、更新された出来事の値が出る。点検は待つ操作や証言の更新を含む道筋をたどる | [レシートの矛盾](http://127.0.0.1:5185/?story=originality-spine-probe)でミラに照合を頼み、台帳へ進む条件の出所を見る。[判断の仕様](docs/specs/studio-rebuild.md) |
 | 旧Web Tester | 編集・グラフ・export等。置き換えまで残し、新機能は足さない | `npm run dev`（port 5173が他projectと衝突する時は下の注意） |
 | レガシー | 「閉館前の返却箱」は鍵の本数から生まれる選択を比べられる。「舞台の暗転」と「搬入口の荷箱」は三人が同じ証言を聞く前後を比べられる | 「レガシーを開く…」で物語か「見本場面｜証言への反応を比べる」を選ぶ。[見本の仕様](docs/specs/premise-driven-story.md#3-試作の契約) |
-| ゲーム層（凍結） | Play演出・BGM、Unity SDK、Public Studio、Sites adapter。再構築中は変更しない | 再開は別の作業単位 |
+| ゲーム層 | UnityChatNovelGame接続のためUnity SDKの互換修正を再開。Play演出・BGM、Public Studio、Sites adapterは作業場再構築中の凍結を継続 | Unity SDKの.NET試験35件。既存のチーズバーガー2モデルから知覚イベント・条件付き選択肢・動的本文をTypeScript版と照合（2026-11-25） |
 
 点検の既知の限界: 数値が増え続ける物語（`full_integration`・`inventory_test`・`trading`・`tutorial`など8件）は
 状態数2000で打ち切る。画面に打ち切りを明示し、「問題なし」は調べた範囲だけの結果と表示する。
@@ -68,7 +68,7 @@ S1 hosted runtime確認（Public Studioのowner-only Version 1）はゲーム層
 | 旧Web Tester退役 | 二つの画面の維持をやめる | 移す機能の棚卸しと退役条件 | proposed / shared | 編集の作業単位の後 |
 | 点検の打ち切り緩和 | 数値が増え続ける物語でも全体を点検できる | 状態の同一視の方法を仕様で決める | proposed / assistant | 受入後 |
 | `docs/AUTHORING_GUIDE.md`の更新 | 旧Web Tester中心の手順を7工程へ合わせる | なし（行為と式は採用済み） | proposed / assistant | 約32KBの文書の全面更新になるため、別の作業単位で書く |
-| ゲーム層の再開 | 演出・Unity・Public Studio | 接続はmodel JSONとsession APIだけ（[Invariants](docs/INVARIANTS.md)） | frozen / user判断 | 再構築の区切りでuserが再開を決める |
+| ゲーム層の再開 | 演出・Public Studio・Sites adapter（Unity SDKの互換修正は上の表のとおり再開済み） | 接続はmodel JSONとsession APIだけ（[Invariants](docs/INVARIANTS.md)） | frozen / user判断 | 再構築の区切りでuserが再開を決める |
 | SP-DTYARN-001、G5〜G8、非blocking debt | 別のpurpose | 各専用packet | hold・proposed | [Roadmap](docs/plans/DEVELOPMENT_PLAN.md) |
 
 ## Product / authority boundary
@@ -81,6 +81,9 @@ S1 hosted runtime確認（Public Studioのowner-only Version 1）はゲーム層
 ## 再開手順
 
 `AGENTS.md` → `docs/REPO_LOCAL_RULES.md`（2026-11-22に1ファイルへ整理。`docs/ai/`は廃止）→ この文書 → [SP-PIPE-001](docs/specs/pipeline-workflow.md)（工程の全体）→ 作業する工程の仕様。
+
+`main`はStudioの前提入力・聞き込みクエスト（旧`studio-premise-input-draft`）とUnity SDKの互換修正（旧`unity-playback-compatibility`）を両方含む。
+別端末に`studio-premise-input-draft`の作業が残っている時は、そのブランチで`git pull --ff-only`してから続ける（`main`と同じcommitまで進む）。
 
 ```powershell
 git switch main

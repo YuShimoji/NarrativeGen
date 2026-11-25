@@ -16,8 +16,11 @@ namespace NarrativeGen
         public List<string> Inventory { get; set; } = new();
         public Dictionary<string, Entity> Events { get; set; } = new(StringComparer.OrdinalIgnoreCase);
         public double Time { get; set; }
+        internal NarrativeModel? Model { get; set; }
 
-        public static EvaluationContext FromSession(Session session)
+        public static EvaluationContext FromSession(Session session) => FromSession(session, null);
+
+        internal static EvaluationContext FromSession(Session session, NarrativeModel? model)
         {
             return new EvaluationContext
             {
@@ -27,6 +30,7 @@ namespace NarrativeGen
                 Inventory = session.Inventory,
                 Events = session.Events,
                 Time = session.Time,
+                Model = model,
             };
         }
     }
@@ -59,7 +63,7 @@ namespace NarrativeGen
         private static bool _initialized;
 
         private readonly Dictionary<string, IConditionEvaluator> _conditions = new();
-        private readonly Dictionary<string, IEffectApplicator> _effects = new();
+        private readonly Dictionary<string, Func<Effect, Session, NarrativeModel?, Session>> _effects = new();
 
         public static InferenceRegistry Instance => _instance ??= new InferenceRegistry();
 
@@ -70,7 +74,7 @@ namespace NarrativeGen
 
         public void RegisterEffect(IEffectApplicator applicator)
         {
-            _effects[applicator.Type] = applicator;
+            _effects[applicator.Type] = (effect, session, _) => applicator.Apply(effect, session);
         }
 
         public bool EvaluateCondition(Condition condition, EvaluationContext context)
@@ -80,10 +84,12 @@ namespace NarrativeGen
             return false;
         }
 
-        public Session ApplyEffect(Effect effect, Session session)
+        public Session ApplyEffect(Effect effect, Session session) => ApplyEffect(effect, session, null);
+
+        internal Session ApplyEffect(Effect effect, Session session, NarrativeModel? model)
         {
-            if (_effects.TryGetValue(effect.Type, out var applicator))
-                return applicator.Apply(effect, session);
+            if (_effects.TryGetValue(effect.Type, out var apply))
+                return apply(effect, session, model);
             return session;
         }
 
@@ -101,6 +107,7 @@ namespace NarrativeGen
             reg.RegisterCondition(new VariableEvaluator());
             reg.RegisterCondition(new HasItemEvaluator());
             reg.RegisterCondition(new HasEventEvaluator());
+            reg.RegisterCondition(new KnowledgeRuleEvaluator());
             reg.RegisterCondition(new TimeWindowEvaluator());
             reg.RegisterCondition(new AndEvaluator());
             reg.RegisterCondition(new OrEvaluator());
@@ -114,6 +121,8 @@ namespace NarrativeGen
             reg.RegisterEffect(new RemoveItemApplicator());
             reg.RegisterEffect(new GotoApplicator());
             reg.RegisterEffect(new CreateEventApplicator());
+            reg._effects["perceiveEntity"] = (effect, session, model) =>
+                CharacterKnowledge.Perceive((PerceiveEntityEffect)effect, session, model);
         }
     }
 
@@ -156,29 +165,48 @@ namespace NarrativeGen
         {
             var vc = (VariableCondition)condition;
             ctx.Variables.TryGetValue(vc.Key, out var raw);
-            if (raw is double numVal && vc.Value is double targetNum)
+            var value = raw ?? string.Empty;
+            var expected = vc.Value;
+            if (RuntimeNumber.TryRead(value, out var actualNumber) &&
+                RuntimeNumber.TryRead(expected, out var expectedNumber))
             {
                 return vc.Op switch
                 {
-                    "==" => Math.Abs(numVal - targetNum) < 1e-9,
-                    "!=" => Math.Abs(numVal - targetNum) >= 1e-9,
-                    ">=" => numVal >= targetNum,
-                    "<=" => numVal <= targetNum,
-                    ">" => numVal > targetNum,
-                    "<" => numVal < targetNum,
+                    "==" => actualNumber == expectedNumber,
+                    "!=" => actualNumber != expectedNumber,
+                    ">=" => actualNumber >= expectedNumber,
+                    "<=" => actualNumber <= expectedNumber,
+                    ">" => actualNumber > expectedNumber,
+                    "<" => actualNumber < expectedNumber,
+                    "!contains" => true,
                     _ => false,
                 };
             }
-            var strVal = raw?.ToString() ?? string.Empty;
-            var strTarget = vc.Value?.ToString() ?? string.Empty;
+
+            bool contains = value is string text && expected is string query && text.Contains(query);
             return vc.Op switch
             {
-                "==" => string.Equals(strVal, strTarget, StringComparison.Ordinal),
-                "!=" => !string.Equals(strVal, strTarget, StringComparison.Ordinal),
-                "contains" => strVal.Contains(strTarget),
-                "!contains" => !strVal.Contains(strTarget),
+                "==" => Equals(value, expected),
+                "!=" => !Equals(value, expected),
+                "contains" => contains,
+                "!contains" => !contains,
                 _ => false,
             };
+        }
+    }
+
+    internal static class RuntimeNumber
+    {
+        public static bool TryRead(object? value, out double number)
+        {
+            if (value is byte or sbyte or short or ushort or int or uint or long or ulong or float or double or decimal)
+            {
+                number = Convert.ToDouble(value);
+                return true;
+            }
+
+            number = 0;
+            return false;
         }
     }
 
@@ -287,7 +315,8 @@ namespace NarrativeGen
         {
             var mv = (ModifyVariableEffect)effect;
             var variables = new Dictionary<string, object>(session.Variables);
-            var cur = variables.ContainsKey(mv.Key) && variables[mv.Key] is double d ? d : 0.0;
+            variables.TryGetValue(mv.Key, out var value);
+            RuntimeNumber.TryRead(value, out var cur);
             double result = mv.Op switch
             {
                 "+" => cur + mv.Value,
