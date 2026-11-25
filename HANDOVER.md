@@ -22,7 +22,7 @@
 | Studio（主画面） | 実行（本文＋判断の列＋道筋）、点検、その場で編集（範囲は[SP-STUDIO-001](docs/specs/studio-rebuild.md) 4節）。`models/`の物語は「保存」で元のJSONへ書き戻し。`models/generated/`の物語は保存の代わりに「写して育てる」で`models/examples/`へ写す。小さい数値は有効3桁で表示。幅1440px・768pxで確認（2026-11-22、生成した物語の実行画面と蓋然の欄） | `npm run dev:studio` → `http://127.0.0.1:5185/`、編集関数の試験は`npm test -w @narrativegen/studio`（7件） |
 | エンジンの判断の記録 | `packages/engine-ts/src/trace.ts`（`traceStart`・`traceStep`・`checkModel`ほか）。読み取り専用で意味論は変えない | `npm run test:engine`（29ファイル・375件、2026-11-23） |
 | 旧Web Tester | 編集・グラフ・export等。置き換えまで残し、新機能は足さない | `npm run dev`（port 5173が他projectと衝突する時は下の注意） |
-| サンプル | 「閉館前の返却箱」は鍵の本数の違和感から生まれる二択と結末を比べられる。「搬入口の荷箱」は、同じ二つの証言を聞く前後で三人の反応を比べ、片方の証言者の正確さを変えて試せる | Studioの物語選択。「見本場面｜証言への反応を比べる…」で荷箱を開く。[見本の仕様](docs/specs/premise-driven-story.md#3-試作の契約) |
+| サンプル | 「閉館前の返却箱」は鍵の本数から生まれる二択と結末を比べられる。「舞台の暗転」と「搬入口の荷箱」は、三人が同じ証言を聞く前後の実測との差と違和感を比べられる | Studioの物語選択。「見本場面｜証言への反応を比べる…」で暗転を開く。[見本の仕様](docs/specs/premise-driven-story.md#3-試作の契約) |
 | ゲーム層（凍結） | Play演出・BGM、Unity SDK、Public Studio、Sites adapter。再構築中は変更しない | 再開は別の作業単位 |
 
 点検の既知の限界: 数値が増え続ける物語（`full_integration`・`inventory_test`・`trading`・`tutorial`など8件）は

@@ -73,8 +73,13 @@ button { font: inherit; color: inherit; }
 
 .testimony-back { margin-left: auto; color: var(--accent); }
 .testimony-scene { max-width: 960px; }
+.testimony-examples { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 16px; }
+.testimony-examples a { color: var(--accent); }
+.testimony-examples a[aria-current="page"] { color: var(--text); font-weight: 600; text-decoration-thickness: 2px; }
 .testimony-scene h1 { margin: 0; font-size: 26px; }
 .testimony-scene h2 { margin: 0; font-size: 17px; }
+.testimony-measurement { margin-block: 12px; font-variant-numeric: tabular-nums; }
+.testimony-measurement strong { font-size: 18px; }
 .testimony-accounts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
 .testimony-accounts p { margin-block: 6px; }
 .testimony-accounts fieldset { min-inline-size: 0; border: 0; margin: 0; padding: 0; }
@@ -83,7 +88,8 @@ button { font: inherit; color: inherit; }
 .testimony-accounts input { margin: 0; accent-color: var(--accent); }
 .testimony-results table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-block: 8px; font-variant-numeric: tabular-nums; }
 .testimony-results :is(th, td) { border-bottom: 1px solid var(--line); padding: 8px; text-align: start; vertical-align: top; }
-.testimony-results th:first-child { width: 26%; }
+.testimony-results th:first-child { width: 22%; }
+.testimony-results th .sub { display: block; font-weight: normal; }
 .testimony-results td .sub { margin: 0; }
 .testimony-range { white-space: nowrap; }
 @media (max-width: 640px) {

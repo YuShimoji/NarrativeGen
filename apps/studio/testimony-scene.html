@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>搬入口の荷箱 | NarrativeGen Studio</title>
+    <title>証言への反応を比べる | NarrativeGen Studio</title>
     <link rel="stylesheet" href="./src/styles.css" />
   </head>
   <body>
@@ -12,35 +12,27 @@
       <a class="testimony-back" href="./">物語の実行に戻る</a>
     </header>
     <main class="testimony-scene">
-      <h1>搬入口の荷箱</h1>
-      <p>搬入口で荷箱を受け取る。三人が二つの証言を聞き、同じ荷箱を見直す。実際の重さは <strong>12 kg</strong>。</p>
-      <section class="testimony-accounts" aria-label="二人の証言">
-        <article class="card">
-          <h2>記録係</h2>
-          <p>「作業票では、10 kgのはずです」</p>
-          <p class="sub">知識の正確さ 0.90</p>
-        </article>
-        <article class="card">
-          <h2>目測した作業員</h2>
-          <p>「見た感じ、12 kgくらいでしょう」</p>
-          <form id="testimony-form">
-            <fieldset>
-              <legend>知識の正確さを切り替える</legend>
-              <label><input type="radio" name="accuracy" value="0.20" checked /> 0.20（低い）</label>
-              <label><input type="radio" name="accuracy" value="0.90" /> 0.90（記録係と同じ）</label>
-            </fieldset>
-          </form>
-        </article>
-      </section>
+      <nav class="testimony-examples" aria-label="比較する見本">
+        <a href="./testimony-scene.html" data-scene="stage">舞台の暗転</a>
+        <a href="./testimony-scene.html?scene=crate" data-scene="crate">搬入口の荷箱</a>
+      </nav>
+      <h1 id="testimony-title"></h1>
+      <p id="testimony-intro"></p>
+      <p class="testimony-measurement"><strong id="testimony-actual"></strong> <span id="testimony-measurement-source" class="sub"></span></p>
+      <section id="testimony-accounts" class="testimony-accounts" aria-label="二人の証言"></section>
       <section class="card testimony-results" aria-labelledby="testimony-results-title">
         <h2 id="testimony-results-title">聞き手三人の反応</h2>
         <table>
           <thead>
-            <tr><th scope="col">聞き手</th><th scope="col">聞く前</th><th scope="col">二人から聞いた後</th></tr>
+            <tr>
+              <th scope="col">聞き手</th>
+              <th scope="col">実測との差 <span class="sub">前 → 後</span></th>
+              <th scope="col">違和感 <span class="sub">前 → 後</span></th>
+            </tr>
           </thead>
           <tbody id="testimony-reactions" aria-live="polite"></tbody>
         </table>
-        <p class="sub">聞いた後の見込みは、本人と二人の見立てを、それぞれの知識の正確さで重み付けして求めます。許容幅は全員、見込みの±10％です。</p>
+        <p class="sub">聞いた後の見込みと許容幅は、本人と二人の値を知識の正確さで重み付けして求めます。実測値が本人の許容範囲を外れると、違和感が生じます。</p>
       </section>
     </main>
     <script type="module" src="./src/testimony-scene.js"></script>
