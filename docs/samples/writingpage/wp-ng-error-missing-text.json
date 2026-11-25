@@ -1,0 +1,5 @@
+{
+  "contractVersion": "wp-ng-0.2",
+  "sourceDocumentId": "sample-missing",
+  "nodes": [{ "nodeId": "a", "speaker": "text が無い" }]
+}

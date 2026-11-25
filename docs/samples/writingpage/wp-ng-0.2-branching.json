@@ -1,0 +1,22 @@
+{
+  "contractVersion": "wp-ng-0.2",
+  "sourceDocumentId": "sample-branching",
+  "nodes": [
+    {
+      "nodeId": "受付",
+      "speaker": "受付係",
+      "text": "ここは試験用の受付です。\n\n用件を選んでください。",
+      "choices": [
+        { "text": "書類を出す", "target": "書類" },
+        { "text": "帰る", "target": "終わり" }
+      ]
+    },
+    {
+      "nodeId": "書類",
+      "speaker": "受付係",
+      "text": "|書類《しょるい》を受け取りました。",
+      "choices": [{ "text": "帰る", "target": "終わり" }]
+    },
+    { "nodeId": "終わり", "text": "試験の場面はここで終わります。" }
+  ]
+}

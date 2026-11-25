@@ -309,10 +309,10 @@
     "id": "SP-WP-001",
     "title": "WritingPage I/O Contract",
     "status": "partial",
-    "pct": 90,
+    "pct": 80,
     "cat": "system",
     "file": "docs/specs/writingpage-io-contract.md",
-    "summary": "Pre-implementation contract for NarrativeGen <-> WritingPage handoff. Gate decision log 2026-04-09: No-Go (external stability, agreement, samples pending). Implementation remains blocked until gate passes."
+    "summary": "NarrativeGen <-> WritingPage hand-off envelope. 2026-11-26 gate re-judged Go on the user request; 0.2 adds optional speaker/choices. engine-ts modelFromWritingPage/modelToWritingPage with SP-WP-001 error rules and samples (docs/samples/writingpage); WritingPage NarrativeScreenBridge converts chapters <-> envelope and screen frames -> Reader Markdown. WritingPage UI wiring remains."
   },
   {
     "id": "SP-HIST-001",
@@ -354,9 +354,9 @@
     "id": "SP-SCREEN-001",
     "title": "Screen Frame",
     "status": "partial",
-    "pct": 60,
+    "pct": 80,
     "cat": "system",
     "file": "docs/specs/screen-frame.md",
-    "summary": "Renderer-neutral per-step screen frame (layout, header, place/speaker, paragraphs with topic links, topic/travel choice groups, journal notes, ending). TS reference buildScreenFrame/playScreenFrames and C# ScreenFrameBuilder produce identical JSON; golden route files and Studio inquiry-window comparison guard it. Consumers: Studio, UnityChatNovelGame chat, WritingPage (via SP-WP-001 0.2)."
+    "summary": "Renderer-neutral per-step screen frame. TS buildScreenFrame/playScreenFrames and C# ScreenFrameBuilder produce identical JSON (golden route files, Studio inquiry-window comparison). UnityChatNovelGame chat draws frames (NarrativeGenChatScreen); WritingPage renders them as zw-dialog Reader Markdown. Human visual review of the Unity chat remains."
   }
 ]

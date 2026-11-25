@@ -154,3 +154,5 @@ export type { StoryPremise, PremiseBelief, PremiseWording, PatternId, StoryActio
 
 export { buildScreenFrame, playScreenFrames, screenChoiceText, screenLayout, screenParagraphs, splitSpeaker, SCREEN_FRAME_FORMAT, SCREEN_FRAME_VERSION } from './screen-frame.js'
 export type { ScreenFrame, ScreenFrameOptions, ScreenLayout, ScreenSpan, ScreenChoice, ScreenChoiceGroup, ScreenNote, ScreenHeader, ChoiceRole } from './screen-frame.js'
+export { WRITINGPAGE_CONTRACT_VERSION, WritingPageContractError, parseContractVersion, validateWritingPageInput, modelFromWritingPage, modelToWritingPage } from './writingpage-contract.js'
+export type { WritingPageChoice, WritingPageNode, WritingPageInput, WritingPageOutput } from './writingpage-contract.js'

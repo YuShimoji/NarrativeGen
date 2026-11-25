@@ -1,0 +1,8 @@
+{
+  "contractVersion": "wp-ng-0.2",
+  "sourceDocumentId": "sample-duplicate",
+  "nodes": [
+    { "nodeId": "a", "text": "一つ目" },
+    { "nodeId": "a", "text": "同じ nodeId は後勝ちにせず止める。" }
+  ]
+}

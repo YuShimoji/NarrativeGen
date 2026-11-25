@@ -1,0 +1,7 @@
+{
+  "contractVersion": "wp-ng-0.1",
+  "sourceDocumentId": "sample-text-only",
+  "nodes": [
+    { "nodeId": "page-1", "text": "0.1の封筒は本文だけを持ちます。", "updatedAt": "2026-11-26T00:00:00Z" }
+  ]
+}

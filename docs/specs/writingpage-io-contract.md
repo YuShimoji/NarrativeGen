@@ -1,7 +1,7 @@
 # WritingPage I/O Contract (Preparation Spec)
 
-Status: draft-ready（実装は No-Go。ゲート判定ログ 2026-04-09 参照）  
-Date: 2026-04-08（ゲート更新: 2026-04-09）
+Status: implemented 0.2（2026-11-26のuserの依頼でゲートを再判定し実装。下のゲート判定ログ）
+Date: 2026-04-08（ゲート更新: 2026-04-09、2026-11-26）
 
 ## 目的
 
@@ -9,19 +9,23 @@ WritingPage 連携を実装する前に、最小契約と非互換時挙動を�
 
 ## スコープ
 
-- 本書は「契約定義」のみ。実装は含まない。
-- NarrativeGen <-> WritingPage のテキスト受け渡しを対象とする。
+- NarrativeGen <-> WritingPage のテキスト受け渡しを対象とする。画面の見せ方は[SP-SCREEN-001 画面フレーム](screen-frame.md)が決める。
+- 実装: NarrativeGen `packages/engine-ts/src/writingpage-contract.ts`（`modelFromWritingPage`・`modelToWritingPage`・`validateWritingPageInput`）。
+  WritingPage `js/modules/narrative/NarrativeScreenBridge.js`（`projectToContract`・`contractToProject`・`framesToMarkdown`）。
+- 受け渡しサンプル: [docs/samples/writingpage/](../samples/writingpage/README.md)（正常2・異常3）。
 
 ## 最小 I/O 契約
 
 ### Input (WritingPage -> NarrativeGen)
 
-- `contractVersion` (string, required): 例 `wp-ng-0.1`
+- `contractVersion` (string, required): 現行 `wp-ng-0.2`（`wp-ng-0.1` も受け付ける）
 - `sourceDocumentId` (string, required)
 - `nodes` (array, required)
   - `nodeId` (string, required)
   - `text` (string, required)
   - `updatedAt` (string, optional, ISO-8601)
+  - `speaker` (string, optional, 0.2): 場面の話者。WritingPageでは`:::zw-dialog{speaker}`
+  - `choices` (array, optional, 0.2): `{text, target}`。`target`は行き先のnodeId。WritingPageでは`[text](chapter://章)`
 
 ### Output (NarrativeGen -> WritingPage)
 
@@ -31,6 +35,14 @@ WritingPage 連携を実装する前に、最小契約と非互換時挙動を�
   - `nodeId` (string, required)
   - `text` (string, required)
   - `speaker` (string, optional)
+  - `choices` (array, optional, 0.2): `{text, target}`。条件・効果は渡らない（警告を返す）
+
+## 本文と記法（0.2）
+
+- 先頭のnodeが開始場面。WritingPageでは表示中の章を章の順に並べ、非表示・下書きの章は渡さない（警告）。
+- nodeIdは章の`metadata.narrativegen.nodeId`、無ければ章名。選択肢のリンク先はWritingPageの章名照合（slug）で解決する。
+- 本文は空行で段落を分ける。WritingPageのルビ`{漢字|かんじ}`は`|漢字《かんじ》`に直して渡す（NarrativeGenの`{…}`記法と衝突させない）。傍点・wikilinkは表示文字だけ、装飾タグは外す（警告）。
+- NarrativeGenの記法（`{?flag:…}`、`[entity.prop]`など）が残る本文はWritingPageで記法のまま見えるため、書き出し時に警告を返す。
 
 ## versioning ルール
 
@@ -63,8 +75,9 @@ WritingPage 連携を実装する前に、最小契約と非互換時挙動を�
 | 判定日 | 項目1（2週間安定） | 項目2（双方合意） | 項目3（サンプル3件） | 項目4（SP-PLAY 確定） | 総合 |
 |--------|-------------------|-------------------|---------------------|----------------------|------|
 | 2026-04-09 | No（WritingPage 側の安定版タグ未確認・リポジトリ外） | No（合意記録なし） | No（サンプル未添付） | Yes（`play-media-bgm-ac.spec.js` + 検証表 Pass） | **No-Go** |
+| 2026-11-26 | Yes（形式を持つ`storage.js`・`TextboxDslParser.js`・`chapter-store.js`・`chapter-nav.js`の最終変更は2026-07-13以前、タグ`v0.3.15`） | userの依頼「この画面互換性は、WritingPageの実装とも互換性を持たせるよう包括的に整備してください」（2026-11-26） | Yes（`docs/samples/writingpage/` 正常2・異常3） | Yes（前回から変更なし） | **Go**（0.2を実装） |
 
-**次に見直す条件**: WritingPage のフォーマットがタグ付きリリースで 2 週間以上固定された旨が分かる資料があるとき。それまで実装は開始しない（`docs/USER_REQUEST_LEDGER.md` と整合）。
+WritingPageの画面へのUI接続（取り込み・書き出しのボタン）は未実装で、WritingPage側の別作業として扱う。
 
 ## 関連
 

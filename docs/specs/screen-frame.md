@@ -1,6 +1,6 @@
 # SP-SCREEN-001 画面フレーム
 
-Status: partial（契約・TS基準・C# SDK・Studio照合・Unityチャット表示は実装済み。WritingPage変換は[SP-WP-001](writingpage-io-contract.md)の0.2で扱う）
+Status: partial（契約・TS基準・C# SDK・Studio照合・Unityチャット表示・WritingPage変換は実装済み。Unityチャットの実画面と、WritingPage Reader本体での表示は人の確認待ち）
 Date: 2026-11-26
 
 ## 目的

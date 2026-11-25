@@ -1,0 +1,5 @@
+{
+  "contractVersion": "wp-ng-1.0",
+  "sourceDocumentId": "sample-major",
+  "nodes": [{ "nodeId": "a", "text": "major が違う封筒は取り込まない。" }]
+}
