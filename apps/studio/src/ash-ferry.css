@@ -1,0 +1,153 @@
+body.ferry-reading {
+  color-scheme: dark;
+  --bg: #181916;
+  --surface: #22231e;
+  --surface-2: #303129;
+  --line: #45473b;
+  --line-strong: #666451;
+  --text: #e9dfc9;
+  --text-2: #c5bba4;
+  --text-3: #a7a08c;
+  --radius: 2px;
+  color: var(--text);
+  background: radial-gradient(ellipse at 35% 18%, #34332a 0, #1e201c 48%, #141613 95%);
+}
+.ferry-reading .topbar {
+  padding-inline: max(20px, calc((100vw - 1104px) / 2));
+  background: #191c19;
+  border-bottom-color: #444536;
+}
+.ferry-reading .brand { color: #e0d5b9; font: 19px Georgia, var(--serif); }
+.ferry-reading .brand span { color: #c3ac84; }
+.ferry-reading .picker select, .ferry-reading .topbar button { font-size: 13px; }
+.ferry-reading .view-tab[aria-selected=true] { background: #c4ac7e; color: #201e17; }
+.ferry-reading #app { max-width: 1152px; padding: clamp(16px, 3vw, 38px) 24px 30px; }
+.ferry-window {
+  --brass: #c2a271;
+  --edge: #76664b;
+  --link: #a6c5d4;
+  --frame: #232620;
+  font-family: var(--serif);
+}
+.ferry-hero {
+  position: relative;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: clamp(195px, 20vw, 268px);
+  overflow: hidden;
+  isolation: isolate;
+  padding: clamp(22px, 3.5vw, 48px);
+  border: 1px solid var(--edge);
+  outline: 1px solid #141510;
+  outline-offset: -4px;
+  background: #49403c url('./ash-ferry-harbour.webp') center 56% / cover no-repeat;
+}
+.ferry-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, #171815bb, #27262055 39%, transparent 64%), linear-gradient(0deg, #151610b3 0%, transparent 66%);
+}
+.ferry-region {
+  display: flex; align-items: center; gap: .7em; margin: 0 0 .55em;
+  font-size: 14px; font-weight: 600; letter-spacing: .2em; color: #f3dfb6;
+}
+.ferry-region i { width: 7px; height: 7px; border: 1px solid #e6c791; transform: rotate(45deg); }
+.ferry-hero h1 {
+  font-size: clamp(32px, 4.3vw, 61px); font-weight: 500; line-height: 1.27;
+  letter-spacing: .08em; margin: 0; color: #fff2d9; text-shadow: 0 2px 8px #211a14;
+}
+.ferry-book {
+  display: inline-flex; align-items: center; gap: .65em; flex: none; cursor: pointer;
+  font: 14px var(--serif); color: #f1e4cb; padding: 10px 14px;
+  background: #211f19ec; border: 1px solid #bfa47a; box-shadow: inset 0 0 0 2px #25231c, inset 0 0 0 3px #74644c;
+}
+.ferry-book span { font: 13px Georgia, serif; border-left: 1px solid #70634c; padding-left: .65em; }
+.ferry-book i { display: inline-block; width: 13px; height: 15px; border: 1px solid currentColor; border-left: 3px double currentColor; transform: rotate(-8deg); }
+.ferry-frame {
+  background: var(--frame);
+  border: 1px solid var(--edge);
+  margin-top: 16px;
+  padding: 3px;
+  box-shadow: 0 6px 22px #0c0e0b55, inset 0 0 0 2px #171a15;
+}
+.ferry-bar {
+  display: flex; align-items: center; gap: 16px; padding: 8px clamp(16px, 2.2vw, 30px);
+  background: linear-gradient(90deg, #3a3b2f, #2d2f27);
+  border: 1px solid #5a5543; color: #decbab; font-size: 13px; letter-spacing: .16em;
+}
+.ferry-bar i { flex: 1; height: 1px; background: linear-gradient(90deg, #867254, #595442); }
+.ferry-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 28%); }
+.ferry-speech { padding: clamp(24px, 3.3vw, 45px); }
+.ferry-speaker { margin: 0 0 20px; font-size: clamp(22px, 2.1vw, 31px); font-weight: 500; line-height: 1.5; color: #f1dfbb; letter-spacing: .08em; }
+.ferry-prose { max-width: 44em; font-size: clamp(16px, 1.3vw, 18px); line-height: 2.05; color: #e4dfd0; overflow-wrap: anywhere; }
+.ferry-prose p { margin: 0 0 .95em; white-space: pre-line; }
+.ferry-prose p:last-child { margin-bottom: 0; }
+.ferry-word { cursor: pointer; border: 0; padding: 0; background: transparent; color: var(--link); font: inherit; text-decoration: underline; text-underline-offset: .21em; text-decoration-color: #79949e; }
+.ferry-menu { padding: 24px clamp(16px, 2.1vw, 28px); border-left: 1px solid #5c5746; background: #1f221d; }
+.ferry-group + .ferry-group { margin-top: 20px; }
+.ferry-group h3, .ferry-journal-caption { color: var(--brass); font-weight: 500; font-size: 13px; letter-spacing: .19em; }
+.ferry-group h3 { display: flex; align-items: center; gap: 12px; margin: 0 0 4px; }
+.ferry-group h3::after { content: ''; flex: 1; height: 1px; background: #514d3d; }
+.ferry-group ul { list-style: none; padding: 0; margin: 0; }
+.ferry-topic, .ferry-destination {
+  display: flex; gap: .65em; align-items: baseline; min-height: 39px; width: 100%;
+  border: 0; padding: 7px 4px; text-align: start; background: transparent; cursor: pointer; font: 16px/1.55 var(--serif);
+}
+.ferry-topic { color: var(--link); }
+.ferry-topic::before { content: '◆'; align-self: center; font-size: 7px; color: #88a8b6; }
+.ferry-topic.asked { color: #b6b8ae; }
+.ferry-topic.asked::before { content: '◇'; }
+.ferry-destination { color: #dfd0b5; }
+.ferry-destination::before { content: '›'; font: 20px/1 Georgia, serif; color: var(--brass); }
+.ferry-window button:hover { color: #ffedc8; }
+.ferry-topic:hover, .ferry-destination:hover { background: #34362b; }
+.ferry-window button:focus-visible, .ferry-reading .topbar :focus-visible { outline: 2px solid #e0bd7e; outline-offset: 2px; }
+.ferry-speaker:focus { outline: none; }
+.ferry-speaker { scroll-margin-top: 105px; }
+.ferry-ink { color: #c4b694; margin: 18px 0 0; font-size: 13px; }
+.ferry-ink i { margin-right: 4px; }
+.ferry-tools { display: flex; justify-content: end; margin-top: 8px; }
+.ferry-tools button { color: #bbb6a5; border: 0; background: none; padding: 8px 2px; cursor: pointer; font: 12px var(--sans); }
+.ferry-tools span { margin-left: .3em; }
+#ferry-journal {
+  color-scheme: light; width: min(38rem, calc(100vw - 32px)); max-height: 78vh; padding: clamp(20px, 4vw, 40px);
+  border: 4px double #766449; background: linear-gradient(115deg, #d7c398, #eee0bd 40%, #dfcda5); color: #302b22;
+  box-shadow: 0 18px 60px #090b08a8; font-family: var(--serif); line-height: 1.8;
+}
+#ferry-journal::backdrop { background: #10120ed9; }
+#ferry-journal header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #958361; padding-bottom: 10px; }
+#ferry-journal h2, #ferry-journal h3, #ferry-journal p { margin: 0; }
+#ferry-journal h2 { font-size: 25px; font-weight: 500; }
+#ferry-journal button { background: transparent; border: 1px solid #817252; padding: 4px 13px; cursor: pointer; color: #302b22; }
+#ferry-journal button:focus-visible { outline-color: #675333; }
+#ferry-journal .ferry-journal-caption { color: #6f5533; margin: 16px 0 2px; }
+#ferry-journal h3 { font-size: 19px; margin-bottom: 5px; }
+#ferry-journal ol { list-style: none; padding: 0; margin: 1em 0 0; }
+#ferry-journal li { padding: .8em 0; border-top: 1px solid #a9926b; }
+#ferry-journal li b { color: #634827; font-size: 14px; }
+@media (max-width: 720px) {
+  .ferry-reading #app { padding: 12px 10px 20px; }
+  .ferry-reading .topbar { flex-wrap: wrap; gap: 6px; padding: 8px 12px; }
+  .ferry-reading .brand { margin-right: auto; }
+  .ferry-reading .picker { flex: 1 1 55%; }
+  .ferry-reading .picker select { width: 100%; min-width: 0; }
+  .ferry-reading .views { margin-left: auto; }
+  .ferry-hero { padding: 19px; min-height: 184px; }
+  .ferry-body { grid-template-columns: 1fr; }
+  .ferry-speech { padding: 19px; }
+  .ferry-menu { border-left: 0; border-top: 1px solid #5c5746; padding: 16px 19px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  .ferry-group + .ferry-group { margin-top: 0; }
+  .ferry-topic, .ferry-destination { min-height: 44px; }
+}
+@media (max-width: 480px) {
+  .ferry-hero { flex-wrap: wrap; align-content: end; gap: 10px; background-position: 62% center; }
+  .ferry-book { padding: 8px 11px; font-size: 12px; }
+  .ferry-titles { width: 100%; }
+  .ferry-frame { margin-top: 10px; }
+  .ferry-speaker { margin-bottom: 10px; }
+  .ferry-menu { gap: 12px; }
+}

@@ -11,6 +11,7 @@ import {
 } from './format.js'
 import * as edit from './edit.js'
 import { downloadJson, takeTrial } from './studio-files.js'
+import { ferryWindow, isFerrySample } from './ash-ferry.js'
 
 // models/generated holds stories built from models/premises (SP-PREMISE-001); they open like any other story
 const samples = {
@@ -21,6 +22,7 @@ const samples = {
 const premises = import.meta.glob('../../../models/premises/*.json', { import: 'default' })
 const premiseTitles = import.meta.glob('../../../models/premises/*.json', { import: 'title', eager: true })
 const exampleTitles = {
+  'ash-ferry': '七人目の渡し賃（聞き込みクエスト）',
   branching_flags: 'フラグで分かれる扉',
   event_test: 'アリスを助ける',
   full_integration: '薬草売りの調査',
@@ -73,6 +75,7 @@ const state = {
   open: new Set(), // which <details> in the editor stay open across re-renders
   // for a story built from a premise: { premise, derivation, baseline, fresh } (SP-PREMISE-001 4.1)
   story: null,
+  ferryReading: true,
 }
 
 // ---------------------------------------------------------------------------
@@ -108,6 +111,11 @@ async function openSample(path) {
   openModel(structuredClone(model), name, { kind: 'sample', file: path.replace(/^(\.\.\/)+/, '') }, await storyFor(path, model))
   picker.value = path
   pref('sample', path)
+  const url = new URL(location.href)
+  if (url.searchParams.has('story') && url.searchParams.get('story') !== name) {
+    url.searchParams.set('story', name)
+    history.replaceState(history.state, '', url)
+  }
 }
 
 /** Key-order independent JSON, to tell whether a model still equals what its premise builds. */
@@ -144,9 +152,10 @@ function openModel(model, name, source, story = null) {
   state.error = ''
   state.story = story
   state.source = source ?? null
+  state.ferryReading = true
   state.dirty = new Set()
   state.notice = ''
-  if (source?.kind === 'file') state.editing = false
+  if (source?.kind === 'file' || isFerrySample(source)) state.editing = false
   state.name = name
   state.model = model
   state.names = createNames(model)
@@ -548,7 +557,12 @@ function timelineHtml() {
 function runHtml() {
   const step = current()
   if (!step) return ''
-  return `<div class="run">
+  const ferry = isFerrySample(state.source)
+  if (ferry && state.ferryReading && !state.editing) {
+    return ferryWindow(state.model, step, state.steps.slice(0, state.cursor + 1))
+  }
+  const back = ferry && !state.editing ? '<button type="button" class="btn" data-ferry="read">クエストの会話窓に戻る</button>' : ''
+  return back + `<div class="run">
     <div class="run-main">${state.editing ? editorHtml(step) : storyHtml(step)}<div id="timeline-wrap">${timelineHtml()}</div></div>
     ${judgmentHtml(step)}
   </div>`
@@ -1278,6 +1292,7 @@ function checkHtml() {
 // render and events
 
 function render() {
+  document.body.classList.toggle('ferry-reading', isFerrySample(state.source) && state.ferryReading && !state.editing && state.view === 'run')
   if (state.error && !state.steps.length) {
     app.innerHTML = `<p class="error">${esc(state.error)}</p>`
     return
@@ -1315,9 +1330,24 @@ app.addEventListener('toggle', (event) => {
 app.addEventListener('click', (event) => {
   const target = event.target.closest('button')
   if (!target) return
+  if (target.dataset.ferry) {
+    if (target.dataset.ferry === 'journal') return document.getElementById('ferry-journal').showModal()
+    state.ferryReading = target.dataset.ferry === 'read'
+    render()
+    app.querySelector(state.ferryReading ? '.ferry-speaker' : '[data-ferry="read"]')?.focus()
+    return
+  }
   if (target.dataset.act) onEditAction(target)
-  else if (target.dataset.choice) choose(target.dataset.choice)
-  else if (target.dataset.step) {
+  else if (target.dataset.choice) {
+    choose(target.dataset.choice)
+    const speaker = app.querySelector('.ferry-speaker')
+    if (speaker) {
+      speaker.focus({ preventScroll: true })
+      if (speaker.getBoundingClientRect().top < document.querySelector('.topbar').getBoundingClientRect().bottom) {
+        speaker.scrollIntoView({ block: 'start' })
+      }
+    }
+  } else if (target.dataset.step) {
     state.cursor = Number(target.dataset.step)
     render()
   } else if (target.dataset.replay) {
@@ -1425,7 +1455,10 @@ async function init() {
   const savedView = pref('view')
   if (savedView === 'check' || savedView === 'run') state.view = savedView
   const savedSample = pref('sample')
-  const initial = sampleList.find((s) => s.path === savedSample) ?? sampleList.find((s) => s.name === DEFAULT_SAMPLE) ?? sampleList[0]
+  const requestedName = new URLSearchParams(location.search).get('story')
+  const requested = sampleList.find((s) => s.name === requestedName)
+  const initial = requested ?? sampleList.find((s) => s.path === savedSample) ?? sampleList.find((s) => s.name === DEFAULT_SAMPLE) ?? sampleList[0]
+  if (requested) state.view = 'run'
   const resume = takeResume()
   await openSample(initial.path)
   pickerValue = picker.value

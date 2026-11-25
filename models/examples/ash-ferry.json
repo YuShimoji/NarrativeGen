@@ -1,0 +1,481 @@
+{
+  "modelType": "adventure-playthrough",
+  "startNode": "arrival",
+  "variables": {
+    "依頼名": "七人目の渡し賃",
+    "依頼": "七枚目の銅貨は、誰の渡し賃だったのか。日暮れまでに聞き出し、検札小屋のイサに報告する。"
+  },
+  "entities": {
+    "夜舟": {
+      "id": "夜舟",
+      "name": "昨夜の渡し舟",
+      "properties": {
+        "灯の数": { "key": "灯の数", "type": "number", "defaultValue": 2 }
+      }
+    }
+  },
+  "characters": {
+    "nagi": {
+      "id": "nagi",
+      "name": "灯台守のナギ",
+      "knowledgeProfiles": [
+        { "domain": "灯火信号", "accuracy": 1, "tolerance": 0.1 }
+      ]
+    }
+  },
+  "nodes": {
+    "arrival": {
+      "id": "arrival",
+      "speaker": "検札小屋｜帳付けのイサ",
+      "text": "イサは帳面の上に銅貨を並べた。六枚までは指ではじき、最後の一枚だけ爪で裏返した。\n\n「昨夜の客は六人。渡し賃は七人分。日が沈むと、次の舟が出る。この一枚をどの欄に入れるか、それまでに決めたい」\n\n「七人目の客を捜してくれないか。下の桟橋に舟番がいる。岬の灯台からも舟は見えるよ」",
+      "choices": [
+        { "id": "fare", "text": "七人目の客", "target": "account" },
+        {
+          "id": "register",
+          "text": "港の帳面",
+          "target": "terms",
+          "effects": [
+            { "type": "createEvent", "id": "registry", "name": "名を港の帳面に入れると冬の灯祭で読み上げられる。窯の名義替えには銀貨三枚が要る。灯明代なら名も税も残らない。" }
+          ]
+        },
+        { "id": "go_ferry", "text": "下の桟橋", "target": "ferry" },
+        { "id": "go_kiln", "text": "貝殻窯", "target": "kiln" },
+        { "id": "go_watch", "text": "岬の灯台", "target": "watch" }
+      ]
+    },
+    "office": {
+      "id": "office",
+      "speaker": "検札小屋｜帳付けのイサ",
+      "text": "イサは七枚目の銅貨のために、一行ぶん余白を残している。\n\n「どうだった？　渡った人の話なら、腰を下ろして聞こう。まだ訊きたいことがあるなら、日が落ちるまではここにいるよ」",
+      "choices": [
+        { "id": "fare", "text": "七人目の客", "target": "account" },
+        {
+          "id": "register",
+          "text": "港の帳面",
+          "target": "terms",
+          "effects": [
+            { "type": "createEvent", "id": "registry", "name": "名を港の帳面に入れると冬の灯祭で読み上げられる。窯の名義替えには銀貨三枚が要る。灯明代なら名も税も残らない。" }
+          ]
+        },
+        {
+          "id": "report",
+          "text": "七枚目の銭の納め先",
+          "target": "reckoning",
+          "conditions": [
+            { "type": "hasEvent", "key": "daughters_word", "value": true }
+          ]
+        },
+        { "id": "go_ferry", "text": "下の桟橋", "target": "ferry" },
+        { "id": "go_kiln", "text": "貝殻窯", "target": "kiln" },
+        { "id": "go_watch", "text": "岬の灯台", "target": "watch" }
+      ]
+    },
+    "account": {
+      "id": "account",
+      "speaker": "検札小屋｜帳付けのイサ",
+      "text": "「舟に乗ったのは網を繕う連中が五人、それに貝殻窯の娘が一人。ここに六人とも拇印がある。誰かが二度払ったなら返したいんだ」\n\n七枚目の縁に、糸の焼けついた跡がある。",
+      "choices": [
+        {
+          "id": "register",
+          "text": "港の帳面",
+          "target": "terms",
+          "effects": [
+            { "type": "createEvent", "id": "registry", "name": "名を港の帳面に入れると冬の灯祭で読み上げられる。窯の名義替えには銀貨三枚が要る。灯明代なら名も税も残らない。" }
+          ]
+        },
+        {
+          "id": "report",
+          "text": "七枚目の銭の納め先",
+          "target": "reckoning",
+          "conditions": [
+            { "type": "hasEvent", "key": "daughters_word", "value": true }
+          ]
+        },
+        { "id": "go_ferry", "text": "下の桟橋", "target": "ferry" },
+        { "id": "go_kiln", "text": "貝殻窯", "target": "kiln" },
+        { "id": "go_watch", "text": "岬の灯台", "target": "watch" }
+      ]
+    },
+    "terms": {
+      "id": "terms",
+      "speaker": "検札小屋｜帳付けのイサ",
+      "text": "「死んだ人に席をひとつ買うことがある。名を港の帳面に入れれば、冬の灯祭でその人の名を呼ぶ。職人なら同時に名義替えだ。跡を継ぐ窯には銀貨三枚の請求が行く」\n\n「銅貨を灯明代にすることもできるよ。そのときは読み上げる名がない」",
+      "choices": [
+        { "id": "fare", "text": "七人目の客", "target": "account" },
+        {
+          "id": "report",
+          "text": "七枚目の銭の納め先",
+          "target": "reckoning",
+          "conditions": [
+            { "type": "hasEvent", "key": "daughters_word", "value": true }
+          ]
+        },
+        { "id": "go_ferry", "text": "下の桟橋", "target": "ferry" },
+        { "id": "go_kiln", "text": "貝殻窯", "target": "kiln" },
+        { "id": "go_watch", "text": "岬の灯台", "target": "watch" }
+      ]
+    },
+    "ferry": {
+      "id": "ferry",
+      "speaker": "下の桟橋｜舟番のロウ",
+      "text": "ロウは舟板から灰を掃き落としている。岸に近い席だけ、丸く灰が残っていない。\n\n「七人目の客？　昨日、そこの段で俺の手を借りて下りたのは六人だ。荷物にまで手を差し出すほど、お上品な渡しじゃないよ」",
+      "choices": [
+        {
+          "id": "fare",
+          "text": "七人目の客",
+          "target": "cord",
+          "effects": [
+            { "type": "createEvent", "id": "blue_cord", "name": "ロウは七枚目の銭に青い結び糸を見た。貝殻窯で壺の口を縛る糸だ。" }
+          ]
+        },
+        {
+          "id": "lamps",
+          "text": "二つの灯",
+          "target": "boat_wake",
+          "conditions": [
+            { "type": "hasEvent", "key": "wake_lights", "value": true }
+          ]
+        },
+        { "id": "go_office", "text": "検札小屋", "target": "office" },
+        { "id": "go_kiln", "text": "貝殻窯", "target": "kiln" },
+        { "id": "go_watch", "text": "岬の灯台", "target": "watch" }
+      ]
+    },
+    "cord": {
+      "id": "cord",
+      "speaker": "下の桟橋｜舟番のロウ",
+      "text": "「七枚目は、セナが歯で青い結び糸をちぎって置いたやつだ。銭は壺の首にくくってあった。あの子は自分の席に立ったまま、壺の方を座らせた」\n\nロウは掃く手を止める。「あの糸なら貝殻窯で焼き手に訊きな。俺の口で荷物とは呼びたくない」",
+      "choices": [
+        {
+          "id": "lamps",
+          "text": "二つの灯",
+          "target": "boat_wake",
+          "conditions": [
+            { "type": "hasEvent", "key": "wake_lights", "value": true }
+          ]
+        },
+        { "id": "go_office", "text": "検札小屋", "target": "office" },
+        { "id": "go_kiln", "text": "貝殻窯", "target": "kiln" },
+        { "id": "go_watch", "text": "岬の灯台", "target": "watch" }
+      ]
+    },
+    "boat_wake": {
+      "id": "boat_wake",
+      "speaker": "下の桟橋｜舟番のロウ",
+      "text": "「舟尾の方は俺の灯じゃない。セナが、こぼれないよう塩を詰めた小皿に芯を入れてきた。向こう岸まで一度も消えなかったよ」",
+      "choices": [
+        {
+          "id": "fare",
+          "text": "七人目の客",
+          "target": "cord",
+          "effects": [
+            { "type": "createEvent", "id": "blue_cord", "name": "ロウは七枚目の銭に青い結び糸を見た。貝殻窯で壺の口を縛る糸だ。" }
+          ]
+        },
+        { "id": "go_office", "text": "検札小屋", "target": "office" },
+        { "id": "go_kiln", "text": "貝殻窯", "target": "kiln" },
+        { "id": "go_watch", "text": "岬の灯台", "target": "watch" }
+      ]
+    },
+    "watch": {
+      "id": "watch",
+      "speaker": "岬の灯台｜灯台守のナギ",
+      "text": "ナギの指は煤で黒い。卓の上には、夜ごとに舟の灯を針先で打ち抜いた薄い銅板がある。\n\n「昨夜の渡し舟なら、自分で見るかい。板を夕日に透かしてごらん」",
+      "choices": [
+        {
+          "id": "lights",
+          "text": "昨夜の渡し舟",
+          "target": "lights",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "nagi",
+              "entity": "夜舟",
+              "domain": "灯火信号",
+              "expectations": { "灯の数": 1 },
+              "eventId": "wake_lights",
+              "eventName": "ナギによれば、へさきと舟尾に灯が一つずつ。二つの灯は骨壺を運ぶ舟の合図だ。",
+              "onlyIfNoticed": true
+            }
+          ]
+        },
+        {
+          "id": "cord",
+          "text": "青い結び糸",
+          "target": "watch_cord",
+          "conditions": [
+            { "type": "hasEvent", "key": "blue_cord", "value": true }
+          ]
+        },
+        { "id": "go_office", "text": "検札小屋", "target": "office" },
+        { "id": "go_ferry", "text": "下の桟橋", "target": "ferry" },
+        { "id": "go_kiln", "text": "貝殻窯", "target": "kiln" }
+      ]
+    },
+    "lights": {
+      "id": "lights",
+      "speaker": "岬の灯台｜灯台守のナギ",
+      "text": "昨夜の渡し舟の欄には、小さな穴が[夜舟.灯の数]つある。ナギは板の端を爪でなぞった。\n\n「へさきの灯が一つなら普段の便。へさきと舟尾に一つずつなら、骨を故郷へ渡す舟。もう櫂を握れない人に、帰る岸が見えるようにね」\n\n「灯の油皿を借りに来たのは貝殻窯のセナだ。持ち主のことは、あの子が話すさ」",
+      "choices": [
+        {
+          "id": "cord",
+          "text": "青い結び糸",
+          "target": "watch_cord",
+          "conditions": [
+            { "type": "hasEvent", "key": "blue_cord", "value": true }
+          ]
+        },
+        { "id": "go_office", "text": "検札小屋", "target": "office" },
+        { "id": "go_ferry", "text": "下の桟橋", "target": "ferry" },
+        { "id": "go_kiln", "text": "貝殻窯", "target": "kiln" }
+      ]
+    },
+    "watch_cord": {
+      "id": "watch_cord",
+      "speaker": "岬の灯台｜灯台守のナギ",
+      "text": "「青い結び糸を張ると灰の中でも青だけがよく見える。だから窯場の連中はあれで自分の壺を見分けるんだ。糸の話なら、貝殻窯の方が早かろうよ」",
+      "choices": [
+        {
+          "id": "lights",
+          "text": "昨夜の渡し舟",
+          "target": "lights",
+          "effects": [
+            {
+              "type": "perceiveEntity",
+              "character": "nagi",
+              "entity": "夜舟",
+              "domain": "灯火信号",
+              "expectations": { "灯の数": 1 },
+              "eventId": "wake_lights",
+              "eventName": "ナギによれば、へさきと舟尾に灯が一つずつ。二つの灯は骨壺を運ぶ舟の合図だ。",
+              "onlyIfNoticed": true
+            }
+          ]
+        },
+        { "id": "go_office", "text": "検札小屋", "target": "office" },
+        { "id": "go_ferry", "text": "下の桟橋", "target": "ferry" },
+        { "id": "go_kiln", "text": "貝殻窯", "target": "kiln" }
+      ]
+    },
+    "kiln": {
+      "id": "kiln",
+      "speaker": "貝殻窯｜焼き手のセナ",
+      "text": "セナは壺を片手で持ち上げ、もう片方の手で底を軽く叩いた。澄んだ音のするものだけを棚に戻す。\n\n「渡し賃なら払ったよ。わたしの席の分はね」",
+      "choices": [
+        { "id": "work", "text": "貝殻窯の仕事", "target": "pots" },
+        {
+          "id": "cord",
+          "text": "青い結び糸",
+          "target": "daughter_cord",
+          "conditions": [
+            { "type": "hasEvent", "key": "blue_cord", "value": true }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
+          ]
+        },
+        {
+          "id": "lamps",
+          "text": "二つの灯",
+          "target": "daughter_lights",
+          "conditions": [
+            { "type": "hasEvent", "key": "wake_lights", "value": true }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
+          ]
+        },
+        {
+          "id": "name",
+          "text": "ウルの名",
+          "target": "daughter_word",
+          "conditions": [
+            { "type": "hasEvent", "key": "last_fare", "value": true }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "daughters_word", "name": "セナに帳面のことを託された。イサに事情を話し、七枚目の銭の納め先を決めよう。" }
+          ]
+        },
+        { "id": "go_office", "text": "検札小屋", "target": "office" },
+        { "id": "go_ferry", "text": "下の桟橋", "target": "ferry" },
+        { "id": "go_watch", "text": "岬の灯台", "target": "watch" }
+      ]
+    },
+    "pots": {
+      "id": "pots",
+      "speaker": "貝殻窯｜焼き手のセナ",
+      "text": "「うちの壺を見たいなら底を見て。この親指のへこみが親方の印。焼き印はお金がかかるけど、指なら十本あるからってさ」\n\nセナは小指の先が欠けた古い壺を、棚のいちばん奥へ戻した。",
+      "choices": [
+        {
+          "id": "cord",
+          "text": "青い結び糸",
+          "target": "daughter_cord",
+          "conditions": [
+            { "type": "hasEvent", "key": "blue_cord", "value": true }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
+          ]
+        },
+        {
+          "id": "lamps",
+          "text": "二つの灯",
+          "target": "daughter_lights",
+          "conditions": [
+            { "type": "hasEvent", "key": "wake_lights", "value": true }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
+          ]
+        },
+        {
+          "id": "name",
+          "text": "ウルの名",
+          "target": "daughter_word",
+          "conditions": [
+            { "type": "hasEvent", "key": "last_fare", "value": true }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "daughters_word", "name": "セナに帳面のことを託された。イサに事情を話し、七枚目の銭の納め先を決めよう。" }
+          ]
+        },
+        { "id": "go_office", "text": "検札小屋", "target": "office" },
+        { "id": "go_ferry", "text": "下の桟橋", "target": "ferry" },
+        { "id": "go_watch", "text": "岬の灯台", "target": "watch" }
+      ]
+    },
+    "daughter_cord": {
+      "id": "daughter_cord",
+      "speaker": "貝殻窯｜焼き手のセナ",
+      "text": "セナは作業台の下から青い結び糸の残りを出した。片端にきれいな歯形がある。\n\n「そう、銭をほどいたのはわたし。あれは父さんの席の分。父さん、自分で焼いた壺で帰りたいって。その底にも親指をぎゅっと押してね」\n\n「名はウル。向こう岸の生まれだよ」",
+      "choices": [
+        { "id": "work", "text": "貝殻窯の仕事", "target": "pots" },
+        {
+          "id": "lamps",
+          "text": "二つの灯",
+          "target": "daughter_lights",
+          "conditions": [
+            { "type": "hasEvent", "key": "wake_lights", "value": true }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
+          ]
+        },
+        {
+          "id": "name",
+          "text": "ウルの名",
+          "target": "daughter_word",
+          "conditions": [
+            { "type": "hasEvent", "key": "last_fare", "value": true }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "daughters_word", "name": "セナに帳面のことを託された。イサに事情を話し、七枚目の銭の納め先を決めよう。" }
+          ]
+        },
+        { "id": "go_office", "text": "検札小屋", "target": "office" },
+        { "id": "go_ferry", "text": "下の桟橋", "target": "ferry" },
+        { "id": "go_watch", "text": "岬の灯台", "target": "watch" }
+      ]
+    },
+    "daughter_lights": {
+      "id": "daughter_lights",
+      "speaker": "貝殻窯｜焼き手のセナ",
+      "text": "「二つの灯が見えたんだね。わたしは向こう岸が見えるまで、ずっと舟尾の皿を押さえてた。壺の中の父さんは手を貸せないもの」\n\n「ウルっていうの。生まれた岸に着いたら、自分の足で降りるつもりだったのかな。ご丁寧に一席分の銭まで残してさ」",
+      "choices": [
+        { "id": "work", "text": "貝殻窯の仕事", "target": "pots" },
+        {
+          "id": "cord",
+          "text": "青い結び糸",
+          "target": "daughter_cord",
+          "conditions": [
+            { "type": "hasEvent", "key": "blue_cord", "value": true }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
+          ]
+        },
+        {
+          "id": "name",
+          "text": "ウルの名",
+          "target": "daughter_word",
+          "conditions": [
+            { "type": "hasEvent", "key": "last_fare", "value": true }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "daughters_word", "name": "セナに帳面のことを託された。イサに事情を話し、七枚目の銭の納め先を決めよう。" }
+          ]
+        },
+        { "id": "go_office", "text": "検札小屋", "target": "office" },
+        { "id": "go_ferry", "text": "下の桟橋", "target": "ferry" },
+        { "id": "go_watch", "text": "岬の灯台", "target": "watch" }
+      ]
+    },
+    "daughter_word": {
+      "id": "daughter_word",
+      "speaker": "貝殻窯｜焼き手のセナ",
+      "text": "セナは灰の上に『ウル』と指で書いた。\n\n「祭で名を呼んでもらえたら、父さん、ずいぶん得意だろうね。でも窯の名義替えは銀貨三枚。炭を買う分まで出さなきゃならない」\n\n「冬まで火を絶やすな、とも言ってた。どっちも父さんの本心だよ。イサにはあんたの言葉で話して。わたしは明日の壺を焼く」",
+      "choices": [
+        { "id": "work", "text": "貝殻窯の仕事", "target": "pots" },
+        {
+          "id": "cord",
+          "text": "青い結び糸",
+          "target": "daughter_cord",
+          "conditions": [
+            { "type": "hasEvent", "key": "blue_cord", "value": true }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
+          ]
+        },
+        {
+          "id": "lamps",
+          "text": "二つの灯",
+          "target": "daughter_lights",
+          "conditions": [
+            { "type": "hasEvent", "key": "wake_lights", "value": true }
+          ],
+          "effects": [
+            { "type": "createEvent", "id": "last_fare", "name": "セナが払ったのは父ウルの渡し賃だった。六人と一緒に、父の骨壺が対岸へ渡った。" }
+          ]
+        },
+        { "id": "go_office", "text": "検札小屋", "target": "office" },
+        { "id": "go_ferry", "text": "下の桟橋", "target": "ferry" },
+        { "id": "go_watch", "text": "岬の灯台", "target": "watch" }
+      ]
+    },
+    "reckoning": {
+      "id": "reckoning",
+      "speaker": "検札小屋｜帳付けのイサ",
+      "text": "イサは帳面を二冊開いた。白い頁は旅客名簿、煤けた頁は灯台の油帳だ。\n\n「六人と、ウルがひとり。これで銭の数は合う。名簿なら祭の晩にウルの名が響き、窯には銀貨三枚の請求が行く。油帳なら今夜の灯が一本もつ。窯にも請求は行かない」\n\n「どちらに入れよう？」",
+      "choices": [
+        {
+          "id": "enter_name",
+          "text": "旅客名簿にウルの名を記す",
+          "target": "name_end",
+          "effects": [
+            { "type": "createEvent", "id": "named", "name": "旅客名簿にウルの名を記した。冬の灯祭で、その名が読み上げられる。" }
+          ]
+        },
+        {
+          "id": "buy_oil",
+          "text": "ウルの銭を灯明代に納める",
+          "target": "lamp_end",
+          "effects": [
+            { "type": "createEvent", "id": "lamplit", "name": "七枚目の銭を灯明代に納めた。セナの窯に名義替えの請求は届かない。" }
+          ]
+        },
+        { "id": "go_office", "text": "まだ帳面を閉じない", "target": "office" }
+      ]
+    },
+    "name_end": {
+      "id": "name_end",
+      "speaker": "検札小屋｜名を呼ぶ岸",
+      "text": "イサは七行目に『ウル、焼き手』と書いた。まだ乾かない文字をセナがのぞき込む。「焼き手の前に、貝殻窯の、って入れて。そういうのにうるさい人だった」\n\n冬の灯祭。港じゅうに父の名が響くと、セナは炭を節約するために小さくした窯の火を、今夜だけは大きくした。"
+    },
+    "lamp_end": {
+      "id": "lamp_end",
+      "speaker": "岬の灯台｜名を伏せた灯",
+      "text": "イサは油帳に銅貨を置いた。名を訊く欄はなかった。セナの窯には炭が届き、次の窯焚きには新しい壺がひと窯ぶん焼き上がった。\n\nその晩、ナギが舟尾の灯をともしにいくと、油皿が新しくなっていた。底には職人の親指の跡。その隣に、ひと回り小さな親指の跡があった。"
+    }
+  }
+}
