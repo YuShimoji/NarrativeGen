@@ -60,9 +60,9 @@ export function createEventEntity(
  */
 export function hasEvent(
   eventId: string,
-  session: SessionState
+  session: Pick<SessionState, 'events'>
 ): boolean {
-  return !!(session.events && eventId in session.events)
+  return Object.prototype.hasOwnProperty.call(session.events ?? {}, eventId)
 }
 
 /**

@@ -4,7 +4,7 @@ import {
   expandTemplateCore,
   expandTemplateWithTracking,
 } from './template.js'
-import { findMatchingTemplates } from './conversation-templates.js'
+import { findMatchingTemplates, type TemplateUsageState } from './conversation-templates.js'
 import type { DescriptionState } from './description-tracker.js'
 
 export { applyLegacySessionPlaceholders } from './template.js'
@@ -15,6 +15,8 @@ export interface ResolveNarrativeDisplayTextOptions {
    * 既定は true（プレイ本線と同一）。
    */
   appendConversationTemplates?: boolean
+  /** Display counts on this route before entering the scene. */
+  templateUsage?: TemplateUsageState
 }
 
 export interface ResolveNarrativeDisplayTextTrackedOptions extends ResolveNarrativeDisplayTextOptions {
@@ -41,9 +43,7 @@ export function resolveNarrativeDisplayText(
   session: SessionState,
   options?: ResolveNarrativeDisplayTextOptions
 ): string {
-  if (!rawText || !session) return rawText
-
-  const appendTemplates = options?.appendConversationTemplates !== false
+  if (typeof rawText !== 'string' || !session) return rawText
 
   let resolved = applyLegacySessionPlaceholders(rawText, session)
 
@@ -51,20 +51,13 @@ export function resolveNarrativeDisplayText(
     resolved = expandTemplateCore(resolved, model, session)
   }
 
-  if (
-    appendTemplates &&
-    model?.conversationTemplates &&
-    model.conversationTemplates.length > 0 &&
-    session?.events
-  ) {
-    const matches = findMatchingTemplates(model.conversationTemplates, session, model)
-    if (matches.length > 0) {
-      const insertions = matches.map(m => m.expandedText).join(' ')
-      resolved = `${resolved} ${insertions}`
-    }
-  }
+  return appendMatchingText(resolved, model, session, options)
+}
 
-  return resolved
+function appendMatchingText(text: string, model: Model, session: SessionState, options?: ResolveNarrativeDisplayTextOptions): string {
+  if (options?.appendConversationTemplates === false || !model?.conversationTemplates?.length) return text
+  const matches = findMatchingTemplates(model.conversationTemplates, session, model, options?.templateUsage)
+  return [text, ...matches.map(m => m.expandedText)].filter(Boolean).join(' ')
 }
 
 /**
@@ -77,11 +70,10 @@ export function resolveNarrativeDisplayTextTracked(
   session: SessionState,
   options?: ResolveNarrativeDisplayTextTrackedOptions
 ): ResolveNarrativeDisplayTextTrackedResult {
-  if (!rawText || !session) {
+  if (typeof rawText !== 'string' || !session) {
     return { text: rawText, descriptionState: options?.descriptionState ?? {} }
   }
 
-  const appendTemplates = options?.appendConversationTemplates !== false
   const descIn = options?.descriptionState ?? {}
   const seed = options?.descriptionSeed ?? 0
 
@@ -97,18 +89,5 @@ export function resolveNarrativeDisplayTextTracked(
     descriptionState = descIn
   }
 
-  if (
-    appendTemplates &&
-    model?.conversationTemplates &&
-    model.conversationTemplates.length > 0 &&
-    session?.events
-  ) {
-    const matches = findMatchingTemplates(model.conversationTemplates, session, model)
-    if (matches.length > 0) {
-      const insertions = matches.map(m => m.expandedText).join(' ')
-      resolved = `${resolved} ${insertions}`
-    }
-  }
-
-  return { text: resolved, descriptionState }
+  return { text: appendMatchingText(resolved, model, session, options), descriptionState }
 }

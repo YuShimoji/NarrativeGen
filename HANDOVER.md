@@ -20,7 +20,7 @@
 |---|---|---|
 | 前提から物語を組む | 前提ファイル → 物語のモデル＋導出の記録。違和感はエンジンが決め、行為（見る・見直す・話す・尋ねる・確かめる・そのままにする）は前提の数値による重みで選ぶ。聞いた話で人物の見込みと許容幅が変わる。結末の割合と、意図を満たす最も蓋然な主線を出す。Studioの右列の先頭に、場面ごとの蓋然と理由が出る（方法は[SP-PREMISE-001](docs/specs/premise-driven-story.md)） | `npm run generate:story -- models/premises/cheeseburger-weight.json` → Studioの物語選択「cheeseburger-weight（前提から生成）」。[導出の記録の見本](docs/samples/premise-story-cheeseburger-weight-review-ja.md) |
 | Studio（主画面） | 実行（本文＋判断の列＋道筋）、点検、その場で編集（範囲は[SP-STUDIO-001](docs/specs/studio-rebuild.md) 4節）。`models/`の物語は「保存」で元のJSONへ書き戻し。`models/generated/`の物語は保存の代わりに「写して育てる」で`models/examples/`へ写す。小さい数値は有効3桁で表示。幅1440px・768pxで確認（2026-11-22、生成した物語の実行画面と蓋然の欄） | `npm run dev:studio` → `http://127.0.0.1:5185/`、編集関数の試験は`npm test -w @narrativegen/studio`（7件） |
-| エンジンの判断の記録 | `packages/engine-ts/src/trace.ts`（`traceStart`・`traceStep`・`checkModel`ほか）。読み取り専用で意味論は変えない | `npm run test:engine`（29ファイル・375件、2026-11-23） |
+| エンジンの判断の記録 | 物の性質で選択肢が開閉し、証言などの出来事で条件付きの本文が変わる。Studioの判断欄には条件が変わった手数と操作、更新された出来事の値が出る。点検は待つ操作や証言の更新を含む道筋をたどる | [レシートの矛盾](http://127.0.0.1:5185/?story=originality-spine-probe)でミラに照合を頼み、台帳へ進む条件の出所を見る。[判断の仕様](docs/specs/studio-rebuild.md) |
 | 旧Web Tester | 編集・グラフ・export等。置き換えまで残し、新機能は足さない | `npm run dev`（port 5173が他projectと衝突する時は下の注意） |
 | サンプル | 「閉館前の返却箱」は鍵の本数から生まれる二択と結末を比べられる。「舞台の暗転」と「搬入口の荷箱」は、三人が同じ証言を聞く前後の実測との差と違和感を比べられる | Studioの物語選択。「見本場面｜証言への反応を比べる…」で暗転を開く。[見本の仕様](docs/specs/premise-driven-story.md#3-試作の契約) |
 | ゲーム層（凍結） | Play演出・BGM、Unity SDK、Public Studio、Sites adapter。再構築中は変更しない | 再開は別の作業単位 |

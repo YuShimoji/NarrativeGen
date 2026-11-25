@@ -1,6 +1,6 @@
 import fs from 'fs'
 
-import type { EntityDef, PropertyDef } from './types'
+import type { Condition, EntityDef, PropertyDef } from './types'
 
 /** Flat entity for CSV import (legacy compatibility) */
 export interface Entity {
@@ -34,6 +34,25 @@ export function resolveProperty(
     return resolveProperty(entity.parentEntity, propertyKey, entities, seen)
   }
   return undefined
+}
+
+/** Read the inherited value once for runtime gates, inference and their trace. */
+export function evaluatePropertyCondition(
+  condition: Extract<Condition, { type: 'property' }>,
+  entities: Record<string, EntityDef> = {},
+): { actual?: PropertyDef['defaultValue']; passed: boolean } {
+  const actual = resolveProperty(condition.entity, condition.key, entities)?.defaultValue
+  const { op, value } = condition
+  if (actual === undefined) return { passed: false }
+  if (op === '==') return { actual, passed: String(actual) === String(value) }
+  if (op === '!=') return { actual, passed: String(actual) !== String(value) }
+  if (typeof actual !== 'number' || typeof value !== 'number') return { actual, passed: false }
+  switch (op) {
+    case '>=': return { actual, passed: actual >= value }
+    case '<=': return { actual, passed: actual <= value }
+    case '>': return { actual, passed: actual > value }
+    case '<': return { actual, passed: actual < value }
+  }
 }
 
 /**

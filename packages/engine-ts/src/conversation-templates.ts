@@ -37,6 +37,10 @@ export interface ExpandedTemplate {
 /** Independent usage tracking (not part of SessionState) */
 export type TemplateUsageState = Record<string, number>
 
+export function templateUseCount(state: TemplateUsageState, id: string): number {
+  return Object.prototype.hasOwnProperty.call(state, id) ? state[id] : 0
+}
+
 /**
  * Check if an event entity matches a single property check.
  */
@@ -120,7 +124,7 @@ export function findMatchingTemplates(
   for (const template of sorted) {
     // Check maxUses
     if (template.maxUses !== undefined) {
-      const used = usage[template.id] ?? 0
+      const used = templateUseCount(usage, template.id)
       if (used >= template.maxUses) continue
     }
 
@@ -151,5 +155,5 @@ export function recordTemplateUsage(
   state: TemplateUsageState,
   templateId: string
 ): TemplateUsageState {
-  return { ...state, [templateId]: (state[templateId] ?? 0) + 1 }
+  return { ...state, [templateId]: templateUseCount(state, templateId) + 1 }
 }

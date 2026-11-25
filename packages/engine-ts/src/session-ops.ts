@@ -3,7 +3,7 @@ import {
   evalCondition as evalConditionCore,
   applyEffect,
 } from './condition-effect-ops.js'
-import { applyPerceptionPolicies } from './perception-policy.js'
+import { applyPerceptionPolicies, type PerceptionObserver } from './perception-policy.js'
 
 // Performance optimization: Memoization cache
 const conditionCache = new Map<string, boolean>()
@@ -77,7 +77,11 @@ function evalCondition(
 }
 
 export function startSession(model: Model, initial?: Partial<SessionState>): SessionState {
-  const session = {
+  return applyPerceptionPolicies(initialSessionState(model, initial), model)
+}
+
+export function initialSessionState(model: Model, initial?: Partial<SessionState>): SessionState {
+  return {
     nodeId: initial?.nodeId ?? model.startNode,
     flags: { ...(model.flags ?? {}), ...(initial?.flags ?? {}) },
     resources: { ...(model.resources ?? {}), ...(initial?.resources ?? {}) },
@@ -86,7 +90,6 @@ export function startSession(model: Model, initial?: Partial<SessionState>): Ses
     time: initial?.time ?? 0,
     events: initial?.events ?? {},
   }
-  return applyPerceptionPolicies(session, model)
 }
 
 export function getAvailableChoices(session: SessionState, model: Model): Choice[] {
@@ -117,6 +120,10 @@ export function getAvailableChoices(session: SessionState, model: Model): Choice
 }
 
 export function applyChoice(session: SessionState, model: Model, choiceId: string): SessionState {
+  return runChoice(session, model, choiceId)
+}
+
+export function runChoice(session: SessionState, model: Model, choiceId: string, observe?: PerceptionObserver): SessionState {
   // Validate inputs
   if (!session) {
     throw new Error('Session state is required')
@@ -148,7 +155,9 @@ export function applyChoice(session: SessionState, model: Model, choiceId: strin
   let next = { ...session }
   for (const eff of choice.effects ?? []) {
     try {
-      next = applyEffect(eff, next, model)
+      const before = next
+      next = applyEffect(eff, before, model)
+      if (eff.type === 'perceiveEntity') observe?.(eff, before, next)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
       throw new Error(`Failed to apply effect ${JSON.stringify(eff)}: ${errorMessage}`)
@@ -164,7 +173,7 @@ export function applyChoice(session: SessionState, model: Model, choiceId: strin
     throw new Error(`Target node not found: ${next.nodeId}. Available nodes: ${Object.keys(model.nodes).join(', ')}`)
   }
 
-  next = applyPerceptionPolicies(next, model)
+  next = applyPerceptionPolicies(next, model, observe)
   next.time = next.time + 1
   return next
 }

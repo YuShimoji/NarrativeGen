@@ -7,17 +7,18 @@
  * applyChoice). This module never changes semantics and never mutates its inputs.
  * Wording for people belongs to the consumer (the Studio), not to the engine.
  */
-import type { Choice, Condition, Effect, EntityDef, Model, PerceptionPolicy, SessionState } from './types'
+import type { Choice, Condition, Effect, EntityDef, Model, SessionState } from './types'
 import { evalCondition } from './condition-effect-ops.js'
-import { applyLegacySessionPlaceholders, expandTemplateCore } from './template.js'
+import { applyLegacySessionPlaceholders, expandTemplateCore, readTextCondition } from './template.js'
 import { resolveNarrativeDisplayText } from './narrative-display-text.js'
-import { findMatchingTemplates } from './conversation-templates.js'
-import type { ConversationTemplate } from './conversation-templates.js'
+import { findMatchingTemplates, recordTemplateUsage, templateUseCount, type ConversationTemplate, type TemplateUsageState } from './conversation-templates.js'
 import { evaluateKnowledgeRule, perceiveEntity } from './character-knowledge.js'
 import type { KnowledgeEvaluationFact } from './character-knowledge.js'
 import type { AnomalyResult } from './anomaly-detector.js'
-import { getInheritanceChain } from './entities.js'
-import { applyChoice, getAvailableChoices, startSession } from './session-ops.js'
+import { evaluatePropertyCondition, getInheritanceChain } from './entities.js'
+import { hasEvent } from './event-entity.js'
+import { applyChoice, getAvailableChoices, initialSessionState, runChoice, startSession } from './session-ops.js'
+import { applyPerceptionPolicies, type PerceptionEventRequest } from './perception-policy.js'
 
 // ---------------------------------------------------------------------------
 // Text
@@ -69,14 +70,15 @@ function segmentText(text: string, model: Model, session: SessionState): TextSeg
     if (m[2] !== undefined) {
       const condition = m[2]
       const negate = m[1] === '!'
-      const shown = rendered !== ''
+      const { passed, observed } = readTextCondition(condition, session)
+      const shown = passed !== negate
       out.push({
         kind: 'conditional',
         text: rendered,
         condition,
         negate,
         shown,
-        observed: observeConditionKey(condition, session),
+        observed,
         children: shown ? segmentText(m[3] ?? '', model, session) : [],
       })
     } else if (m[4] !== undefined) {
@@ -113,32 +115,26 @@ function entitySegment(ref: string, rendered: string, model: Model, session: Ses
   return { kind: 'entity', text: rendered, ref, entityId, property, source, suppliedBy }
 }
 
-function observeConditionKey(cond: string, session: SessionState): string | number | boolean | undefined {
-  const key = cond.match(/^(\w+)(>=|<=|>|<|==|!=)/)?.[1] ?? cond
-  if (session.resources && key in session.resources) return session.resources[key]
-  if (session.flags && key in session.flags) return session.flags[key]
-  if (session.variables && key in session.variables) return session.variables[key]
-  if (session.inventory?.includes(key)) return true
-  return undefined
-}
-
 function flatten(segments: TextSegment[]): string {
   return segments.map((s) => s.text).join('')
 }
 
-export function traceText(rawText: string, model: Model, session: SessionState): TextTrace {
-  const text = resolveNarrativeDisplayText(rawText, model, session)
-  if (!rawText) return { text: text ?? '', segments: [], exact: true }
+export function traceText(rawText: string, model: Model, session: SessionState, usage?: TemplateUsageState): TextTrace {
+  if (typeof rawText !== 'string') return { text: '', segments: [], exact: true }
+  const text = resolveNarrativeDisplayText(rawText, model, session, { templateUsage: usage })
   const segments = segmentText(applyLegacySessionPlaceholders(rawText, session), model, session)
   const matches = model.conversationTemplates?.length
-    ? findMatchingTemplates(model.conversationTemplates, session, model)
+    ? findMatchingTemplates(model.conversationTemplates, session, model, usage)
     : []
+  let needsSpace = flatten(segments).length > 0
   for (const match of matches) {
+    if (!match.expandedText) continue
     const template = model.conversationTemplates?.find((t) => t.id === match.templateId)
     const children = template
       ? segmentText(applyLegacySessionPlaceholders(template.text, session), model, session)
       : [{ kind: 'literal' as const, text: match.expandedText }]
-    segments.push({ kind: 'literal', text: ' ' })
+    if (needsSpace) segments.push({ kind: 'literal', text: ' ' })
+    needsSpace = true
     segments.push({ kind: 'template', text: match.expandedText, templateId: match.templateId, children })
   }
   return { text, segments, exact: flatten(segments) === text }
@@ -156,8 +152,8 @@ export interface ConditionTrace {
   knowledge?: KnowledgeEvaluationFact
 }
 
-export function traceCondition(cond: Condition, session: SessionState, model: Model): ConditionTrace {
-  const passed = evalCondition(
+function conditionPasses(cond: Condition, session: SessionState, model: Model): boolean {
+  return evalCondition(
     cond,
     session.flags,
     session.resources,
@@ -168,6 +164,14 @@ export function traceCondition(cond: Condition, session: SessionState, model: Mo
     model,
     session,
   )
+}
+
+export function traceCondition(cond: Condition, session: SessionState, model: Model): ConditionTrace {
+  if (cond.type === 'property') {
+    const { passed, actual } = evaluatePropertyCondition(cond, model.entities)
+    return { condition: cond, passed, actual }
+  }
+  const passed = conditionPasses(cond, session, model)
   switch (cond.type) {
     case 'and':
     case 'or':
@@ -181,13 +185,11 @@ export function traceCondition(cond: Condition, session: SessionState, model: Mo
     case 'variable':
       return { condition: cond, passed, actual: session.variables[cond.key] }
     case 'hasItem':
-      return { condition: cond, passed, actual: session.inventory.includes(cond.key) }
+      return { condition: cond, passed, actual: session.inventory.some((id) => id.toLowerCase() === cond.key.toLowerCase()) }
     case 'hasEvent':
-      return { condition: cond, passed, actual: Boolean(session.events?.[cond.key]) }
+      return { condition: cond, passed, actual: hasEvent(cond.key, session) }
     case 'timeWindow':
       return { condition: cond, passed, actual: session.time }
-    case 'property':
-      return { condition: cond, passed }
     case 'knowledgeRule':
       return { condition: cond, passed, knowledge: evaluateKnowledgeRule(session, model, cond.rule) }
   }
@@ -224,9 +226,9 @@ export interface TemplateTrace {
   sessionConditions: ConditionTrace[]
 }
 
-export function traceTemplates(session: SessionState, model: Model): TemplateTrace[] {
+export function traceTemplates(session: SessionState, model: Model, usage: TemplateUsageState = {}): TemplateTrace[] {
   const templates: ConversationTemplate[] = model.conversationTemplates ?? []
-  const matched = new Set(findMatchingTemplates(templates, session, model).map((m) => m.templateId))
+  const matched = new Set(findMatchingTemplates(templates, session, model, usage).map((m) => m.templateId))
   const events = session.events ?? {}
   return templates.map((t) => {
     const checks = t.trigger.eventMatch?.propertyChecks ?? []
@@ -243,7 +245,7 @@ export function traceTemplates(session: SessionState, model: Model): TemplateTra
       templateId: t.id,
       matched: matched.has(t.id),
       priority: t.priority ?? 0,
-      usesExhausted: false,
+      usesExhausted: t.maxUses !== undefined && templateUseCount(usage, t.id) >= t.maxUses,
       eventChecks,
       matchedEventId,
       sessionConditions: (t.trigger.sessionConditions ?? []).map((c) => traceCondition(c, session, model)),
@@ -276,7 +278,7 @@ function propertyCheck(
 // ---------------------------------------------------------------------------
 // Perception (character knowledge vs. entity properties)
 
-export type PerceptionOutcome = 'created' | 'not_noticed' | 'already_exists' | 'missing_input'
+export type PerceptionOutcome = 'created' | 'recorded_again' | 'not_noticed' | 'already_exists' | 'missing_input'
 
 export interface PerceptionTrace {
   origin: 'policy' | 'effect'
@@ -297,19 +299,9 @@ export interface PerceptionTrace {
   outcome: PerceptionOutcome
 }
 
-interface PerceptionRequestLike {
-  character: string
-  entity: string
-  domain: string
-  expectations: Record<string, number>
-  eventId?: string
-  eventName?: string
-  onlyIfNoticed?: boolean
-}
-
 function tracePerception(
   origin: 'policy' | 'effect',
-  req: PerceptionRequestLike,
+  req: PerceptionEventRequest,
   before: SessionState,
   after: SessionState,
   model: Model,
@@ -336,13 +328,10 @@ function tracePerception(
   const profiles = character.knowledgeProfiles ?? []
   const profile = profiles.find((p) => p.domain === req.domain) ?? profiles.find((p) => p.domain === 'general')
   const perception = perceiveEntity(character, req.entity, req.expectations, req.domain, model.entities)
-  const existed = Boolean(before.events?.[eventId])
-  const exists = Boolean(after.events?.[eventId])
-  const outcome: PerceptionOutcome = existed
-    ? 'already_exists'
-    : exists
-      ? 'created'
-      : 'not_noticed'
+  const previous = before.events?.[eventId]
+  let outcome: PerceptionOutcome = 'not_noticed'
+  if (previous !== after.events?.[eventId]) outcome = previous ? 'recorded_again' : 'created'
+  else if (origin === 'policy' && previous) outcome = 'already_exists'
   return {
     ...base,
     tolerance: profile?.tolerance,
@@ -351,10 +340,6 @@ function tracePerception(
     noticed: perception.noticed,
     outcome,
   }
-}
-
-function policiesAt(model: Model, nodeId: string): PerceptionPolicy[] {
-  return (model.perceptionPolicies ?? []).filter((p) => p.trigger.node === nodeId)
 }
 
 // ---------------------------------------------------------------------------
@@ -367,6 +352,9 @@ export type StateChange =
   | { kind: 'variable'; key: string; before?: string | number; after?: string | number }
   | { kind: 'item'; key: string; change: 'added' | 'removed' }
   | { kind: 'event'; key: string; name: string; properties: Record<string, string | number | boolean> }
+  | { kind: 'eventUpdate'; key: string; previousName: string; name: string; properties: Array<{
+      key: string; before?: string | number | boolean; after?: string | number | boolean
+    }> }
 
 export function diffState(before: SessionState, after: SessionState): StateChange[] {
   const changes: StateChange[] = []
@@ -383,7 +371,17 @@ export function diffState(before: SessionState, after: SessionState): StateChang
   for (const key of after.inventory) if (!before.inventory.includes(key)) changes.push({ kind: 'item', key, change: 'added' })
   for (const key of before.inventory) if (!after.inventory.includes(key)) changes.push({ kind: 'item', key, change: 'removed' })
   for (const [key, event] of Object.entries(after.events ?? {})) {
-    if (before.events?.[key]) continue
+    const previous = before.events?.[key]
+    if (previous === event) continue
+    if (previous) {
+      const properties = keysOf(previous.properties, event.properties).map((key) => ({
+        key, before: previous.properties?.[key]?.defaultValue, after: event.properties?.[key]?.defaultValue,
+      })).filter((p) => p.before !== p.after)
+      if (previous.name !== event.name || properties.length) {
+        changes.push({ kind: 'eventUpdate', key, previousName: previous.name, name: event.name, properties })
+      }
+      continue
+    }
     const properties: Record<string, string | number | boolean> = {}
     for (const [k, p] of Object.entries(event.properties ?? {})) {
       if (p.defaultValue !== undefined) properties[k] = p.defaultValue
@@ -410,19 +408,21 @@ export interface SceneTrace {
   ending: boolean
 }
 
-export function traceScene(session: SessionState, model: Model): SceneTrace {
+export function traceScene(session: SessionState, model: Model, usage?: TemplateUsageState): SceneTrace {
   const node = model.nodes[session.nodeId]
   return {
     nodeId: session.nodeId,
     speaker: node?.speaker,
-    text: traceText(node?.text ?? '', model, session),
+    text: traceText(node?.text ?? '', model, session, usage),
     choices: traceChoices(session, model),
-    templates: traceTemplates(session, model),
+    templates: traceTemplates(session, model, usage),
     ending: !node?.choices || node.choices.length === 0,
   }
 }
 
 export interface StepTrace {
+  /** Display counts after this scene. Supply these when tracing the next step. */
+  templateUsage: TemplateUsageState
   /** null for the opening step */
   choiceId: string | null
   fromNodeId: string | null
@@ -434,51 +434,78 @@ export interface StepTrace {
 }
 
 /** Start a session and record what happened on arrival at the start node. */
-export function traceStart(model: Model, initial?: Partial<SessionState>): StepTrace {
-  const bare: SessionState = {
-    nodeId: initial?.nodeId ?? model.startNode,
-    flags: { ...(model.flags ?? {}), ...(initial?.flags ?? {}) },
-    resources: { ...(model.resources ?? {}), ...(initial?.resources ?? {}) },
-    variables: { ...(model.variables ?? {}), ...(initial?.variables ?? {}) },
-    inventory: initial?.inventory ?? [],
-    time: initial?.time ?? 0,
-    events: initial?.events ?? {},
-  }
-  const session = startSession(model, initial)
-  const perceptions = policiesAt(model, session.nodeId).map((p) =>
-    tracePerception('policy', p, bare, session, model, p.id))
+export function traceStart(model: Model, initial?: Partial<SessionState>, usage: TemplateUsageState = {}): StepTrace {
+  const bare = initialSessionState(model, initial)
+  const perceptions: PerceptionTrace[] = []
+  const session = applyPerceptionPolicies(bare, model, (req, before, after, policyId) => {
+    perceptions.push(tracePerception('policy', req, before, after, model, policyId))
+  })
+  const scene = traceScene(session, model, usage)
   return {
+    templateUsage: usageAfter(scene.text, model, usage),
     choiceId: null,
     fromNodeId: null,
     effects: [],
     changes: diffState(bare, session),
     perceptions,
     session,
-    scene: traceScene(session, model),
+    scene,
   }
 }
 
 /** Apply a choice through the real runtime and record what changed and why. */
-export function traceStep(session: SessionState, model: Model, choiceId: string): StepTrace {
+export function traceStep(session: SessionState, model: Model, choiceId: string, usage: TemplateUsageState = {}): StepTrace {
   const choice = model.nodes[session.nodeId]?.choices?.find((c) => c.id === choiceId)
-  const next = applyChoice(session, model, choiceId)
-  const effects = choice?.effects ?? []
   const perceptions: PerceptionTrace[] = []
-  for (const effect of effects) {
-    if (effect.type === 'perceiveEntity') perceptions.push(tracePerception('effect', effect, session, next, model))
-  }
-  for (const policy of policiesAt(model, next.nodeId)) {
-    perceptions.push(tracePerception('policy', policy, session, next, model, policy.id))
-  }
+  const next = runChoice(session, model, choiceId, (req, before, after, policyId) => {
+    perceptions.push(tracePerception(policyId === undefined ? 'effect' : 'policy', req, before, after, model, policyId))
+  })
+  const scene = traceScene(next, model, usage)
   return {
+    templateUsage: usageAfter(scene.text, model, usage),
     choiceId,
     fromNodeId: session.nodeId,
-    effects,
+    effects: choice?.effects ?? [],
     changes: diffState(session, next),
     perceptions,
     session: next,
-    scene: traceScene(next, model),
+    scene,
   }
+}
+
+function usageAfter(text: TextTrace, model: Model, usage: TemplateUsageState): TemplateUsageState {
+  if (!model.conversationTemplates?.length) return usage
+  let next = usage
+  for (const segment of text.segments) {
+    if (segment.kind === 'template' && model.conversationTemplates.some(t => t.id === segment.templateId && t.maxUses !== undefined)) {
+      next = recordTemplateUsage(next, segment.templateId)
+    }
+  }
+  return next
+}
+
+/**
+ * For each gated choice in the last scene, find the step when its conditions
+ * last switched to their current verdict. Evaluate the same conditions against
+ * past states, even across scenes; visiting a new node alone is not an unlock.
+ * The route starts at traceStart and ends at the current cursor.
+ */
+export function traceChoiceOrigins(model: Model, route: readonly StepTrace[]): Map<string, number> {
+  const origins = new Map<string, number>()
+  const current = route[route.length - 1]
+  if (!current) return origins
+  for (const { choice, available } of current.scene.choices) {
+    const conditions = choice.conditions
+    if (!conditions?.length) continue
+    for (let index = route.length - 2; index >= 0; index--) {
+      const passed = conditions.every((cond) => conditionPasses(cond, route[index].session, model))
+      if (passed !== available) {
+        origins.set(choice.id, index + 1)
+        break
+      }
+    }
+  }
+  return origins
 }
 
 // ---------------------------------------------------------------------------
@@ -523,14 +550,29 @@ export interface ModelCheck {
   exploredStates: number
 }
 
-function stateKey(s: SessionState): string {
+function lastTimeWindow(conditions: Condition[] = []): number {
+  let last = -1
+  for (const condition of conditions) {
+    if (condition.type === 'timeWindow') last = Math.max(last, condition.end)
+    if (condition.type === 'and' || condition.type === 'or') last = Math.max(last, lastTimeWindow(condition.conditions))
+    if (condition.type === 'not') last = Math.max(last, lastTimeWindow([condition.condition]))
+  }
+  return last
+}
+
+function stateKey(s: SessionState, timeHorizon: number, usage: TemplateUsageState): string {
   return JSON.stringify([
     s.nodeId,
+    Math.min(s.time, timeHorizon),
+    Object.keys(usage).sort().map(id => [id, usage[id]]),
     s.flags,
     s.resources,
     s.variables,
     [...s.inventory].sort(),
-    Object.keys(s.events ?? {}).sort(),
+    Object.keys(s.events ?? {}).sort().map((key) => {
+      const event = s.events[key]
+      return [key, event.name, Object.keys(event.properties ?? {}).sort().map((p) => [p, event.properties![p].defaultValue])]
+    }),
   ])
 }
 
@@ -559,6 +601,13 @@ function collectHasEvent(conds: Condition[] | undefined, out: Set<string>): void
 export function checkModel(model: Model, options: { maxStates?: number } = {}): ModelCheck {
   const maxStates = options.maxStates ?? 2000
   const nodeIds = Object.keys(model.nodes)
+  // After the last window closes, further waiting alone cannot change a gate.
+  let last = -1
+  for (const node of Object.values(model.nodes)) {
+    for (const choice of node.choices ?? []) last = Math.max(last, lastTimeWindow(choice.conditions))
+  }
+  for (const t of model.conversationTemplates ?? []) last = Math.max(last, lastTimeWindow(t.trigger.sessionConditions))
+  const timeHorizon = Math.floor(last) + 1
 
   const missingTargets: ModelCheck['missingTargets'] = []
   const linked = new Set<string>([model.startNode])
@@ -593,14 +642,16 @@ export function checkModel(model: Model, options: { maxStates?: number } = {}): 
   const unresolved = new Map<string, Set<string>>()
   let truncated = false
   const start = startSession(model)
-  const frontier: Array<{ s: SessionState; path: string[] }> = [{ s: start, path: [] }]
-  seen.add(stateKey(start))
+  const frontier: Array<{ s: SessionState; path: string[]; usage: TemplateUsageState }> = [{ s: start, path: [], usage: {} }]
+  seen.add(stateKey(start, timeHorizon, {}))
   while (frontier.length) {
-    const { s, path } = frontier.shift() as { s: SessionState; path: string[] }
+    const { s, path, usage } = frontier.shift()!
     const node = model.nodes[s.nodeId]
     if (!node) continue
     played.add(s.nodeId)
-    for (const seg of traceText(node.text ?? '', model, s).segments) markUnresolved(seg, s.nodeId, unresolved)
+    const text = traceText(node.text ?? '', model, s, usage)
+    const nextUsage = usageAfter(text, model, usage)
+    for (const seg of text.segments) markUnresolved(seg, s.nodeId, unresolved)
     if (!node.choices || node.choices.length === 0) {
       if (!endings.has(s.nodeId)) endings.set(s.nodeId, { nodeId: s.nodeId, path })
       continue
@@ -618,14 +669,14 @@ export function checkModel(model: Model, options: { maxStates?: number } = {}): 
         errors.push({ nodeId: s.nodeId, choiceId: c.id, message: err instanceof Error ? err.message : String(err) })
         continue
       }
-      const key = stateKey(next)
+      const key = stateKey(next, timeHorizon, nextUsage)
       if (seen.has(key)) continue
       if (seen.size >= maxStates) {
         truncated = true
         continue
       }
       seen.add(key)
-      frontier.push({ s: next, path: [...path, c.id] })
+      frontier.push({ s: next, path: [...path, c.id], usage: nextUsage })
     }
   }
 

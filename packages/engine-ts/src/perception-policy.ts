@@ -17,9 +17,14 @@ interface PerceptionEventMetadata {
   policyTriggerNode?: string
 }
 
+export type PerceptionObserver = (
+  request: PerceptionEventRequest, before: SessionState, after: SessionState, policyId?: string,
+) => void
+
 export function applyPerceptionPolicies(
   session: SessionState,
-  model?: Model
+  model?: Model,
+  observe?: PerceptionObserver,
 ): SessionState {
   const policies = model?.perceptionPolicies
   if (!Array.isArray(policies) || policies.length === 0) return session
@@ -29,12 +34,14 @@ export function applyPerceptionPolicies(
     if (!matchesPolicyTrigger(policy, next)) continue
 
     const eventId = policy.eventId ?? `event_${policy.character}_perceives_${policy.entity}`
-    if (next.events?.[eventId]) continue
-
-    next = createPerceptionEvent(policy, next, model, {
-      policyId: policy.id,
-      policyTriggerNode: next.nodeId,
-    })
+    const before = next
+    if (!next.events?.[eventId]) {
+      next = createPerceptionEvent(policy, before, model, {
+        policyId: policy.id,
+        policyTriggerNode: before.nodeId,
+      })
+    }
+    observe?.(policy, before, next, policy.id)
   }
   return next
 }

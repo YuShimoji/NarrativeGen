@@ -153,6 +153,9 @@ export function changeSentence(ch, names) {
       return ch.change === 'added' ? `「${esc(ch.key)}」を<b>手に入れた</b>` : `「${esc(ch.key)}」を<b>手放した</b>`
     case 'event':
       return `出来事「<b>${esc(ch.name)}</b>」が生まれた`
+    case 'eventUpdate':
+      return ch.previousName === ch.name ? `出来事「<b>${esc(ch.name)}</b>」の記録が変わった`
+        : `出来事「${esc(ch.previousName)}」の記録が「<b>${esc(ch.name)}</b>」に変わった`
     default:
       return ''
   }
@@ -174,5 +177,6 @@ export const OUTCOME = {
   created: (p, names) => `出来事「${esc(p.eventName ?? names.event(p.eventId))}」を作った`,
   not_noticed: (p) => (p.onlyIfNoticed ? '気づかなかったので、出来事は作らない' : '出来事は作られなかった'),
   already_exists: (p, names) => `出来事「${esc(names.event(p.eventId))}」は既にあるので作り直さない`,
+  recorded_again: (p) => `今回の知覚を「${esc(p.eventName ?? p.eventId)}」に記録し直した`,
   missing_input: () => '人物・物・知識の分野のどれかがモデルに無く、判定できない',
 }

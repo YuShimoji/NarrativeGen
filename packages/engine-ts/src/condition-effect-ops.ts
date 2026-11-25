@@ -12,10 +12,11 @@ import type {
   SessionState,
   VariableState,
 } from './types'
-import { createEventEntity } from './event-entity.js'
+import { createEventEntity, hasEvent } from './event-entity.js'
 import type { CreateEventEffect } from './event-entity.js'
 import { createPerceptionEvent } from './perception-policy.js'
 import { evaluateKnowledgeRule } from './character-knowledge.js'
+import { evaluatePropertyCondition } from './entities.js'
 
 export function cmp(op: '>=' | '<=' | '>' | '<' | '==', a: number, b: number): boolean {
   switch (op) {
@@ -43,9 +44,11 @@ export function evalCondition(
   model?: Model,
   session?: SessionState,
 ): boolean {
+  if (cond.type === 'property') {
+    return evaluatePropertyCondition(cond, model?.entities).passed
+  }
   if (cond.type === 'hasEvent') {
-    const has = cond.key in events
-    return has === cond.value
+    return hasEvent(cond.key, { events }) === cond.value
   }
   if (cond.type === 'flag') {
     return (flags[cond.key] ?? false) === cond.value

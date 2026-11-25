@@ -103,7 +103,7 @@ interface Model {
 ノードテキスト: "{?blamed_event:You recall [blamed_event]. Severity was [blamed_event.severity].}"
 ```
 
-追加実装なし。expandTemplate + hasEvent 条件で既に使用可能。
+事象が起きると `{?event_id:…}` の本文を表示し、`{?!event_id:…}` を省く。同名のフラグ・変数がある場合はその値を優先する。選択肢は `hasEvent` で事象の有無を指定する。
 
 ### 案B (新規実装)
 

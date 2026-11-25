@@ -105,7 +105,7 @@ interface SessionState {
 | `resource` | `key`, `op`, `value: number` | `resources[key] op value` |
 | `variable` | `key`, `op`, `value` | 文字列: `==`, `!=`, `contains`, `!contains` / 数値: `>=`, `<=`, `>`, `<` |
 | `hasItem` | `key`, `value: boolean` | `inventory` にアイテムが存在するか (case-insensitive) |
-| `property` | `entity`, `key`, `op`, `value` | Entity property を比較 |
+| `property` | `entity`, `key`, `op`, `value` | 親から継承した性質を含めて値を比較する。性質・値が未定義なら不成立。プレイ・推論・会話の差し込みで同じ判定を使う |
 | `hasEvent` | `key`, `value: boolean` | session event の存在を判定 |
 | `knowledgeRule` | `rule`, `result: 'noticed'` | SP-KNOW-002 evaluator が missing なしかつ noticed のとき真 |
 | `timeWindow` | `start`, `end` | `time >= start && time <= end` |

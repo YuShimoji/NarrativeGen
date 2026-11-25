@@ -102,6 +102,7 @@
 
 - `resolveNarrativeDisplayText(rawText, model, session, options?)`
   - `appendConversationTemplates`: 既定 `true`。`false` のとき段階 3 をスキップ（エディタプレビュー用）。
+  - `templateUsage`: その場面に入る直前の表示回数。追跡あり・なしのどちらでも使用できる。Studioは各手の `StepTrace.templateUsage` を次の手へ渡し、上限に達した差し込みを省く。本文が空の場面でも条件を満たした差し込みだけで一文を表示できる。
 - `resolveNarrativeDisplayTextTracked(rawText, model, session, options?)` → `{ text, descriptionState }`
   - `descriptionState` / `descriptionSeed`: 段階2（`[entity~]`）。
   - `appendConversationTemplates`: 上に同じ。

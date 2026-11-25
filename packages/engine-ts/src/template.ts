@@ -1,6 +1,7 @@
 import type { Model, PropertyDef, SessionState } from './types'
 import { resolveProperty, getEntityProperties } from './entities.js'
 import type { DescriptionState } from './description-tracker.js'
+import { hasEvent } from './event-entity.js'
 import { getUndescribedKeys, markDescribed } from './description-tracker.js'
 
 function escapeRegExp(s: string): string {
@@ -32,55 +33,46 @@ export function applyLegacySessionPlaceholders(text: string, session: SessionSta
   return resolved
 }
 
-/**
- * 段階1以降のみ（段階0なし）。`resolveNarrativeDisplayText` 等が段階0のあとに呼ぶ。
- */
-export function expandTemplateCore(
-  text: string,
-  model: Model,
-  session: SessionState
-): string {
+/** The value and verdict used by both conditional prose and its Studio trace. */
+export function readTextCondition(condition: string, session: SessionState): {
+  observed?: string | number | boolean
+  passed: boolean
+} {
+  const comparison = condition.match(/^([\p{L}\p{M}\p{N}_]+)(>=|<=|>|<|==|!=)(.+)$/u)
+  if (comparison) {
+    const [, key, op, raw] = comparison
+    const observed = session.resources?.[key] ?? session.variables?.[key]
+    const a = Number(observed)
+    const b = Number(raw)
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return { observed, passed: false }
+    switch (op) {
+      case '>=': return { observed, passed: a >= b }
+      case '<=': return { observed, passed: a <= b }
+      case '>': return { observed, passed: a > b }
+      case '<': return { observed, passed: a < b }
+      case '==': return { observed, passed: a === b }
+      case '!=': return { observed, passed: a !== b }
+    }
+  }
+  // An explicitly defined false flag or zero variable still owns its name.
+  if (Object.prototype.hasOwnProperty.call(session.flags ?? {}, condition)) {
+    return { observed: session.flags[condition], passed: session.flags[condition] }
+  }
+  if (Object.prototype.hasOwnProperty.call(session.variables ?? {}, condition)) {
+    return { observed: session.variables[condition], passed: Boolean(session.variables[condition]) }
+  }
+  if (session.inventory?.includes(condition) || hasEvent(condition, session)) {
+    return { observed: true, passed: true }
+  }
+  return { passed: false }
+}
+
+export function expandTemplateCore(text: string, model: Model, session: SessionState): string {
   if (!text) return text
 
-  // Phase 3: Conditional sections {?condition:text} — processed first
   let result = text.replace(/\{\?(!?)([^:}]+):([^}]*)\}/g, (_match, neg: string, cond: string, body: string) => {
-    const negate = neg === '!'
-    let condResult = false
-
-    // Check for comparison operators (resource/variable conditions)
-    const opMatch = cond.match(/^(\w+)(>=|<=|>|<|==|!=)(.+)$/)
-    if (opMatch) {
-      const [, key, op, rawVal] = opMatch
-      const val = Number(rawVal)
-      const actual = (session.resources && key in session.resources)
-        ? session.resources[key]
-        : (session.variables && key in session.variables)
-          ? Number(session.variables[key])
-          : undefined
-      if (actual !== undefined && Number.isFinite(val) && Number.isFinite(actual)) {
-        const a = actual
-        switch (op) {
-          case '>=': condResult = a >= val; break
-          case '<=': condResult = a <= val; break
-          case '>': condResult = a > val; break
-          case '<': condResult = a < val; break
-          case '==': condResult = a === val; break
-          case '!=': condResult = a !== val; break
-        }
-      }
-    } else {
-      // Simple flag/variable truthiness check
-      if (session.flags && cond in session.flags) {
-        condResult = !!session.flags[cond]
-      } else if (session.variables && cond in session.variables) {
-        condResult = !!session.variables[cond]
-      } else if (session.inventory && session.inventory.includes(cond)) {
-        condResult = true
-      }
-    }
-
-    if (negate) condResult = !condResult
-    return condResult ? body : ''
+    const { passed } = readTextCondition(cond, session)
+    return passed !== (neg === '!') ? body : ''
   })
 
   // Phase 1: Entity references [entity_id] and [entity_id.property]

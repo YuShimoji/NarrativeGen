@@ -1,4 +1,4 @@
-import { beatLabel, checkModel, endingLabel, explainAction, generateStory, traceStart, traceStep } from '@narrativegen/engine-ts/browser'
+import { beatLabel, checkModel, endingLabel, explainAction, generateStory, traceChoiceOrigins, traceStart, traceStep } from '@narrativegen/engine-ts/browser'
 import {
   HIDDEN_EVENT_PROPS,
   OUTCOME,
@@ -181,7 +181,7 @@ function restart() {
 function choose(choiceId) {
   const current = state.steps[state.cursor]
   try {
-    const step = traceStep(current.session, state.model, choiceId)
+    const step = traceStep(current.session, state.model, choiceId, current.templateUsage)
     state.steps = [...state.steps.slice(0, state.cursor + 1), step]
     state.cursor = state.steps.length - 1
   } catch (err) {
@@ -194,7 +194,7 @@ function replay(path) {
   restart()
   for (const choiceId of path) {
     const current = state.steps[state.steps.length - 1]
-    state.steps.push(traceStep(current.session, state.model, choiceId))
+    state.steps.push(traceStep(current.session, state.model, choiceId, current.templateUsage))
   }
   state.cursor = state.steps.length - 1
   setView('run')
@@ -205,7 +205,7 @@ function replayQuiet(path) {
     const last = state.steps[state.steps.length - 1]
     const ct = last.scene.choices.find((c) => c.choice.id === choiceId)
     if (!ct || !ct.available) break
-    state.steps.push(traceStep(last.session, state.model, choiceId))
+    state.steps.push(traceStep(last.session, state.model, choiceId, last.templateUsage))
   }
   state.cursor = state.steps.length - 1
 }
@@ -447,6 +447,9 @@ function changesCard(step) {
   if (!shown.length) return ''
   const items = shown.map((c) => {
     let extra = ''
+    if (c.kind === 'eventUpdate' && c.properties.length) {
+      extra = `<ul>${c.properties.map((p) => `<li>${esc(p.key)}　${esc(p.before ?? '未設定')} → ${esc(p.after ?? '未設定')}</li>`).join('')}</ul>`
+    }
     if (c.kind === 'event') {
       const all = Object.entries(c.properties)
       const props = all.filter(([k]) => !HIDDEN_EVENT_PROPS.has(k))
@@ -478,6 +481,7 @@ function compositionCard(step) {
   const n = state.names
   const s = step.session
   const tplReason = (t) => {
+    if (t.usesExhausted) return 'この道筋では表示回数の上限に達した'
     const parts = []
     if (t.eventChecks.length) {
       const checks = t.eventChecks.map((c) => `<span class="term">${esc(c.key)}</span>${esc(c.op)}${esc(c.value)}`).join('・')
@@ -508,6 +512,13 @@ function choicesCard(step) {
   const list = step.scene.choices
   if (!list.length) return ''
   const n = state.names
+  const origins = traceChoiceOrigins(state.model, state.steps.slice(0, state.cursor + 1))
+  const originLine = (ct) => {
+    const index = origins.get(ct.choice.id)
+    if (index === undefined) return ''
+    const origin = state.steps[index]
+    return `<p class="sub">${index}手目の「${esc(n.choice(origin.fromNodeId, origin.choiceId))}」で条件が${ct.available ? 'そろいました' : '外れました'}。</p>`
+  }
   const s = step.session
   const condLines = (conds, depth = 0) => conds.map((ct) => {
     const actual = conditionActual(ct, n)
@@ -525,6 +536,7 @@ function choicesCard(step) {
   const items = list.map((ct) => `
     <li class="${ct.available ? 'open' : 'closed'}">
       <div class="choice-row"><span class="state">${ct.available ? '開' : '閉'}</span><span>${esc(ct.choice.text)}</span></div>
+      ${originLine(ct)}
       ${ct.conditions.length ? `<ul class="conds">${condLines(ct.conditions)}</ul>${ct.conditions.map(creators).join('')}` : '<p class="sub">条件なし（いつでも選べる）</p>'}
     </li>`).join('')
   return `<section class="card"><h3><span class="tag">選択肢</span>開いている理由・閉じている理由</h3><ul class="choice-judge">${items}</ul></section>`
@@ -852,7 +864,7 @@ function retrace() {
     const last = steps[steps.length - 1]
     const ct = last.scene.choices.find((c) => c.choice.id === id)
     if (!ct || !ct.available) break
-    steps.push(traceStep(last.session, state.model, id))
+    steps.push(traceStep(last.session, state.model, id, last.templateUsage))
   }
   state.steps = steps
   state.cursor = Math.min(state.cursor, steps.length - 1)
