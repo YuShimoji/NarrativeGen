@@ -50,8 +50,7 @@ namespace NarrativeGen.Tests
         [TestCase("cheeseburger-weight-hearsay.json")]
         public void GeneratedStoryPreservesPerceptionChoicesAndDynamicText(string fileName)
         {
-            var file = Path.Combine(AppContext.BaseDirectory, "GeneratedModels", fileName);
-            var model = Engine.LoadModel(File.ReadAllText(file));
+            var model = LoadPlaybackModel(fileName);
             var start = Engine.StartSession(model);
 
             var unnoticed = Engine.ApplyChoice(start, model, "look_drunk_person");
@@ -70,6 +69,36 @@ namespace NarrativeGen.Tests
                 model.Nodes[noticed.CurrentNodeId].Text, model, noticed).Text;
             Assert.That(output, Is.EqualTo(
                 "探偵Aは誰かが食べていたチーズバーガーを見る。重さは0.1のはずだと思っていた。実際は0.12。探偵Aは違和感を覚える。"));
+        }
+
+        [TestCase("brass-weight.json", "配給所の秤台｜欠け耳の分銅", "s10_verify_baker",
+            "look_baker,tell_baker_clerk,look_clerk,verify_baker")]
+        [TestCase("blue-selvedge.json", "布改め小屋｜荷改めのユノ", "market",
+            "go_loom,ask_thread,go_cloth,match_thread,go_desk,give_maker")]
+        [TestCase("ebb-stair.json", "舟便詰所｜水先案内のエナ", "crossed",
+            "go_steps,wait,read,signal")]
+        public void StudioSampleKeepsSpeakerAndReachesEnding(
+            string fileName, string speaker, string ending, string route)
+        {
+            var model = LoadPlaybackModel(fileName);
+            var session = Engine.StartSession(model);
+            Assert.That(model.Nodes[session.CurrentNodeId].Speaker, Is.EqualTo(speaker));
+
+            foreach (var choiceId in route.Split(','))
+            {
+                Assert.That(Engine.GetAvailableChoices(session, model).Select(choice => choice.Id),
+                    Does.Contain(choiceId), $"Choice was unavailable at {session.CurrentNodeId}.");
+                session = Engine.ApplyChoice(session, model, choiceId);
+            }
+
+            Assert.That(session.CurrentNodeId, Is.EqualTo(ending));
+            Assert.That(model.Nodes[ending].Choices, Is.Null.Or.Empty);
+        }
+
+        private static NarrativeModel LoadPlaybackModel(string fileName)
+        {
+            var file = Path.Combine(AppContext.BaseDirectory, "PlaybackModels", fileName);
+            return Engine.LoadModel(File.ReadAllText(file));
         }
     }
 }

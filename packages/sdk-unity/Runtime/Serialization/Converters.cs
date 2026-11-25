@@ -44,6 +44,7 @@ namespace NarrativeGen.Serialization
                 "flag" => new FlagCondition(),
                 "resource" => new ResourceCondition(),
                 "variable" => new VariableCondition(),
+                "property" => new PropertyCondition(),
                 "hasItem" => new HasItemCondition(),
                 "hasEvent" => new HasEventCondition(),
                 "timeWindow" => new TimeWindowCondition(),

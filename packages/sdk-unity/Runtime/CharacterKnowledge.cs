@@ -193,7 +193,7 @@ namespace NarrativeGen
 
             foreach (var measurement in expectations)
             {
-                var property = ResolveProperty(entities, entityId, measurement.Key);
+                var property = Entity.ResolveProperty(entities, entityId, measurement.Key);
                 if (IsFinite(measurement.Value) &&
                     RuntimeNumber.TryRead(property?.DefaultValue, out var actual) && IsFinite(actual))
                 {
@@ -201,22 +201,6 @@ namespace NarrativeGen
                 }
             }
             return results;
-        }
-
-        private static PropertyDef? ResolveProperty(Dictionary<string, Entity> entities, string entityId, string key)
-        {
-            var visited = new HashSet<string>(StringComparer.Ordinal);
-            string? current = entityId;
-            while (!string.IsNullOrEmpty(current) && visited.Add(current!) && entities.TryGetValue(current!, out var entity))
-            {
-                if (entity.Properties != null && entity.Properties.TryGetValue(key, out var property) && property != null)
-                {
-                    return property;
-                }
-
-                current = entity.ParentEntity;
-            }
-            return null;
         }
 
         private static CreateEventPropertyInput Value(object value) =>

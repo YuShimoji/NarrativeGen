@@ -45,5 +45,21 @@ namespace NarrativeGen
         /// </summary>
         [JsonProperty("properties")]
         public Dictionary<string, PropertyDef>? Properties { get; set; }
+
+        internal static PropertyDef? ResolveProperty(Dictionary<string, Entity> entities, string entityId, string key)
+        {
+            var visited = new HashSet<string>(StringComparer.Ordinal);
+            string? current = entityId;
+            while (!string.IsNullOrEmpty(current) && visited.Add(current!) && entities.TryGetValue(current!, out var entity))
+            {
+                if (entity.Properties != null && entity.Properties.TryGetValue(key, out var property) && property != null)
+                {
+                    return property;
+                }
+
+                current = entity.ParentEntity;
+            }
+            return null;
+        }
     }
 }

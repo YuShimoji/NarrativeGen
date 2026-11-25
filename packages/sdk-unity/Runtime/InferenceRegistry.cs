@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using NarrativeGen.Runtime;
 
@@ -105,6 +106,7 @@ namespace NarrativeGen
             reg.RegisterCondition(new FlagEvaluator());
             reg.RegisterCondition(new ResourceEvaluator());
             reg.RegisterCondition(new VariableEvaluator());
+            reg.RegisterCondition(new PropertyEvaluator());
             reg.RegisterCondition(new HasItemEvaluator());
             reg.RegisterCondition(new HasEventEvaluator());
             reg.RegisterCondition(new KnowledgeRuleEvaluator());
@@ -193,6 +195,47 @@ namespace NarrativeGen
                 _ => false,
             };
         }
+    }
+
+    internal sealed class PropertyEvaluator : IConditionEvaluator
+    {
+        public string Type => "property";
+
+        public bool Evaluate(Condition condition, EvaluationContext ctx)
+        {
+            var property = (PropertyCondition)condition;
+            var entities = ctx.Model?.Entities;
+            var actual = entities == null
+                ? null
+                : Entity.ResolveProperty(entities, property.EntityId, property.Key)?.DefaultValue;
+            if (actual == null || property.Value == null)
+            {
+                return false;
+            }
+
+            bool actualIsNumber = RuntimeNumber.TryRead(actual, out var actualNumber);
+            bool expectedIsNumber = RuntimeNumber.TryRead(property.Value, out var expectedNumber);
+            if (property.Op is "==" or "!=")
+            {
+                bool equal = actualIsNumber && expectedIsNumber
+                    ? actualNumber == expectedNumber
+                    : StringValue(actual) == StringValue(property.Value);
+                return property.Op == "==" ? equal : !equal;
+            }
+
+            return actualIsNumber && expectedIsNumber && (property.Op switch
+            {
+                ">" => actualNumber > expectedNumber,
+                ">=" => actualNumber >= expectedNumber,
+                "<" => actualNumber < expectedNumber,
+                "<=" => actualNumber <= expectedNumber,
+                _ => false
+            });
+        }
+
+        private static string? StringValue(object value) => value is bool boolean
+            ? (boolean ? "true" : "false")
+            : Convert.ToString(value, CultureInfo.InvariantCulture);
     }
 
     internal static class RuntimeNumber

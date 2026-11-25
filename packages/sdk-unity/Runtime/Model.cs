@@ -95,6 +95,12 @@ namespace NarrativeGen
         public string? Text { get; set; }
 
         /// <summary>
+        /// Gets or sets the optional speaker label for display.
+        /// </summary>
+        [JsonProperty("speaker")]
+        public string? Speaker { get; set; }
+
+        /// <summary>
         /// Gets or sets the choices available from this node.
         /// </summary>
         [JsonProperty("choices")]
@@ -272,6 +278,21 @@ namespace NarrativeGen
 
         [JsonProperty("value")]
         public object Value { get; set; } = string.Empty;
+    }
+
+    internal sealed class PropertyCondition : Condition
+    {
+        [JsonProperty("entity")]
+        public string EntityId { get; set; } = string.Empty;
+
+        [JsonProperty("key")]
+        public string Key { get; set; } = string.Empty;
+
+        [JsonProperty("op")]
+        public string Op { get; set; } = "==";
+
+        [JsonProperty("value")]
+        public object? Value { get; set; }
     }
 
     /// <summary>
