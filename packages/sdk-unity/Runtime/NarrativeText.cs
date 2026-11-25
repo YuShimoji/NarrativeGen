@@ -240,7 +240,9 @@ namespace NarrativeGen
                 return f;
             if (session.Variables.ContainsKey(cond))
                 return Truthy(session.Variables[cond]);
-            return session.Inventory.Any(id => string.Equals(id, cond, StringComparison.OrdinalIgnoreCase));
+            // TS readTextCondition: an item in the inventory or a created event passes.
+            return session.Inventory.Any(id => string.Equals(id, cond, StringComparison.OrdinalIgnoreCase))
+                || session.Events.ContainsKey(cond);
         }
 
         private static bool IsFinite(double d) => !double.IsNaN(d) && !double.IsInfinity(d);

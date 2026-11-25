@@ -34,7 +34,7 @@ namespace NarrativeGen
             ResolveNarrativeDisplayTextTrackedOptions? options = null)
         {
             var emptyState = CloneDescriptionState(options?.DescriptionState);
-            if (string.IsNullOrEmpty(rawText))
+            if (rawText == null)
             {
                 return new ResolveNarrativeDisplayTextTrackedResult
                 {
@@ -57,28 +57,21 @@ namespace NarrativeGen
             Dictionary<string, HashSet<string>> descriptionState;
 
             var body = rawText ?? string.Empty;
-            var hasEntities = model.Entities != null && model.Entities.Count > 0;
-            if (hasEntities || session.Events.Count > 0)
-            {
-                var tracked = NarrativeText.ExpandTemplateWithTracking(body, model, session, descIn, seed);
-                resolved = tracked.Text;
-                descriptionState = tracked.DescriptionState;
-            }
-            else
-            {
-                resolved = NarrativeText.ApplyLegacyPlaceholders(body, session);
-                descriptionState = CloneDescriptionState(descIn);
-            }
+            // TS resolveNarrativeDisplayTextTracked always expands here because a session
+            // always has an events object; conditional prose ({?flag:…}) must work without entities.
+            var tracked = NarrativeText.ExpandTemplateWithTracking(body, model, session, descIn, seed);
+            resolved = tracked.Text;
+            descriptionState = tracked.DescriptionState;
 
             if (appendTemplates &&
-                model.ConversationTemplates is { Count: > 0 } templates &&
-                session.Events.Count > 0)
+                model.ConversationTemplates is { Count: > 0 } templates)
             {
                 var matches = ConversationTemplateMatcher.FindMatchingTemplates(templates, session, model, usageState);
                 if (matches.Count > 0)
                 {
-                    var insertions = string.Join(" ", matches.Select(m => m.ExpandedText));
-                    resolved = string.IsNullOrEmpty(resolved) ? insertions : resolved + " " + insertions;
+                    // TS appendMatchingText: [text, ...expanded].filter(Boolean).join(' ')
+                    resolved = string.Join(" ", new[] { resolved }.Concat(matches.Select(m => m.ExpandedText))
+                        .Where(part => !string.IsNullOrEmpty(part)));
                     foreach (var match in matches)
                     {
                         usageState = ConversationTemplateMatcher.RecordTemplateUsage(usageState, match.TemplateId);

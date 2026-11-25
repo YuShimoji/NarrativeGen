@@ -1,0 +1,265 @@
+{
+  "format": "narrativegen-screen-route",
+  "version": 1,
+  "model": "models/generated/brass-weight.json",
+  "path": [
+    "look_baker",
+    "tell_baker_clerk",
+    "look_clerk",
+    "verify_baker"
+  ],
+  "frames": [
+    {
+      "format": "narrativegen-screen-frame",
+      "version": 1,
+      "layout": "inquiry",
+      "step": 0,
+      "nodeId": "start",
+      "choiceId": null,
+      "choiceText": null,
+      "notes": [],
+      "newNote": false,
+      "ending": false,
+      "header": {
+        "region": "灰渡りの港",
+        "title": "六目の分銅",
+        "goal": "配給所とパン窯で同じ粉袋の重さが合わない。欠け耳の分銅を二人に渡し、今日の配給を量り直すか決める。"
+      },
+      "place": "配給所の秤台",
+      "speaker": "欠け耳の分銅",
+      "paragraphs": [
+        [
+          {
+            "text": "配給所で粉を受け取った客が、袋の紐を引いた。「窯で四目ぶん買う時は、これで口を結べるんだけど」"
+          }
+        ],
+        [
+          {
+            "text": "配給係のオリは欠け耳の分銅を出した。パン焼きのナミは、窯から持ってきた天秤の上皿を拭う。どちらの手に先に載せよう。"
+          }
+        ]
+      ],
+      "choiceGroups": [
+        {
+          "role": "topic",
+          "label": "話題",
+          "choices": [
+            {
+              "id": "look_clerk",
+              "text": "配給係のオリに分銅を渡す",
+              "visited": false
+            },
+            {
+              "id": "look_baker",
+              "text": "パン焼きのナミに分銅を渡す",
+              "visited": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "format": "narrativegen-screen-frame",
+      "version": 1,
+      "layout": "inquiry",
+      "step": 1,
+      "nodeId": "s2_look_baker",
+      "choiceId": "look_baker",
+      "choiceText": "パン焼きのナミに分銅を渡す",
+      "notes": [
+        {
+          "source": "パン焼きのナミ",
+          "text": "パン焼きのナミの違和感"
+        }
+      ],
+      "newNote": true,
+      "ending": false,
+      "header": {
+        "region": "灰渡りの港",
+        "title": "六目の分銅",
+        "goal": "配給所とパン窯で同じ粉袋の重さが合わない。欠け耳の分銅を二人に渡し、今日の配給を量り直すか決める。"
+      },
+      "place": "配給所の秤台",
+      "speaker": "パン焼きのナミ",
+      "paragraphs": [
+        [
+          {
+            "text": "パン焼きのナミは分銅を上皿に置いた。「待って。私なら目を4つ数えたところで手を離す」針はその先へ振れた。"
+          }
+        ],
+        [
+          {
+            "text": "台の下に、粉をまだ受け取っていない客の札が重なっている。"
+          }
+        ]
+      ],
+      "choiceGroups": [
+        {
+          "role": "topic",
+          "label": "話題",
+          "choices": [
+            {
+              "id": "tell_baker_clerk",
+              "text": "パン焼きのナミの読みを配給係のオリに伝える",
+              "visited": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "format": "narrativegen-screen-frame",
+      "version": 1,
+      "layout": "inquiry",
+      "step": 2,
+      "nodeId": "s14_tell_baker_clerk",
+      "choiceId": "tell_baker_clerk",
+      "choiceText": "パン焼きのナミの読みを配給係のオリに伝える",
+      "notes": [
+        {
+          "source": "パン焼きのナミ",
+          "text": "パン焼きのナミの違和感"
+        },
+        {
+          "source": "パン焼きのナミ",
+          "text": "パン焼きのナミが配給係のオリに話した"
+        }
+      ],
+      "newNote": true,
+      "ending": false,
+      "header": {
+        "region": "灰渡りの港",
+        "title": "六目の分銅",
+        "goal": "配給所とパン窯で同じ粉袋の重さが合わない。欠け耳の分銅を二人に渡し、今日の配給を量り直すか決める。"
+      },
+      "place": "配給所の秤台",
+      "speaker": "パン焼きのナミ",
+      "paragraphs": [
+        [
+          {
+            "text": "パン焼きのナミは秤を配給係のオリのほうへ押した。「持った感じで済ませずに、針が止まるところを見て」"
+          }
+        ]
+      ],
+      "choiceGroups": [
+        {
+          "role": "topic",
+          "label": "話題",
+          "choices": [
+            {
+              "id": "look_clerk",
+              "text": "配給係のオリに分銅を渡す",
+              "visited": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "format": "narrativegen-screen-frame",
+      "version": 1,
+      "layout": "inquiry",
+      "step": 3,
+      "nodeId": "s17_look_clerk",
+      "choiceId": "look_clerk",
+      "choiceText": "配給係のオリに分銅を渡す",
+      "notes": [
+        {
+          "source": "パン焼きのナミ",
+          "text": "パン焼きのナミの違和感"
+        },
+        {
+          "source": "パン焼きのナミ",
+          "text": "パン焼きのナミが配給係のオリに話した"
+        },
+        {
+          "source": "配給係のオリ",
+          "text": "配給係のオリの違和感"
+        }
+      ],
+      "newNote": true,
+      "ending": false,
+      "header": {
+        "region": "灰渡りの港",
+        "title": "六目の分銅",
+        "goal": "配給所とパン窯で同じ粉袋の重さが合わない。欠け耳の分銅を二人に渡し、今日の配給を量り直すか決める。"
+      },
+      "place": "配給所の秤台",
+      "speaker": "配給係のオリ",
+      "paragraphs": [
+        [
+          {
+            "text": "配給係のオリは分銅を上皿に置いた。「待って。私なら目を4.740741つ数えたところで手を離す」針はその先へ振れた。"
+          }
+        ],
+        [
+          {
+            "text": "台の下に、粉をまだ受け取っていない客の札が重なっている。"
+          }
+        ]
+      ],
+      "choiceGroups": [
+        {
+          "role": "topic",
+          "label": "話題",
+          "choices": [
+            {
+              "id": "verify_baker",
+              "text": "パン焼きのナミと親秤に掛ける",
+              "visited": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "format": "narrativegen-screen-frame",
+      "version": 1,
+      "layout": "inquiry",
+      "step": 4,
+      "nodeId": "s10_verify_baker",
+      "choiceId": "verify_baker",
+      "choiceText": "パン焼きのナミと親秤に掛ける",
+      "notes": [
+        {
+          "source": "パン焼きのナミ",
+          "text": "パン焼きのナミの違和感"
+        },
+        {
+          "source": "パン焼きのナミ",
+          "text": "パン焼きのナミが配給係のオリに話した"
+        },
+        {
+          "source": "配給係のオリ",
+          "text": "配給係のオリの違和感"
+        },
+        {
+          "source": "パン焼きのナミ",
+          "text": "パン焼きのナミが確かめた"
+        }
+      ],
+      "newNote": true,
+      "ending": true,
+      "header": {
+        "region": "灰渡りの港",
+        "title": "六目の分銅",
+        "goal": "配給所とパン窯で同じ粉袋の重さが合わない。欠け耳の分銅を二人に渡し、今日の配給を量り直すか決める。"
+      },
+      "place": "配給所の秤台",
+      "speaker": "パン焼きのナミ",
+      "paragraphs": [
+        [
+          {
+            "text": "パン焼きのナミは港の親秤を持ち出した。欠け耳の分銅を掛けると、針は6目で止まった。その刻みを客にも見える向きにして札を掛けた。"
+          }
+        ],
+        [
+          {
+            "text": "粉を受け取った客が袋の口をほどく。二人は親秤を戸口へ据え、渡した分から量り直した。"
+          }
+        ]
+      ],
+      "choiceGroups": []
+    }
+  ]
+}

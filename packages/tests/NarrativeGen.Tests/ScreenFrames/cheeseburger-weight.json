@@ -1,0 +1,133 @@
+{
+  "format": "narrativegen-screen-route",
+  "version": 1,
+  "model": "models/generated/cheeseburger-weight.json",
+  "path": [
+    "look_detective_a",
+    "verify_detective_a"
+  ],
+  "frames": [
+    {
+      "format": "narrativegen-screen-frame",
+      "version": 1,
+      "layout": "standard",
+      "step": 0,
+      "nodeId": "start",
+      "choiceId": null,
+      "choiceText": null,
+      "notes": [],
+      "newNote": false,
+      "ending": false,
+      "header": null,
+      "place": "",
+      "speaker": "",
+      "paragraphs": [
+        [
+          {
+            "text": "誰かが食べていたチーズバーガーがある。探偵A、目撃者B、酔った人がいる。"
+          }
+        ]
+      ],
+      "choiceGroups": [
+        {
+          "role": "choice",
+          "label": "選択肢",
+          "choices": [
+            {
+              "id": "look_drunk_person",
+              "text": "酔った人が見る",
+              "visited": false
+            },
+            {
+              "id": "look_detective_a",
+              "text": "探偵Aが見る",
+              "visited": false
+            },
+            {
+              "id": "look_witness_b",
+              "text": "目撃者Bが見る",
+              "visited": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "format": "narrativegen-screen-frame",
+      "version": 1,
+      "layout": "standard",
+      "step": 1,
+      "nodeId": "s2_look_detective_a",
+      "choiceId": "look_detective_a",
+      "choiceText": "探偵Aが見る",
+      "notes": [
+        {
+          "source": "探偵A",
+          "text": "探偵Aの違和感"
+        }
+      ],
+      "newNote": true,
+      "ending": false,
+      "header": null,
+      "place": "",
+      "speaker": "",
+      "paragraphs": [
+        [
+          {
+            "text": "探偵Aは誰かが食べていたチーズバーガーを見る。重さは0.1のはずだと思っていた。実際は0.12。探偵Aは違和感を覚える。"
+          }
+        ]
+      ],
+      "choiceGroups": [
+        {
+          "role": "choice",
+          "label": "選択肢",
+          "choices": [
+            {
+              "id": "verify_detective_a",
+              "text": "探偵Aが確かめる",
+              "visited": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "format": "narrativegen-screen-frame",
+      "version": 1,
+      "layout": "standard",
+      "step": 2,
+      "nodeId": "s18_verify_detective_a",
+      "choiceId": "verify_detective_a",
+      "choiceText": "探偵Aが確かめる",
+      "notes": [
+        {
+          "source": "探偵A",
+          "text": "探偵Aの違和感"
+        },
+        {
+          "source": "探偵A",
+          "text": "探偵Aが確かめた"
+        }
+      ],
+      "newNote": true,
+      "ending": true,
+      "header": null,
+      "place": "",
+      "speaker": "",
+      "paragraphs": [
+        [
+          {
+            "text": "探偵Aは誰かが食べていたチーズバーガーの重さを確かめる。0.12。見込みの0.1とは違っていた。"
+          }
+        ],
+        [
+          {
+            "text": "違和感は確かめられ、事実として残った。"
+          }
+        ]
+      ],
+      "choiceGroups": []
+    }
+  ]
+}

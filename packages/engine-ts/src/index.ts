@@ -382,3 +382,6 @@ export type { TextSegment, TextTrace, ConditionTrace, ChoiceTrace, TemplateTrace
 // Premise-driven story construction (SP-PREMISE-001 prototype)
 export { generateStory, describeDerivation, explainAction, endingLabel, beatLabel, DEFAULT_PATTERNS } from './premise-story.js'
 export type { StoryPremise, PremiseBelief, PremiseWording, PatternId, StoryAction, StoryActionKind, StoryStep, StoryEnding, StoryDerivation, PerceptionFact, EndingShare, WeightFactor, GenerateStoryOptions, GeneratedStory, SceneDerivation, ActionExplanation, StoryBeat, StoryIntent } from './premise-story.js'
+
+export { buildScreenFrame, playScreenFrames, screenChoiceText, screenLayout, screenParagraphs, splitSpeaker, SCREEN_FRAME_FORMAT, SCREEN_FRAME_VERSION } from './screen-frame.js'
+export type { ScreenFrame, ScreenFrameOptions, ScreenLayout, ScreenSpan, ScreenChoice, ScreenChoiceGroup, ScreenNote, ScreenHeader, ChoiceRole } from './screen-frame.js'

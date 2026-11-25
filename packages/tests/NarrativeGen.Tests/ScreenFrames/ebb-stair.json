@@ -1,0 +1,283 @@
+{
+  "format": "narrativegen-screen-route",
+  "version": 1,
+  "model": "models/examples/ebb-stair.json",
+  "path": [
+    "go_steps",
+    "wait",
+    "read",
+    "signal"
+  ],
+  "frames": [
+    {
+      "format": "narrativegen-screen-frame",
+      "version": 1,
+      "layout": "inquiry",
+      "step": 0,
+      "nodeId": "lock",
+      "choiceId": null,
+      "choiceText": null,
+      "notes": [],
+      "newNote": false,
+      "ending": false,
+      "header": {
+        "region": "灰渡りの港",
+        "title": "潮待ちの石段",
+        "goal": "粉倉へ荷を上げる道を決める。引き潮にだけ出る古い敷石を確かめるか、荷車を堤へ回す。"
+      },
+      "place": "舟便詰所",
+      "speaker": "水先案内のエナ",
+      "paragraphs": [
+        [
+          {
+            "text": "軒下には粉袋が八つ。引き潮に川底の石道を渡せば、朝のパンに間に合う。エナは車輪の小さい荷車を指した。「あれを泥に入れたら、袋ごと沈むよ」"
+          }
+        ],
+        [
+          {
+            "text": "「旧水門の石段に白い印が出る。見逃したら堤から回せるけど、窯を一度落とすことになる」"
+          }
+        ]
+      ],
+      "choiceGroups": [
+        {
+          "role": "travel",
+          "label": "行き先",
+          "choices": [
+            {
+              "id": "go_steps",
+              "text": "旧水門の石段",
+              "visited": false
+            },
+            {
+              "id": "go_store",
+              "text": "堤の粉倉",
+              "visited": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "format": "narrativegen-screen-frame",
+      "version": 1,
+      "layout": "inquiry",
+      "step": 1,
+      "nodeId": "steps",
+      "choiceId": "go_steps",
+      "choiceText": "旧水門の石段",
+      "notes": [],
+      "newNote": false,
+      "ending": false,
+      "header": {
+        "region": "灰渡りの港",
+        "title": "潮待ちの石段",
+        "goal": "粉倉へ荷を上げる道を決める。引き潮にだけ出る古い敷石を確かめるか、荷車を堤へ回す。"
+      },
+      "place": "旧水門",
+      "speaker": "量水石",
+      "paragraphs": [
+        [
+          {
+            "text": "段の脇の鉄環に、水売りの柄杓がぶら下がっている。川面を見るには、ここがいちばん低い。 "
+          }
+        ],
+        [
+          {
+            "text": "水が下がり始めた。欠けた段鼻が泡の下に透けている。あと一息待てば、底まで見えそうだ。"
+          }
+        ]
+      ],
+      "choiceGroups": [
+        {
+          "role": "topic",
+          "label": "話題",
+          "choices": [
+            {
+              "id": "wait",
+              "text": "石段で潮を待つ",
+              "visited": true
+            }
+          ]
+        },
+        {
+          "role": "travel",
+          "label": "行き先",
+          "choices": [
+            {
+              "id": "go_lock",
+              "text": "舟便詰所",
+              "visited": true
+            },
+            {
+              "id": "go_store",
+              "text": "堤の粉倉",
+              "visited": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "format": "narrativegen-screen-frame",
+      "version": 1,
+      "layout": "inquiry",
+      "step": 2,
+      "nodeId": "steps",
+      "choiceId": "wait",
+      "choiceText": "石段で潮を待つ",
+      "notes": [],
+      "newNote": false,
+      "ending": false,
+      "header": {
+        "region": "灰渡りの港",
+        "title": "潮待ちの石段",
+        "goal": "粉倉へ荷を上げる道を決める。引き潮にだけ出る古い敷石を確かめるか、荷車を堤へ回す。"
+      },
+      "place": "旧水門",
+      "speaker": "量水石",
+      "paragraphs": [
+        [
+          {
+            "text": "段の脇の鉄環に、水売りの柄杓がぶら下がっている。川面を見るには、ここがいちばん低い。 "
+          }
+        ],
+        [
+          {
+            "text": "水が切れた。濡れた石の上に、白い三角がひとつ光る。いまなら三角の先をたどれる。"
+          }
+        ]
+      ],
+      "choiceGroups": [
+        {
+          "role": "topic",
+          "label": "話題",
+          "choices": [
+            {
+              "id": "wait",
+              "text": "石段で潮を待つ",
+              "visited": true
+            },
+            {
+              "id": "read",
+              "text": "三角の先をたどる",
+              "visited": false
+            }
+          ]
+        },
+        {
+          "role": "travel",
+          "label": "行き先",
+          "choices": [
+            {
+              "id": "go_lock",
+              "text": "舟便詰所",
+              "visited": true
+            },
+            {
+              "id": "go_store",
+              "text": "堤の粉倉",
+              "visited": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "format": "narrativegen-screen-frame",
+      "version": 1,
+      "layout": "inquiry",
+      "step": 3,
+      "nodeId": "read",
+      "choiceId": "read",
+      "choiceText": "三角の先をたどる",
+      "notes": [
+        {
+          "source": "量水石",
+          "text": "白い三角の先に、対岸の粉倉まで続く敷石が現れた。"
+        }
+      ],
+      "newNote": true,
+      "ending": false,
+      "header": {
+        "region": "灰渡りの港",
+        "title": "潮待ちの石段",
+        "goal": "粉倉へ荷を上げる道を決める。引き潮にだけ出る古い敷石を確かめるか、荷車を堤へ回す。"
+      },
+      "place": "旧水門",
+      "speaker": "量水石",
+      "paragraphs": [
+        [
+          {
+            "text": "三角の尖った先に、次の石。その先にも一つ。柄杓の柄で突くと、どれも硬く鳴った。戻ってエナに合図するなら今だ。堤の荷車をそのまま使うこともできる。"
+          }
+        ]
+      ],
+      "choiceGroups": [
+        {
+          "role": "topic",
+          "label": "話題",
+          "choices": [
+            {
+              "id": "signal",
+              "text": "柄杓を振って石道へ呼ぶ",
+              "visited": false
+            }
+          ]
+        },
+        {
+          "role": "travel",
+          "label": "行き先",
+          "choices": [
+            {
+              "id": "go_lock",
+              "text": "舟便詰所",
+              "visited": true
+            },
+            {
+              "id": "go_store",
+              "text": "堤の粉倉",
+              "visited": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "format": "narrativegen-screen-frame",
+      "version": 1,
+      "layout": "inquiry",
+      "step": 4,
+      "nodeId": "crossed",
+      "choiceId": "signal",
+      "choiceText": "柄杓を振って石道へ呼ぶ",
+      "notes": [
+        {
+          "source": "量水石",
+          "text": "白い三角の先に、対岸の粉倉まで続く敷石が現れた。"
+        },
+        {
+          "source": "量水石",
+          "text": "石段から柄杓を振った。エナは白い敷石に車輪を乗せた。"
+        }
+      ],
+      "newNote": true,
+      "ending": true,
+      "header": {
+        "region": "灰渡りの港",
+        "title": "潮待ちの石段",
+        "goal": "粉倉へ荷を上げる道を決める。引き潮にだけ出る古い敷石を確かめるか、荷車を堤へ回す。"
+      },
+      "place": "舟便詰所",
+      "speaker": "水先案内のエナ",
+      "paragraphs": [
+        [
+          {
+            "text": "八袋目が向こう岸へ上がるころ、石道の白い印は水に消えた。粉番が向こうから柄杓を振り返す。最初の舟に、焼きたての丸パンが四つ積まれた。"
+          }
+        ]
+      ],
+      "choiceGroups": []
+    }
+  ]
+}

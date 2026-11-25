@@ -11,6 +11,7 @@
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ScreenFrames/*.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../../models/generated/cheeseburger-weight*.json;../../../models/generated/brass-weight.json;../../../models/examples/blue-selvedge.json;../../../models/examples/ebb-stair.json"
           Link="PlaybackModels/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

@@ -349,5 +349,14 @@
     "cat": "core",
     "file": "docs/specs/premise-driven-story.md",
     "summary": "物・人物・思い込み・場（と任意の意図）から物語を組む。違和感はエンジンのperceiveEntityが決め（必然）、見る・見直す・話す・尋ねる・確かめる・そのままにするは前提の数値による重みで選ぶ（蓋然）。聞いた話で人物の見込みと許容幅が変わる。全展開を数えて結末の割合と意図を満たす主線を出し、通常のモデルと導出の記録を返す。generateStory / describeDerivation、npm run generate:story。2026-11-22にuserが重み・意図の語彙・骨子文・置き場を採用し、規則と数値による組み立てを認めた。行為は2026-11-23に6種へ直した。尋ねる・見直すの重みと見込みの混ぜ方も同日userが採用した。場面ごとの蓋然と理由をStudioの右列に出す。"
+  },
+  {
+    "id": "SP-SCREEN-001",
+    "title": "Screen Frame",
+    "status": "partial",
+    "pct": 60,
+    "cat": "system",
+    "file": "docs/specs/screen-frame.md",
+    "summary": "Renderer-neutral per-step screen frame (layout, header, place/speaker, paragraphs with topic links, topic/travel choice groups, journal notes, ending). TS reference buildScreenFrame/playScreenFrames and C# ScreenFrameBuilder produce identical JSON; golden route files and Studio inquiry-window comparison guard it. Consumers: Studio, UnityChatNovelGame chat, WritingPage (via SP-WP-001 0.2)."
   }
 ]
