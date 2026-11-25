@@ -35,22 +35,22 @@
         "provenance": {
           "key": "provenance",
           "type": "string",
-          "defaultValue": "clocktower archive desk"
+          "defaultValue": "鐘楼の書庫の机"
         },
         "owner": {
           "key": "owner",
           "type": "string",
-          "defaultValue": "Mira's mentor"
+          "defaultValue": "ミラの師"
         },
         "location": {
           "key": "location",
           "type": "string",
-          "defaultValue": "south archive"
+          "defaultValue": "南書庫"
         },
         "contradiction": {
           "key": "contradiction",
           "type": "string",
-          "defaultValue": "signed after the bell was sealed"
+          "defaultValue": "鐘の封印後に署名されている"
         },
         "credibility": {
           "key": "credibility",
@@ -152,7 +152,7 @@
                   "defaultValue": "目撃された矛盾"
                 },
                 "location": {
-                  "defaultValue": "south archive"
+                  "defaultValue": "南書庫"
                 }
               }
             },

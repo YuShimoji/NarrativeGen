@@ -43,8 +43,9 @@ test.describe('Originality Spine Probe', () => {
     await loadProbe(page);
 
     await expect(page.locator('#storyView')).toContainText('ミラはレシート片を机に置く');
-    await expect(page.locator('#storyView')).toContainText('clocktower archive desk');
-    await expect(page.locator('#storyView')).toContainText("持ち主はMira's mentor");
+    await expect(page.locator('#storyView')).toContainText('出所は鐘楼の書庫の机');
+    await expect(page.locator('#storyView')).toContainText('持ち主はミラの師');
+    await expect(page.locator('#storyView')).toContainText('「鐘の封印後に署名されている」');
 
     await page.locator('#designerDashboardTab').click();
     await expect(page.locator('[data-dashboard-field="model-name"]')).toContainText('originality-spine-probe');
