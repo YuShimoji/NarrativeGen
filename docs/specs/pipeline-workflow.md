@@ -40,7 +40,7 @@ flowchart TD
   F -->|"場面を直す"| G["5 直す・文章を書く<br/>その場で編集"]
   G --> E
   G --> H["6 保存して守る<br/>保存・検査・試験"]
-  H --> I["7 出す・つなぐ<br/>（凍結中）"]
+  H --> I["7 出す・つなぐ<br/>（Unity Editor試遊）"]
 ```
 
 図は工程の順と戻り先を表す。ひし形は組み方の分岐、点検からの2本の矢印は直す場所の違い（前提か場面か）。
@@ -57,7 +57,7 @@ flowchart TD
 | 4 | 全体を点検する | 結末・行き止まり・開かない選択肢を読み、直す場所を決める | 開いている選択肢をすべて実際に選んで調べる | Studio 点検 | —（確認） | 使える（数値が増え続ける物語は状態数2000で打ち切り） |
 | 5 | 直す・文章を書く | 本文・選択肢・条件・知識ルール・人物と物を直す。骨子文を自分の文章にする | 変更のたびに同じ道筋を再トレース | Studio「その場で編集」 | 編集中のモデル | 本文・条件・定義は使える。会話テンプレート・言い換え辞書・経過数の編集は未対応 |
 | 6 | 保存して守る | 保存を押し、必要に応じて開き直す | 保存前の点検、リポジトリ内の保存では`loadModel`の検査 | Studio「物語を保存」→物語の一覧「物語のファイルを開く」。既存モデルは「保存」 | 物語JSON | 使える |
-| 7 | 出す・つなぐ | 出力形式を選び、ランタイムへ置く | 変換、SDKでの実行 | 旧Web Testerの出力（JSON/CSV/Yarn/Ink/Twine）、Unity SDK | 各ランタイム用ファイル | 凍結（再構築の区切りでuserが再開を決める） |
+| 7 | 出す・つなぐ | 出力形式を選び、ランタイムへ置く | 変換、SDKでの実行 | 旧Web Testerの出力（JSON/CSV/Yarn/Ink/Twine）、Unity SDK | 各ランタイム用ファイル | Unity EditorのJSON試遊を再開済み。配布Playerと公開経路は保留 |
 
 ### 2aと2bの使い分け
 
@@ -88,15 +88,15 @@ flowchart TD
 |---|---|---|
 | 自作前提から一本を仕上げる作者受入 | 入力・試算・再生・編集・再読込の使い勝手は実作品で未確認 | 作者が自分の前提で一本を結末まで作り、止まった操作を確認する |
 | 会話テンプレート・言い換え辞書を編集できない | 5で差し込み文と言い換えを直せない | Studio編集の受入の後 |
-| 7が凍結中 | 作った物語をゲームへ渡す経路を今は使わない | 再構築の区切りでuserが再開を決める |
-| WritingPage連携は延期中 | 長文の執筆をStudio内で行う | 着手条件は[writingpage-io-contract.md](writingpage-io-contract.md) |
+| 7の配布経路は保留 | UnityChatNovelGame Editorで生成JSONを試遊できる。配布Playerへの接続は未完 | [接続の申し送り](../../HANDOVER.md#unitychatnovelgamewritingpageとの接続) |
+| WritingPageの入出力・Reader導線 | 0.2の変換APIを通常の操作から呼ぶ経路が未接続 | [SP-WP-001](writingpage-io-contract.md)と[SP-SCREEN-001](screen-frame.md) |
 
 ## HUMAN_AUTHORITY 確認結果（2026-03-27、#4は2026-11-22に改めた）
 
 | # | 項目 | 決定 | 備考 |
 |---|------|------|------|
 | 1 | ペルソナの妥当性 | **1人運用** | P1/P2/P3 は「帽子の切替」。3分類は設計上の関心分離として維持 |
-| 2 | WritingPage 連携の優先度 | **延期 (WritingPage 安定待ち)** | 次スライス候補として維持 (2026-04-03) |
+| 2 | WritingPage 連携の優先度 | **0.2の変換と画面フレームの実装に着手** | 2026-04-03の延期は、2026-11-26の[ゲート再判定](writingpage-io-contract.md#ゲート判定ログ)で見直した |
 | 3 | エクスポート戦略 | **JSON 主軸** | 独自機能が活きるのは JSON + 独自ランタイムのみ。他形式は互換用 |
 | 4 | Stage 1 AI 支援 | **規則と数値による組み立ては認める**（2026-11-22） | LLMによる構想支援は入れていない。2026-03-27の「スコープ外」を改めた |
 | 5 | Pipeline ガイドの形態 | **AUTHORING_GUIDE 拡張** | `docs/AUTHORING_GUIDE.md`は旧Web Tester中心の記述のまま（未更新） |
@@ -108,4 +108,4 @@ flowchart TD
 - SP-KNOW-001 / SP-KNOW-002 / SP-ANOMALY-001 / SP-EVENT-001: 必然の段（知識・違和感・出来事）
 - SP-TGEN-001 / SP-TEXT-001 / SP-DYNAMIC-001: 文章の展開と差し込み
 - SP-SCHEMA-001 / SP-ENGINE-001: モデルの形と実行
-- SP-EXP-YARN-001 / SP-UNITY-001: 工程7（凍結中）
+- SP-EXP-YARN-001 / SP-UNITY-001: 工程7。Unity試遊の接続状況は[申し送り](../../HANDOVER.md#unitychatnovelgamewritingpageとの接続)

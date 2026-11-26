@@ -155,7 +155,7 @@ Source: `docs/plans/DEVELOPMENT_PLAN.md`
 - [x] Reclassify regression responsibility (automated vs manual) and document it.
 
 ### Long term (3-6 months)
-- [ ] Start WritingPage integration only after external format stabilization.
+- [ ] Connect the WritingPage hand-off converters to the normal app entry points. See [handoff](../HANDOVER.md#unitychatnovelgamewritingpageとの接続).
 - [x] Improve Unity distribution path (UPM-first, local NuGet pack readiness; public publishing remains human-owned).
 - [ ] Promote quality gates from "check set" to release readiness criteria.
 - [x] Define WritingPage pre-implementation I/O contract and start gates.

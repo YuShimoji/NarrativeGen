@@ -119,7 +119,7 @@ Web Tester runs at the Vite URL printed by `npm run dev`, normally `http://local
 - Spreadsheet CSV/TSV import/export supports writer-friendly authoring.
 - Web Tester provides visual editing, graph views, validation, play preview, inference UI, and 5-format export.
 - Unity SDK follows TypeScript engine parity; TypeScript remains the SDK source of truth.
-- WritingPage integration is blocked until the gates in [`docs/specs/writingpage-io-contract.md`](docs/specs/writingpage-io-contract.md) pass.
+- WritingPage hand-off 0.2 and the shared screen-frame converters are implemented. See the [integration handoff](HANDOVER.md#unitychatnovelgamewritingpageとの接続) for the remaining Studio, WritingPage and Unity work.
 
 ## Specs
 

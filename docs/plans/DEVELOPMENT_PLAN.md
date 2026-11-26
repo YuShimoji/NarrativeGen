@@ -116,7 +116,7 @@ Review sequence: three same-content direction mocks -> one-screen macro contract
 
 ## Long-Term Tracks
 
-- **WritingPage integration** remains blocked until `docs/specs/writingpage-io-contract.md` gates pass.
+- **WritingPage integration** passed the 0.2 implementation gate on 2026-11-26. The [handoff](../../HANDOVER.md#unitychatnovelgamewritingpageとの接続) tracks the remaining app entry points and Reader verification.
 - **Unity distribution** remains UPM-first. Local NuGet pack readiness is complete; public publishing remains outside assistant-owned implementation.
 - **Quality gates** should stay centered on spec integrity, model sync, compatibility, and regression evidence.
 
@@ -129,7 +129,7 @@ Review sequence: three same-content direction mocks -> one-screen macro contract
 - SP-UNITY-001 is done; `createEvent` applies through the C# runtime, `expandTemplate` major parity edges are covered, and local NuGet pack metadata is present.
 - Vite 8 is merged to `main` with the Rollup wasm override maintained.
 - Web Tester has baseline a11y/responsive improvements and runbook-backed E2E flaky handling.
-- WritingPage has a preparation contract and a recorded No-Go gate.
+- WritingPage hand-off has a 0.2 contract, converters and shared fixtures. The [gate log](../specs/writingpage-io-contract.md#ゲート判定ログ) records the original No-Go and subsequent Go.
 
 ## Operating Rules
 

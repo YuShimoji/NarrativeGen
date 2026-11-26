@@ -26,7 +26,7 @@
 
 - 1人運用。ライター／テクニカルデザイナー／インテグレーターは帽子の切替で、別の担当者ではない。
   条件と効果は書き手自身が設定する（2026-03-08）
-- WritingPage連携は延期中で、不要になったのではない。WritingPage側の形式が安定してから着手する
+- WritingPageとの原稿受け渡しは[SP-WP-001](specs/writingpage-io-contract.md) 0.2を使う。条件・効果を含むモデルの完全な保存はNarrativeGenのJSONが担う
 
 ## 運用
 

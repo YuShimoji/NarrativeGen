@@ -1,6 +1,6 @@
 # SP-SCREEN-001 画面フレーム
 
-Status: partial（契約・TS基準・C# SDK・Studio照合・Unityチャット表示・WritingPage変換は実装済み。Unityチャットの実画面と、WritingPage Reader本体での表示は人の確認待ち）
+Status: partial（TS・C# SDKとStudio照合、Unity Editorのチャット描画、WritingPageのMarkdown変換まで実装。Unityの実画面照合とWritingPageのReader導線が残る。[再開手順](../../HANDOVER.md#unitychatnovelgamewritingpageとの接続)）
 Date: 2026-11-26
 
 ## 目的
