@@ -308,11 +308,11 @@
   {
     "id": "SP-WP-001",
     "title": "WritingPage I/O Contract",
-    "status": "partial",
-    "pct": 80,
+    "status": "done",
+    "pct": 100,
     "cat": "system",
     "file": "docs/specs/writingpage-io-contract.md",
-    "summary": "NarrativeGen <-> WritingPage hand-off envelope. 2026-11-26 gate re-judged Go on the user request; 0.2 adds optional speaker/choices. engine-ts modelFromWritingPage/modelToWritingPage with SP-WP-001 error rules and samples (docs/samples/writingpage); WritingPage NarrativeScreenBridge converts chapters <-> envelope and screen frames -> Reader Markdown. WritingPage UI wiring remains."
+    "summary": "Studio and WritingPage exchange wp-ng-0.2 files through their app menus. The shared reception sample preserves text, speakers, choices and targets after reopening and returning the manuscript to Studio. Export warns when it drops choice conditions or effects."
   },
   {
     "id": "SP-HIST-001",
@@ -353,10 +353,10 @@
   {
     "id": "SP-SCREEN-001",
     "title": "Screen Frame",
-    "status": "partial",
-    "pct": 80,
+    "status": "done",
+    "pct": 100,
     "cat": "system",
     "file": "docs/specs/screen-frame.md",
-    "summary": "Renderer-neutral per-step screen frame. TS buildScreenFrame/playScreenFrames and C# ScreenFrameBuilder produce identical JSON (golden route files, Studio inquiry-window comparison). UnityChatNovelGame chat draws frames (NarrativeGenChatScreen); WritingPage renders them as zw-dialog Reader Markdown. Human visual review of the Unity chat remains."
+    "summary": "TypeScript and C# build equivalent v1 screen frames. The fixed route of 藍布の耳 reaches its ending in Studio and the Unity Editor chat. WritingPage opens the same route in Reader, including the three journal entries and ending."
   }
 ]

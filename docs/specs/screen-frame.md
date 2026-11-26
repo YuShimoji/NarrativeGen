@@ -1,6 +1,6 @@
 # SP-SCREEN-001 画面フレーム
 
-Status: partial（TS・C# SDKとStudio照合、Unity Editorのチャット描画、WritingPageのMarkdown変換まで実装。Unityの実画面照合とWritingPageのReader導線が残る。[再開手順](../../HANDOVER.md#unitychatnovelgamewritingpageとの接続)）
+Status: StudioとUnity Editorのチャットで「藍布の耳」の固定経路を結末まで照合。WritingPageのReaderで同じ再生記録を表示。[操作・確認](../../HANDOVER.md#unitychatnovelgamewritingpageとの接続)
 Date: 2026-11-26
 
 ## 目的

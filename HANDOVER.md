@@ -16,7 +16,7 @@
 | 前提から物語を組む | 前提ファイル → 物語のモデル＋導出の記録。違和感はエンジンが決め、行為（見る・見直す・話す・尋ねる・確かめる・そのままにする）は前提の数値による重みで選ぶ。聞いた話で人物の見込みと許容幅が変わる。結末の割合と、意図を満たす最も蓋然な主線を出す。Studioの右列の先頭に、場面ごとの蓋然と理由が出る（方法は[SP-PREMISE-001](docs/specs/premise-driven-story.md)） | `npm run generate:story -- models/premises/brass-weight.json` → Studioの物語選択「六目の分銅（前提から生成）」。[導出の記録の見本](docs/samples/premise-story-cheeseburger-weight-review-ja.md) |
 | Studio（主画面） | 実行（本文＋判断の列＋道筋）、点検、その場で編集（範囲は[SP-STUDIO-001](docs/specs/studio-rebuild.md) 4節）。`models/`の物語は「保存」で元のJSONへ書き戻し。`models/generated/`の物語は保存の代わりに「写して育てる」で`models/examples/`へ写す。小さい数値は有効3桁で表示。幅1440px・768pxで確認（2026-11-22、生成した物語の実行画面と蓋然の欄） | `npm run dev:studio` → `http://127.0.0.1:5185/`、編集関数の試験は`npm test -w @narrativegen/studio`（7件） |
 | エンジンの判断の記録 | 物の性質で選択肢が開閉し、証言などの出来事で条件付きの本文が変わる。Studioの判断欄には条件が変わった手数と操作、更新された出来事の値が出る。点検は待つ操作や証言の更新を含む道筋をたどる | [レシートの矛盾](http://127.0.0.1:5185/?story=originality-spine-probe)でミラに照合を頼み、台帳へ進む条件の出所を見る。[判断の仕様](docs/specs/studio-rebuild.md) |
-| 画面フレーム（SP-SCREEN-001） | TSとC# SDKが同じ経路から同じ画面情報を出す。UnityのEditor試遊がフレームを描く。WritingPageにはReader用Markdown変換がある | `npm run check:screen-frames`、Studio試験、.NET試験（`ScreenFrameConformanceTests`）。[仕様](docs/specs/screen-frame.md) |
+| 画面フレーム（SP-SCREEN-001） | TSとC# SDKが同じ経路から同じ画面情報を出す。UnityのEditor試遊とWritingPageのReaderで「藍布の耳」の固定経路を確認済み | `npm run check:screen-frames`、Studio試験、.NET試験（`ScreenFrameConformanceTests`）。[仕様](docs/specs/screen-frame.md) |
 | 旧Web Tester | 編集・グラフ・export等。置き換えまで残し、新機能は足さない | `npm run dev`（port 5173が他projectと衝突する時は下の注意） |
 | レガシー | 「閉館前の返却箱」は鍵の本数から生まれる選択を比べられる。「舞台の暗転」と「搬入口の荷箱」は三人が同じ証言を聞く前後を比べられる | 「レガシーを開く…」で物語か「見本場面｜証言への反応を比べる」を選ぶ。[見本の仕様](docs/specs/premise-driven-story.md#3-試作の契約) |
 | ゲーム層 | Unity SDKはStudioの話者ラベルと、継承した物の属性を読む選択肢条件に対応。Play演出・BGM、Public Studio、Sites adapterは作業場再構築中の凍結を継続 | .NET試験38件。現行3作「藍布の耳」「潮待ちの石段」「六目の分銅」の各1経路を結末まで確認（2026-11-26）。既存のチーズバーガー2モデルでも知覚イベント・条件付き選択肢・動的本文を確認 |
@@ -27,13 +27,15 @@
 
 本人依頼（2026-11-27）「NarrativeGen と UnityChatNovelGameおよびWritingPageを接続するタスクについて明確化してリモートに反映して、開発再開可能なようにしてください。」画面の互換性を求めた11月26日の原文と着手時の差は[SP-SCREEN-001](docs/specs/screen-frame.md)にある。
 
-| 工程と担当 | 現在地 | 再開する作業と完了条件 |
-|---|---|---|
-| 画面と原稿受け渡しの契約 / NarrativeGen | [SP-SCREEN-001](docs/specs/screen-frame.md) v1のTS・C#基準、[SP-WP-001](docs/specs/writingpage-io-contract.md) 0.2の双方向変換APIあり | Studioで受け渡しファイルを明示的に開く・書き出す入口を接続する。取り込みは新規モデルへ。書き出しで条件・効果等が落ちる場合は警告を表示する。既存モデルを保ったまま本文・話者・選択肢の往復を確認する |
-| Editorでの再生 / UnityChatNovelGame | [Editor試遊](https://github.com/YuShimoji/UnityChatNovelGame/blob/main/docs/HANDOFF.md#narrativegenの試遊)がSDK `43dc307`でフレームを描画。PlayModeで履歴への出力を確認済み | 下記の「藍布の耳」をGameビューで結末まで再生し、Studioと場所・話者・段落・選択肢・手帳・結末を照合する。配布Playerへの組み込みは別工程 |
-| 原稿入出力とReader / WritingPage | [WritingPageの再開手順](https://github.com/YuShimoji/WritingPage/blob/main/docs/CURRENT_STATE.md#narrativegen連携の再開)に変換器と試験を収録。原稿入出力・Readerへのアプリ内導線は未接続 | まず「藍布の耳」のMarkdownを試験用原稿で再生オーバーレイに開く。次に既存の原稿入出力へ0.2、再生オーバーレイへフレーム経路を接続する。互換エラー時に原稿を上書きせず、保存した試験原稿を開き直せることまで確認する |
+WritingPageで書いた本文・話者・分岐をStudioで試遊し、原稿に戻せるようにする。同じ物語をStudioとUnityで進め、選んだ経路をWritingPageのReaderで読めるようにする。
 
-画面比較には [藍布の耳のモデル](models/examples/blue-selvedge.json) と [固定の選択経路・期待フレーム](packages/tests/NarrativeGen.Tests/ScreenFrames/blue-selvedge.json) を使う。Unityの画面照合とWritingPageのReader表示確認は並行して進められる。テキスト受け渡しは [受付の分岐サンプル](docs/samples/writingpage/README.md) で両アプリの入口をつないで確認する。ゲームの進行・条件の正本はNarrativeGenのモデルJSONとランタイム。WritingPageは選んだ経路をReaderで表示し、ゲームの選択実行はStudio・Unityが受け持つ。
+| 工程と担当 | 現在地 | 操作・確認 |
+|---|---|---|
+| 画面と原稿受け渡しの契約 / NarrativeGen | [SP-SCREEN-001](docs/specs/screen-frame.md) v1のTS・C#基準と[SP-WP-001](docs/specs/writingpage-io-contract.md) 0.2。Studioから取り込み・書き出しができる | 物語の一覧にあるWritingPageの操作を使う。取り込みは新規モデル。条件・効果などが渡らない場合は書き出し前に確認が出る。互換エラーでも開いていたモデルと再生位置を保持する |
+| Editorでの再生 / UnityChatNovelGame | [Editor試遊](https://github.com/YuShimoji/UnityChatNovelGame/blob/main/docs/HANDOFF.md#narrativegenの試遊)のSDK `43dc307`で「藍布の耳」を6選択で結末まで確認 | StudioとGameビューで場所・話者・段落・選択肢・手帳3件・結末を照合。配布Playerへの組み込みは別工程 |
+| 原稿入出力とReader / WritingPage | 「構造 → ドキュメント → 入出力」で原稿を読み込み・書き出しできる。コマンドパレットから再生記録をReaderに開ける | Studioが書き出した受付の原稿を保存・再読込・再書き出しして同じ分岐を再生。Readerで「藍布の耳」の場所・左右の吹き出し・手帳3件・結末と、執筆画面への復帰を確認 |
+
+画面比較には [藍布の耳のモデル](models/examples/blue-selvedge.json) と [固定の選択経路・期待フレーム](packages/tests/NarrativeGen.Tests/ScreenFrames/blue-selvedge.json) を使う。原稿の往復には [受付の分岐サンプル](docs/samples/writingpage/README.md) を使う。ゲームの進行・条件の正本はNarrativeGenのモデルJSONとランタイム。WritingPageは選んだ経路をReaderで表示し、ゲームの選択実行はStudio・Unityが受け持つ。
 
 ## 人の確認待ち
 
