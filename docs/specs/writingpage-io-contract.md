@@ -77,7 +77,7 @@ WritingPage 連携を実装する前に、最小契約と非互換時挙動を�
 | 2026-04-09 | No（WritingPage 側の安定版タグ未確認・リポジトリ外） | No（合意記録なし） | No（サンプル未添付） | Yes（`play-media-bgm-ac.spec.js` + 検証表 Pass） | **No-Go** |
 | 2026-11-26 | Yes（形式を持つ`storage.js`・`TextboxDslParser.js`・`chapter-store.js`・`chapter-nav.js`の最終変更は2026-07-13以前、タグ`v0.3.15`） | userの依頼「この画面互換性は、WritingPageの実装とも互換性を持たせるよう包括的に整備してください」（2026-11-26） | Yes（`docs/samples/writingpage/` 正常2・異常3） | Yes（前回から変更なし） | **Go**（0.2を実装） |
 
-両アプリの通常画面から取り込み・書き出しを行う入口は未接続。[接続の申し送り](../../HANDOVER.md#unitychatnovelgamewritingpageとの接続)に担当と確認方法を置く。
+Studioの物語一覧とWritingPageのドキュメントの入出力メニューから取り込み・書き出しができる。[接続の申し送り](../../HANDOVER.md#unitychatnovelgamewritingpageとの接続)に操作と確認方法を置く。
 
 ## 関連
 

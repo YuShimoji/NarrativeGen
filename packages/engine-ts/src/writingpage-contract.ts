@@ -51,7 +51,7 @@ export function parseContractVersion(version: unknown): [number, number] {
   if (!match) throw new WritingPageContractError(`contractVersion の形式が違います: ${String(version)}（期待 ${WRITINGPAGE_CONTRACT_VERSION}）`)
   const major = Number(match[1])
   if (major !== SUPPORTED_MAJOR) {
-    throw new WritingPageContractError(`contractVersion ${version} は互換がありません（期待 ${WRITINGPAGE_CONTRACT_VERSION}、major ${SUPPORTED_MAJOR}）`)
+    throw new WritingPageContractError(`contractVersion ${String(version)} は互換がありません（期待 ${WRITINGPAGE_CONTRACT_VERSION}、major ${SUPPORTED_MAJOR}）`)
   }
   return [major, Number(match[2])]
 }

@@ -1,4 +1,4 @@
-import { beatLabel, checkModel, endingLabel, explainAction, generateStory, traceChoiceOrigins, traceStart, traceStep } from '@narrativegen/engine-ts/browser'
+import { beatLabel, checkModel, endingLabel, explainAction, generateStory, modelFromWritingPage, modelToWritingPage, traceChoiceOrigins, traceStart, traceStep } from '@narrativegen/engine-ts/browser'
 import {
   HIDDEN_EVENT_PROPS,
   OUTCOME,
@@ -109,7 +109,9 @@ function fillPicker(extraName, extraLabel = '読み込んだファイル') {
   picker.innerHTML = `${loaded}<optgroup label="現行サンプル">${current}</optgroup>
     <optgroup label="レガシー">${selected ? sampleOption(selected) : ''}<option value="__archive">レガシーを開く…</option></optgroup>
     <optgroup label="ファイル"><option value="__open">物語のファイルを開く…</option>
-    ${import.meta.env.DEV ? '<option value="__premise">前提入力を開く…</option>' : ''}</optgroup>`
+    ${import.meta.env.DEV ? '<option value="__premise">前提入力を開く…</option>' : ''}</optgroup>
+    <optgroup label="WritingPage"><option value="__writingpage_open">WritingPageの原稿を開く…</option>
+    <option value="__writingpage_export"${state.model ? '' : ' disabled'}>WritingPage用の原稿を書き出す…</option></optgroup>`
 }
 
 async function openSample(path) {
@@ -1265,6 +1267,15 @@ function confirmDiscard() {
   return !state.dirty.size || window.confirm(`保存していない変更が ${state.dirty.size} か所あります。捨てて続けますか？`)
 }
 
+function exportWritingPage() {
+  if (!state.model) return
+  const { output, warnings } = modelToWritingPage(state.model, state.name)
+  if (warnings.length && !window.confirm(`WritingPageへの書き出しで失われる情報があります。\n\n${warnings.join('\n')}\n\n原稿を書き出しますか？`)) return
+  const filename = downloadJson(`${state.name}.wp-ng`, output)
+  state.notice = `${esc(filename)} を書き出しました。`
+  updateSaveArea()
+}
+
 // ---------------------------------------------------------------------------
 // check view
 
@@ -1388,6 +1399,7 @@ app.addEventListener('click', (event) => {
 
 let pickerValue = ''
 const storyFile = document.getElementById('story-file')
+const writingPageFile = document.getElementById('writingpage-file')
 document.getElementById('archive-stories').innerHTML = sampleList.filter((s) => s.legacy)
   .map((s) => `<li><button type="button" class="btn" data-story="${esc(s.path)}">${esc(s.label)}</button></li>`).join('')
 archive.addEventListener('click', (e) => {
@@ -1403,10 +1415,12 @@ picker.addEventListener('change', () => {
     archive.showModal()
     return
   }
-  if (['__open', '__premise'].includes(picker.value)) {
+  if (['__open', '__premise', '__writingpage_open', '__writingpage_export'].includes(picker.value)) {
     const action = picker.value
     picker.value = pickerValue
     if (action === '__open') storyFile.click()
+    else if (action === '__writingpage_open') writingPageFile.click()
+    else if (action === '__writingpage_export') exportWritingPage()
     else window.open('./premise-draft.html', '_blank', 'noopener')
     return
   }
@@ -1441,20 +1455,34 @@ window.addEventListener('dragleave', (e) => {
   if (!e.relatedTarget) hint.hidden = true
 })
 
-async function openFile(file) {
-  if (!file || !confirmDiscard()) return
+async function openFile(file, writingPage = false) {
+  if (!file) return
+  let json
   try {
-    const model = JSON.parse(await file.text())
-    const name = file.name.replace(/\.json$/i, '')
-    if (!openModel(model, name, { kind: 'file' })) return
-    fillPicker(name)
-    picker.value = '__file'
-    pickerValue = picker.value
-    setView('run')
+    json = JSON.parse(await file.text())
   } catch {
     state.error = `「${file.name}」はJSONとして読めません。`
     render()
+    return
   }
+  const isWritingPage = writingPage || (json && typeof json === 'object' && Object.hasOwn(json, 'contractVersion'))
+  let model = json
+  if (isWritingPage) {
+    try {
+      model = modelFromWritingPage(json)
+    } catch (err) {
+      state.error = `WritingPageの原稿を開けません: ${err.message}`
+      render()
+      return
+    }
+  }
+  if (!confirmDiscard()) return
+  const name = file.name.replace(isWritingPage ? /(?:\.wp-ng)?\.json$/i : /\.json$/i, '')
+  if (!openModel(model, name, { kind: 'file' })) return
+  fillPicker(name, isWritingPage ? 'WritingPageから取り込み' : undefined)
+  picker.value = '__file'
+  pickerValue = picker.value
+  setView('run')
 }
 
 window.addEventListener('drop', (e) => {
@@ -1466,6 +1494,11 @@ storyFile.addEventListener('change', () => {
   const file = storyFile.files?.[0]
   storyFile.value = ''
   openFile(file)
+})
+writingPageFile.addEventListener('change', () => {
+  const file = writingPageFile.files?.[0]
+  writingPageFile.value = ''
+  openFile(file, true)
 })
 
 async function init() {

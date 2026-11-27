@@ -89,7 +89,6 @@ flowchart TD
 | 自作前提から一本を仕上げる作者受入 | 入力・試算・再生・編集・再読込の使い勝手は実作品で未確認 | 作者が自分の前提で一本を結末まで作り、止まった操作を確認する |
 | 会話テンプレート・言い換え辞書を編集できない | 5で差し込み文と言い換えを直せない | Studio編集の受入の後 |
 | 7の配布経路は保留 | UnityChatNovelGame Editorで生成JSONを試遊できる。配布Playerへの接続は未完 | [接続の申し送り](../../HANDOVER.md#unitychatnovelgamewritingpageとの接続) |
-| WritingPageの入出力・Reader導線 | 0.2の変換APIを通常の操作から呼ぶ経路が未接続 | [SP-WP-001](writingpage-io-contract.md)と[SP-SCREEN-001](screen-frame.md) |
 
 ## HUMAN_AUTHORITY 確認結果（2026-03-27、#4は2026-11-22に改めた）
 
